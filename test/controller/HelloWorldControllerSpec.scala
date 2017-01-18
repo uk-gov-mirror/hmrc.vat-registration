@@ -14,18 +14,26 @@
  * limitations under the License.
  */
 
-resolvers += Resolver.url("hmrc-sbt-plugin-releases", url("https://dl.bintray.com/hmrc/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
+package controller
 
-resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
+import controllers.HelloWorldController
+import helpers.VatRegSpec
+import play.api.http.Status
+import play.api.test.FakeRequest
+import play.api.test.Helpers._
 
-addSbtPlugin("uk.gov.hmrc" % "sbt-auto-build" % "1.4.0")
 
-addSbtPlugin("uk.gov.hmrc" % "sbt-git-versioning" % "0.9.0")
+class HelloWorldControllerSpec extends VatRegSpec {
 
-addSbtPlugin("uk.gov.hmrc" % "sbt-distributables" % "1.0.0")
+  val fakeRequest = FakeRequest("GET", "/")
 
-addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "0.8.0")
 
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.0")
+  "GET /" should {
+    "return 200" in {
+      val result = new HelloWorldController().hello(FakeRequest())
+      status(result) mustBe Status.OK
+    }
+  }
 
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.5.8")
+
+}
