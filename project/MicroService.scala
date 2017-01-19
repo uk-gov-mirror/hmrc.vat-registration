@@ -1,5 +1,6 @@
 
 import play.routes.compiler.StaticRoutesGenerator
+import play.sbt.PlayImport.PlayKeys
 import sbt.Keys._
 import sbt.Tests.{Group, SubProcess}
 import sbt._
@@ -37,6 +38,7 @@ trait MicroService {
   lazy val microservice = Project(appName, file("."))
     .enablePlugins(Seq(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin) ++ plugins: _*)
     .settings(playSettings: _*)
+    .settings(PlayKeys.playDefaultPort := 9896)
     .settings(scalaSettings: _*)
     .settings(scoverageSettings: _*)
     .settings(publishingSettings: _*)
