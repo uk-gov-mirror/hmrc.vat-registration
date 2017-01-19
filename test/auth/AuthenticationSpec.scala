@@ -47,16 +47,13 @@ class AuthenticationSpec extends VatRegSpec with BeforeAndAfter {
 
       val a = Authority("x", "y", "z", UserIds("tiid", "teid"))
 
-      when(mockAuth.getCurrentAuthority()(Matchers.any())).
-        thenReturn(Future.successful(Some(a)))
+      when(mockAuth.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
 
-      val result = Authenticated.authenticated { authResult => {
+      status(Authenticated.authenticated { authResult => {
         authResult shouldBe LoggedIn(a)
         Future.successful(Results.Ok)
       }
-      }
-      val response = await(result)
-      response.header.status shouldBe OK
+      }) shouldBe OK
     }
 
     "indicate there's no logged in user where there isn't a valid bearer token" in {
@@ -64,13 +61,11 @@ class AuthenticationSpec extends VatRegSpec with BeforeAndAfter {
       when(mockAuth.getCurrentAuthority()(Matchers.any())).
         thenReturn(Future.successful(None))
 
-      val result = Authenticated.authenticated { authResult => {
+      status(Authenticated.authenticated { authResult => {
         authResult shouldBe NotLoggedIn
         Future.successful(Results.Forbidden)
       }
-      }
-      val response = await(result)
-      response.header.status shouldBe FORBIDDEN
+      }) shouldBe FORBIDDEN
     }
   }
 }

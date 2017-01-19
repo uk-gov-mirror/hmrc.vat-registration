@@ -26,7 +26,7 @@ import scala.concurrent.Future
 
 trait VATMocks {
 
-  this:MockitoSugar =>
+  this: MockitoSugar =>
 
   lazy val mockAuthConnector = mock[AuthConnector]
 

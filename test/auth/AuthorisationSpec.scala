@@ -55,13 +55,11 @@ class AuthorisationSpec extends VatRegSpec with BeforeAndAfter {
       when(mockAuth.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(None))
       when(mockResource.getInternalId(Matchers.any())).thenReturn(Future.successful(None))
 
-      val result = Authorisation.authorised("xxx") { authResult => {
+      status(Authorisation.authorised("xxx") { authResult => {
         authResult shouldBe NotLoggedInOrAuthorised
         Future.successful(Results.Forbidden)
       }
-      }
-      val response = await(result)
-      response.header.status shouldBe FORBIDDEN
+      }) shouldBe FORBIDDEN
     }
 
     "provided an authorised result when logged in and a consistent resource" in {
@@ -73,13 +71,11 @@ class AuthorisationSpec extends VatRegSpec with BeforeAndAfter {
       when(mockAuth.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
       when(mockResource.getInternalId(Matchers.eq(regId))).thenReturn(Future.successful(Some((regId, userIDs.internalId))))
 
-      val result = Authorisation.authorised(regId) { authResult => {
+      status(Authorisation.authorised(regId) { authResult => {
         authResult shouldBe Authorised(a)
         Future.successful(Results.Ok)
       }
-      }
-      val response = await(result)
-      response.header.status shouldBe OK
+      }) shouldBe OK
     }
 
     "provided a not-authorised result when logged in and an inconsistent resource" in {
@@ -91,13 +87,11 @@ class AuthorisationSpec extends VatRegSpec with BeforeAndAfter {
       when(mockAuth.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
       when(mockResource.getInternalId(Matchers.eq(regId))).thenReturn(Future.successful(Some((regId, userIDs.internalId + "xxx"))))
 
-      val result = Authorisation.authorised(regId) { authResult => {
+      status(Authorisation.authorised(regId) { authResult => {
         authResult shouldBe NotAuthorised(a)
         Future.successful(Results.Ok)
       }
-      }
-      val response = await(result)
-      response.header.status shouldBe OK
+      }) shouldBe OK
     }
 
     "provide a not-found result when logged in and no resource for the identifier" in {
@@ -107,13 +101,11 @@ class AuthorisationSpec extends VatRegSpec with BeforeAndAfter {
       when(mockAuth.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
       when(mockResource.getInternalId(Matchers.any())).thenReturn(Future.successful(None))
 
-      val result = Authorisation.authorised("xxx") { authResult => {
+      status(Authorisation.authorised("xxx") { authResult => {
         authResult shouldBe AuthResourceNotFound(a)
         Future.successful(Results.Ok)
       }
-      }
-      val response = await(result)
-      response.header.status shouldBe OK
+      }) shouldBe OK
     }
 
     "return a Forbidden status when a user is not logged in" in {
@@ -124,9 +116,7 @@ class AuthorisationSpec extends VatRegSpec with BeforeAndAfter {
       when(mockAuth.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(None))
       when(mockResource.getInternalId(Matchers.any())).thenReturn(Future.successful(Some((regId, userIDs.internalId + "xxx"))))
 
-      val result = Authorisation.authorisedFor("xxx")(tstResultFunc)
-      val response = await(result)
-      response.header.status shouldBe FORBIDDEN
+      status(Authorisation.authorisedFor("xxx")(tstResultFunc)) shouldBe FORBIDDEN
     }
 
     "return a Not Found status when a user has no corresponding registration ID" in {
@@ -136,9 +126,7 @@ class AuthorisationSpec extends VatRegSpec with BeforeAndAfter {
       when(mockAuth.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
       when(mockResource.getInternalId(Matchers.any())).thenReturn(Future.successful(None))
 
-      val result = Authorisation.authorisedFor("xxx")(tstResultFunc)
-      val response = await(result)
-      response.header.status shouldBe NOT_FOUND
+      status(Authorisation.authorisedFor("xxx")(tstResultFunc)) shouldBe NOT_FOUND
     }
 
     "return a Forbidden status when a user has a different registration ID to their auth context's ID" in {
@@ -148,9 +136,7 @@ class AuthorisationSpec extends VatRegSpec with BeforeAndAfter {
       when(mockAuth.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
       when(mockResource.getInternalId(Matchers.any())).thenReturn(Future.successful(Some(("xxx", "NotTiid"))))
 
-      val result = Authorisation.authorisedFor("xxx")(tstResultFunc)
-      val response = await(result)
-      response.header.status shouldBe FORBIDDEN
+      status(Authorisation.authorisedFor("xxx")(tstResultFunc)) shouldBe FORBIDDEN
     }
 
     "allow an authorised user to complete their action" in {
@@ -160,9 +146,7 @@ class AuthorisationSpec extends VatRegSpec with BeforeAndAfter {
       when(mockAuth.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
       when(mockResource.getInternalId(Matchers.any())).thenReturn(Future.successful(Some(("xxx", a.ids.internalId))))
 
-      val result = Authorisation.authorisedFor("xxx")(tstResultFunc)
-      val response = await(result)
-      response.header.status shouldBe OK
+      status(Authorisation.authorisedFor("xxx")(tstResultFunc)) shouldBe OK
     }
 
 
