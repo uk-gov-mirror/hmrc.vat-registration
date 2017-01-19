@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-package controller
+package common.exceptions
 
-import controllers.HelloWorldController
-import helpers.VatRegSpec
-import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import scala.util.control.NoStackTrace
 
+object DBExceptions extends DBExceptions
 
-class HelloWorldControllerSpec extends VatRegSpec {
+trait DBExceptions {
 
-  "GET /" should {
-    "return 200" in {
-      val result = HelloWorldController.hello(FakeRequest())
-      status(result) shouldBe OK
-    }
-  }
+  class PreExistingRegDocument(regId: String) extends NoStackTrace
 
+  class MissingRegDocument(regId: String) extends NoStackTrace
+
+  class UpdateFailed(regId: String, attemptedModel: String) extends NoStackTrace
+
+  class InsertFailed(regId: String, attemptedModel: String) extends NoStackTrace
+
+  class DeleteFailed(regId: String, msg: String) extends NoStackTrace
 
 }

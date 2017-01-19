@@ -16,7 +16,9 @@
 
 package helpers
 
+import mocks.VATMocks
 import org.scalatest.Inside
-import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
+import org.scalatest.mockito.MockitoSugar
+import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
-abstract class VatRegSpec extends PlaySpec with OneAppPerSuite with Inside
+abstract class VatRegSpec extends UnitSpec with WithFakeApplication with Inside with MockitoSugar with VATMocks

@@ -14,22 +14,15 @@
  * limitations under the License.
  */
 
-package controller
-
-import controllers.HelloWorldController
-import helpers.VatRegSpec
-import play.api.test.FakeRequest
-import play.api.test.Helpers._
+package common
 
 
-class HelloWorldControllerSpec extends VatRegSpec {
+sealed trait DBResponse
 
-  "GET /" should {
-    "return 200" in {
-      val result = HelloWorldController.hello(FakeRequest())
-      status(result) shouldBe OK
-    }
-  }
+case class DBSuccessResponse[T](responseObject: T) extends DBResponse
 
+case object DBNotFoundResponse extends DBResponse
 
-}
+case object DBDuplicateResponse extends DBResponse
+
+case class DBErrorResponse(err: Throwable) extends DBResponse

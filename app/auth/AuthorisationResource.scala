@@ -14,22 +14,10 @@
  * limitations under the License.
  */
 
-package controller
+package auth
 
-import controllers.HelloWorldController
-import helpers.VatRegSpec
-import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import scala.concurrent.Future
 
-
-class HelloWorldControllerSpec extends VatRegSpec {
-
-  "GET /" should {
-    "return 200" in {
-      val result = HelloWorldController.hello(FakeRequest())
-      status(result) shouldBe OK
-    }
-  }
-
-
+trait AuthorisationResource[I] {
+  def getInternalId(id: I): Future[Option[(I, String)]]
 }

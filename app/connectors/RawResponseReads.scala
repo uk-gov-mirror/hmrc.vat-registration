@@ -14,22 +14,13 @@
  * limitations under the License.
  */
 
-package controller
+package connectors
 
-import controllers.HelloWorldController
-import helpers.VatRegSpec
-import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import uk.gov.hmrc.play.http.{HttpReads, HttpResponse}
 
+trait RawResponseReads {
 
-class HelloWorldControllerSpec extends VatRegSpec {
-
-  "GET /" should {
-    "return 200" in {
-      val result = HelloWorldController.hello(FakeRequest())
-      status(result) shouldBe OK
-    }
+  implicit val httpReads: HttpReads[HttpResponse] = new HttpReads[HttpResponse] {
+    override def read(method: String, url: String, response: HttpResponse) = response
   }
-
-
 }

@@ -16,12 +16,12 @@
 
 package controllers
 
-import javax.inject.Inject
-
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
-class HelloWorldController @Inject()() extends BaseController {
+object HelloWorldController extends HelloWorldController
+
+trait HelloWorldController extends BaseController {
 
   def hello: Action[AnyContent] = Action(Ok("Hello world"))
 

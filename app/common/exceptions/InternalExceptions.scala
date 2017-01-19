@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-package controller
+package common.exceptions
 
-import controllers.HelloWorldController
-import helpers.VatRegSpec
-import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import common.DBResponse
 
+object InternalExceptions extends InternalExceptions
 
-class HelloWorldControllerSpec extends VatRegSpec {
+trait InternalExceptions {
 
-  "GET /" should {
-    "return 200" in {
-      val result = HelloWorldController.hello(FakeRequest())
-      status(result) shouldBe OK
-    }
-  }
+  class IncorrectDBSuccessResponseException(expected: Any, actual: Any) extends Exception(
+    s"Success Response of type [${actual.getClass.toString}] did not match expected type [${expected.getClass.toString}]"
+  )
 
+  class UnexpextedDBResponseException(action: String, resp: DBResponse) extends Exception(
+    s"Unexpected DB Response of type [${resp.getClass.toString}] returned in action $action"
+  )
 
 }
