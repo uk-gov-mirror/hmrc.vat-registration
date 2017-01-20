@@ -26,7 +26,9 @@ import scala.concurrent.Future
 
 object HelloWorldController extends HelloWorldController {
 
+  // $COVERAGE-OFF$
   override val auth = AuthConnector
+  // $COVERAGE-ON$
 
 }
 

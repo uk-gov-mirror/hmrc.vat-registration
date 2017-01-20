@@ -36,7 +36,8 @@ class HelloWorldControllerSpec extends VatRegSpec {
   "GET /" should {
 
     "return 403" in {
-      val result = HelloWorldController.hello(FakeRequest())
+      AuthorisationMocks.mockNotLoggedInOrAuthorised
+      val result = TestController.hello(FakeRequest())
       status(result) shouldBe FORBIDDEN
     }
 
