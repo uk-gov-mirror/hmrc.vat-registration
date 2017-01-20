@@ -19,12 +19,13 @@ package mocks
 import connectors.{AuthConnector, Authority}
 import org.mockito.Matchers
 import org.mockito.Mockito._
+import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait VATMocks {
+trait VatMocks {
 
   this: MockitoSugar =>
 
@@ -32,20 +33,21 @@ trait VATMocks {
 
   object AuthorisationMocks {
 
-    def mockSuccessfulAuthorisation(registrationId: String, authority: Authority) = {
+    def mockSuccessfulAuthorisation(registrationId: String, authority: Authority): OngoingStubbing[Future[Option[Authority]]] = {
       when(mockAuthConnector.getCurrentAuthority()(Matchers.any()))
         .thenReturn(Future.successful(Some(authority)))
     }
 
-    def mockNotLoggedInOrAuthorised = {
+    def mockNotLoggedInOrAuthorised: OngoingStubbing[Future[Option[Authority]]] = {
       when(mockAuthConnector.getCurrentAuthority()(Matchers.any[HeaderCarrier]()))
         .thenReturn(Future.successful(None))
     }
 
-    def mockNotAuthorised(registrationId: String, authority: Authority) = {
+    def mockNotAuthorised(registrationId: String, authority: Authority): OngoingStubbing[Future[Option[Authority]]] = {
       when(mockAuthConnector.getCurrentAuthority()(Matchers.any()))
         .thenReturn(Future.successful(Some(authority)))
     }
+
   }
 
 }

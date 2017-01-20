@@ -16,13 +16,29 @@
 
 package controllers
 
+import auth.{Authenticated, LoggedIn, NotLoggedIn}
+import connectors.AuthConnector
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
-object HelloWorldController extends HelloWorldController
+import scala.concurrent.Future
 
-trait HelloWorldController extends BaseController {
+object HelloWorldController extends HelloWorldController {
 
-  def hello: Action[AnyContent] = Action(Ok("Hello world"))
+  override val auth = AuthConnector
+
+}
+
+trait HelloWorldController extends BaseController with Authenticated {
+
+  def hello: Action[AnyContent] = Action.async {
+    implicit request =>
+      authenticated {
+        case NotLoggedIn => Future.successful(Forbidden)
+        case LoggedIn(context) =>
+          Future.successful(Ok(Json.toJson(context)))
+      }
+  }
 
 }

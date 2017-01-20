@@ -18,18 +18,33 @@ package controller
 
 import controllers.HelloWorldController
 import helpers.VatRegSpec
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+
+import scala.concurrent.Future
 
 
 class HelloWorldControllerSpec extends VatRegSpec {
 
+  val testId = "testId"
+
+  object TestController extends HelloWorldController {
+    override val auth = mockAuthConnector
+  }
+
   "GET /" should {
-    "return 200" in {
+
+    "return 403" in {
       val result = HelloWorldController.hello(FakeRequest())
+      status(result) shouldBe FORBIDDEN
+    }
+
+    "return 200" in {
+      AuthorisationMocks.mockSuccessfulAuthorisation(testId, testAuthority(testId))
+      val result: Future[Result] = TestController.hello()(FakeRequest())
       status(result) shouldBe OK
     }
   }
-
 
 }

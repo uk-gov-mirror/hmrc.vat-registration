@@ -16,9 +16,14 @@
 
 package helpers
 
-import mocks.VATMocks
+import connectors.{Authority, UserIds}
+import mocks.VatMocks
 import org.scalatest.Inside
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
-abstract class VatRegSpec extends UnitSpec with WithFakeApplication with Inside with MockitoSugar with VATMocks
+abstract class VatRegSpec extends UnitSpec with WithFakeApplication with Inside with MockitoSugar with VatMocks {
+
+  protected def testAuthority(userId: String): Authority = Authority(userId, userId, userId, UserIds(userId, userId))
+
+}

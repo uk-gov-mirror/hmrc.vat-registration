@@ -26,18 +26,17 @@ import uk.gov.hmrc.play.http.{HeaderCarrier, _}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class Authority(
-                      uri: String,
-                      gatewayId: String,
-                      userDetailsLink: String,
-                      ids: UserIds
-                    )
 
-case class UserIds(internalId: String,
-                   externalId: String)
+case class UserIds(internalId: String, externalId: String)
 
 object UserIds {
   implicit val format = Json.format[UserIds]
+}
+
+case class Authority(uri: String, gatewayId: String, userDetailsLink: String, ids: UserIds)
+
+object Authority {
+  implicit val format = Json.format[Authority]
 }
 
 trait AuthConnector extends ServicesConfig with RawResponseReads {

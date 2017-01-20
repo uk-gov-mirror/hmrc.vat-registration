@@ -40,7 +40,7 @@ trait Authorisation[I] {
   val auth: AuthConnector
   val resourceConn: AuthorisationResource[I]
 
-  def authorised(id: I)(f: => AuthorisationResult => Future[Result])(implicit hc: HeaderCarrier) = {
+  def authorised(id: I)(f: => AuthorisationResult => Future[Result])(implicit hc: HeaderCarrier): Future[Result] = {
     for {
       authority <- auth.getCurrentAuthority()
       resource <- resourceConn.getInternalId(id)
