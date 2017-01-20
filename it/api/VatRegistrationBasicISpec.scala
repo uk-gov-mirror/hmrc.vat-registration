@@ -22,7 +22,7 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WS
 import play.api.test.FakeApplication
 
-class VatRegistrationBasicISpec extends IntegrationSpecBase {
+class VatRegistrationBassbticISpec extends IntegrationSpecBase {
 
   val mockHost = WiremockHelper.wiremockHost
   val mockPort = WiremockHelper.wiremockPort
@@ -38,7 +38,7 @@ class VatRegistrationBasicISpec extends IntegrationSpecBase {
   private def client(path: String) = WS.url(s"http://localhost:$port$path").withFollowRedirects(false)
 
 
-  "PAYE Registration API - for initial / basic calls" should {
+  "VAT Registration API - for initial / basic calls" should {
 
     def setupSimpleAuthMocks(): StubMapping = {
       stubPost("/write/audit", OK, """{"x":2}""")
