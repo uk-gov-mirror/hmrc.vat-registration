@@ -22,6 +22,7 @@ import org.mockito.Matchers
 import org.mockito.Mockito._
 import org.scalatest._
 import play.api.mvc.Results
+import play.api.mvc.Results.Forbidden
 import play.api.test.Helpers._
 import uk.gov.hmrc.play.http.HeaderCarrier
 
@@ -30,6 +31,7 @@ import scala.concurrent.Future
 class AuthenticationSpec extends VatRegSpec with BeforeAndAfter {
 
   implicit val hc = HeaderCarrier()
+  implicit val uuh = () => Forbidden
 
   val mockAuth = mock[AuthConnector]
 
@@ -46,25 +48,20 @@ class AuthenticationSpec extends VatRegSpec with BeforeAndAfter {
     "provided a logged in auth result when there is a valid bearer token" in {
 
       val a = Authority("x", "y", "z", UserIds("tiid", "teid"))
-
       when(mockAuth.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
 
-      status(Authenticated.authenticated { authResult => {
-        authResult shouldBe LoggedIn(a)
-        Future.successful(Results.Ok)
-      }
+      status(Authenticated.authenticated { authResult =>
+        authResult shouldBe a
+        Results.Ok
       }) shouldBe OK
     }
 
     "indicate there's no logged in user where there isn't a valid bearer token" in {
 
-      when(mockAuth.getCurrentAuthority()(Matchers.any())).
-        thenReturn(Future.successful(None))
+      when(mockAuth.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(None))
 
-      status(Authenticated.authenticated { authResult => {
-        authResult shouldBe NotLoggedIn
-        Future.successful(Results.Forbidden)
-      }
+      status(Authenticated.authenticated { authResult =>
+        Results.Ok
       }) shouldBe FORBIDDEN
     }
   }

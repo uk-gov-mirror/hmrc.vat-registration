@@ -16,13 +16,12 @@
 
 package controllers
 
-import auth.{Authenticated, LoggedIn, NotLoggedIn}
+import auth.Authenticated
 import connectors.AuthConnector
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
-import scala.concurrent.Future
 
 object HelloWorldController extends HelloWorldController {
 
@@ -37,9 +36,7 @@ trait HelloWorldController extends BaseController with Authenticated {
   def hello: Action[AnyContent] = Action.async {
     implicit request =>
       authenticated {
-        case NotLoggedIn => Future.successful(Forbidden)
-        case LoggedIn(context) =>
-          Future.successful(Ok(Json.toJson(context)))
+        user => Ok(Json.toJson(user))
       }
   }
 
