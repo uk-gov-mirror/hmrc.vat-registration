@@ -22,7 +22,7 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WS
 import play.api.test.FakeApplication
 
-class VatRegistrationBassbticISpec extends IntegrationSpecBase {
+class VatRegistrationBasicISpec extends IntegrationSpecBase {
 
   val mockHost = WiremockHelper.wiremockHost
   val mockPort = WiremockHelper.wiremockPort
