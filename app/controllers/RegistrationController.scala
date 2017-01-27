@@ -16,21 +16,23 @@
 
 package controllers
 
+import javax.inject.Inject
+
 import auth.Authenticated
 import connectors.AuthConnector
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 
-class HelloWorldController extends VatRegistrationController with Authenticated {
+class RegistrationController extends VatRegistrationController with Authenticated {
 
   // $COVERAGE-OFF$
-  override val auth: AuthConnector = AuthConnector
+  override val auth = AuthConnector
   // $COVERAGE-ON$
 
-  def hello: Action[AnyContent] = Action.async {
+  def newVatRegistration: Action[AnyContent] = Action.async {
     implicit request =>
-      authenticated {
-        user => Ok(Json.toJson(user))
+      authenticated { user =>
+        Ok(Json.toJson(user))
       }
   }
 

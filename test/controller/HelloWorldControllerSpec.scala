@@ -29,7 +29,7 @@ class HelloWorldControllerSpec extends VatRegSpec {
 
   val testId = "testId"
 
-  object TestController extends HelloWorldController {
+  class TestController extends HelloWorldController {
     override val auth = mockAuthConnector
   }
 
@@ -37,13 +37,13 @@ class HelloWorldControllerSpec extends VatRegSpec {
 
     "return 403" in {
       AuthorisationMocks.mockNotLoggedInOrAuthorised
-      val result = TestController.hello(FakeRequest())
+      val result = new TestController().hello(FakeRequest())
       status(result) shouldBe FORBIDDEN
     }
 
     "return 200" in {
       AuthorisationMocks.mockSuccessfulAuthorisation(testId, testAuthority(testId))
-      val result: Future[Result] = TestController.hello()(FakeRequest())
+      val result: Future[Result] = new TestController().hello()(FakeRequest())
       status(result) shouldBe OK
     }
   }

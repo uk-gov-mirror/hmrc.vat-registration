@@ -14,24 +14,11 @@
  * limitations under the License.
  */
 
-package controllers
+package controller
 
-import auth.Authenticated
-import connectors.AuthConnector
-import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent}
-
-class HelloWorldController extends VatRegistrationController with Authenticated {
-
-  // $COVERAGE-OFF$
-  override val auth: AuthConnector = AuthConnector
-  // $COVERAGE-ON$
-
-  def hello: Action[AnyContent] = Action.async {
-    implicit request =>
-      authenticated {
-        user => Ok(Json.toJson(user))
-      }
-  }
+/**
+  * Created by elie on 27/01/17.
+  */
+class RegistrationControllerSpec {
 
 }
