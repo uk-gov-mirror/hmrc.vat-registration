@@ -16,8 +16,6 @@
 
 package controllers
 
-import javax.inject.Inject
-
 import auth.Authenticated
 import connectors.AuthConnector
 import play.api.libs.json.Json
@@ -26,7 +24,7 @@ import play.api.mvc.{Action, AnyContent}
 class RegistrationController extends VatRegistrationController with Authenticated {
 
   // $COVERAGE-OFF$
-  override val auth = AuthConnector
+  override val auth: AuthConnector  = AuthConnector
   // $COVERAGE-ON$
 
   def newVatRegistration: Action[AnyContent] = Action.async {
