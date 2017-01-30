@@ -17,7 +17,7 @@
 package repositories
 
 import java.time.LocalDateTime
-import javax.inject.Inject
+import javax.inject.{Inject, Named, Provider}
 
 import auth.AuthorisationResource
 import com.google.inject.ImplementedBy
@@ -25,7 +25,7 @@ import common.exceptions.DBExceptions._
 import helpers.DateHelper._
 import models._
 import play.api.Logger
-import play.api.libs.json.Format
+import play.modules.reactivemongo.MongoDbConnection
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONDocument, BSONObjectID, _}
@@ -43,10 +43,14 @@ trait RegistrationRepository {
 
 }
 
-class RegistrationMongoRepository @Inject() (mongo: () => DB, format: Format[VatRegistration]) extends ReactiveRepository[VatRegistration, BSONObjectID](
+class MongoDBProvider @Inject() extends Function0[DB] with MongoDbConnection {
+  def apply: DB = db()
+}
+
+class RegistrationMongoRepository @Inject()( mongoProvider: Function0[DB] ) extends ReactiveRepository[VatRegistration, BSONObjectID](
   collectionName = "registration-information", //TODO confirm name of collection
-  mongo = mongo,
-  domainFormat = format
+  mongo = mongoProvider,
+  domainFormat = VatRegistration.jsonFormat
 ) with RegistrationRepository
   with AuthorisationResource[String] {
 
@@ -59,9 +63,7 @@ class RegistrationMongoRepository @Inject() (mongo: () => DB, format: Format[Vat
     )
   )
 
-  private[repositories] def registrationIDSelector(registrationID: String): BSONDocument = BSONDocument(
-    "registrationID" -> BSONString(registrationID)
-  )
+  private[repositories] def registrationIDSelector(registrationID: String) = BSONDocument("registrationID" -> registrationID)
 
   override def createNewRegistration(registrationID: String, internalId: String): Future[VatRegistration] = {
     val newReg = VatRegistration(registrationID, internalId, LocalDateTime.now().toIsoTimestamp)

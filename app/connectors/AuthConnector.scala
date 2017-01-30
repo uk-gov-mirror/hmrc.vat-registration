@@ -40,7 +40,6 @@ object Authority {
   implicit val format = Json.format[Authority]
 }
 
-@ImplementedBy(classOf[VatRegAuthConnector])
 trait AuthConnector extends ServicesConfig with RawResponseReads {
 
   def serviceUrl: String

@@ -16,7 +16,6 @@
 
 package connectors
 
-import com.google.inject.ImplementedBy
 import config.WSHttp
 import models.external.CurrentProfile
 import play.api.Logger
@@ -40,7 +39,6 @@ case object BusinessRegistrationNotFoundResponse extends BusinessRegistrationRes
 case object BusinessRegistrationForbiddenResponse extends BusinessRegistrationResponse
 case class BusinessRegistrationErrorResponse(err: Exception) extends BusinessRegistrationResponse
 
-@ImplementedBy(classOf[VatRegBusinessRegistrationConnector])
 trait BusinessRegistrationConnector {
 
   val businessRegUrl: String

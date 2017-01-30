@@ -30,7 +30,7 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, vatRegistrati
   def newVatRegistration: Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { user =>
-        vatRegistrationService.createNewRegistration map {
+        vatRegistrationService.createNewRegistration(user.ids.internalId) map {
           case Right(vatScheme) => Created(Json.toJson(vatScheme))
           case _ => ServiceUnavailable
         }

@@ -56,8 +56,7 @@ trait VatMocks extends WSHTTPMock {
   object ServiceMocks {
 
     def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
-      when(mockRegistrationService.createNewRegistration(Matchers.any())).thenReturn(Future.successful(Right(VatScheme(registrationId))))
-
+      when(mockRegistrationService.createNewRegistration(Matchers.any())(Matchers.any())).thenReturn(Future.successful(Right(VatScheme(registrationId))))
     }
 
   }

@@ -18,28 +18,29 @@ package services
 
 import javax.inject.Inject
 
-import com.google.inject.ImplementedBy
-import connectors.{BusinessRegistrationConnector, BusinessRegistrationResponse, BusinessRegistrationSuccessResponse}
+import connectors.{BusinessRegistrationConnector, BusinessRegistrationSuccessResponse}
 import models.VatScheme
+import repositories.RegistrationRepository
 import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-@ImplementedBy(classOf[VatRegistrationService])
 trait RegistrationService {
 
-  def createNewRegistration(implicit headerCarrier: HeaderCarrier): Future[Either[BusinessRegistrationResponse, VatScheme]]
+  def createNewRegistration(internalId: String)(implicit headerCarrier: HeaderCarrier): Future[Either[Exception, VatScheme]]
 
 }
 
-class VatRegistrationService @Inject()(val brConnector: BusinessRegistrationConnector) extends RegistrationService {
+class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnector, registrationRepository: RegistrationRepository) extends RegistrationService {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  override def createNewRegistration(implicit headerCarrier: HeaderCarrier): Future[Either[BusinessRegistrationResponse, VatScheme]] = {
-    brConnector.retrieveCurrentProfile map {
-      case BusinessRegistrationSuccessResponse(profile) => Right(VatScheme(profile.registrationID))
-      case res@_ => Left(res)
+  override def createNewRegistration(internalId: String)(implicit headerCarrier: HeaderCarrier): Future[Either[Exception, VatScheme]] = {
+    (for {
+      BusinessRegistrationSuccessResponse(profile) <- brConnector.retrieveCurrentProfile
+      registration <- registrationRepository.createNewRegistration(profile.registrationID, internalId)
+    } yield Right(VatScheme(registration.registrationId))) recover {
+      case ex: Exception => Left(ex)
     }
   }
 
