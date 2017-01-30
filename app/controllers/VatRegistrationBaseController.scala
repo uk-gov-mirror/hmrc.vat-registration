@@ -17,21 +17,6 @@
 package controllers
 
 import auth.Authenticated
-import connectors.AuthConnector
-import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent}
+import uk.gov.hmrc.play.microservice.controller.BaseController
 
-class RegistrationController extends VatRegistrationController with Authenticated {
-
-  // $COVERAGE-OFF$
-  override val auth: AuthConnector  = AuthConnector
-  // $COVERAGE-ON$
-
-  def newVatRegistration: Action[AnyContent] = Action.async {
-    implicit request =>
-      authenticated { user =>
-        Ok(Json.toJson(user))
-      }
-  }
-
-}
+abstract class VatRegistrationBaseController extends BaseController with Authenticated

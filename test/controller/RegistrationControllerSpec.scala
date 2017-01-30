@@ -16,7 +16,7 @@
 
 package controller
 
-import controllers.RegistrationController
+import controllers.VatRegistrationController
 import helpers.VatRegSpec
 import play.api.mvc.Result
 import play.api.test.FakeRequest
@@ -30,9 +30,7 @@ class RegistrationControllerSpec extends VatRegSpec {
   val testId = "testId"
 
   class Setup {
-    val controller = new RegistrationController {
-      override val auth = mockAuthConnector
-    }
+    val controller = new VatRegistrationController(mockAuthConnector, mockRegistrationService)
   }
 
   "GET /" should {
@@ -43,10 +41,11 @@ class RegistrationControllerSpec extends VatRegSpec {
       status(response) shouldBe FORBIDDEN
     }
 
-    "return 200" in new Setup {
-      AuthorisationMocks.mockSuccessfulAuthorisation(testId, testAuthority(testId))
+    "return 201" in new Setup {
+      AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+      ServiceMocks.mockSuccessfulCreateNewRegistration(testId)
       val response: Future[Result] = controller.newVatRegistration()(FakeRequest())
-      status(response) shouldBe OK
+      status(response) shouldBe CREATED
     }
 
   }

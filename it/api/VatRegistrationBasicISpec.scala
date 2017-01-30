@@ -50,7 +50,7 @@ class VatRegistrationBasicISpec extends IntegrationSpecBase {
     "Return a 200 for " in {
       setupSimpleAuthMocks()
 
-      client(controllers.routes.RegistrationController.newVatRegistration().url) map { response =>
+      client(controllers.routes.VatRegistrationController.newVatRegistration().url) map { response =>
         response.status shouldBe OK
         response.json shouldBe Json.parse("""{"uri":"xxx","gatewayId":"xxx2","userDetailsLink":"xxx3","ids":{"internalId":"Int-xxx","externalId":"Ext-xxx"}}""")
       }
@@ -58,7 +58,7 @@ class VatRegistrationBasicISpec extends IntegrationSpecBase {
     }
 
     "Return a 403 for " in {
-      client(controllers.routes.RegistrationController.newVatRegistration().url) map { response =>
+      client(controllers.routes.VatRegistrationController.newVatRegistration().url) map { response =>
         response.status shouldBe FORBIDDEN
       }
     }

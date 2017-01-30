@@ -16,6 +16,25 @@
 
 package controllers
 
-import uk.gov.hmrc.play.microservice.controller.BaseController
+import javax.inject.Inject
 
-abstract class VatRegistrationController extends BaseController
+import connectors.AuthConnector
+import play.api.libs.json.Json
+import play.api.mvc.{Action, AnyContent}
+import services.RegistrationService
+
+import scala.concurrent.ExecutionContext.Implicits.global
+
+class VatRegistrationController @Inject()(val auth: AuthConnector, vatRegistrationService: RegistrationService) extends VatRegistrationBaseController {
+
+  def newVatRegistration: Action[AnyContent] = Action.async {
+    implicit request =>
+      authenticated { user =>
+        vatRegistrationService.createNewRegistration map {
+          case Right(vatScheme) => Created(Json.toJson(vatScheme))
+          case _ => ServiceUnavailable
+        }
+      }
+  }
+
+}

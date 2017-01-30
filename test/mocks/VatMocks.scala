@@ -17,10 +17,12 @@
 package mocks
 
 import connectors.{AuthConnector, Authority}
+import models.VatScheme
 import org.mockito.Matchers
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
+import services.RegistrationService
 import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -30,10 +32,11 @@ trait VatMocks extends WSHTTPMock {
   this: MockitoSugar =>
 
   lazy val mockAuthConnector = mock[AuthConnector]
+  lazy val mockRegistrationService = mock[RegistrationService]
 
   object AuthorisationMocks {
 
-    def mockSuccessfulAuthorisation(registrationId: String, authority: Authority): OngoingStubbing[Future[Option[Authority]]] = {
+    def mockSuccessfulAuthorisation(authority: Authority): OngoingStubbing[Future[Option[Authority]]] = {
       when(mockAuthConnector.getCurrentAuthority()(Matchers.any()))
         .thenReturn(Future.successful(Some(authority)))
     }
@@ -43,9 +46,18 @@ trait VatMocks extends WSHTTPMock {
         .thenReturn(Future.successful(None))
     }
 
-    def mockNotAuthorised(registrationId: String, authority: Authority): OngoingStubbing[Future[Option[Authority]]] = {
+    def mockNotAuthorised(authority: Authority): OngoingStubbing[Future[Option[Authority]]] = {
       when(mockAuthConnector.getCurrentAuthority()(Matchers.any()))
         .thenReturn(Future.successful(Some(authority)))
+    }
+
+  }
+
+  object ServiceMocks {
+
+    def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
+      when(mockRegistrationService.createNewRegistration(Matchers.any())).thenReturn(Future.successful(Right(VatScheme(registrationId))))
+
     }
 
   }

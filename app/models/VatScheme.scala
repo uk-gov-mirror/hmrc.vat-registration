@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package common.exceptions
+package models
 
-import scala.util.control.NoStackTrace
+import play.api.libs.json.Json
 
-object DBExceptions extends DBExceptions
+case class VatScheme(registrationId: String)
 
-trait DBExceptions {
-  class PreExistingRegDocument(regId: String) extends NoStackTrace
-  class MissingRegDocument(regId: String) extends NoStackTrace
-  class UpdateFailed(regId: String, attemptedModel: String) extends NoStackTrace
-  class InsertFailed(regId: String, attemptedModel: String) extends NoStackTrace
-  class DeleteFailed(regId: String, msg: String) extends NoStackTrace
-  class RetrieveFailed(regId: String) extends NoStackTrace
+
+object VatScheme {
+
+  implicit val jsonFormat = Json.format[VatScheme]
+
 }

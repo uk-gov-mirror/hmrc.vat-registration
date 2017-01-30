@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package common.exceptions
+package helpers
 
-import scala.util.control.NoStackTrace
+import java.time.format.DateTimeFormatter
 
-object DBExceptions extends DBExceptions
+object DateHelper {
 
-trait DBExceptions {
-  class PreExistingRegDocument(regId: String) extends NoStackTrace
-  class MissingRegDocument(regId: String) extends NoStackTrace
-  class UpdateFailed(regId: String, attemptedModel: String) extends NoStackTrace
-  class InsertFailed(regId: String, attemptedModel: String) extends NoStackTrace
-  class DeleteFailed(regId: String, msg: String) extends NoStackTrace
-  class RetrieveFailed(regId: String) extends NoStackTrace
+  val format: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+
+  implicit class DateTimeOps(dateTime: java.time.LocalDateTime) {
+    def toIsoTimestamp: String = format.format(dateTime)
+  }
+
 }

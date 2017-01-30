@@ -16,10 +16,10 @@
 
 package connectors
 
+import com.google.inject.ImplementedBy
 import config.WSHttp
-import models.external.{CurrentProfile, BusinessRegistrationRequest}
+import models.external.CurrentProfile
 import play.api.Logger
-import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http._
 
@@ -27,7 +27,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-object BusinessRegistrationConnector extends BusinessRegistrationConnector with ServicesConfig {
+class VatRegBusinessRegistrationConnector extends BusinessRegistrationConnector with ServicesConfig {
   //$COVERAGE-OFF$
   val businessRegUrl = baseUrl("business-registration")
   val http = WSHttp
@@ -40,6 +40,7 @@ case object BusinessRegistrationNotFoundResponse extends BusinessRegistrationRes
 case object BusinessRegistrationForbiddenResponse extends BusinessRegistrationResponse
 case class BusinessRegistrationErrorResponse(err: Exception) extends BusinessRegistrationResponse
 
+@ImplementedBy(classOf[VatRegBusinessRegistrationConnector])
 trait BusinessRegistrationConnector {
 
   val businessRegUrl: String

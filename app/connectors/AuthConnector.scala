@@ -16,6 +16,7 @@
 
 package connectors
 
+import com.google.inject.ImplementedBy
 import config.WSHttp
 import play.api.Logger
 import play.api.http.Status._
@@ -39,6 +40,7 @@ object Authority {
   implicit val format = Json.format[Authority]
 }
 
+@ImplementedBy(classOf[VatRegAuthConnector])
 trait AuthConnector extends ServicesConfig with RawResponseReads {
 
   def serviceUrl: String
@@ -75,7 +77,8 @@ trait AuthConnector extends ServicesConfig with RawResponseReads {
 
 }
 
-object AuthConnector extends AuthConnector {
+
+class VatRegAuthConnector extends AuthConnector {
   // $COVERAGE-OFF$
   lazy val serviceUrl = baseUrl("auth")
   // $COVERAGE-OFF$
