@@ -16,13 +16,35 @@
 
 package models
 
-import play.api.libs.json.Json
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
-case class VatScheme(registrationId: String)
-
+case class VatScheme(
+                      id: String,
+                      tradingDetails: VatTradingDetails,
+                      vatChoice: VatChoice
+                    )
 
 object VatScheme {
 
-  implicit val jsonFormat = Json.format[VatScheme]
+  import helpers.DateTimeHelpers._
+
+  def blank(id: String)(implicit dtp: DateTimeProvider) = VatScheme(id, VatTradingDetails(""), VatChoice(dtp(), ""))
+
+  val r =
+    (__ \ "ID").read[String] and
+      (__ \ "trading-details").read[VatTradingDetails] and
+      (__ \ "vat-choice").read[VatChoice]
+
+  val w =
+    (__ \ "ID").write[String] and
+      (__ \ "trading-details").write[VatTradingDetails] and
+      (__ \ "vat-choice").write[VatChoice]
+
+  val apiReads: Reads[VatScheme] = r(VatScheme.apply _)
+  val apiWrites: OWrites[VatScheme] = w(unlift(VatScheme.unapply))
+
+  implicit val format: OFormat[VatScheme] = OFormat(apiReads, apiWrites)
+
 
 }

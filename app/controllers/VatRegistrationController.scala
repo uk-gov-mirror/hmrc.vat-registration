@@ -18,7 +18,9 @@ package controllers
 
 import javax.inject.Inject
 
+import common.exceptions.GenericServiceException
 import connectors.AuthConnector
+import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import services.RegistrationService
@@ -30,9 +32,11 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, vatRegistrati
   def newVatRegistration: Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { user =>
-        vatRegistrationService.createNewRegistration(user.ids.internalId) map {
+        vatRegistrationService.createNewRegistration("regId") map {
           case Right(vatScheme) => Created(Json.toJson(vatScheme))
-          case _ => ServiceUnavailable
+          case Left(GenericServiceException(t)) =>
+            Logger.warn("Exception in service call", t)
+            ServiceUnavailable
         }
       }
   }

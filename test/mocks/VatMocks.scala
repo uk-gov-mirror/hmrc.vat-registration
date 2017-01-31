@@ -17,7 +17,9 @@
 package mocks
 
 import connectors.{AuthConnector, Authority}
+import helpers.DateTimeHelpers.DateTimeProvider
 import models.VatScheme
+import org.joda.time.DateTime
 import org.mockito.Matchers
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
@@ -56,7 +58,8 @@ trait VatMocks extends WSHTTPMock {
   object ServiceMocks {
 
     def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
-      when(mockRegistrationService.createNewRegistration(Matchers.any())(Matchers.any())).thenReturn(Future.successful(Right(VatScheme(registrationId))))
+      implicit val dtp:DateTimeProvider = () => new DateTime(2017,1,31,13,6)
+      when(mockRegistrationService.createNewRegistration(Matchers.any())(Matchers.any())).thenReturn(Future.successful(Right(VatScheme.blank(registrationId))))
     }
 
   }

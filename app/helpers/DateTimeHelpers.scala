@@ -14,14 +14,23 @@
  * limitations under the License.
  */
 
-package models
+package helpers
 
-import play.api.libs.json.{Json, OFormat}
+import java.time.format.DateTimeFormatter
 
-case class VatRegistration(registrationId: String, internalId: String, timestamp: String)
+import org.joda.time.DateTime
 
-object VatRegistration {
+object DateTimeHelpers {
 
-  implicit val jsonFormat: OFormat[VatRegistration] = Json.format[VatRegistration]
+
+  type DateTimeProvider = () => DateTime
+
+  implicit val nowProvider: DateTimeProvider = () => DateTime.now()
+
+  val format: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+
+  implicit class DateTimeOps(dateTime: java.time.LocalDateTime) {
+    def toIsoTimestamp: String = format.format(dateTime)
+  }
 
 }

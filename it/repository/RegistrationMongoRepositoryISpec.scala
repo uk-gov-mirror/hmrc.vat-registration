@@ -16,8 +16,9 @@
 
 package repository
 
-import common.exceptions.DBExceptions.InsertFailed
-import models.VatRegistration
+import common.exceptions.InsertFailed
+import models.{VatChoice, VatScheme, VatTradingDetails}
+import org.joda.time.DateTime
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import repositories.{MongoDBProvider, RegistrationMongoRepository}
@@ -29,10 +30,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class RegistrationMongoRepositoryISpec
   extends UnitSpec with MongoSpecSupport with BeforeAndAfterEach with ScalaFutures with Eventually with WithFakeApplication {
 
-  private val reg = VatRegistration(registrationId = "AC123456", internalId = "09876", timestamp = "timestamp")
+  val fixedDate = new DateTime(2017, 1, 31, 13, 53)
+  private val internalId = "internalId"
+  private val reg = VatScheme(id = "AC123456", tradingDetails = VatTradingDetails("trading name"), VatChoice(fixedDate, "necessity"))
 
   class Setup {
-    val repository = new RegistrationMongoRepository(new MongoDBProvider())
+    val repository = new RegistrationMongoRepository(new MongoDBProvider(), "integration-testing")
     await(repository.drop)
     await(repository.ensureIndexes)
   }
@@ -41,12 +44,12 @@ class RegistrationMongoRepositoryISpec
 
     "create a new, blank VatRegistration with the correct ID" in new Setup {
       val actual = await(repository.createNewRegistration("AC234321", "09876"))
-      actual.registrationId shouldBe "AC234321"
+      actual.id shouldBe "AC234321"
     }
 
     "throw an Insert Failed exception when creating a new VAT reg when one already exists" in new Setup {
-      await(repository.createNewRegistration(reg.registrationId, reg.internalId))
-      an[InsertFailed] shouldBe thrownBy(await(repository.createNewRegistration(reg.registrationId, reg.internalId)))
+      await(repository.createNewRegistration(reg.id, internalId))
+      an[InsertFailed] shouldBe thrownBy(await(repository.createNewRegistration(reg.id, internalId)))
     }
   }
 
@@ -54,7 +57,7 @@ class RegistrationMongoRepositoryISpec
 
     "retrieve a registration object" in new Setup {
       await(repository.insert(reg))
-      val actual = await(repository.retrieveRegistration(reg.registrationId))
+      val actual = await(repository.retrieveRegistration(reg.id))
       actual shouldBe Some(reg)
     }
 

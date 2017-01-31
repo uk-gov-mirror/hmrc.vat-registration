@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, Provides}
 import repositories.{MongoDBProvider, RegistrationMongoRepository, RegistrationRepository}
-
 
 class Module extends AbstractModule {
 
@@ -27,6 +27,7 @@ class Module extends AbstractModule {
     bind(classOf[connectors.AuthConnector]).to(classOf[connectors.VatRegAuthConnector])
     bind(classOf[connectors.BusinessRegistrationConnector]).to(classOf[connectors.VatRegBusinessRegistrationConnector])
     bind(classOf[services.RegistrationService]).to(classOf[services.VatRegistrationService])
+    bindConstant().annotatedWith(Names.named("collectionName")).to("registration-information")
   }
 
 

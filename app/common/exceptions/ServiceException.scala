@@ -14,16 +14,8 @@
  * limitations under the License.
  */
 
-package helpers
+package common.exceptions
 
-import java.time.format.DateTimeFormatter
+sealed trait ServiceException
 
-object DateHelper {
-
-  val format: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
-
-  implicit class DateTimeOps(dateTime: java.time.LocalDateTime) {
-    def toIsoTimestamp: String = format.format(dateTime)
-  }
-
-}
+final case class GenericServiceException(throwable: Throwable) extends ServiceException
