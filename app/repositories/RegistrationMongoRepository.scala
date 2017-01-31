@@ -17,7 +17,7 @@
 package repositories
 
 import java.time.LocalDateTime
-import javax.inject.{Inject, Named, Provider}
+import javax.inject.Inject
 
 import auth.AuthorisationResource
 import com.google.inject.ImplementedBy
@@ -47,7 +47,7 @@ class MongoDBProvider @Inject() extends Function0[DB] with MongoDbConnection {
   def apply: DB = db()
 }
 
-class RegistrationMongoRepository @Inject()( mongoProvider: Function0[DB] ) extends ReactiveRepository[VatRegistration, BSONObjectID](
+class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB]) extends ReactiveRepository[VatRegistration, BSONObjectID](
   collectionName = "registration-information", //TODO confirm name of collection
   mongo = mongoProvider,
   domainFormat = VatRegistration.jsonFormat
@@ -56,14 +56,16 @@ class RegistrationMongoRepository @Inject()( mongoProvider: Function0[DB] ) exte
 
   override def indexes: Seq[Index] = Seq(
     Index(
-      key = Seq("registrationID" -> IndexType.Ascending),
+      key = Seq("registrationId" -> IndexType.Ascending),
       name = Some("RegId"),
       unique = true,
       sparse = false
     )
   )
 
-  private[repositories] def registrationIDSelector(registrationID: String) = BSONDocument("registrationID" -> registrationID)
+  private[repositories] def registrationIdSelector(registrationID: String) = BSONDocument(
+    "registrationId" -> BSONString(registrationID)
+  )
 
   override def createNewRegistration(registrationID: String, internalId: String): Future[VatRegistration] = {
     val newReg = VatRegistration(registrationID, internalId, LocalDateTime.now().toIsoTimestamp)
@@ -81,12 +83,12 @@ class RegistrationMongoRepository @Inject()( mongoProvider: Function0[DB] ) exte
     case None => None
   }
 
-  override def retrieveRegistration(registrationID: String): Future[Option[VatRegistration]] = {
-    val selector = registrationIDSelector(registrationID)
+  override def retrieveRegistration(registrationId: String): Future[Option[VatRegistration]] = {
+    val selector = registrationIdSelector(registrationId)
     collection.find(selector).one[VatRegistration] recover {
       case e: Exception =>
-        Logger.error(s"Unable to retrieve VAT Registration for registration ID $registrationID, Error: ${e.getMessage}")
-        throw new RetrieveFailed(registrationID)
+        Logger.error(s"Unable to retrieve VAT Registration for registration ID $registrationId, Error: ${e.getMessage}")
+        throw new RetrieveFailed(registrationId)
     }
   }
 
