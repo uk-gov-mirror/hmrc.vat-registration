@@ -34,9 +34,9 @@ import scala.concurrent.Future
 
 trait RegistrationRepository {
 
-  def createNewRegistration(registrationID: String, internalId: String): Future[VatScheme]
+  def createNewRegistration(registrationId: String): Future[VatScheme]
 
-  def retrieveRegistration(registrationID: String): Future[Option[VatScheme]]
+  def retrieveRegistration(registrationId: String): Future[Option[VatScheme]]
 
 }
 
@@ -62,10 +62,10 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
 
   private[repositories] def registrationIdSelector(registrationID: String) = BSONDocument("ID" -> BSONString(registrationID))
 
-  override def createNewRegistration(registrationId: String, internalId: String): Future[VatScheme] = {
+  override def createNewRegistration(registrationId: String): Future[VatScheme] = {
     val newReg = VatScheme.blank(registrationId)
     collection.insert(newReg) map {
-      res => newReg
+      _ => newReg
     } recover {
       case e =>
         Logger.warn(s"Unable to insert new VAT Registration for registration ID $registrationId, Error: ${e.getMessage}")

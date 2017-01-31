@@ -28,21 +28,20 @@ import scala.concurrent.Future
 
 trait RegistrationService {
 
-  def createNewRegistration(internalId: String)(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatScheme]]
+  def createNewRegistration(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatScheme]]
 
 }
 
-class VatRegistrationService @Inject()(
-                                        brConnector: BusinessRegistrationConnector,
-                                        registrationRepository: RegistrationRepository
+class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnector,
+                                       registrationRepository: RegistrationRepository
                                       ) extends RegistrationService {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  override def createNewRegistration(internalId: String)(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatScheme]] = {
+  override def createNewRegistration(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatScheme]] = {
     (for {
       BusinessRegistrationSuccessResponse(profile) <- brConnector.retrieveCurrentProfile
-      registration <- registrationRepository.createNewRegistration("registrationId", internalId)
+      registration <- registrationRepository.createNewRegistration(profile.registrationID)
     } yield Right(registration)) recover {
       case t: Throwable => Left(GenericServiceException(t))
     }

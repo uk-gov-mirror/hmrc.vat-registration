@@ -32,7 +32,7 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, vatRegistrati
   def newVatRegistration: Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { user =>
-        vatRegistrationService.createNewRegistration("regId") map {
+        vatRegistrationService.createNewRegistration map {
           case Right(vatScheme) => Created(Json.toJson(vatScheme))
           case Left(GenericServiceException(t)) =>
             Logger.warn("Exception in service call", t)

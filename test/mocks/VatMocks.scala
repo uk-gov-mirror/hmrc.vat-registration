@@ -59,7 +59,7 @@ trait VatMocks extends WSHTTPMock {
 
     def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
       implicit val dtp:DateTimeProvider = () => new DateTime(2017,1,31,13,6)
-      when(mockRegistrationService.createNewRegistration(Matchers.any())(Matchers.any())).thenReturn(Future.successful(Right(VatScheme.blank(registrationId))))
+      when(mockRegistrationService.createNewRegistration(Matchers.any())).thenReturn(Future.successful(Right(VatScheme.blank(registrationId))))
     }
 
   }

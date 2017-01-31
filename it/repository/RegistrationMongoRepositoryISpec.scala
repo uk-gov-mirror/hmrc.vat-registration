@@ -43,13 +43,13 @@ class RegistrationMongoRepositoryISpec
   "Calling createNewRegistration" should {
 
     "create a new, blank VatRegistration with the correct ID" in new Setup {
-      val actual = await(repository.createNewRegistration("AC234321", "09876"))
+      val actual = await(repository.createNewRegistration("AC234321"))
       actual.id shouldBe "AC234321"
     }
 
     "throw an Insert Failed exception when creating a new VAT reg when one already exists" in new Setup {
-      await(repository.createNewRegistration(reg.id, internalId))
-      an[InsertFailed] shouldBe thrownBy(await(repository.createNewRegistration(reg.id, internalId)))
+      await(repository.createNewRegistration(reg.id))
+      an[InsertFailed] shouldBe thrownBy(await(repository.createNewRegistration(reg.id)))
     }
   }
 
