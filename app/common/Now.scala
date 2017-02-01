@@ -23,6 +23,7 @@ import org.joda.time.DateTime
 
 object Now {
 
+// $COVERAGE-OFF$
   trait Now[T] {
     def apply(): T
   }
@@ -44,5 +45,6 @@ object Now {
   implicit object LocalDateTimeNow extends Now[LocalDateTime] {
     override def apply(): LocalDateTime = LocalDateTime.now()
   }
+// $COVERAGE-ON$
 
 }
