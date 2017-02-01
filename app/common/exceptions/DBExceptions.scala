@@ -18,18 +18,16 @@ package common.exceptions
 
 import scala.util.control.NoStackTrace
 
-object DBExceptions extends DBExceptions
+sealed trait DBExceptions
 
-trait DBExceptions {
+final case class PreExistingRegDocument(regId: String) extends NoStackTrace with DBExceptions
 
-  class PreExistingRegDocument(regId: String) extends NoStackTrace
+final case class MissingRegDocument(regId: String) extends NoStackTrace with DBExceptions
 
-  class MissingRegDocument(regId: String) extends NoStackTrace
+final case class UpdateFailed(regId: String, attemptedModel: String) extends NoStackTrace with DBExceptions
 
-  class UpdateFailed(regId: String, attemptedModel: String) extends NoStackTrace
+final case class InsertFailed(regId: String, attemptedModel: String) extends NoStackTrace with DBExceptions
 
-  class InsertFailed(regId: String, attemptedModel: String) extends NoStackTrace
+final case class DeleteFailed(regId: String, msg: String) extends NoStackTrace with DBExceptions
 
-  class DeleteFailed(regId: String, msg: String) extends NoStackTrace
-
-}
+final case class RetrieveFailed(regId: String) extends NoStackTrace with DBExceptions

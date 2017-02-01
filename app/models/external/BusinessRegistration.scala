@@ -14,30 +14,21 @@
  * limitations under the License.
  */
 
-package controllers
+package models.external
 
-import auth.Authenticated
-import connectors.AuthConnector
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.play.microservice.controller.BaseController
 
+case class BusinessRegistrationRequest(language: String)
 
-object HelloWorldController extends HelloWorldController {
-
-  // $COVERAGE-OFF$
-  override val auth = AuthConnector
-  // $COVERAGE-ON$
-
+object BusinessRegistrationRequest {
+  implicit val formats = Json.format[BusinessRegistrationRequest]
 }
 
-trait HelloWorldController extends BaseController with Authenticated {
+case class CurrentProfile(registrationID: String,
+                          completionCapacity : Option[String],
+                          language: String)
 
-  def hello: Action[AnyContent] = Action.async {
-    implicit request =>
-      authenticated {
-        user => Ok(Json.toJson(user))
-      }
-  }
-
+object CurrentProfile {
+  implicit val formats = Json.format[CurrentProfile]
 }
+

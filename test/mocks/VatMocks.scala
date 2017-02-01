@@ -17,23 +17,28 @@
 package mocks
 
 import connectors.{AuthConnector, Authority}
+import helpers.DateTimeHelpers.DateTimeProvider
+import models.VatScheme
+import org.joda.time.DateTime
 import org.mockito.Matchers
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
+import services.RegistrationService
 import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait VatMocks {
+trait VatMocks extends WSHTTPMock {
 
   this: MockitoSugar =>
 
   lazy val mockAuthConnector = mock[AuthConnector]
+  lazy val mockRegistrationService = mock[RegistrationService]
 
   object AuthorisationMocks {
 
-    def mockSuccessfulAuthorisation(registrationId: String, authority: Authority): OngoingStubbing[Future[Option[Authority]]] = {
+    def mockSuccessfulAuthorisation(authority: Authority): OngoingStubbing[Future[Option[Authority]]] = {
       when(mockAuthConnector.getCurrentAuthority()(Matchers.any()))
         .thenReturn(Future.successful(Some(authority)))
     }
@@ -43,9 +48,18 @@ trait VatMocks {
         .thenReturn(Future.successful(None))
     }
 
-    def mockNotAuthorised(registrationId: String, authority: Authority): OngoingStubbing[Future[Option[Authority]]] = {
+    def mockNotAuthorised(authority: Authority): OngoingStubbing[Future[Option[Authority]]] = {
       when(mockAuthConnector.getCurrentAuthority()(Matchers.any()))
         .thenReturn(Future.successful(Some(authority)))
+    }
+
+  }
+
+  object ServiceMocks {
+
+    def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
+      implicit val dtp:DateTimeProvider = () => new DateTime(2017,1,31,13,6)
+      when(mockRegistrationService.createNewRegistration(Matchers.any())).thenReturn(Future.successful(Right(VatScheme.blank(registrationId))))
     }
 
   }

@@ -33,9 +33,13 @@ object UserIds {
   implicit val format = Json.format[UserIds]
 }
 
-case class Authority(uri: String, gatewayId: String, userDetailsLink: String, ids: UserIds)
+case class Authority(uri: String, gatewayId: String, userDetailsLink: String, ids: UserIds) {
+  def internalId: String = ids.internalId
+
+}
 
 object Authority {
+
   implicit val format = Json.format[Authority]
 }
 
@@ -75,7 +79,8 @@ trait AuthConnector extends ServicesConfig with RawResponseReads {
 
 }
 
-object AuthConnector extends AuthConnector {
+
+class VatRegAuthConnector extends AuthConnector {
   // $COVERAGE-OFF$
   lazy val serviceUrl = baseUrl("auth")
   // $COVERAGE-OFF$

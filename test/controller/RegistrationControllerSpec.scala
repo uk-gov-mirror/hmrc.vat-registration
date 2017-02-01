@@ -16,7 +16,7 @@
 
 package controller
 
-import controllers.HelloWorldController
+import controllers.VatRegistrationController
 import helpers.VatRegSpec
 import play.api.mvc.Result
 import play.api.test.FakeRequest
@@ -25,27 +25,29 @@ import play.api.test.Helpers._
 import scala.concurrent.Future
 
 
-class HelloWorldControllerSpec extends VatRegSpec {
+class RegistrationControllerSpec extends VatRegSpec {
 
   val testId = "testId"
 
-  object TestController extends HelloWorldController {
-    override val auth = mockAuthConnector
+  class Setup {
+    val controller = new VatRegistrationController(mockAuthConnector, mockRegistrationService)
   }
 
   "GET /" should {
 
-    "return 403" in {
+    "return 403" in new Setup {
       AuthorisationMocks.mockNotLoggedInOrAuthorised
-      val result = TestController.hello(FakeRequest())
-      status(result) shouldBe FORBIDDEN
+      val response: Future[Result] = controller.newVatRegistration(FakeRequest())
+      status(response) shouldBe FORBIDDEN
     }
 
-    "return 200" in {
-      AuthorisationMocks.mockSuccessfulAuthorisation(testId, testAuthority(testId))
-      val result: Future[Result] = TestController.hello()(FakeRequest())
-      status(result) shouldBe OK
+    "return 201" in new Setup {
+      AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+      ServiceMocks.mockSuccessfulCreateNewRegistration(testId)
+      val response: Future[Result] = controller.newVatRegistration()(FakeRequest())
+      status(response) shouldBe CREATED
     }
+
   }
 
 }

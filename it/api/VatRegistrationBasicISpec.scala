@@ -17,10 +17,11 @@ package api
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import itutil.{IntegrationSpecBase, WiremockHelper}
-import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.libs.ws.WS
 import play.api.test.FakeApplication
+import play.api.test.Helpers._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class VatRegistrationBasicISpec extends IntegrationSpecBase {
 
@@ -35,7 +36,7 @@ class VatRegistrationBasicISpec extends IntegrationSpecBase {
     "microservice.services.auth.port" -> s"$mockPort"
   ))
 
-  private def client(path: String) = WS.url(s"http://localhost:$port$path").withFollowRedirects(false)
+  private def client(path: String) = WS.url(s"http://localhost:$port$path").withFollowRedirects(false).post("test")
 
 
   "VAT Registration API - for initial / basic calls" should {
@@ -49,19 +50,21 @@ class VatRegistrationBasicISpec extends IntegrationSpecBase {
     "Return a 200 for " in {
       setupSimpleAuthMocks()
 
-      val response = client(controllers.routes.HelloWorldController.hello().url).get.futureValue
-      response.status shouldBe OK
-      response.json shouldBe Json.parse("""{"uri":"xxx","gatewayId":"xxx2","userDetailsLink":"xxx3","ids":{"internalId":"Int-xxx","externalId":"Ext-xxx"}}""")
+      client(controllers.routes.VatRegistrationController.newVatRegistration().url) map { response =>
+        response.status shouldBe OK
+        response.json shouldBe Json.parse("""{"uri":"xxx","gatewayId":"xxx2","userDetailsLink":"xxx3","ids":{"internalId":"Int-xxx","externalId":"Ext-xxx"}}""")
+      }
+
     }
 
     "Return a 403 for " in {
-      val response = client(controllers.routes.HelloWorldController.hello().url).get.futureValue
-      response.status shouldBe FORBIDDEN
+      client(controllers.routes.VatRegistrationController.newVatRegistration().url) map { response =>
+        response.status shouldBe FORBIDDEN
+      }
     }
 
     "Return a 404 if the registration is missing" in {
-      val response = client(s"/12345").get.futureValue
-      response.status shouldBe NOT_FOUND
+      client(s"/12345") map { response => response.status shouldBe NOT_FOUND }
     }
   }
 }
