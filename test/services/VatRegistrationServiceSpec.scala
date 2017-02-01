@@ -17,18 +17,16 @@
 package services
 
 import common.Now
-import common.Now.Now
 import common.exceptions.{ForbiddenException, GenericServiceException, NotFoundException}
 import connectors._
-import fixtures.BusinessRegistrationFixture
 import helpers.VatRegSpec
-import models.{VatChoice, VatScheme, VatTradingDetails}
+import models.VatScheme
 import models.external.CurrentProfile
 import org.joda.time.DateTime
 import org.mockito.Matchers
 import org.mockito.Mockito._
 import repositories.RegistrationRepository
-import uk.gov.hmrc.play.http.{ForbiddenException, HeaderCarrier, NotFoundException}
+import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
 
@@ -39,9 +37,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
   trait Setup {
     val service = new VatRegistrationService(mockBusRegConnector, mockRegistrationRepository)
-    implicit val fixedDateTime: Now[DateTime] = new Now[DateTime] {
-      override def apply() = new DateTime(2017, 1, 31, 13, 6)
-    }
+    implicit val defaultTimeOfNow = Now(new DateTime(2017, 1, 31, 13, 6))
   }
 
   implicit val hc = HeaderCarrier()

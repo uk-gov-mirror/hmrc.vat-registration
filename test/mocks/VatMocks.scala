@@ -16,7 +16,7 @@
 
 package mocks
 
-import common.Now.Now
+import common.Now
 import connectors.{AuthConnector, Authority}
 import models.VatScheme
 import org.joda.time.DateTime
@@ -35,6 +35,8 @@ trait VatMocks extends WSHTTPMock {
 
   lazy val mockAuthConnector = mock[AuthConnector]
   lazy val mockRegistrationService = mock[RegistrationService]
+
+  implicit val fixedDateTime = Now(new DateTime(2017, 1, 31, 13, 6))
 
   object AuthorisationMocks {
 
@@ -58,9 +60,6 @@ trait VatMocks extends WSHTTPMock {
   object ServiceMocks {
 
     def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
-      implicit val dtn: Now[DateTime] = new Now[DateTime] {
-        override def apply(): DateTime = new DateTime(2017, 1, 31, 13, 6)
-      }
       when(mockRegistrationService.createNewRegistration(Matchers.any())).thenReturn(Future.successful(Right(VatScheme.blank(registrationId))))
     }
 

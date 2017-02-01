@@ -16,7 +16,7 @@
 
 package models
 
-import common.Now.Now
+import common.Now
 import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
