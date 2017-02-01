@@ -39,15 +39,18 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   import scala.concurrent.ExecutionContext.Implicits.global
 
   override def createNewRegistration(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatScheme]] = {
-      brConnector.retrieveCurrentProfile flatMap  {
-        case BusinessRegistrationSuccessResponse(profile) =>
-          (registrationRepository.createNewRegistration(profile.registrationID) map (vatScheme => Right(vatScheme))).recover {
-            case t:Throwable => Left(GenericServiceException(t))
+    brConnector.retrieveCurrentProfile flatMap {
+      case BusinessRegistrationSuccessResponse(profile) =>
+        registrationRepository.retrieveRegistration(profile.registrationID) flatMap {
+          case Some(registration) => Future.successful(Right(registration))
+          case None => (registrationRepository.createNewRegistration(profile.registrationID) map (vatScheme => Right(vatScheme))).recover {
+            case t: Throwable => Left(GenericServiceException(t))
           }
-        case BusinessRegistrationForbiddenResponse => Future.successful(Left(ForbiddenException))
-        case BusinessRegistrationNotFoundResponse => Future.successful(Left(NotFoundException))
-        case BusinessRegistrationErrorResponse(err) => Future.successful(Left(GenericServiceException(err)))
-      }
+        }
+      case BusinessRegistrationForbiddenResponse => Future.successful(Left(ForbiddenException))
+      case BusinessRegistrationNotFoundResponse => Future.successful(Left(NotFoundException))
+      case BusinessRegistrationErrorResponse(err) => Future.successful(Left(GenericServiceException(err)))
+    }
   }
 
 }

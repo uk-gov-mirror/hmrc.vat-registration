@@ -29,22 +29,11 @@ case class VatScheme(
 
 object VatScheme {
 
-  def blank(id: String)(implicit now: Now[DateTime]) = VatScheme(id, VatTradingDetails(""), VatChoice(now(), ""))
+  def blank(id: String)(implicit now: Now[DateTime]): VatScheme = VatScheme(id, VatTradingDetails(""), VatChoice(now(), ""))
 
-  val r =
-    (__ \ "ID").read[String] and
-      (__ \ "trading-details").read[VatTradingDetails] and
-      (__ \ "vat-choice").read[VatChoice]
-
-  val w =
-    (__ \ "ID").write[String] and
-      (__ \ "trading-details").write[VatTradingDetails] and
-      (__ \ "vat-choice").write[VatChoice]
-
-  val apiReads: Reads[VatScheme] = r(VatScheme.apply _)
-  val apiWrites: OWrites[VatScheme] = w(unlift(VatScheme.unapply))
-
-  implicit val format: OFormat[VatScheme] = OFormat(apiReads, apiWrites)
-
+  implicit val format = (
+    (__ \ "ID").format[String] and
+      (__ \ "trading-details").format[VatTradingDetails] and
+      (__ \ "vat-choice").format[VatChoice]) (VatScheme.apply, unlift(VatScheme.unapply))
 
 }
