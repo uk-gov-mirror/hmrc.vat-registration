@@ -18,14 +18,7 @@ package helpers
 
 import java.time.format.DateTimeFormatter
 
-import org.joda.time.DateTime
-
 object DateTimeHelpers {
-
-
-  type DateTimeProvider = () => DateTime
-
-  implicit val nowProvider: DateTimeProvider = () => DateTime.now()
 
   val format: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
