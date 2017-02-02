@@ -18,8 +18,8 @@ package services
 
 import javax.inject.Inject
 
-import common.exceptions.GenericServiceException
-import connectors.{BusinessRegistrationConnector, BusinessRegistrationSuccessResponse}
+import common.exceptions.{ForbiddenException, GenericServiceException, NotFoundException}
+import connectors._
 import models.VatScheme
 import repositories.RegistrationRepository
 import uk.gov.hmrc.play.http.HeaderCarrier
@@ -39,11 +39,17 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   import scala.concurrent.ExecutionContext.Implicits.global
 
   override def createNewRegistration(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatScheme]] = {
-    (for {
-      BusinessRegistrationSuccessResponse(profile) <- brConnector.retrieveCurrentProfile
-      registration <- registrationRepository.createNewRegistration(profile.registrationID)
-    } yield Right(registration)) recover {
-      case t: Throwable => Left(GenericServiceException(t))
+    brConnector.retrieveCurrentProfile flatMap {
+      case BusinessRegistrationSuccessResponse(profile) =>
+        registrationRepository.retrieveVatScheme(profile.registrationID) flatMap {
+          case Some(registration) => Future.successful(Right(registration))
+          case None => (registrationRepository.createNewVatScheme(profile.registrationID) map (vatScheme => Right(vatScheme))).recover {
+            case t: Throwable => Left(GenericServiceException(t))
+          }
+        }
+      case BusinessRegistrationForbiddenResponse => Future.successful(Left(ForbiddenException))
+      case BusinessRegistrationNotFoundResponse => Future.successful(Left(NotFoundException))
+      case BusinessRegistrationErrorResponse(err) => Future.successful(Left(GenericServiceException(err)))
     }
   }
 
