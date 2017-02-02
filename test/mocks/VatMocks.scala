@@ -17,6 +17,7 @@
 package mocks
 
 import common.Now
+import common.exceptions.GenericServiceException
 import connectors.{AuthConnector, Authority}
 import models.VatScheme
 import org.joda.time.DateTime
@@ -60,6 +61,11 @@ trait VatMocks extends WSHTTPMock {
     def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
       when(mockRegistrationService.createNewRegistration(Matchers.any()))
         .thenReturn(Future.successful(Right(VatScheme.blank(registrationId)(Now(new DateTime(2017, 1, 31, 13, 6))))))
+    }
+
+    def mockFailedCreateNewRegistration(registrationId: String): Unit = {
+      when(mockRegistrationService.createNewRegistration(Matchers.any()))
+        .thenReturn(Future.successful(Left(GenericServiceException(new RuntimeException("something went wrong")))))
     }
 
   }
