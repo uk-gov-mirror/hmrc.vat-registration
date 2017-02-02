@@ -57,18 +57,15 @@ trait VatMocks extends WSHTTPMock {
   }
 
   object ServiceMocks {
-    implicit val hc = HeaderCarrier()
-
 
     def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
       when(mockRegistrationService.createNewRegistration(Matchers.any()))
         .thenReturn(Future.successful(Right(VatScheme.blank(registrationId)(Now(new DateTime(2017, 1, 31, 13, 6))))))
     }
 
-    def mockSuccessfulUpdateVatChoice(registrationId: String): Unit = {
-
+    def mockSuccessfulUpdateVatChoice(registrationId: String, vatChoice: VatChoice): Unit = {
       when(mockRegistrationService.updateVatChoice(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]()))
-        .thenReturn(Future.successful(Right(VatChoice.blank(new DateTime(2017, 1, 31, 13, 6)))))
+        .thenReturn(Future.successful(Right(vatChoice)))
     }
 
   }

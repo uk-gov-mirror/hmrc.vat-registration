@@ -39,7 +39,7 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   import scala.concurrent.ExecutionContext.Implicits.global
 
   override def updateVatChoice(registrationId: String, vatChoice: VatChoice)(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatChoice]] = {
-    (registrationRepository.updateVatChoice(registrationId, vatChoice) map (vatChoice => Right(vatChoice))).recover {
+    (registrationRepository.updateVatChoice(registrationId, vatChoice) flatMap (vatChoice =>  Future.successful(Right(vatChoice)))).recover {
       case t: Throwable => Left(GenericServiceException(t))
     }
   }

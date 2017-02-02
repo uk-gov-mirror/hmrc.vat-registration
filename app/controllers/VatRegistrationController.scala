@@ -21,7 +21,6 @@ import javax.inject.Inject
 import common.exceptions.GenericServiceException
 import connectors.AuthConnector
 import models.VatChoice
-import org.joda.time.DateTime
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
