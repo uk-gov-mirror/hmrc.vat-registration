@@ -19,7 +19,7 @@ package repositories
 import javax.inject.{Inject, Named}
 
 import common.Now
-import common.exceptions.{InsertFailed, RetrieveFailed}
+import common.exceptions.{InsertFailed, RetrieveFailed, UpdateFailed}
 import models._
 import org.joda.time.DateTime
 import play.api.Logger
@@ -34,10 +34,12 @@ import scala.concurrent.Future
 
 trait RegistrationRepository {
 
+
   def createNewVatScheme(registrationId: String)(implicit now:Now[DateTime]): Future[VatScheme]
 
   def retrieveVatScheme(registrationId: String): Future[Option[VatScheme]]
 
+  def updateVatChoice(registrationId: String, vatChoice: VatChoice) : Future[VatChoice]
 }
 
 // this is here for Guice dependency injection of `() => DB`
@@ -84,4 +86,20 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
     }
   }
 
+  override def updateVatChoice(registrationId: String, vatChoice: VatChoice): Future[VatChoice] = {
+    val selector = registrationIdSelector(registrationId)
+    retrieveVatScheme(registrationId) flatMap {
+      case Some(vatScheme) =>
+        collection.update(selector, vatScheme.copy(vatChoice = vatChoice)) map {
+          res => vatChoice
+        } recover {
+          case e: Exception =>
+            // $COVERAGE-OFF$
+            Logger.error(s"Unable to update VatChoice for registration ID $registrationId, Error: ${e.getMessage}")
+            throw UpdateFailed(registrationId, "VatChoice")
+          // $COVERAGE-ON$
+        }
+
+    }
+  }
 }
