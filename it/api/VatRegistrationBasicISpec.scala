@@ -60,7 +60,9 @@ class VatRegistrationBasicISpec extends IntegrationSpecBase {
     "Return a 403 for " in {
       client(controllers.routes.VatRegistrationController.newVatRegistration().url) map { response =>
         response.status shouldBe FORBIDDEN
+
       }
+
     }
 
     "Return a 404 if the registration is missing" in {

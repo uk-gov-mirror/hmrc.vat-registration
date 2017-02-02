@@ -21,6 +21,7 @@ import javax.inject.Inject
 import common.exceptions.GenericServiceException
 import connectors.AuthConnector
 import models.VatChoice
+import org.joda.time.DateTime
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
@@ -43,10 +44,9 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, vatRegistrati
   }
 
 
-  def updateVatChoice(registrationId: String) : Action[JsValue] = Action.async(parse.json) {
+    def updateVatChoice(registrationId: String) : Action[JsValue] = Action.async(parse.json) {
     implicit request =>
- //     authenticated { user =>
-
+      authenticated { user =>
         withJsonBody[VatChoice] { vatChoice =>
           vatRegistrationService.updateVatChoice(registrationId, vatChoice) map {
             case Right(vatChoice) => Created(Json.toJson(vatChoice))
@@ -55,7 +55,7 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, vatRegistrati
               ServiceUnavailable
           }
         }
-    //  }
+      }
   }
 
 }

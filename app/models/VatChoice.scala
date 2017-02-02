@@ -16,6 +16,7 @@
 
 package models
 
+import common.Now
 import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -26,6 +27,8 @@ case class VatChoice(
                     )
 
 object VatChoice {
+  def blank(startDate: DateTime) : VatChoice = VatChoice(startDate, "false")
+
 
   implicit val format = (
     (__ \ "start-date").format[DateTime] and

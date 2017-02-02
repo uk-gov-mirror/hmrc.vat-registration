@@ -18,7 +18,7 @@ package mocks
 
 import common.Now
 import connectors.{AuthConnector, Authority}
-import models.VatScheme
+import models.{VatChoice, VatScheme}
 import org.joda.time.DateTime
 import org.mockito.Matchers
 import org.mockito.Mockito._
@@ -30,6 +30,7 @@ import uk.gov.hmrc.play.http.HeaderCarrier
 import scala.concurrent.Future
 
 trait VatMocks extends WSHTTPMock {
+
 
   this: MockitoSugar =>
 
@@ -56,10 +57,18 @@ trait VatMocks extends WSHTTPMock {
   }
 
   object ServiceMocks {
+    implicit val hc = HeaderCarrier()
+
 
     def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
       when(mockRegistrationService.createNewRegistration(Matchers.any()))
         .thenReturn(Future.successful(Right(VatScheme.blank(registrationId)(Now(new DateTime(2017, 1, 31, 13, 6))))))
+    }
+
+    def mockSuccessfulUpdateVatChoice(registrationId: String): Unit = {
+
+      when(mockRegistrationService.updateVatChoice(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]()))
+        .thenReturn(Future.successful(Right(VatChoice.blank(new DateTime(2017, 1, 31, 13, 6)))))
     }
 
   }
