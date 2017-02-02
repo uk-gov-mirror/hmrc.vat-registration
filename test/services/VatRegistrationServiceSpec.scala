@@ -24,6 +24,7 @@ import models.VatScheme
 import models.external.CurrentProfile
 import org.joda.time.DateTime
 import org.mockito.Matchers
+import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import repositories.RegistrationRepository
 import uk.gov.hmrc.play.http.HeaderCarrier
@@ -37,7 +38,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
   trait Setup {
     val service = new VatRegistrationService(mockBusRegConnector, mockRegistrationRepository)
-    implicit val defaultTimeOfNow = Now(new DateTime(2017, 1, 31, 13, 6))
+    implicit val defaultTimeOfNow: Now[DateTime] = Now(new DateTime(2017, 1, 31, 13, 6))
   }
 
   implicit val hc = HeaderCarrier()
@@ -47,8 +48,8 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       val businessRegistrationSuccessResponse = BusinessRegistrationSuccessResponse(CurrentProfile("1", None, ""))
       val vatScheme = VatScheme.blank("1")
 
-      when(mockBusRegConnector.retrieveCurrentProfile(Matchers.any(), Matchers.any())).thenReturn(businessRegistrationSuccessResponse)
-      when(mockRegistrationRepository.retrieveRegistration("1")).thenReturn(Some(vatScheme))
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
+      when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(Some(vatScheme))
 
       val response = service.createNewRegistration
       await(response) shouldBe Right(vatScheme)
@@ -58,9 +59,9 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       val businessRegistrationSuccessResponse = BusinessRegistrationSuccessResponse(CurrentProfile("1", None, ""))
       val vatScheme = VatScheme.blank("1")
 
-      when(mockBusRegConnector.retrieveCurrentProfile(Matchers.any(), Matchers.any())).thenReturn(businessRegistrationSuccessResponse)
-      when(mockRegistrationRepository.retrieveRegistration("1")).thenReturn(None)
-      when(mockRegistrationRepository.createNewRegistration("1")).thenReturn(vatScheme)
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
+      when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(None)
+      when(mockRegistrationRepository.createNewVatScheme(Matchers.eq("1"))(any())).thenReturn(vatScheme)
 
       val response = service.createNewRegistration
       await(response) shouldBe Right(vatScheme)
@@ -71,9 +72,9 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       val vatScheme = VatScheme.blank("1")
       val t = new RuntimeException("Exception")
 
-      when(mockBusRegConnector.retrieveCurrentProfile(Matchers.any(), Matchers.any())).thenReturn(businessRegistrationSuccessResponse)
-      when(mockRegistrationRepository.retrieveRegistration("1")).thenReturn(None)
-      when(mockRegistrationRepository.createNewRegistration("1")).thenReturn(Future.failed(t))
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
+      when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(None)
+      when(mockRegistrationRepository.createNewVatScheme(Matchers.eq("1"))(any())).thenReturn(Future.failed(t))
 
 
       val response = service.createNewRegistration
@@ -81,14 +82,14 @@ class VatRegistrationServiceSpec extends VatRegSpec {
     }
 
     "call to business service return ForbiddenException response " in new Setup {
-      when(mockBusRegConnector.retrieveCurrentProfile(Matchers.any(), Matchers.any())).thenReturn(BusinessRegistrationForbiddenResponse)
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(BusinessRegistrationForbiddenResponse)
 
       val response = service.createNewRegistration
       await(response) shouldBe Left(ForbiddenException)
     }
 
     "call to business service return NotFoundException response " in new Setup {
-      when(mockBusRegConnector.retrieveCurrentProfile(Matchers.any(), Matchers.any())).thenReturn(BusinessRegistrationNotFoundResponse)
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(BusinessRegistrationNotFoundResponse)
 
       val response = service.createNewRegistration
       await(response) shouldBe Left(NotFoundException)
@@ -96,7 +97,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
     "call to business service return ErrorResponse response " in new Setup {
       val t = new RuntimeException("Exception")
-      when(mockBusRegConnector.retrieveCurrentProfile(Matchers.any(), Matchers.any())).thenReturn(BusinessRegistrationErrorResponse(t))
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(BusinessRegistrationErrorResponse(t))
 
       val response = service.createNewRegistration
       await(response) shouldBe Left(GenericServiceException(t))

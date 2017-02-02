@@ -29,7 +29,8 @@ trait Now[T] {
 object Now {
 
   // $COVERAGE-OFF$
-  def apply[T: Now](value: => T): Now[T] = new Now[T] {
+
+  def apply[T](value: => T): Now[T] = new Now[T] {
     override def apply(): T = value
   }
 

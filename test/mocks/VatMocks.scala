@@ -36,8 +36,6 @@ trait VatMocks extends WSHTTPMock {
   lazy val mockAuthConnector = mock[AuthConnector]
   lazy val mockRegistrationService = mock[RegistrationService]
 
-  implicit val fixedDateTime = Now(new DateTime(2017, 1, 31, 13, 6))
-
   object AuthorisationMocks {
 
     def mockSuccessfulAuthorisation(authority: Authority): OngoingStubbing[Future[Option[Authority]]] = {
@@ -60,7 +58,8 @@ trait VatMocks extends WSHTTPMock {
   object ServiceMocks {
 
     def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
-      when(mockRegistrationService.createNewRegistration(Matchers.any())).thenReturn(Future.successful(Right(VatScheme.blank(registrationId))))
+      when(mockRegistrationService.createNewRegistration(Matchers.any()))
+        .thenReturn(Future.successful(Right(VatScheme.blank(registrationId)(Now(new DateTime(2017, 1, 31, 13, 6))))))
     }
 
   }

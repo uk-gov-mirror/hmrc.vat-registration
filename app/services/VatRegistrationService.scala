@@ -41,9 +41,9 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   override def createNewRegistration(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatScheme]] = {
     brConnector.retrieveCurrentProfile flatMap {
       case BusinessRegistrationSuccessResponse(profile) =>
-        registrationRepository.retrieveRegistration(profile.registrationID) flatMap {
+        registrationRepository.retrieveVatScheme(profile.registrationID) flatMap {
           case Some(registration) => Future.successful(Right(registration))
-          case None => (registrationRepository.createNewRegistration(profile.registrationID) map (vatScheme => Right(vatScheme))).recover {
+          case None => (registrationRepository.createNewVatScheme(profile.registrationID) map (vatScheme => Right(vatScheme))).recover {
             case t: Throwable => Left(GenericServiceException(t))
           }
         }
