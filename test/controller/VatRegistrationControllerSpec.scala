@@ -62,7 +62,6 @@ class VatRegistrationControllerSpec extends VatRegSpec {
       status(response) shouldBe SERVICE_UNAVAILABLE
     }
 
-  }
     "call updateVatChoice return CREATED" in new Setup {
       AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
       ServiceMocks.mockSuccessfulUpdateVatChoice(testId, vatChoice)
@@ -85,5 +84,8 @@ class VatRegistrationControllerSpec extends VatRegSpec {
           )))
       await(response) shouldBe ServiceUnavailable
     }
+
   }
+
+
 }
