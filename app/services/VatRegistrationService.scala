@@ -18,17 +18,21 @@ package services
 
 import javax.inject.Inject
 
-import common.exceptions.{ForbiddenException, GenericServiceException, NotFoundException, UpdateFailed}
+import common.exceptions.{ForbiddenException, GenericServiceException, NotFoundException}
 import connectors._
-import models.{VatChoice, VatScheme}
+import models.{VatChoice, VatScheme, VatTradingDetails}
 import repositories.RegistrationRepository
 import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
 
 trait RegistrationService {
-  def updateVatChoice(registrationId: String, vatChoice: VatChoice)(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatChoice]]
+
   def createNewRegistration(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatScheme]]
+
+  def updateVatChoice(registrationId: String, vatChoice: VatChoice): Future[ServiceResult[VatChoice]]
+
+  def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Future[ServiceResult[VatTradingDetails]]
 
 }
 
@@ -37,12 +41,6 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
                                       ) extends RegistrationService {
 
   import scala.concurrent.ExecutionContext.Implicits.global
-
-  override def updateVatChoice(registrationId: String, vatChoice: VatChoice)(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatChoice]] = {
-    (registrationRepository.updateVatChoice(registrationId, vatChoice) flatMap (vatChoice =>  Future.successful(Right(vatChoice)))).recover {
-      case t: Throwable => Left(GenericServiceException(t))
-    }
-  }
 
   override def createNewRegistration(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatScheme]] = {
     brConnector.retrieveCurrentProfile flatMap {
@@ -57,6 +55,14 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
       case BusinessRegistrationNotFoundResponse => Future.successful(Left(NotFoundException))
       case BusinessRegistrationErrorResponse(err) => Future.successful(Left(GenericServiceException(err)))
     }
+  }
+
+  override def updateVatChoice(registrationId: String, vatChoice: VatChoice): Future[ServiceResult[VatChoice]] = {
+    registrationRepository.updateVatChoice(registrationId, vatChoice) map (Right(_))
+  }
+
+  override def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Future[ServiceResult[VatTradingDetails]] = {
+    registrationRepository.updateTradingDetails(registrationId, tradingDetails) map (Right(_))
   }
 
 }

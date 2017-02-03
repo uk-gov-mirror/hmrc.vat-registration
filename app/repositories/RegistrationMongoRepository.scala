@@ -34,12 +34,14 @@ import scala.concurrent.Future
 
 trait RegistrationRepository {
 
-
-  def createNewVatScheme(registrationId: String)(implicit now:Now[DateTime]): Future[VatScheme]
+  def createNewVatScheme(registrationId: String)(implicit now: Now[DateTime]): Future[VatScheme]
 
   def retrieveVatScheme(registrationId: String): Future[Option[VatScheme]]
 
-  def updateVatChoice(registrationId: String, vatChoice: VatChoice) : Future[VatChoice]
+  def updateVatChoice(registrationId: String, vatChoice: VatChoice): Future[VatChoice]
+
+  def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Future[VatTradingDetails]
+
 }
 
 // this is here for Guice dependency injection of `() => DB`
@@ -64,11 +66,9 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
     )
   )
 
-  override def createNewVatScheme(registrationId: String)(implicit now:Now[DateTime]): Future[VatScheme] = {
+  override def createNewVatScheme(registrationId: String)(implicit now: Now[DateTime]): Future[VatScheme] = {
     val newReg = VatScheme.blank(registrationId)
-    collection.insert(newReg) map {
-      _ => newReg
-    } recover {
+    collection.insert(newReg) map (_ => newReg) recover {
       case e =>
         Logger.error(s"Unable to insert new VAT Scheme for registration ID $registrationId, Error: ${e.getMessage}")
         throw InsertFailed(registrationId, "VatScheme")
@@ -90,16 +90,28 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
     val selector = registrationIdSelector(registrationId)
     retrieveVatScheme(registrationId) flatMap {
       case Some(vatScheme) =>
-        collection.update(selector, vatScheme.copy(vatChoice = vatChoice)) map {
-          res => vatChoice
-        } recover {
+        collection.update(selector, vatScheme.copy(vatChoice = vatChoice)) map (_ => vatChoice) recover {
           case e: Exception =>
             // $COVERAGE-OFF$
             Logger.error(s"Unable to update VatChoice for registration ID $registrationId, Error: ${e.getMessage}")
             throw UpdateFailed(registrationId, "VatChoice")
           // $COVERAGE-ON$
         }
-
     }
   }
+
+  override def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Future[VatTradingDetails] = {
+    val selector = registrationIdSelector(registrationId)
+    retrieveVatScheme(registrationId) flatMap {
+      case Some(vatScheme) =>
+        collection.update(selector, vatScheme.copy(tradingDetails = tradingDetails)) map (_ => tradingDetails) recover {
+          case e: Exception =>
+            // $COVERAGE-OFF$
+            Logger.error(s"Unable to update VAT trading details for registration ID $registrationId, Error: ${e.getMessage}")
+            throw UpdateFailed(registrationId, "VatTradingDetails")
+          // $COVERAGE-ON$
+        }
+    }
+  }
+
 }
