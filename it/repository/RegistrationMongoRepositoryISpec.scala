@@ -18,7 +18,7 @@ package repository
 
 import common.Now
 import common.exceptions.InsertFailed
-import models.VatScheme
+import models.{VatChoice, VatScheme}
 import org.joda.time.DateTime
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
@@ -34,6 +34,7 @@ class RegistrationMongoRepositoryISpec
   private val fixedDate = Now(new DateTime(2017, 1, 31, 13, 53))
   private val regId = "AC234321"
   private val vatScheme: VatScheme = VatScheme.blank(regId)(fixedDate)
+  private val vatChoice: VatChoice = VatChoice.blank(new DateTime())
 
   class Setup {
     val repository = new RegistrationMongoRepository(new MongoDBProvider(), "integration-testing")
@@ -65,6 +66,16 @@ class RegistrationMongoRepositoryISpec
     "return a None when there is no corresponding VatScheme object" in new Setup {
       await(repository.insert(vatScheme))
       await(repository.retrieveVatScheme("NOT_THERE")) shouldBe None
+    }
+  }
+
+
+  "Calling updateVatChoice" should {
+
+    "should update to VatChoice success" in new Setup {
+      await(repository.insert(vatScheme))
+      val result = await(repository.updateVatChoice(regId, vatChoice))
+      result shouldBe vatChoice
     }
   }
 

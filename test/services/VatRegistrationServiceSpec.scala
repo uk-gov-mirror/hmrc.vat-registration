@@ -20,7 +20,7 @@ import common.Now
 import common.exceptions.{ForbiddenException, GenericServiceException, NotFoundException}
 import connectors._
 import helpers.VatRegSpec
-import models.VatScheme
+import models.{VatChoice, VatScheme}
 import models.external.CurrentProfile
 import org.joda.time.DateTime
 import org.mockito.Matchers
@@ -35,6 +35,8 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
   val mockBusRegConnector = mock[BusinessRegistrationConnector]
   val mockRegistrationRepository = mock[RegistrationRepository]
+  val vatChoice: VatChoice = VatChoice.blank(new DateTime())
+
 
   trait Setup {
     val service = new VatRegistrationService(mockBusRegConnector, mockRegistrationRepository)
@@ -103,5 +105,21 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       await(response) shouldBe Left(GenericServiceException(t))
     }
 
+    "call to updateVatChoice return Success response " in new Setup {
+      when(mockRegistrationRepository.updateVatChoice("1", vatChoice)).thenReturn(vatChoice)
+
+      val response = service.updateVatChoice("1", vatChoice)
+      await(response) shouldBe Right(vatChoice)
+    }
+
+
+    "call to updateVatChoice return Error response " in new Setup {
+      val t = new RuntimeException("Exception")
+      when(mockRegistrationRepository.updateVatChoice("1", vatChoice)).thenReturn(Future.failed(t))
+
+      val response = service.updateVatChoice("1", vatChoice)
+      await(response) shouldBe Left(GenericServiceException(t))
+
+    }
   }
 }

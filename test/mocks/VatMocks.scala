@@ -17,10 +17,12 @@
 package mocks
 
 import common.Now
+import common.exceptions.GenericServiceException
 import connectors.{AuthConnector, Authority}
 import models.{VatChoice, VatScheme}
 import org.joda.time.DateTime
 import org.mockito.Matchers
+import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
@@ -66,6 +68,11 @@ trait VatMocks extends WSHTTPMock {
     def mockSuccessfulUpdateVatChoice(registrationId: String, vatChoice: VatChoice): Unit = {
       when(mockRegistrationService.updateVatChoice(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]()))
         .thenReturn(Future.successful(Right(vatChoice)))
+    }
+
+    def mockServiceUnavailableUpdateVatChoice(registrationId: String, vatChoice: VatChoice, exception :Exception): Unit = {
+      when(mockRegistrationService.updateVatChoice(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]()))
+        .thenReturn(Future.successful(Left(GenericServiceException(exception))))
     }
 
   }
