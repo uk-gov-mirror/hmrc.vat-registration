@@ -33,7 +33,6 @@ import scala.concurrent.Future
 
 trait VatMocks extends WSHTTPMock {
 
-
   this: MockitoSugar =>
 
   lazy val mockAuthConnector = mock[AuthConnector]
@@ -73,6 +72,11 @@ trait VatMocks extends WSHTTPMock {
     def mockServiceUnavailableUpdateVatChoice(registrationId: String, vatChoice: VatChoice, exception :Exception): Unit = {
       when(mockRegistrationService.updateVatChoice(Matchers.any(), Matchers.any())(Matchers.any[HeaderCarrier]()))
         .thenReturn(Future.successful(Left(GenericServiceException(exception))))
+    }
+
+    def mockFailedCreateNewRegistration(registrationId: String): Unit = {
+      when(mockRegistrationService.createNewRegistration(Matchers.any()))
+        .thenReturn(Future.successful(Left(GenericServiceException(new RuntimeException("something went wrong")))))
     }
 
   }

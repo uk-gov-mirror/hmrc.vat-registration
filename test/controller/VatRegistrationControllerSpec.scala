@@ -29,7 +29,8 @@ import play.api.test.Helpers._
 
 import scala.concurrent.Future
 
-class RegistrationControllerSpec extends VatRegSpec {
+
+class VatRegistrationControllerSpec extends VatRegSpec {
 
   val testId = "testId"
   val vatChoice: VatChoice = VatChoice.blank(new DateTime())
@@ -41,19 +42,27 @@ class RegistrationControllerSpec extends VatRegSpec {
 
   "GET /" should {
 
-    "return 403" in new Setup {
+    "return 403 if user not authenticated" in new Setup {
       AuthorisationMocks.mockNotLoggedInOrAuthorised
       val response: Future[Result] = controller.newVatRegistration(FakeRequest())
       status(response) shouldBe FORBIDDEN
     }
 
-    "return 201" in new Setup {
+    "return 201 if a new VAT scheme is successfully created" in new Setup {
       AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
       ServiceMocks.mockSuccessfulCreateNewRegistration(testId)
       val response: Future[Result] = controller.newVatRegistration()(FakeRequest())
       status(response) shouldBe CREATED
     }
 
+    "return 503 if RegistrationService encounters any problems" in new Setup {
+      AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+      ServiceMocks.mockFailedCreateNewRegistration(testId)
+      val response: Future[Result] = controller.newVatRegistration()(FakeRequest())
+      status(response) shouldBe SERVICE_UNAVAILABLE
+    }
+
+  }
     "call updateVatChoice return CREATED" in new Setup {
       AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
       ServiceMocks.mockSuccessfulUpdateVatChoice(testId, vatChoice)
