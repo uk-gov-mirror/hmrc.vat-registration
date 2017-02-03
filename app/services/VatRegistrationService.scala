@@ -18,16 +18,16 @@ package services
 
 import javax.inject.Inject
 
-import common.exceptions.{ForbiddenException, GenericServiceException, NotFoundException}
+import common.exceptions.{ForbiddenException, GenericServiceException, NotFoundException, UpdateFailed}
 import connectors._
-import models.VatScheme
+import models.{VatChoice, VatScheme}
 import repositories.RegistrationRepository
 import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
 
 trait RegistrationService {
-
+  def updateVatChoice(registrationId: String, vatChoice: VatChoice)(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatChoice]]
   def createNewRegistration(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatScheme]]
 
 }
@@ -37,6 +37,12 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
                                       ) extends RegistrationService {
 
   import scala.concurrent.ExecutionContext.Implicits.global
+
+  override def updateVatChoice(registrationId: String, vatChoice: VatChoice)(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatChoice]] = {
+    (registrationRepository.updateVatChoice(registrationId, vatChoice) flatMap (vatChoice =>  Future.successful(Right(vatChoice)))).recover {
+      case t: Throwable => Left(GenericServiceException(t))
+    }
+  }
 
   override def createNewRegistration(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatScheme]] = {
     brConnector.retrieveCurrentProfile flatMap {

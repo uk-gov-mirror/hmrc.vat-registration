@@ -16,9 +16,14 @@
 
 package controller
 
+import common.exceptions.GenericServiceException
 import controllers.VatRegistrationController
 import helpers.VatRegSpec
+import models.VatChoice
+import org.joda.time.DateTime
+import play.api.libs.json.Json
 import play.api.mvc.Result
+import play.api.mvc.Results.{Created, ServiceUnavailable}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
@@ -28,6 +33,8 @@ import scala.concurrent.Future
 class VatRegistrationControllerSpec extends VatRegSpec {
 
   val testId = "testId"
+  val vatChoice: VatChoice = VatChoice.blank(new DateTime())
+
 
   class Setup {
     val controller = new VatRegistrationController(mockAuthConnector, mockRegistrationService)
@@ -55,6 +62,30 @@ class VatRegistrationControllerSpec extends VatRegSpec {
       status(response) shouldBe SERVICE_UNAVAILABLE
     }
 
+    "call updateVatChoice return CREATED" in new Setup {
+      AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+      ServiceMocks.mockSuccessfulUpdateVatChoice(testId, vatChoice)
+      val response: Future[Result] = controller.updateVatChoice(testId)(
+        FakeRequest().withBody(
+          Json.toJson[VatChoice](
+            vatChoice
+          )))
+      await(response) shouldBe Created(Json.toJson(vatChoice))
+    }
+
+    "call updateVatChoice return ServiceUnavailable" in new Setup {
+      AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+      val exception = new Exception("Exception")
+      ServiceMocks.mockServiceUnavailableUpdateVatChoice(testId, vatChoice, exception)
+      val response: Future[Result] = controller.updateVatChoice(testId)(
+        FakeRequest().withBody(
+          Json.toJson[VatChoice](
+            vatChoice
+          )))
+      await(response) shouldBe ServiceUnavailable
+    }
+
   }
+
 
 }
