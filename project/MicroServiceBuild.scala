@@ -1,7 +1,4 @@
 import sbt._
-import uk.gov.hmrc.SbtAutoBuildPlugin
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
-import uk.gov.hmrc.versioning.SbtGitVersioning
 
 object MicroServiceBuild extends Build with MicroService {
 
@@ -11,44 +8,35 @@ object MicroServiceBuild extends Build with MicroService {
 }
 
 private object AppDependencies {
-  import play.sbt.PlayImport._
-  import play.core.PlayVersion
 
-  private val microserviceBootstrapVersion = "5.8.0"
-  private val playAuthVersion = "4.2.0"
-  private val playHealthVersion = "2.0.0"
-  private val playJsonLoggerVersion = "3.0.0"
-  private val logbackJsonLoggerVersion = "3.1.0"
-  private val playUrlBindersVersion = "2.0.0"
-  private val playConfigVersion = "3.0.0"
-  private val domainVersion = "4.0.0"
+  import play.core.PlayVersion
+  import play.sbt.PlayImport._
+
   private val hmrcTestVersion = "2.2.0"
   private val scalaTestVersion_test = "3.0.1"
   private val scalaTestVersion_it = "2.2.6"
   private val scalaTestPlusVersion = "1.5.1"
   private val pegdownVersion = "1.6.0"
-  private val cryptoVersion = "3.1.0"
+  private val scoverageVersion = "1.3.0"
 
-  private val playReactivemongoVersion = "5.1.0"
 
   val compile = Seq(
-    "uk.gov.hmrc" %% "play-reactivemongo" % playReactivemongoVersion,
-
     ws,
-    "uk.gov.hmrc" %% "microservice-bootstrap" % microserviceBootstrapVersion,
-    "uk.gov.hmrc" %% "play-authorisation" % playAuthVersion,
-    "uk.gov.hmrc" %% "play-health" % playHealthVersion,
-    "uk.gov.hmrc" %% "play-url-binders" % playUrlBindersVersion,
-    "uk.gov.hmrc" %% "play-config" % playConfigVersion,
-    //    "uk.gov.hmrc" %% "logback-json-logger" % logbackJsonLoggerVersion,
-    "uk.gov.hmrc" %% "play-json-logger" %  playJsonLoggerVersion,
-    "uk.gov.hmrc" %% "domain" % domainVersion,
-    "uk.gov.hmrc" %% "crypto" % cryptoVersion
+    "uk.gov.hmrc" %% "play-reactivemongo" % "5.1.0",
+    "uk.gov.hmrc" %% "microservice-bootstrap" % "5.8.0",
+    "uk.gov.hmrc" %% "play-authorisation" % "4.2.0",
+    "uk.gov.hmrc" %% "play-health" % "2.0.0",
+    "uk.gov.hmrc" %% "play-url-binders" % "2.0.0",
+    "uk.gov.hmrc" %% "play-config" % "3.0.0",
+    "uk.gov.hmrc" %% "play-json-logger" % "3.0.0",
+    "uk.gov.hmrc" %% "domain" % "4.0.0",
+    "uk.gov.hmrc" %% "crypto" % "3.1.0",
+    "org.typelevel" %% "cats" % "0.9.0"
   )
 
   trait TestDependencies {
     lazy val scope: String = "test"
-    lazy val test : Seq[ModuleID] = ???
+    lazy val test: Seq[ModuleID] = ???
   }
 
   object Test {
@@ -58,7 +46,7 @@ private object AppDependencies {
         "org.scalatest" %% "scalatest" % scalaTestVersion_test % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
         "org.pegdown" % "pegdown" % pegdownVersion % scope,
-        "org.scoverage" % "scalac-scoverage-runtime_2.11" % "1.3.0" % scope,
+        "org.scoverage" % "scalac-scoverage-runtime_2.11" % scoverageVersion % scope,
         "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
         "uk.gov.hmrc" %% "reactivemongo-test" % "1.6.0" % scope,
         "org.mockito" % "mockito-core" % "1.9.5"
@@ -76,7 +64,7 @@ private object AppDependencies {
         "org.scalatest" %% "scalatest" % scalaTestVersion_it % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
         "org.pegdown" % "pegdown" % pegdownVersion % scope,
-        "org.scoverage" % "scalac-scoverage-runtime_2.11" % "1.3.0" % scope,
+        "org.scoverage" % "scalac-scoverage-runtime_2.11" % scoverageVersion % scope,
         "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
         "uk.gov.hmrc" %% "reactivemongo-test" % "1.6.0" % scope,
         "com.github.tomakehurst" % "wiremock" % "2.5.0" % scope
