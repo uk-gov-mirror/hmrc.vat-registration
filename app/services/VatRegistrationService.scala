@@ -47,9 +47,8 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
       case BusinessRegistrationSuccessResponse(profile) =>
         registrationRepository.retrieveVatScheme(profile.registrationID) flatMap {
           case Some(registration) => Future.successful(Right(registration))
-          case None => (registrationRepository.createNewVatScheme(profile.registrationID) map (vatScheme => Right(vatScheme))).recover {
-            case t: Throwable => Left(GenericServiceException(t))
-          }
+          case None => registrationRepository.createNewVatScheme(profile.registrationID).map(Right(_))
+            .recover(genericServiceException)
         }
       case BusinessRegistrationForbiddenResponse => Future.successful(Left(ForbiddenException))
       case BusinessRegistrationNotFoundResponse => Future.successful(Left(NotFoundException))
@@ -58,11 +57,13 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   }
 
   override def updateVatChoice(registrationId: String, vatChoice: VatChoice): Future[ServiceResult[VatChoice]] = {
-    registrationRepository.updateVatChoice(registrationId, vatChoice) map (Right(_))
+    registrationRepository.updateVatChoice(registrationId, vatChoice).map(Right(_))
+      .recover(genericServiceException)
   }
 
   override def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Future[ServiceResult[VatTradingDetails]] = {
-    registrationRepository.updateTradingDetails(registrationId, tradingDetails) map (Right(_))
+    registrationRepository.updateTradingDetails(registrationId, tradingDetails).map(Right(_))
+      .recover(genericServiceException)
   }
 
 }

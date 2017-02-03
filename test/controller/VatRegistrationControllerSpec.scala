@@ -16,10 +16,9 @@
 
 package controller
 
-import common.exceptions.GenericServiceException
 import controllers.VatRegistrationController
 import helpers.VatRegSpec
-import models.VatChoice
+import models.{VatChoice, VatTradingDetails}
 import org.joda.time.DateTime
 import play.api.libs.json.Json
 import play.api.mvc.Result
@@ -34,6 +33,7 @@ class VatRegistrationControllerSpec extends VatRegSpec {
 
   val testId = "testId"
   val vatChoice: VatChoice = VatChoice.blank(new DateTime())
+  val tradingDetails: VatTradingDetails = VatTradingDetails("some-trader-name")
 
 
   class Setup {
@@ -83,6 +83,26 @@ class VatRegistrationControllerSpec extends VatRegSpec {
             vatChoice
           )))
       await(response) shouldBe ServiceUnavailable
+    }
+
+    "updateTradingDetails" should {
+
+      val fakeRequest = FakeRequest().withBody(Json.toJson(tradingDetails))
+
+      "call updateTradingDetails return CREATED" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+        ServiceMocks.mockSuccessfulUpdateTradingDetails(testId, tradingDetails)
+        val response: Future[Result] = controller.updateTradingDetails(testId)(fakeRequest)
+        await(response) shouldBe Created(Json.toJson(tradingDetails))
+      }
+
+      "call updateTradingDetails return ServiceUnavailable" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+        val exception = new Exception("Exception")
+        ServiceMocks.mockServiceUnavailableUpdateTradingDetails(testId, tradingDetails, exception)
+        val response: Future[Result] = controller.updateTradingDetails(testId)(fakeRequest)
+        await(response) shouldBe ServiceUnavailable
+      }
     }
 
   }

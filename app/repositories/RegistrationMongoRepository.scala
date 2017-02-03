@@ -19,7 +19,7 @@ package repositories
 import javax.inject.{Inject, Named}
 
 import common.Now
-import common.exceptions.{InsertFailed, RetrieveFailed, UpdateFailed}
+import common.exceptions.{InsertFailed, MissingRegDocument, RetrieveFailed, UpdateFailed}
 import models._
 import org.joda.time.DateTime
 import play.api.Logger
@@ -97,6 +97,7 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
             throw UpdateFailed(registrationId, "VatChoice")
           // $COVERAGE-ON$
         }
+      case None => throw MissingRegDocument(registrationId)
     }
   }
 
@@ -111,6 +112,7 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
             throw UpdateFailed(registrationId, "VatTradingDetails")
           // $COVERAGE-ON$
         }
+      case None => throw MissingRegDocument(registrationId)
     }
   }
 

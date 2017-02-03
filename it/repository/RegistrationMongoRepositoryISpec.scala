@@ -17,8 +17,8 @@
 package repository
 
 import common.Now
-import common.exceptions.InsertFailed
-import models.{VatChoice, VatScheme}
+import common.exceptions.{InsertFailed, MissingRegDocument}
+import models.{VatChoice, VatScheme, VatTradingDetails}
 import org.joda.time.DateTime
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
@@ -35,6 +35,7 @@ class RegistrationMongoRepositoryISpec
   private val regId = "AC234321"
   private val vatScheme: VatScheme = VatScheme.blank(regId)(fixedDate)
   private val vatChoice: VatChoice = VatChoice.blank(new DateTime())
+  private val tradingDetails: VatTradingDetails = VatTradingDetails("some-trader-name")
 
   class Setup {
     val repository = new RegistrationMongoRepository(new MongoDBProvider(), "integration-testing")
@@ -76,6 +77,26 @@ class RegistrationMongoRepositoryISpec
       await(repository.insert(vatScheme))
       val result = await(repository.updateVatChoice(regId, vatChoice))
       result shouldBe vatChoice
+    }
+
+    "should throw MissingRegDocument exception when regId not found" in new Setup {
+      await(repository.insert(vatScheme))
+      an[MissingRegDocument] shouldBe thrownBy(await(repository.updateVatChoice("123", vatChoice)))
+    }
+
+  }
+
+  "Calling updateTradingDetails" should {
+
+    "should update VatTradingDetails success" in new Setup {
+      await(repository.insert(vatScheme))
+      val result = await(repository.updateTradingDetails(regId, tradingDetails))
+      result shouldBe tradingDetails
+    }
+
+    "should throw MissingRegDocument exception when regId not found" in new Setup {
+      await(repository.insert(vatScheme))
+      an[MissingRegDocument] shouldBe thrownBy(await(repository.updateTradingDetails("123", tradingDetails)))
     }
   }
 

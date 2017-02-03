@@ -20,8 +20,8 @@ import common.Now
 import common.exceptions.{ForbiddenException, GenericServiceException, NotFoundException}
 import connectors._
 import helpers.VatRegSpec
-import models.{VatChoice, VatScheme}
 import models.external.CurrentProfile
+import models.{VatChoice, VatScheme, VatTradingDetails}
 import org.joda.time.DateTime
 import org.mockito.Matchers
 import org.mockito.Matchers.any
@@ -105,7 +105,12 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       await(response) shouldBe Left(GenericServiceException(t))
     }
 
-    "call to updateVatChoice return Success response " in new Setup {
+  }
+
+
+  "call to updateVatChoice" should {
+
+    "return Success response " in new Setup {
       when(mockRegistrationRepository.updateVatChoice("1", vatChoice)).thenReturn(vatChoice)
 
       val response = service.updateVatChoice("1", vatChoice)
@@ -113,13 +118,35 @@ class VatRegistrationServiceSpec extends VatRegSpec {
     }
 
 
-    "call to updateVatChoice return Error response " in new Setup {
+    "return Error response " in new Setup {
       val t = new RuntimeException("Exception")
       when(mockRegistrationRepository.updateVatChoice("1", vatChoice)).thenReturn(Future.failed(t))
 
       val response = service.updateVatChoice("1", vatChoice)
       await(response) shouldBe Left(GenericServiceException(t))
+    }
 
+  }
+
+  "call to updateTradingDetails" should {
+
+    val tradingDetails = VatTradingDetails("some-trader-name")
+
+    "return Success response " in new Setup {
+      when(mockRegistrationRepository.updateTradingDetails("1", tradingDetails)).thenReturn(tradingDetails)
+
+      val response = service.updateTradingDetails("1", tradingDetails)
+      await(response) shouldBe Right(tradingDetails)
+    }
+
+
+    "return Error response " in new Setup {
+      val t = new RuntimeException("Exception")
+      when(mockRegistrationRepository.updateTradingDetails("1", tradingDetails)).thenReturn(Future.failed(t))
+
+      val response = service.updateTradingDetails("1", tradingDetails)
+      await(response) shouldBe Left(GenericServiceException(t))
     }
   }
+
 }
