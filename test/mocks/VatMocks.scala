@@ -17,7 +17,7 @@
 package mocks
 
 import common.Now
-import common.exceptions.GenericServiceException
+import common.exceptions._
 import connectors.{AuthConnector, Authority}
 import models.{VatChoice, VatScheme, VatTradingDetails}
 import org.joda.time.DateTime
@@ -66,7 +66,7 @@ trait VatMocks extends WSHTTPMock {
 
     def mockFailedCreateNewRegistration(registrationId: String): Unit = {
       when(mockRegistrationService.createNewRegistration(Matchers.any()))
-        .thenReturn(Future.successful(Left(GenericServiceException(new RuntimeException("something went wrong")))))
+        .thenReturn(Future.successful(Left(GenericError(new RuntimeException("something went wrong")))))
     }
 
     def mockSuccessfulUpdateVatChoice(registrationId: String, vatChoice: VatChoice): Unit = {
@@ -76,7 +76,7 @@ trait VatMocks extends WSHTTPMock {
 
     def mockServiceUnavailableUpdateVatChoice(registrationId: String, vatChoice: VatChoice, exception: Exception): Unit = {
       when(mockRegistrationService.updateVatChoice(Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(Left(GenericServiceException(exception))))
+        .thenReturn(Future.successful(Left(GenericError(exception))))
     }
 
     def mockSuccessfulUpdateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Unit = {
@@ -86,7 +86,7 @@ trait VatMocks extends WSHTTPMock {
 
     def mockServiceUnavailableUpdateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails, exception: Exception): Unit = {
       when(mockRegistrationService.updateTradingDetails(Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(Left(GenericServiceException(exception))))
+        .thenReturn(Future.successful(Left(GenericError(exception))))
     }
 
   }

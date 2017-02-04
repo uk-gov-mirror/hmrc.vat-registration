@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import common.exceptions.{GenericServiceException, ServiceException}
+import common.exceptions.{GenericError, LeftState}
 
 /*
  * Copyright 2017 HM Revenue & Customs
@@ -34,10 +34,10 @@ import common.exceptions.{GenericServiceException, ServiceException}
 
 package object services {
 
-  type ServiceResult[T] = Either[ServiceException, T]
+  type ServiceResult[T] = Either[LeftState, T]
 
   def genericServiceException[T]: PartialFunction[Throwable, ServiceResult[T]] = {
-    case t: Throwable => Left(GenericServiceException(t))
+    case t: Throwable => Left(GenericError(t))
   }
 
 }

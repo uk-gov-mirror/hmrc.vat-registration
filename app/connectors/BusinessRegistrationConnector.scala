@@ -16,6 +16,7 @@
 
 package connectors
 
+import common.exceptions._
 import config.WSHttp
 import models.external.CurrentProfile
 import play.api.Logger
@@ -33,11 +34,6 @@ class VatRegBusinessRegistrationConnector extends BusinessRegistrationConnector 
   //$COVERAGE-ON$
 }
 
-sealed trait BusinessRegistrationResponse
-case class BusinessRegistrationSuccessResponse(response: CurrentProfile) extends BusinessRegistrationResponse
-case object BusinessRegistrationNotFoundResponse extends BusinessRegistrationResponse
-case object BusinessRegistrationForbiddenResponse extends BusinessRegistrationResponse
-case class BusinessRegistrationErrorResponse(err: Exception) extends BusinessRegistrationResponse
 
 trait BusinessRegistrationConnector {
 
@@ -45,21 +41,19 @@ trait BusinessRegistrationConnector {
   val http: HttpGet with HttpPost
   val logPrefix: String = "[BusinessRegistrationConnector] [retrieveCurrentProfile]"
 
-  def retrieveCurrentProfile(implicit hc: HeaderCarrier, rds: HttpReads[CurrentProfile]): Future[BusinessRegistrationResponse] = {
+  def retrieveCurrentProfile(implicit hc: HeaderCarrier, rds: HttpReads[CurrentProfile]): Future[Either[LeftState, CurrentProfile]] = {
 
-    http.GET[CurrentProfile](s"$businessRegUrl/business-registration/business-tax-registration") map {
-      currentProfile =>
-        BusinessRegistrationSuccessResponse(currentProfile)
-    } recover {
-      case e: NotFoundException =>
-        Logger.error(s"$logPrefix - Received a NotFound status code when expecting current profile from Business-Registration")
-        BusinessRegistrationNotFoundResponse
-      case e: ForbiddenException =>
-        Logger.error(s"$logPrefix - Received a Forbidden status code when expecting current profile from Business-Registration")
-        BusinessRegistrationForbiddenResponse
-      case e: Exception =>
-        Logger.error(s"$logPrefix - Received error when expecting current profile from Business-Registration - Error ${e.getMessage}")
-        BusinessRegistrationErrorResponse(e)
-    }
+    http.GET[CurrentProfile](s"$businessRegUrl/business-registration/business-tax-registration").map(Right(_))
+      .recover {
+        case e: NotFoundException =>
+          Logger.error(s"$logPrefix - Received a NotFound status code when expecting current profile from Business-Registration")
+          Left(NotFound)
+        case e: ForbiddenException =>
+          Logger.error(s"$logPrefix - Received a Forbidden status code when expecting current profile from Business-Registration")
+          Left(Forbidden)
+        case e: Exception =>
+          Logger.error(s"$logPrefix - Received error when expecting current profile from Business-Registration - Error ${e.getMessage}")
+          Left(GenericError(e))
+      }
   }
 }

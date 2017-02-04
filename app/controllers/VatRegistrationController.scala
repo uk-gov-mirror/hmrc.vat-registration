@@ -18,7 +18,7 @@ package controllers
 
 import javax.inject.Inject
 
-import common.exceptions.{GenericServiceException, NotFoundException}
+import common.exceptions.GenericError
 import connectors.AuthConnector
 import models.{VatChoice, VatTradingDetails}
 import play.api.Logger
@@ -32,8 +32,8 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
 
   private[controllers] def handle[T](f: (T) => Result): ServiceResult[T] => Result = {
     case Right(entity) => f(entity)
-    case Left(NotFoundException) => Gone
-    case Left(GenericServiceException(t)) => Logger.warn("Exception in service call", t); ServiceUnavailable
+    case Left(NotFound) => Gone
+    case Left(GenericError(t)) => Logger.warn("Exception in service call", t); ServiceUnavailable
     case _ => ServiceUnavailable
   }
 

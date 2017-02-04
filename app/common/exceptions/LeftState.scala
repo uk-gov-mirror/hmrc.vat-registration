@@ -16,8 +16,13 @@
 
 package common.exceptions
 
-sealed trait ServiceException
 
-case object ForbiddenException extends ServiceException
-case object NotFoundException extends ServiceException
-final case class GenericServiceException(throwable: Throwable) extends ServiceException
+sealed trait LeftState extends Product with Serializable
+
+case object VatSchemeNotFound extends LeftState
+
+case object NotFound extends LeftState
+
+case object Forbidden extends LeftState
+
+final case class GenericError(t: Throwable) extends LeftState
