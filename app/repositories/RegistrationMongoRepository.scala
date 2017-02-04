@@ -18,22 +18,22 @@ package repositories
 
 import javax.inject.{Inject, Named}
 
+import cats.data.OptionT
 import common.Now
-import common.exceptions.{InsertFailed, MissingRegDocument, RetrieveFailed, UpdateFailed}
+import common.exceptions._
 import models._
 import org.joda.time.DateTime
 import play.api.Logger
 import play.modules.reactivemongo.MongoDbConnection
 import reactivemongo.api.DB
+import reactivemongo.api.commands.UpdateWriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.{BSONDocument, BSONObjectID, _}
+import reactivemongo.bson._
 import uk.gov.hmrc.mongo.ReactiveRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait RegistrationRepository {
-
   def createNewVatScheme(registrationId: String)(implicit now: Now[DateTime]): Future[VatScheme]
 
   def retrieveVatScheme(registrationId: String): Future[Option[VatScheme]]
@@ -41,7 +41,6 @@ trait RegistrationRepository {
   def updateVatChoice(registrationId: String, vatChoice: VatChoice): Future[VatChoice]
 
   def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Future[VatTradingDetails]
-
 }
 
 // this is here for Guice dependency injection of `() => DB`
@@ -56,15 +55,17 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
     domainFormat = VatScheme.format
   ) with RegistrationRepository {
 
-  private[repositories] def registrationIdSelector(registrationID: String) = BSONDocument("ID" -> BSONString(registrationID))
+  import cats.implicits._
 
-  override def indexes: Seq[Index] = Seq(
-    Index(
-      name = Some("RegId"),
-      key = Seq("registrationId" -> IndexType.Ascending),
-      unique = true
-    )
-  )
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  private[repositories] def regIdSelector(registrationID: String) = BSONDocument("ID" -> BSONString(registrationID))
+
+  override def indexes: Seq[Index] = Seq(Index(
+    name = Some("RegId"),
+    key = Seq("registrationId" -> IndexType.Ascending),
+    unique = true
+  ))
 
   override def createNewVatScheme(registrationId: String)(implicit now: Now[DateTime]): Future[VatScheme] = {
     val newReg = VatScheme.blank(registrationId)
@@ -75,45 +76,23 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
     }
   }
 
-  override def retrieveVatScheme(registrationId: String): Future[Option[VatScheme]] = {
-    val selector = registrationIdSelector(registrationId)
-    collection.find(selector).one[VatScheme] recover {
-      case e: Exception =>
-        // $COVERAGE-OFF$
-        Logger.error(s"Unable to retrieve VAT Scheme for registration ID $registrationId, Error: ${e.getMessage}")
-        throw RetrieveFailed(registrationId)
-      // $COVERAGE-ON$
+  override def retrieveVatScheme(regId: String): Future[Option[VatScheme]] = {
+    collection.find(regIdSelector(regId)).one[VatScheme]
+  }
+
+  private def updateVatScheme[T](regId: String, update: VatScheme => VatScheme, toReturnType: UpdateWriteResult => T): Future[T] = {
+    (for {
+      vatScheme <- OptionT(retrieveVatScheme(regId))
+      res <- OptionT.liftF(collection.update(regIdSelector(regId), update(vatScheme)))
+    } yield res).map(toReturnType).getOrElse {
+      throw MissingRegDocument(regId)
     }
   }
 
-  override def updateVatChoice(registrationId: String, vatChoice: VatChoice): Future[VatChoice] = {
-    val selector = registrationIdSelector(registrationId)
-    retrieveVatScheme(registrationId) flatMap {
-      case Some(vatScheme) =>
-        collection.update(selector, vatScheme.copy(vatChoice = vatChoice)) map (_ => vatChoice) recover {
-          case e: Exception =>
-            // $COVERAGE-OFF$
-            Logger.error(s"Unable to update VatChoice for registration ID $registrationId, Error: ${e.getMessage}")
-            throw UpdateFailed(registrationId, "VatChoice")
-          // $COVERAGE-ON$
-        }
-      case None => throw MissingRegDocument(registrationId)
-    }
-  }
+  override def updateVatChoice(regId: String, vatChoice: VatChoice): Future[VatChoice] =
+    updateVatScheme(regId, _.copy(vatChoice = vatChoice), _ => vatChoice)
 
-  override def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Future[VatTradingDetails] = {
-    val selector = registrationIdSelector(registrationId)
-    retrieveVatScheme(registrationId) flatMap {
-      case Some(vatScheme) =>
-        collection.update(selector, vatScheme.copy(tradingDetails = tradingDetails)) map (_ => tradingDetails) recover {
-          case e: Exception =>
-            // $COVERAGE-OFF$
-            Logger.error(s"Unable to update VAT trading details for registration ID $registrationId, Error: ${e.getMessage}")
-            throw UpdateFailed(registrationId, "VatTradingDetails")
-          // $COVERAGE-ON$
-        }
-      case None => throw MissingRegDocument(registrationId)
-    }
-  }
+  override def updateTradingDetails(regId: String, tradingDetails: VatTradingDetails): Future[VatTradingDetails] =
+    updateVatScheme(regId, _.copy(tradingDetails = tradingDetails), _ => tradingDetails)
 
 }
