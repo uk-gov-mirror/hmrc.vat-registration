@@ -16,6 +16,7 @@
 
 package mocks
 
+import cats.data.EitherT
 import common.Now
 import common.exceptions._
 import connectors.{AuthConnector, Authority}
@@ -25,7 +26,7 @@ import org.mockito.Matchers
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
-import services.RegistrationService
+import services.{RegistrationService, ServiceResult}
 import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -58,35 +59,43 @@ trait VatMocks extends WSHTTPMock {
 
   object ServiceMocks {
 
+    def serviceResult[B](b: B): ServiceResult[B] = {
+      EitherT[Future, LeftState, B](Future.successful(Right(b)))
+    }
+
+    def serviceError[B](a: LeftState): ServiceResult[B] = {
+      EitherT[Future, LeftState, B](Future.successful(Left(a)))
+    }
+
     def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
       when(mockRegistrationService.createNewRegistration(Matchers.any()))
-        .thenReturn(Future.successful(Right(VatScheme.blank(registrationId)(Now(new DateTime(2017, 1, 31, 13, 6))))))
+        .thenReturn(serviceResult(VatScheme.blank(registrationId)(Now(new DateTime(2017, 1, 31, 13, 6)))))
     }
 
 
     def mockFailedCreateNewRegistration(registrationId: String): Unit = {
       when(mockRegistrationService.createNewRegistration(Matchers.any()))
-        .thenReturn(Future.successful(Left(GenericError(new RuntimeException("something went wrong")))))
+        .thenReturn(serviceError[VatScheme](GenericError(new RuntimeException("something went wrong"))))
     }
 
     def mockSuccessfulUpdateVatChoice(registrationId: String, vatChoice: VatChoice): Unit = {
       when(mockRegistrationService.updateVatChoice(Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(Right(vatChoice)))
+        .thenReturn(serviceResult(vatChoice))
     }
 
     def mockServiceUnavailableUpdateVatChoice(registrationId: String, vatChoice: VatChoice, exception: Exception): Unit = {
       when(mockRegistrationService.updateVatChoice(Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(Left(GenericError(exception))))
+        .thenReturn(serviceError[VatChoice](GenericError(exception)))
     }
 
     def mockSuccessfulUpdateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Unit = {
       when(mockRegistrationService.updateTradingDetails(Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(Right(tradingDetails)))
+        .thenReturn(serviceResult(tradingDetails))
     }
 
     def mockServiceUnavailableUpdateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails, exception: Exception): Unit = {
       when(mockRegistrationService.updateTradingDetails(Matchers.any(), Matchers.any()))
-        .thenReturn(Future.successful(Left(GenericError(exception))))
+        .thenReturn(serviceError[VatTradingDetails](GenericError(exception)))
     }
 
   }

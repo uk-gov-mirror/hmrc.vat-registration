@@ -21,7 +21,7 @@ import common.exceptions._
 import connectors._
 import helpers.VatRegSpec
 import models.external.CurrentProfile
-import models.{VatChoice, VatScheme, VatTradingDetails}
+import models._
 import org.joda.time.DateTime
 import org.mockito.Matchers
 import org.mockito.Matchers.any
@@ -54,7 +54,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(Some(vatScheme))
 
       val response = service.createNewRegistration
-      await(response) shouldBe Right(vatScheme)
+      await(response.value) shouldBe Right(vatScheme)
     }
 
     "return a new VatScheme response " in new Setup {
@@ -66,7 +66,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockRegistrationRepository.createNewVatScheme(Matchers.eq("1"))(any())).thenReturn(vatScheme)
 
       val response = service.createNewRegistration
-      await(response) shouldBe Right(vatScheme)
+      await(response.value) shouldBe Right(vatScheme)
     }
 
     "error when creating VatScheme " in new Setup {
@@ -79,21 +79,21 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockRegistrationRepository.createNewVatScheme(Matchers.eq("1"))(any())).thenReturn(Future.failed(t))
 
       val response = service.createNewRegistration
-      await(response) shouldBe Left(GenericError(t))
+      await(response.value) shouldBe Left(GenericError(t))
     }
 
     "call to business service return ForbiddenException response " in new Setup {
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(Forbidden))
 
       val response = service.createNewRegistration
-      await(response) shouldBe Left(Forbidden)
+      await(response.value) shouldBe Left(Forbidden)
     }
 
     "call to business service return NotFoundException response " in new Setup {
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(NotFound))
 
       val response = service.createNewRegistration
-      await(response) shouldBe Left(NotFound)
+      await(response.value) shouldBe Left(NotFound)
     }
 
     "call to business service return ErrorResponse response " in new Setup {
@@ -101,7 +101,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(GenericError(t)))
 
       val response = service.createNewRegistration
-      await(response) shouldBe Left(GenericError(t))
+      await(response.value) shouldBe Left(GenericError(t))
     }
 
   }
@@ -113,7 +113,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockRegistrationRepository.updateVatChoice("1", vatChoice)).thenReturn(vatChoice)
 
       val response = service.updateVatChoice("1", vatChoice)
-      await(response) shouldBe Right(vatChoice)
+      await(response.value) shouldBe Right(vatChoice)
     }
 
 
@@ -122,7 +122,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockRegistrationRepository.updateVatChoice("1", vatChoice)).thenReturn(Future.failed(t))
 
       val response = service.updateVatChoice("1", vatChoice)
-      await(response) shouldBe Left(GenericError(t))
+      await(response.value) shouldBe Left(GenericError(t))
     }
 
   }
@@ -135,7 +135,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockRegistrationRepository.updateTradingDetails("1", tradingDetails)).thenReturn(tradingDetails)
 
       val response = service.updateTradingDetails("1", tradingDetails)
-      await(response) shouldBe Right(tradingDetails)
+      await(response.value) shouldBe Right(tradingDetails)
     }
 
 
@@ -144,7 +144,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockRegistrationRepository.updateTradingDetails("1", tradingDetails)).thenReturn(Future.failed(t))
 
       val response = service.updateTradingDetails("1", tradingDetails)
-      await(response) shouldBe Left(GenericError(t))
+      await(response.value) shouldBe Left(GenericError(t))
     }
   }
 

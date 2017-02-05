@@ -17,6 +17,24 @@
 package controllers
 
 import auth.Authenticated
+import common.exceptions.LeftState
+import play.api.libs.json.{Json, Writes}
+import play.api.mvc.Result
+import services.ServiceResult
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
-abstract class VatRegistrationBaseController extends BaseController with Authenticated
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
+abstract class VatRegistrationBaseController extends BaseController with Authenticated {
+
+  private[controllers] def handle[T](f: (T) => Result): (Either[LeftState, T]) => Result = {
+    case Right(entity) => f(entity)
+    case Left(NotFound) => Gone
+    case _ => ServiceUnavailable
+  }
+
+  protected def patch[T: Writes](serviceCall: (String, T) => ServiceResult[T], regId: String): T => Future[Result] =
+    (t: T) => serviceCall(regId, t).value.map(handle(u => Created(Json.toJson(u))))
+
+}

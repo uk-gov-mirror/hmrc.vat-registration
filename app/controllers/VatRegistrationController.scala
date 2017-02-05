@@ -18,55 +18,26 @@ package controllers
 
 import javax.inject.Inject
 
-import common.exceptions.GenericError
 import connectors.AuthConnector
-import models.{VatChoice, VatTradingDetails}
-import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, AnyContent, Result}
-import services.{RegistrationService, ServiceResult}
+import play.api.mvc.{Action, AnyContent}
+import services.RegistrationService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class VatRegistrationController @Inject()(val auth: AuthConnector, registrationService: RegistrationService) extends VatRegistrationBaseController {
-
-  private[controllers] def handle[T](f: (T) => Result): ServiceResult[T] => Result = {
-    case Right(entity) => f(entity)
-    case Left(NotFound) => Gone
-    case Left(GenericError(t)) => Logger.warn("Exception in service call", t); ServiceUnavailable
-    case _ => ServiceUnavailable
-  }
+class VatRegistrationController @Inject()(val auth: AuthConnector, registrationService: RegistrationService)
+  extends VatRegistrationBaseController {
 
   def newVatRegistration: Action[AnyContent] = Action.async {
-    implicit request =>
-      authenticated { user =>
-        registrationService.createNewRegistration.map {
-          handle(newVatScheme => Created(Json.toJson(newVatScheme)))
-        }
-      }
+    implicit request => authenticated { _ => registrationService.createNewRegistration.value.map(handle(u => Created(Json.toJson(u)))) }
   }
 
   def updateVatChoice(registrationId: String): Action[JsValue] = Action.async(parse.json) {
-    implicit request =>
-      authenticated { user =>
-        withJsonBody[VatChoice] { vatChoice =>
-          registrationService.updateVatChoice(registrationId, vatChoice).map {
-            handle(updated => Created(Json.toJson(updated)))
-          }
-        }
-      }
+    implicit request => authenticated { _ => withJsonBody(patch(registrationService.updateVatChoice, registrationId)) }
   }
 
-
   def updateTradingDetails(registrationId: String): Action[JsValue] = Action.async(parse.json) {
-    implicit request =>
-      authenticated { user =>
-        withJsonBody[VatTradingDetails] { tradingDetails =>
-          registrationService.updateTradingDetails(registrationId, tradingDetails).map {
-            handle(updated => Created(Json.toJson(updated)))
-          }
-        }
-      }
+    implicit request => authenticated { _ => withJsonBody(patch(registrationService.updateTradingDetails, registrationId)) }
   }
 
 }

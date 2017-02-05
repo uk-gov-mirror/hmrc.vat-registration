@@ -19,21 +19,23 @@ package services
 import javax.inject.Inject
 
 import cats.data.EitherT
-import common.exceptions.{GenericError, LeftState}
+import common.exceptions._
 import connectors._
-import models.{VatChoice, VatScheme, VatTradingDetails}
+import models._
+import models.external.CurrentProfile
 import repositories.RegistrationRepository
 import uk.gov.hmrc.play.http.HeaderCarrier
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait RegistrationService {
 
-  def createNewRegistration(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatScheme]]
+  def createNewRegistration(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme]
 
-  def updateVatChoice(registrationId: String, vatChoice: VatChoice): Future[ServiceResult[VatChoice]]
+  def updateVatChoice(registrationId: String, vatChoice: VatChoice): ServiceResult[VatChoice]
 
-  def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Future[ServiceResult[VatTradingDetails]]
+  def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): ServiceResult[VatTradingDetails]
 
 }
 
@@ -43,28 +45,27 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
 
   import cats.implicits._
 
-  import scala.concurrent.ExecutionContext.Implicits.global
+  private def toEitherT[T](eventualT: Future[T]) =
+    EitherT[Future, LeftState, T](eventualT.map(Right(_)).recover { case t => Left(GenericError(t)) })
 
-  override def createNewRegistration(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatScheme]] = {
-    val futureVatScheme = for {
+  private def getOrCreateVatScheme(profile: CurrentProfile): Future[Either[LeftState, VatScheme]] =
+    registrationRepository.retrieveVatScheme(profile.registrationID).flatMap {
+      case Some(vatScheme) => Future.successful(Right(vatScheme))
+      case None => registrationRepository.createNewVatScheme(profile.registrationID).map(Right(_)).recover {
+        case t => Left(GenericError(t))
+      }
+    }
+
+  override def createNewRegistration(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme] =
+    for {
       profile <- EitherT(brConnector.retrieveCurrentProfile)
-      vatScheme <- EitherT[Future, LeftState, VatScheme](
-        registrationRepository.retrieveVatScheme(profile.registrationID).flatMap {
-          case Some(vatScheme) => Future.successful(Right(vatScheme))
-          case None => registrationRepository.createNewVatScheme(profile.registrationID).map(Right(_)).recover {
-            case t => Left(GenericError(t))
-          }
-        })
+      vatScheme <- EitherT(getOrCreateVatScheme(profile))
     } yield vatScheme
-    futureVatScheme.value
-  }
 
-  override def updateVatChoice(registrationId: String, vatChoice: VatChoice): Future[ServiceResult[VatChoice]] =
-    registrationRepository.updateVatChoice(registrationId, vatChoice).map(Right(_))
-      .recover(genericServiceException)
+  override def updateVatChoice(registrationId: String, vatChoice: VatChoice): ServiceResult[VatChoice] =
+    toEitherT(registrationRepository.updateVatChoice(registrationId, vatChoice))
 
-  override def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Future[ServiceResult[VatTradingDetails]] =
-    registrationRepository.updateTradingDetails(registrationId, tradingDetails).map(Right(_))
-      .recover(genericServiceException)
+  override def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): ServiceResult[VatTradingDetails] =
+    toEitherT(registrationRepository.updateTradingDetails(registrationId, tradingDetails))
 
 }
