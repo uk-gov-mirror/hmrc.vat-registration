@@ -57,4 +57,16 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, vatRegistrati
       }
   }
 
+  def retrieveVatScheme(registrationId: String) : Action[AnyContent] = Action.async {
+    implicit request =>
+      authenticated { user =>
+          vatRegistrationService.retrieveVatScheme(registrationId) map {
+            case Right(vatScheme) => Ok(Json.toJson(vatScheme))
+            case Left(GenericServiceException(t)) =>
+              Logger.warn("Exception in service call", t)
+              ServiceUnavailable
+          }
+        }
+      }
+
 }

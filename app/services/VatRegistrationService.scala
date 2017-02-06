@@ -29,7 +29,7 @@ import scala.concurrent.Future
 trait RegistrationService {
   def updateVatChoice(registrationId: String, vatChoice: VatChoice)(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatChoice]]
   def createNewRegistration(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatScheme]]
-
+  def retrieveVatScheme(registrationId: String): Future[ServiceResult[VatScheme]]
 }
 
 class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnector,
@@ -47,9 +47,9 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   override def createNewRegistration(implicit headerCarrier: HeaderCarrier): Future[ServiceResult[VatScheme]] = {
     brConnector.retrieveCurrentProfile flatMap {
       case BusinessRegistrationSuccessResponse(profile) =>
-        registrationRepository.retrieveVatScheme(profile.registrationID) flatMap {
-          case Some(registration) => Future.successful(Right(registration))
-          case None => (registrationRepository.createNewVatScheme(profile.registrationID) map (vatScheme => Right(vatScheme))).recover {
+        retrieveVatScheme(profile.registrationID) flatMap {
+          case Right(registration) => Future.successful(Right(registration))
+          case Left(left) => (registrationRepository.createNewVatScheme(profile.registrationID) map (vatScheme => Right(vatScheme))).recover {
             case t: Throwable => Left(GenericServiceException(t))
           }
         }
@@ -59,4 +59,12 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
     }
   }
 
+  override def retrieveVatScheme(registrationId: String): Future[ServiceResult[VatScheme]] = {
+    (registrationRepository.retrieveVatScheme(registrationId) flatMap {
+      case Some(vatScheme)  => Future.successful(Right(vatScheme))
+      case None => Future.successful(Left(NotFoundException))
+    }).recover {
+      case t: Throwable => Left(GenericServiceException(t))
+    }
+  }
 }
