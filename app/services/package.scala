@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-import common.exceptions.ServiceException
+import cats.data.EitherT
+import common.exceptions.LeftState
+
+import scala.concurrent.Future
 
 package object services {
 
-  type ServiceResult[T] = Either[ServiceException, T]
-
+  type ServiceResult[T] = EitherT[Future, LeftState, T]
 
 }

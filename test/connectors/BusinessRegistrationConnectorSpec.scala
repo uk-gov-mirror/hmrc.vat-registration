@@ -16,6 +16,7 @@
 
 package connectors
 
+import common.exceptions._
 import fixtures.BusinessRegistrationFixture
 import helpers.VatRegSpec
 import models.external.CurrentProfile
@@ -42,28 +43,29 @@ class BusinessRegistrationConnectorSpec extends VatRegSpec with BusinessRegistra
     "return a a CurrentProfile response if one is found in business registration micro-service" in new Setup {
       mockHttpGet[CurrentProfile]("testUrl", validBusinessRegistrationResponse)
 
-      await(connector.retrieveCurrentProfile) shouldBe BusinessRegistrationSuccessResponse(validBusinessRegistrationResponse)
+      await(connector.retrieveCurrentProfile) shouldBe Right(validBusinessRegistrationResponse)
     }
 
     "return a Not Found response when a CurrentProfile record can not be found" in new Setup {
       when(mockWSHttp.GET[CurrentProfile](Matchers.any())(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new NotFoundException("Bad request")))
 
-      await(connector.retrieveCurrentProfile) shouldBe BusinessRegistrationNotFoundResponse
+      await(connector.retrieveCurrentProfile) shouldBe Left(NotFound("Bad request"))
     }
 
     "return a Forbidden response when a CurrentProfile record can not be accessed by the user" in new Setup {
       when(mockWSHttp.GET[CurrentProfile](Matchers.any())(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new ForbiddenException("Forbidden")))
 
-      await(connector.retrieveCurrentProfile) shouldBe BusinessRegistrationForbiddenResponse
+      await(connector.retrieveCurrentProfile) shouldBe Left(Forbidden("Forbidden"))
     }
 
     "return an Exception response when an unspecified error has occurred" in new Setup {
+      val ex = new Exception("exception")
       when(mockWSHttp.GET[CurrentProfile](Matchers.any())(Matchers.any(), Matchers.any()))
-        .thenReturn(Future.failed(new Exception("exception")))
+        .thenReturn(Future.failed(ex))
 
-      await(connector.retrieveCurrentProfile).getClass shouldBe BusinessRegistrationErrorResponse(new Exception).getClass
+      await(connector.retrieveCurrentProfile) shouldBe Left(GenericError(ex))
     }
   }
 }

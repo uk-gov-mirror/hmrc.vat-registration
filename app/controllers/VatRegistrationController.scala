@@ -18,55 +18,30 @@ package controllers
 
 import javax.inject.Inject
 
-import common.exceptions.GenericServiceException
+import cats.implicits._
 import connectors.AuthConnector
-import models.VatChoice
-import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
 import services.RegistrationService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class VatRegistrationController @Inject()(val auth: AuthConnector, vatRegistrationService: RegistrationService) extends VatRegistrationBaseController {
+class VatRegistrationController @Inject()(val auth: AuthConnector, registrationService: RegistrationService)
+  extends VatRegistrationBaseController {
 
   def newVatRegistration: Action[AnyContent] = Action.async {
-    implicit request =>
-      authenticated { user =>
-        vatRegistrationService.createNewRegistration map {
-          case Right(vatScheme) => Created(Json.toJson(vatScheme))
-          case Left(GenericServiceException(t)) =>
-            Logger.warn("Exception in service call", t)
-            ServiceUnavailable
-        }
-      }
+    implicit request => authenticated { _ => registrationService.createNewRegistration.fold(err => err.toResult, b => Created(Json.toJson(b))) }
   }
 
+  def updateTradingDetails(registrationId: String): Action[JsValue] = patch(registrationService.updateTradingDetails, registrationId)
 
-    def updateVatChoice(registrationId: String) : Action[JsValue] = Action.async(parse.json) {
+  def updateVatChoice(registrationId: String): Action[JsValue] = patch(registrationService.updateVatChoice, registrationId)
+
+  def retrieveVatScheme(registrationId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      authenticated { user =>
-        withJsonBody[VatChoice] { vatChoice =>
-          vatRegistrationService.updateVatChoice(registrationId, vatChoice) map {
-            case Right(vatChoice) => Created(Json.toJson(vatChoice))
-            case Left(GenericServiceException(t)) =>
-              Logger.warn("Exception in service call", t)
-              ServiceUnavailable
-          }
-        }
+      authenticated { _ =>
+        registrationService.retrieveVatScheme(registrationId).fold(err => err.toResult, vatScheme => Created(Json.toJson(vatScheme)))
       }
   }
-
-  def retrieveVatScheme(registrationId: String) : Action[AnyContent] = Action.async {
-    implicit request =>
-      authenticated { user =>
-          vatRegistrationService.retrieveVatScheme(registrationId) map {
-            case Right(vatScheme) => Ok(Json.toJson(vatScheme))
-            case Left(GenericServiceException(t)) =>
-              Logger.warn("Exception in service call", t)
-              ServiceUnavailable
-          }
-        }
-      }
 
 }
