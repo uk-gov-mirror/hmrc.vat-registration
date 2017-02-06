@@ -19,9 +19,10 @@ package controllers
 import javax.inject.Inject
 
 import cats.implicits._
+import common.exceptions.LeftState
 import connectors.AuthConnector
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, Result}
 import services.RegistrationService
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,19 +30,24 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class VatRegistrationController @Inject()(val auth: AuthConnector, registrationService: RegistrationService)
   extends VatRegistrationBaseController {
 
+  val errorHandler: (LeftState) => Result = err => err.toResult
+
   def newVatRegistration: Action[AnyContent] = Action.async {
-    implicit request => authenticated { _ => registrationService.createNewRegistration.fold(err => err.toResult, b => Created(Json.toJson(b))) }
+    implicit request =>
+      authenticated { _ =>
+        registrationService.createNewRegistration.fold(errorHandler, vatScheme => Created(Json.toJson(vatScheme)))
+      }
+  }
+
+  def retrieveVatScheme(registrationId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      authenticated { _ =>
+        registrationService.retrieveVatScheme(registrationId).fold(errorHandler, vatScheme => Created(Json.toJson(vatScheme)))
+      }
   }
 
   def updateTradingDetails(registrationId: String): Action[JsValue] = patch(registrationService.updateTradingDetails, registrationId)
 
   def updateVatChoice(registrationId: String): Action[JsValue] = patch(registrationService.updateVatChoice, registrationId)
-
-  def retrieveVatScheme(registrationId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authenticated { _ =>
-        registrationService.retrieveVatScheme(registrationId).fold(err => err.toResult, vatScheme => Created(Json.toJson(vatScheme)))
-      }
-  }
 
 }
