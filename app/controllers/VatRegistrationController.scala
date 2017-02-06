@@ -18,6 +18,7 @@ package controllers
 
 import javax.inject.Inject
 
+import cats.implicits._
 import connectors.AuthConnector
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
@@ -29,7 +30,7 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
   extends VatRegistrationBaseController {
 
   def newVatRegistration: Action[AnyContent] = Action.async {
-    implicit request => authenticated { _ => registrationService.createNewRegistration.value.map(handle(u => Created(Json.toJson(u)))) }
+    implicit request => authenticated { _ => registrationService.createNewRegistration.fold(errorHandler, b => Created(Json.toJson(b))) }
   }
 
   def updateTradingDetails(registrationId: String): Action[JsValue] = patch(registrationService.updateTradingDetails, registrationId)

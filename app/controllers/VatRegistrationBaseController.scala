@@ -17,6 +17,7 @@
 package controllers
 
 import auth.Authenticated
+import cats.implicits._
 import common.exceptions.LeftState
 import play.api.libs.json.{Format, JsValue, Json}
 import play.api.mvc.{Action, Result}
@@ -27,9 +28,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 abstract class VatRegistrationBaseController extends BaseController with Authenticated {
 
-  private[controllers] def handle[T](f: (T) => Result): (Either[LeftState, T]) => Result = {
-    case Right(entity) => f(entity)
-    case Left(NotFound) => Gone
+  protected def errorHandler[T]: (LeftState) => Result = {
+    case NotFound => Gone
     case _ => ServiceUnavailable
   }
 
@@ -37,7 +37,10 @@ abstract class VatRegistrationBaseController extends BaseController with Authent
     Action.async(parse.json) {
       implicit request =>
         authenticated { user =>
-          withJsonBody((t: T) => serviceCall(regId, t).value.map(handle(u => Created(Json.toJson(u)))))
+          withJsonBody((t: T) => serviceCall(regId, t).fold(
+            errorHandler,
+            b => Created(Json.toJson(b))
+          ))
         }
     }
 
