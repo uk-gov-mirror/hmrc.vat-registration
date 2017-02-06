@@ -33,6 +33,8 @@ trait RegistrationService {
 
   def createNewRegistration(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme]
 
+  def retrieveVatScheme(registrationId: String): ServiceResult[VatScheme]
+
   def updateVatChoice(registrationId: String, vatChoice: VatChoice): ServiceResult[VatChoice]
 
   def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): ServiceResult[VatTradingDetails]
@@ -68,10 +70,15 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
       vatScheme <- EitherT(getOrCreateVatScheme(profile))
     } yield vatScheme
 
+  override def retrieveVatScheme(registrationId: String): ServiceResult[VatScheme] =
+    EitherT(registrationRepository.retrieveVatScheme(registrationId).map[Either[LeftState, VatScheme]] {
+      case Some(vatScheme) => Right(vatScheme)
+      case None => Left(NotFound(registrationId))
+    })
+
   override def updateVatChoice(registrationId: String, vatChoice: VatChoice): ServiceResult[VatChoice] =
     toEitherT(registrationRepository.updateVatChoice(registrationId, vatChoice))
 
   override def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): ServiceResult[VatTradingDetails] =
     toEitherT(registrationRepository.updateTradingDetails(registrationId, tradingDetails))
-
 }

@@ -30,11 +30,18 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
   extends VatRegistrationBaseController {
 
   def newVatRegistration: Action[AnyContent] = Action.async {
-    implicit request => authenticated { _ => registrationService.createNewRegistration.fold(a => a.toResult, b => Created(Json.toJson(b))) }
+    implicit request => authenticated { _ => registrationService.createNewRegistration.fold(err => err.toResult, b => Created(Json.toJson(b))) }
   }
 
   def updateTradingDetails(registrationId: String): Action[JsValue] = patch(registrationService.updateTradingDetails, registrationId)
 
   def updateVatChoice(registrationId: String): Action[JsValue] = patch(registrationService.updateVatChoice, registrationId)
+
+  def retrieveVatScheme(registrationId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      authenticated { _ =>
+        registrationService.retrieveVatScheme(registrationId).fold(err => err.toResult, vatScheme => Created(Json.toJson(vatScheme)))
+      }
+  }
 
 }

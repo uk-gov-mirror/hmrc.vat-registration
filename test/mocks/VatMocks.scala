@@ -67,11 +67,21 @@ trait VatMocks extends WSHTTPMock {
       EitherT[Future, LeftState, B](Future.successful(Left(a)))
     }
 
+    def mockRetrieveVatSchemeThrowsException(testId: String): Unit = {
+      val exception = new Exception("Exception")
+      when(mockRegistrationService.retrieveVatScheme(Matchers.any()))
+        .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception)))
+    }
+
+    def mockRetrieveVatScheme(testId: String, vatScheme: VatScheme): Unit = {
+      when(mockRegistrationService.retrieveVatScheme(Matchers.contains(testId)))
+        .thenReturn(serviceResult(vatScheme))
+    }
+
     def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
       when(mockRegistrationService.createNewRegistration(Matchers.any()))
         .thenReturn(serviceResult(VatScheme.blank(registrationId)(Now(new DateTime(2017, 1, 31, 13, 6)))))
     }
-
 
     def mockFailedCreateNewRegistration(registrationId: String): Unit = {
       when(mockRegistrationService.createNewRegistration(Matchers.any()))

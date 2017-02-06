@@ -57,6 +57,20 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       await(response.value) shouldBe Right(vatScheme)
     }
 
+    "call to retrieveVatScheme return VatScheme from DB" in new Setup {
+      val vatScheme = VatScheme.blank("1")
+      when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(Future.successful(Some(vatScheme)))
+      val response = service.retrieveVatScheme("1")
+      await(response.value) shouldBe Right(vatScheme)
+    }
+
+    "call to retrieveVatScheme return None from DB " in new Setup {
+      val vatScheme = VatScheme.blank("1")
+      when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(Future.successful(None))
+      val response = service.retrieveVatScheme("1")
+      await(response.value) shouldBe Left(NotFound("1"))
+    }
+
     "return a new VatScheme response " in new Setup {
       val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
       val vatScheme = VatScheme.blank("1")
