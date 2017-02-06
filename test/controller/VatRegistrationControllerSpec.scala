@@ -16,10 +16,11 @@
 
 package controller
 
-import common.exceptions.GenericServiceException
+import akka.stream.Materializer
+import common.Now
 import controllers.VatRegistrationController
 import helpers.VatRegSpec
-import models.VatChoice
+import models.{VatChoice, VatScheme}
 import org.joda.time.DateTime
 import play.api.libs.json.Json
 import play.api.mvc.Result
@@ -27,6 +28,7 @@ import play.api.mvc.Results.{Created, ServiceUnavailable}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
@@ -34,8 +36,8 @@ class VatRegistrationControllerSpec extends VatRegSpec {
 
   val testId = "testId"
   val vatChoice: VatChoice = VatChoice.blank(new DateTime())
-
-
+  val vatScheme: VatScheme = VatScheme.blank(testId)(Now(new DateTime(2017, 1, 31, 13, 6)))
+  val materializer = fakeApplication.injector.instanceOf[Materializer]
   class Setup {
     val controller = new VatRegistrationController(mockAuthConnector, mockRegistrationService)
   }
@@ -54,6 +56,7 @@ class VatRegistrationControllerSpec extends VatRegSpec {
       val response: Future[Result] = controller.newVatRegistration()(FakeRequest())
       status(response) shouldBe CREATED
     }
+
 
     "return 503 if RegistrationService encounters any problems" in new Setup {
       AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
@@ -85,7 +88,26 @@ class VatRegistrationControllerSpec extends VatRegSpec {
       await(response) shouldBe ServiceUnavailable
     }
 
-  }
 
+    "call to retrieveVatScheme return Ok with VatScheme" in new Setup {
+      AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+      ServiceMocks.mockRetrieveVatScheme(testId, vatScheme)
+      val response: Future[Result] = controller.retrieveVatScheme(testId)(
+        FakeRequest()
+      )
+      status(response) shouldBe OK
+      response.map(result => result.shouldBe(vatScheme))
+    }
+
+    "call to retrieveVatScheme return ServiceUnavailable" in new Setup {
+      AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+      ServiceMocks.mockRetrieveVatSchemeThrowsException(testId)
+      val response: Future[Result] = controller.retrieveVatScheme(testId)(
+        FakeRequest()
+      )
+      await(response) shouldBe ServiceUnavailable
+    }
+
+  }
 
 }

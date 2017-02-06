@@ -22,7 +22,6 @@ import connectors.{AuthConnector, Authority}
 import models.{VatChoice, VatScheme}
 import org.joda.time.DateTime
 import org.mockito.Matchers
-import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
@@ -58,8 +57,23 @@ trait VatMocks extends WSHTTPMock {
   }
 
   object ServiceMocks {
+    def mockRetrieveVatSchemeThrowsException(testId: String): Unit = {
+      val exception = new Exception("Exception")
+      when(mockRegistrationService.retrieveVatScheme(Matchers.any()))
+        .thenReturn(Future.successful(Left(GenericServiceException(exception))))
+    }
+
+    def mockRetrieveVatScheme(testId: String, vatScheme: VatScheme) : Unit = {
+      when(mockRegistrationService.retrieveVatScheme(Matchers.contains(testId)))
+        .thenReturn(Future.successful(Right(vatScheme)))
+    }
 
     def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
+      when(mockRegistrationService.createNewRegistration(Matchers.any()))
+        .thenReturn(Future.successful(Right(VatScheme.blank(registrationId)(Now(new DateTime(2017, 1, 31, 13, 6))))))
+    }
+
+    def mockCreateNewRegistration(registrationId: String): Unit = {
       when(mockRegistrationService.createNewRegistration(Matchers.any()))
         .thenReturn(Future.successful(Right(VatScheme.blank(registrationId)(Now(new DateTime(2017, 1, 31, 13, 6))))))
     }

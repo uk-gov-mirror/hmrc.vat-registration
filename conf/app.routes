@@ -2,3 +2,4 @@
 
 POST    /new                         controllers.VatRegistrationController.newVatRegistration
 PATCH   /:regID/vat-choice           controllers.VatRegistrationController.updateVatChoice(regID)
+GET     /:regID/vat-scheme           controllers.VatRegistrationController.retrieveVatScheme(regID)
