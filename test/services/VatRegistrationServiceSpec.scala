@@ -20,8 +20,8 @@ import common.Now
 import common.exceptions._
 import connectors._
 import helpers.VatRegSpec
-import models.external.CurrentProfile
 import models._
+import models.external.CurrentProfile
 import org.joda.time.DateTime
 import org.mockito.Matchers
 import org.mockito.Matchers.any
@@ -83,17 +83,17 @@ class VatRegistrationServiceSpec extends VatRegSpec {
     }
 
     "call to business service return ForbiddenException response " in new Setup {
-      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(Forbidden))
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(Forbidden("forbidden")))
 
       val response = service.createNewRegistration
-      await(response.value) shouldBe Left(Forbidden)
+      await(response.value) shouldBe Left(Forbidden("forbidden"))
     }
 
     "call to business service return NotFoundException response " in new Setup {
-      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(NotFound))
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(NotFound("notfound")))
 
       val response = service.createNewRegistration
-      await(response.value) shouldBe Left(NotFound)
+      await(response.value) shouldBe Left(NotFound("notfound"))
     }
 
     "call to business service return ErrorResponse response " in new Setup {
@@ -125,6 +125,16 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       await(response.value) shouldBe Left(GenericError(t))
     }
 
+    "return Error response for MissingRegDocument" in new Setup {
+      val regId = "regId"
+      val t = MissingRegDocument(regId)
+      when(mockRegistrationRepository.updateVatChoice("1", vatChoice)).thenReturn(Future.failed(t))
+
+      val response = service.updateVatChoice("1", vatChoice)
+
+      await(response.value) shouldBe Left(NotFound(s"No registration found for registration ID: $regId"))
+    }
+
   }
 
   "call to updateTradingDetails" should {
@@ -145,6 +155,16 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
       val response = service.updateTradingDetails("1", tradingDetails)
       await(response.value) shouldBe Left(GenericError(t))
+    }
+
+    "return Error response for MissingRegDocument" in new Setup {
+      val regId = "regId"
+      val t = MissingRegDocument(regId)
+      when(mockRegistrationRepository.updateTradingDetails("1", tradingDetails)).thenReturn(Future.failed(t))
+
+      val response = service.updateTradingDetails("1", tradingDetails)
+
+      await(response.value) shouldBe Left(NotFound(s"No registration found for registration ID: $regId"))
     }
   }
 

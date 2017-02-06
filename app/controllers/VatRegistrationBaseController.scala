@@ -18,9 +18,8 @@ package controllers
 
 import auth.Authenticated
 import cats.implicits._
-import common.exceptions.LeftState
 import play.api.libs.json.{Format, JsValue, Json}
-import play.api.mvc.{Action, Result}
+import play.api.mvc.Action
 import services.ServiceResult
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
@@ -28,17 +27,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 abstract class VatRegistrationBaseController extends BaseController with Authenticated {
 
-  protected def errorHandler[T]: (LeftState) => Result = {
-    case NotFound => Gone
-    case _ => ServiceUnavailable
-  }
-
   protected def patch[T: Format : Manifest](serviceCall: (String, T) => ServiceResult[T], regId: String): Action[JsValue] =
     Action.async(parse.json) {
       implicit request =>
         authenticated { user =>
           withJsonBody((t: T) => serviceCall(regId, t).fold(
-            errorHandler,
+            a => a.toResult,
             b => Created(Json.toJson(b))
           ))
         }

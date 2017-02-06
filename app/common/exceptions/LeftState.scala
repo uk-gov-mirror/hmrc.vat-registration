@@ -16,13 +16,28 @@
 
 package common.exceptions
 
+import play.api.libs.json.Json
+import play.api.mvc.Result
+import play.api.mvc.Results._
 
-sealed trait LeftState extends Product with Serializable
+sealed trait LeftState extends Product with Serializable {
 
-case object VatSchemeNotFound extends LeftState
+  private def toResult(status: play.api.mvc.Results.Status, msg: String) =
+    status(Json.obj("errorCode" -> status.header.status, "errorMessage" -> msg))
 
-case object NotFound extends LeftState
+  def toResult: Result = this match {
+    case NotFound(msg) => toResult(play.api.mvc.Results.Gone, msg)
+    case Forbidden(msg) => toResult(play.api.mvc.Results.Forbidden, msg)
+    case GenericDatabaseError(t) => toResult(ServiceUnavailable, t.getMessage)
+    case GenericError(t) => toResult(ServiceUnavailable, t.getMessage)
+  }
 
-case object Forbidden extends LeftState
+}
+
+final case class NotFound(msg: String) extends LeftState
+
+final case class Forbidden(msg: String) extends LeftState
+
+final case class GenericDatabaseError(t: Throwable) extends LeftState
 
 final case class GenericError(t: Throwable) extends LeftState

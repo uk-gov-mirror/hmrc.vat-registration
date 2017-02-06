@@ -45,8 +45,14 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
 
   import cats.implicits._
 
+  private def repositoryErrorHandler[T]: PartialFunction[Throwable, Either[LeftState, T]] = {
+    case e: MissingRegDocument => Left(NotFound(s"No registration found for registration ID: ${e.regId}"))
+    case e: DBExceptions => Left(GenericDatabaseError(e))
+    case t: Throwable => Left(GenericError(t))
+  }
+
   private def toEitherT[T](eventualT: Future[T]) =
-    EitherT[Future, LeftState, T](eventualT.map(Right(_)).recover { case t => Left(GenericError(t)) })
+    EitherT[Future, LeftState, T](eventualT.map(Right(_)).recover(repositoryErrorHandler))
 
   private def getOrCreateVatScheme(profile: CurrentProfile): Future[Either[LeftState, VatScheme]] =
     registrationRepository.retrieveVatScheme(profile.registrationID).flatMap {
