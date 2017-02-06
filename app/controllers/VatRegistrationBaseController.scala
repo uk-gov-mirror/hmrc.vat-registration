@@ -18,13 +18,12 @@ package controllers
 
 import auth.Authenticated
 import common.exceptions.LeftState
-import play.api.libs.json.{Json, Writes}
-import play.api.mvc.Result
+import play.api.libs.json.{Format, JsValue, Json}
+import play.api.mvc.{Action, Result}
 import services.ServiceResult
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 abstract class VatRegistrationBaseController extends BaseController with Authenticated {
 
@@ -34,7 +33,12 @@ abstract class VatRegistrationBaseController extends BaseController with Authent
     case _ => ServiceUnavailable
   }
 
-  protected def patch[T: Writes](serviceCall: (String, T) => ServiceResult[T], regId: String): T => Future[Result] =
-    (t: T) => serviceCall(regId, t).value.map(handle(u => Created(Json.toJson(u))))
+  protected def patch[T: Format : Manifest](serviceCall: (String, T) => ServiceResult[T], regId: String): Action[JsValue] =
+    Action.async(parse.json) {
+      implicit request =>
+        authenticated { user =>
+          withJsonBody((t: T) => serviceCall(regId, t).value.map(handle(u => Created(Json.toJson(u)))))
+        }
+    }
 
 }

@@ -32,12 +32,8 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
     implicit request => authenticated { _ => registrationService.createNewRegistration.value.map(handle(u => Created(Json.toJson(u)))) }
   }
 
-  def updateVatChoice(registrationId: String): Action[JsValue] = Action.async(parse.json) {
-    implicit request => authenticated { _ => withJsonBody(patch(registrationService.updateVatChoice, registrationId)) }
-  }
+  def updateTradingDetails(registrationId: String): Action[JsValue] = patch(registrationService.updateTradingDetails, registrationId)
 
-  def updateTradingDetails(registrationId: String): Action[JsValue] = Action.async(parse.json) {
-    implicit request => authenticated { _ => withJsonBody(patch(registrationService.updateTradingDetails, registrationId)) }
-  }
+  def updateVatChoice(registrationId: String): Action[JsValue] = patch(registrationService.updateVatChoice, registrationId)
 
 }
