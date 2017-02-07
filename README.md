@@ -23,14 +23,15 @@ alias precommit="sbt clean coverage test it:test scalastyle coverageReport"
 
 User service manager to run all services required by VAT Registration backend:
 
+```bash
 sm --start VAT_REG_DEP -f
-
+```
 Note this will start the VAT registration backend itself too, as it's included in the profile.
 
 alternatively, create an alias for starting the services required for the backend:
 
 ```bash
-alias scrs='sm --start AUTH AUTHENTICATOR GG GG_STUBS USER_DETAILS KEYSTORE DATASTREAM -f'
+alias vatreg='docker start graphite && sm --start AUTH AUTH_LOGIN_STUB AUTHENTICATOR BUS_REG CA_FRONTEND GG GG_STUBS USER_DETAILS KEYSTORE SAVE4LATER DATASTREAM ASSETS_FRONTEND -f'
 ```
 
 To run the service, just `cd` to cloned directory and execute:
