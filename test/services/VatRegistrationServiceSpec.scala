@@ -53,7 +53,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
       when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(Some(vatScheme))
 
-      val response = service.createNewRegistration
+      val response = service.createNewRegistration()
       await(response.value) shouldBe Right(vatScheme)
     }
 
@@ -68,7 +68,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       val vatScheme = VatScheme.blank("1")
       when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(Future.successful(None))
       val response = service.retrieveVatScheme("1")
-      await(response.value) shouldBe Left(NotFound("1"))
+      await(response.value) shouldBe Left(ResourceNotFound("1"))
     }
 
     "return a new VatScheme response " in new Setup {
@@ -79,7 +79,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(None)
       when(mockRegistrationRepository.createNewVatScheme(Matchers.eq("1"))(any())).thenReturn(vatScheme)
 
-      val response = service.createNewRegistration
+      val response = service.createNewRegistration()
       await(response.value) shouldBe Right(vatScheme)
     }
 
@@ -92,29 +92,29 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(None)
       when(mockRegistrationRepository.createNewVatScheme(Matchers.eq("1"))(any())).thenReturn(Future.failed(t))
 
-      val response = service.createNewRegistration
+      val response = service.createNewRegistration()
       await(response.value) shouldBe Left(GenericError(t))
     }
 
     "call to business service return ForbiddenException response " in new Setup {
-      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(Forbidden("forbidden")))
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(ForbiddenAccess("forbidden")))
 
-      val response = service.createNewRegistration
-      await(response.value) shouldBe Left(Forbidden("forbidden"))
+      val response = service.createNewRegistration()
+      await(response.value) shouldBe Left(ForbiddenAccess("forbidden"))
     }
 
     "call to business service return NotFoundException response " in new Setup {
-      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(NotFound("notfound")))
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(ResourceNotFound("notfound")))
 
-      val response = service.createNewRegistration
-      await(response.value) shouldBe Left(NotFound("notfound"))
+      val response = service.createNewRegistration()
+      await(response.value) shouldBe Left(ResourceNotFound("notfound"))
     }
 
     "call to business service return ErrorResponse response " in new Setup {
       val t = new RuntimeException("Exception")
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(GenericError(t)))
 
-      val response = service.createNewRegistration
+      val response = service.createNewRegistration()
       await(response.value) shouldBe Left(GenericError(t))
     }
 
@@ -146,7 +146,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
       val response = service.updateVatChoice("1", vatChoice)
 
-      await(response.value) shouldBe Left(NotFound(s"No registration found for registration ID: $regId"))
+      await(response.value) shouldBe Left(ResourceNotFound(s"No registration found for registration ID: $regId"))
     }
 
   }
@@ -178,7 +178,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
       val response = service.updateTradingDetails("1", tradingDetails)
 
-      await(response.value) shouldBe Left(NotFound(s"No registration found for registration ID: $regId"))
+      await(response.value) shouldBe Left(ResourceNotFound(s"No registration found for registration ID: $regId"))
     }
   }
 

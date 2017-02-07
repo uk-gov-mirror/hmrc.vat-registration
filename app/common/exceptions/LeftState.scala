@@ -26,18 +26,18 @@ sealed trait LeftState extends Product with Serializable {
     status(Json.obj("errorCode" -> status.header.status, "errorMessage" -> msg))
 
   def toResult: Result = this match {
-    case NotFound(msg) => toResult(play.api.mvc.Results.Gone, msg)
-    case Forbidden(msg) => toResult(play.api.mvc.Results.Forbidden, msg)
-    case GenericDatabaseError(t) => toResult(ServiceUnavailable, t.getMessage)
-    case GenericError(t) => toResult(ServiceUnavailable, t.getMessage)
+    case ResourceNotFound(msg) => toResult(play.api.mvc.Results.Gone, msg)
+    case ForbiddenAccess(msg) => toResult(play.api.mvc.Results.Forbidden, msg)
+    case GenericDatabaseError(t, regId) => toResult(ServiceUnavailable, s"Mongo exception: $t ; registration ID: ${regId.getOrElse("n/a")}")
+    case GenericError(t) => toResult(ServiceUnavailable, s"Generic exception: $t")
   }
 
 }
 
-final case class NotFound(msg: String) extends LeftState
+final case class ResourceNotFound(msg: String) extends LeftState
 
-final case class Forbidden(msg: String) extends LeftState
+final case class ForbiddenAccess(msg: String) extends LeftState
 
-final case class GenericDatabaseError(t: Throwable) extends LeftState
+final case class GenericDatabaseError(t: Throwable, regId: Option[String]) extends LeftState
 
 final case class GenericError(t: Throwable) extends LeftState

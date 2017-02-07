@@ -35,7 +35,6 @@ trait Authenticated {
   implicit val uuh: UnauthenticatedUserHandler = () => Forbidden
 
   def authenticated(f: Authority => Future[Result])(implicit hc: HeaderCarrier, uuh: UnauthenticatedUserHandler): Future[Result] = {
-
     Logger.debug(s"Current user id is ${hc.userId}")
     auth.getCurrentAuthority() flatMap {
       case None => Future.successful(uuh())

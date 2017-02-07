@@ -31,7 +31,7 @@ import scala.concurrent.Future
 
 trait RegistrationService {
 
-  def createNewRegistration(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme]
+  def createNewRegistration()(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme]
 
   def retrieveVatScheme(registrationId: String): ServiceResult[VatScheme]
 
@@ -48,8 +48,8 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   import cats.implicits._
 
   private def repositoryErrorHandler[T]: PartialFunction[Throwable, Either[LeftState, T]] = {
-    case e: MissingRegDocument => Left(NotFound(s"No registration found for registration ID: ${e.regId}"))
-    case e: DBExceptions => Left(GenericDatabaseError(e))
+    case e: MissingRegDocument => Left(ResourceNotFound(s"No registration found for registration ID: ${e.regId}"))
+    case dbe: DBExceptions => Left(GenericDatabaseError(dbe, Some(dbe.regId)))
     case t: Throwable => Left(GenericError(t))
   }
 
@@ -59,12 +59,10 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   private def getOrCreateVatScheme(profile: CurrentProfile): Future[Either[LeftState, VatScheme]] =
     registrationRepository.retrieveVatScheme(profile.registrationID).flatMap {
       case Some(vatScheme) => Future.successful(Right(vatScheme))
-      case None => registrationRepository.createNewVatScheme(profile.registrationID).map(Right(_)).recover {
-        case t => Left(GenericError(t))
-      }
+      case None => registrationRepository.createNewVatScheme(profile.registrationID).map(Right(_)).recover(repositoryErrorHandler)
     }
 
-  override def createNewRegistration(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme] =
+  override def createNewRegistration()(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme] =
     for {
       profile <- EitherT(brConnector.retrieveCurrentProfile)
       vatScheme <- EitherT(getOrCreateVatScheme(profile))
@@ -73,7 +71,7 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   override def retrieveVatScheme(registrationId: String): ServiceResult[VatScheme] =
     EitherT(registrationRepository.retrieveVatScheme(registrationId).map[Either[LeftState, VatScheme]] {
       case Some(vatScheme) => Right(vatScheme)
-      case None => Left(NotFound(registrationId))
+      case None => Left(ResourceNotFound(registrationId))
     })
 
   override def updateVatChoice(registrationId: String, vatChoice: VatChoice): ServiceResult[VatChoice] =
