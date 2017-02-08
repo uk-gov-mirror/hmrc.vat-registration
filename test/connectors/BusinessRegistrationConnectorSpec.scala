@@ -50,14 +50,14 @@ class BusinessRegistrationConnectorSpec extends VatRegSpec with BusinessRegistra
       when(mockWSHttp.GET[CurrentProfile](Matchers.any())(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new NotFoundException("Bad request")))
 
-      await(connector.retrieveCurrentProfile) shouldBe Left(NotFound("Bad request"))
+      await(connector.retrieveCurrentProfile) shouldBe Left(ResourceNotFound("Bad request"))
     }
 
     "return a Forbidden response when a CurrentProfile record can not be accessed by the user" in new Setup {
       when(mockWSHttp.GET[CurrentProfile](Matchers.any())(Matchers.any(), Matchers.any()))
         .thenReturn(Future.failed(new ForbiddenException("Forbidden")))
 
-      await(connector.retrieveCurrentProfile) shouldBe Left(Forbidden("Forbidden"))
+      await(connector.retrieveCurrentProfile) shouldBe Left(ForbiddenAccess("Forbidden"))
     }
 
     "return an Exception response when an unspecified error has occurred" in new Setup {

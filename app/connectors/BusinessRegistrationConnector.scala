@@ -46,10 +46,10 @@ trait BusinessRegistrationConnector {
       .recover {
         case e: NotFoundException =>
           Logger.error("Received a NotFound status code when expecting current profile from Business-Registration")
-          Left(NotFound(e.message))
+          Left(ResourceNotFound(e.message))
         case e: ForbiddenException =>
           Logger.error("Received a Forbidden status code when expecting current profile from Business-Registration")
-          Left(Forbidden(e.message))
+          Left(ForbiddenAccess(e.message))
         case e: Exception =>
           Logger.error(s"Received error when expecting current profile from Business-Registration - Error ${e.getMessage}")
           Left(GenericError(e))

@@ -18,7 +18,9 @@ package common.exceptions
 
 import scala.util.control.NoStackTrace
 
-sealed trait DBExceptions
+sealed trait DBExceptions {
+  val regId:String
+}
 
 final case class PreExistingRegDocument(regId: String) extends NoStackTrace with DBExceptions
 

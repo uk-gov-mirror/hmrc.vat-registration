@@ -42,7 +42,7 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
   def retrieveVatScheme(registrationId: String): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
-        registrationService.retrieveVatScheme(registrationId).fold(errorHandler, vatScheme => Created(Json.toJson(vatScheme)))
+        registrationService.retrieveVatScheme(registrationId).fold(errorHandler, vatScheme => Ok(Json.toJson(vatScheme)))
       }
   }
 

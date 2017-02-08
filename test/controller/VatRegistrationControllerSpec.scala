@@ -109,7 +109,7 @@ class VatRegistrationControllerSpec extends VatRegSpec {
         val response: Future[Result] = controller.retrieveVatScheme(testId)(
           FakeRequest()
         )
-        status(response) shouldBe CREATED
+        status(response) shouldBe OK
         response.map(_ shouldBe vatScheme)
       }
 
