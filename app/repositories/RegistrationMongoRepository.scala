@@ -41,6 +41,8 @@ trait RegistrationRepository {
   def updateVatChoice(registrationId: String, vatChoice: VatChoice): Future[VatChoice]
 
   def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Future[VatTradingDetails]
+
+  def dropCollection: Future[Unit]
 }
 
 // this is here for Guice dependency injection of `() => DB`
@@ -95,4 +97,7 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
   override def updateTradingDetails(regId: String, tradingDetails: VatTradingDetails): Future[VatTradingDetails] =
     updateVatScheme(regId, _.copy(tradingDetails = tradingDetails), _ => tradingDetails)
 
+  override def dropCollection: Future[Unit] = {
+    collection.drop()
+  }
 }
