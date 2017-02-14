@@ -21,7 +21,9 @@ import javax.inject.Inject
 import auth.Authenticated
 import connectors.test.BusinessRegistrationTestConnector
 import connectors.{AuthConnector, BusinessRegistrationConnector}
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
+import services.RegistrationService
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -31,7 +33,8 @@ import scala.util.{Left, Right}
 class TestSupportController @Inject()(
                                        val auth: AuthConnector,
                                        brConnector: BusinessRegistrationConnector,
-                                       brTestConnector: BusinessRegistrationTestConnector
+                                       brTestConnector: BusinessRegistrationTestConnector,
+                                       registrationService: RegistrationService
                                      ) extends BaseController with Authenticated {
   // $COVERAGE-OFF$
 
@@ -45,5 +48,11 @@ class TestSupportController @Inject()(
     }
   }
 
+  def dropCollection(): Action[AnyContent] = Action.async { implicit request =>
+    authenticated { user =>
+      registrationService.dropCollection
+      Future.successful(Ok("Collection Dropped"))
+    }
+  }
   // $COVERAGE-ON$
 }

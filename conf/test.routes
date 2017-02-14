@@ -1,1 +1,3 @@
 POST        /current-profile-setup        controllers.test.TestSupportController.currentProfileSetup()
+GET         /clear                        controllers.test.TestSupportController.dropCollection()
+
