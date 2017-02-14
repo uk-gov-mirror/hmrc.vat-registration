@@ -29,7 +29,9 @@ case class VatScheme(
 
 object VatScheme {
 
-  def blank(id: String)(implicit now: Now[DateTime]): VatScheme = VatScheme(id, VatTradingDetails(""), VatChoice(now(), ""))
+  implicit val epochTime: Now[DateTime] = Now(new DateTime(0))
+
+  def blank(id: String)(implicit now: Now[DateTime]): VatScheme = VatScheme(id, VatTradingDetails("#"), VatChoice(epochTime(), ""))
 
   implicit val format = (
     (__ \ "ID").format[String] and
