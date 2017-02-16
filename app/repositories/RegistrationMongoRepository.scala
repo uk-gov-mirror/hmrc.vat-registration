@@ -92,10 +92,10 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
   }
 
   override def updateVatChoice(regId: String, vatChoice: VatChoice): Future[VatChoice] =
-    updateVatScheme(regId, _.copy(vatChoice = vatChoice), _ => vatChoice)
+    updateVatScheme(regId, _.copy(vatChoice = Option(vatChoice)), _ => vatChoice)
 
   override def updateTradingDetails(regId: String, tradingDetails: VatTradingDetails): Future[VatTradingDetails] =
-    updateVatScheme(regId, _.copy(tradingDetails = tradingDetails), _ => tradingDetails)
+    updateVatScheme(regId, _.copy(tradingDetails = Option(tradingDetails)), _ => tradingDetails)
 
   override def dropCollection: Future[Unit] = {
     collection.drop()
