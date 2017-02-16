@@ -20,17 +20,13 @@ import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatChoice(
-                      startDate: DateTime,
-                      necessity: String // "obligatory" or "voluntary"
-                    )
+case class VatAccountingPeriod(periodStart: DateTime, frequency: String)
 
-object VatChoice {
-  def blank(startDate: DateTime) : VatChoice = VatChoice(startDate, "false")
 
+object VatAccountingPeriod {
+  def blank(periodStart: DateTime): VatAccountingPeriod = VatAccountingPeriod(periodStart, "")
 
   implicit val format = (
-    (__ \ "start-date").format[DateTime] and
-      (__ \ "necessity").format[String]) (VatChoice.apply, unlift(VatChoice.unapply))
-
+    (__ \ "periodStart").format[DateTime] and
+      (__ \ "frequency").format[String]) (VatAccountingPeriod.apply, unlift(VatAccountingPeriod.unapply))
 }

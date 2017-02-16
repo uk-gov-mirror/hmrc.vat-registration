@@ -42,6 +42,8 @@ trait RegistrationRepository {
 
   def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Future[VatTradingDetails]
 
+  def updateVatFinancials(registrationId: String, financials: VatFinancials): Future[VatFinancials]
+
   def dropCollection: Future[Unit]
 }
 
@@ -90,6 +92,9 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
       throw MissingRegDocument(regId)
     }
   }
+
+  override def updateVatFinancials(regId: String, financials: VatFinancials): Future[VatFinancials] =
+    updateVatScheme(regId, _.copy(financials = financials), _ => financials)
 
   override def updateVatChoice(regId: String, vatChoice: VatChoice): Future[VatChoice] =
     updateVatScheme(regId, _.copy(vatChoice = Option(vatChoice)), _ => vatChoice)

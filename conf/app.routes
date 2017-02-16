@@ -3,4 +3,5 @@
 POST         /new                           controllers.VatRegistrationController.newVatRegistration
 PATCH        /:regID/vat-choice             controllers.VatRegistrationController.updateVatChoice(regID)
 PATCH        /:regID/trading-details        controllers.VatRegistrationController.updateTradingDetails(regID)
+PATCH        /:regID/vat-financials         controllers.VatRegistrationController.updateVatFinancials(regID)
 GET          /:regID/get-scheme             controllers.VatRegistrationController.retrieveVatScheme(regID)
