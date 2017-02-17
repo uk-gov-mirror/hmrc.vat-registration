@@ -20,7 +20,7 @@ import akka.stream.Materializer
 import common.Now
 import controllers.VatRegistrationController
 import helpers.VatRegSpec
-import models.{VatChoice, VatScheme, VatTradingDetails}
+import models.{VatAccountingPeriod, _}
 import org.joda.time.DateTime
 import play.api.libs.json.Json
 import play.api.mvc.Result
@@ -117,6 +117,36 @@ class VatRegistrationControllerSpec extends VatRegSpec {
         AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
         ServiceMocks.mockRetrieveVatSchemeThrowsException(testId)
         val response: Future[Result] = controller.retrieveVatScheme(testId)(FakeRequest())
+        status(response) shouldBe SERVICE_UNAVAILABLE
+      }
+
+    }
+
+    "updateVatFinancials" should {
+
+      val EstimateValue: Long = 10000000000L
+      val zeroRatedTurnoverEstimate : Long = 10000000000L
+      val vatFinancials = VatFinancials(Some(VatBankAccount("Reddy", "101010","100000000000")),
+        EstimateValue,
+        Some(zeroRatedTurnoverEstimate),
+        true,
+        VatAccountingPeriod(None, "monthly")
+      )
+
+      val fakeRequest = FakeRequest().withBody(Json.toJson(vatFinancials))
+
+      "call updateVatFinancials return CREATED" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+        ServiceMocks.mockSuccessfulUpdateVatFinancials(testId, vatFinancials)
+        val response: Future[Result] = controller.updateVatFinancials(testId)(fakeRequest)
+        await(response) shouldBe Created(Json.toJson(vatFinancials))
+      }
+
+      "call updateVatFinancials return ServiceUnavailable" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+        val exception = new Exception("Exception")
+        ServiceMocks.mockServiceUnavailableUpdateVatFinancials(testId, vatFinancials, exception)
+        val response: Future[Result] = controller.updateVatFinancials(testId)(fakeRequest)
         status(response) shouldBe SERVICE_UNAVAILABLE
       }
 

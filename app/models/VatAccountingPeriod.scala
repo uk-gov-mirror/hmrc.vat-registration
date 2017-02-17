@@ -20,13 +20,12 @@ import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatAccountingPeriod(periodStart: DateTime, frequency: String)
+case class VatAccountingPeriod(periodStart: Option[DateTime], frequency: String)
 
 
 object VatAccountingPeriod {
-  def blank(periodStart: DateTime): VatAccountingPeriod = VatAccountingPeriod(periodStart, "")
 
   implicit val format = (
-    (__ \ "periodStart").format[DateTime] and
+    (__ \ "periodStart").formatNullable[DateTime] and
       (__ \ "frequency").format[String]) (VatAccountingPeriod.apply, unlift(VatAccountingPeriod.unapply))
 }

@@ -16,7 +16,6 @@
 
 package models
 
-import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -29,8 +28,6 @@ case class VatFinancials( bankAccount: Option[VatBankAccount],
 
 
 object VatFinancials {
-  def blank(periodStart: DateTime) : VatFinancials = VatFinancials(Some(VatBankAccount.blank()), 0, 0, false, VatAccountingPeriod.blank(periodStart))
-
 
   implicit val format = (
     (__ \ "bankAccount").formatNullable[VatBankAccount] and

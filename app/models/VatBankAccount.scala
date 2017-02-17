@@ -22,8 +22,6 @@ import play.api.libs.json._
 case class VatBankAccount(accountName: String, accountSortCode: String, accountNumber: String)
 
 object VatBankAccount {
-  def blank(): VatBankAccount = VatBankAccount("", "", "")
-
 
   implicit val format = (
     (__ \ "accountName").format[String] and

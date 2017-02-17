@@ -94,15 +94,17 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
   }
 
   override def updateVatFinancials(regId: String, financials: VatFinancials): Future[VatFinancials] =
-    updateVatScheme(regId, _.copy(financials = financials), _ => financials)
+    updateVatScheme(regId, _.copy(financials = Some(financials)), _ => financials)
 
   override def updateVatChoice(regId: String, vatChoice: VatChoice): Future[VatChoice] =
-    updateVatScheme(regId, _.copy(vatChoice = Option(vatChoice)), _ => vatChoice)
+    updateVatScheme(regId, _.copy(vatChoice = Some(vatChoice)), _ => vatChoice)
 
   override def updateTradingDetails(regId: String, tradingDetails: VatTradingDetails): Future[VatTradingDetails] =
-    updateVatScheme(regId, _.copy(tradingDetails = Option(tradingDetails)), _ => tradingDetails)
+    updateVatScheme(regId, _.copy(tradingDetails = Some(tradingDetails)), _ => tradingDetails)
 
+  // $COVERAGE-OFF$
   override def dropCollection: Future[Unit] = {
     collection.drop()
   }
+  // $COVERAGE-ON$
 }

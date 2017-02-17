@@ -18,7 +18,7 @@ package repository
 
 import common.Now
 import common.exceptions.{InsertFailed, MissingRegDocument}
-import models.{VatChoice, VatScheme, VatTradingDetails}
+import models.{VatAccountingPeriod, _}
 import org.joda.time.DateTime
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
@@ -36,6 +36,15 @@ class RegistrationMongoRepositoryISpec
   private val vatScheme: VatScheme = VatScheme.blank(regId)(fixedDate)
   private val vatChoice: VatChoice = VatChoice.blank(new DateTime())
   private val tradingDetails: VatTradingDetails = VatTradingDetails("some-trader-name")
+  val EstimateValue: Long = 10000000000L
+  val zeroRatedTurnoverEstimate : Long = 10000000000L
+  val vatFinancials = VatFinancials(Some(VatBankAccount("Reddy", "101010","100000000000")),
+                                    EstimateValue,
+                                    Some(zeroRatedTurnoverEstimate),
+                                    true,
+                                    VatAccountingPeriod(None, "monthly")
+                                  )
+
 
   class Setup {
     val repository = new RegistrationMongoRepository(new MongoDBProvider(), "integration-testing")
@@ -97,6 +106,20 @@ class RegistrationMongoRepositoryISpec
     "should throw MissingRegDocument exception when regId not found" in new Setup {
       await(repository.insert(vatScheme))
       an[MissingRegDocument] shouldBe thrownBy(await(repository.updateTradingDetails("123", tradingDetails)))
+    }
+  }
+
+  "Calling updateVatFinancials" should {
+
+    "should update updateVatFinancials success" in new Setup {
+      await(repository.insert(vatScheme))
+      val result = await(repository.updateVatFinancials(regId, vatFinancials))
+      result shouldBe vatFinancials
+    }
+
+    "should throw MissingRegDocument exception when regId not found" in new Setup {
+      await(repository.insert(vatScheme))
+      an[MissingRegDocument] shouldBe thrownBy(await(repository.updateVatFinancials("123", vatFinancials)))
     }
   }
 
