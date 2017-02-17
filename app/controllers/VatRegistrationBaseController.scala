@@ -30,12 +30,12 @@ abstract class VatRegistrationBaseController extends BaseController with Authent
   protected def patch[T: Format : Manifest](serviceCall: (String, T) => ServiceResult[T], regId: String): Action[JsValue] =
     Action.async(parse.json) {
       implicit request =>
-    //    authenticated { user =>
+        authenticated { user =>
           withJsonBody((t: T) => serviceCall(regId, t).fold(
             a => a.toResult,
             b => Created(Json.toJson(b))
           ))
-    //    }
+        }
     }
 
 }
