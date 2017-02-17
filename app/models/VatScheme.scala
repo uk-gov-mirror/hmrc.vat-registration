@@ -30,8 +30,6 @@ case class VatScheme(
 
 object VatScheme {
 
-  def blank(id: String)(implicit now: Now[DateTime]): VatScheme = VatScheme(id, None, None, None)
-
   implicit val format = (
     (__ \ "ID").format[String] and
       (__ \ "trading-details").formatNullable[VatTradingDetails] and

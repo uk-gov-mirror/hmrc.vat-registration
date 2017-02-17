@@ -16,9 +16,11 @@
 
 package repository
 
+import java.time.LocalDate
+
 import common.Now
 import common.exceptions.{InsertFailed, MissingRegDocument}
-import models.{VatAccountingPeriod, _}
+import models._
 import org.joda.time.DateTime
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
@@ -31,10 +33,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class RegistrationMongoRepositoryISpec
   extends UnitSpec with MongoSpecSupport with BeforeAndAfterEach with ScalaFutures with Eventually with WithFakeApplication {
 
-  private val fixedDate = Now(new DateTime(2017, 1, 31, 13, 53))
+  private val date = LocalDate.of(2017, 1, 1)
   private val regId = "AC234321"
-  private val vatScheme: VatScheme = VatScheme.blank(regId)(fixedDate)
-  private val vatChoice: VatChoice = VatChoice.blank(new DateTime())
+  private val vatScheme: VatScheme = VatScheme(regId, None, None, None)
+  private val vatChoice: VatChoice = VatChoice(date, "")
   private val tradingDetails: VatTradingDetails = VatTradingDetails("some-trader-name")
   val EstimateValue: Long = 10000000000L
   val zeroRatedTurnoverEstimate : Long = 10000000000L
@@ -55,12 +57,12 @@ class RegistrationMongoRepositoryISpec
   "Calling createNewVatScheme" should {
 
     "create a new, blank VatScheme with the correct ID" in new Setup {
-      val actual = await(repository.createNewVatScheme(regId)(fixedDate))
+      val actual = await(repository.createNewVatScheme(regId))
       actual shouldBe vatScheme
     }
 
     "throw an InsertFailed exception when creating a new VAT scheme when one already exists" in new Setup {
-      await(repository.createNewVatScheme(vatScheme.id)(fixedDate))
+      await(repository.createNewVatScheme(vatScheme.id))
       an[InsertFailed] shouldBe thrownBy(await(repository.createNewVatScheme(vatScheme.id)))
     }
   }

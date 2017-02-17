@@ -19,7 +19,12 @@ package models
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatBankAccount(accountName: String, accountSortCode: String, accountNumber: String)
+case class VatBankAccount(
+                           accountName: String,
+                           accountSortCode: String,
+                           accountNumber: String
+                         )
+  extends VatBankAccountValidator
 
 object VatBankAccount {
 

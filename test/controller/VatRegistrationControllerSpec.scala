@@ -16,6 +16,8 @@
 
 package controller
 
+import java.time.LocalDate
+
 import akka.stream.Materializer
 import common.Now
 import controllers.VatRegistrationController
@@ -35,9 +37,10 @@ import scala.concurrent.Future
 class VatRegistrationControllerSpec extends VatRegSpec {
 
   val testId = "testId"
-  val vatChoice: VatChoice = VatChoice.blank(new DateTime())
+  val date = LocalDate.of(2017, 1, 1)
+  val vatChoice: VatChoice = VatChoice(date, "")
   val tradingDetails: VatTradingDetails = VatTradingDetails("some-trader-name")
-  val vatScheme: VatScheme = VatScheme.blank(testId)(Now(new DateTime(2017, 1, 31, 13, 6)))
+  val vatScheme: VatScheme = VatScheme(testId, None, None, None)
   val materializer = fakeApplication.injector.instanceOf[Materializer]
 
   class Setup {

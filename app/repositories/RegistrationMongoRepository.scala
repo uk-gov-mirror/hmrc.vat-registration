@@ -34,7 +34,7 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 import scala.concurrent.Future
 
 trait RegistrationRepository {
-  def createNewVatScheme(registrationId: String)(implicit now: Now[DateTime]): Future[VatScheme]
+  def createNewVatScheme(registrationId: String): Future[VatScheme]
 
   def retrieveVatScheme(registrationId: String): Future[Option[VatScheme]]
 
@@ -71,8 +71,8 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
     unique = true
   ))
 
-  override def createNewVatScheme(registrationId: String)(implicit now: Now[DateTime]): Future[VatScheme] = {
-    val newReg = VatScheme.blank(registrationId)
+  override def createNewVatScheme(registrationId: String): Future[VatScheme] = {
+    val newReg = VatScheme(registrationId, None, None, None)
     collection.insert(newReg) map (_ => newReg) recover {
       case e =>
         Logger.error(s"Unable to insert new VAT Scheme for registration ID $registrationId, Error: ${e.getMessage}")

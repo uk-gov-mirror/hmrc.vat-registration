@@ -79,12 +79,12 @@ trait VatMocks extends WSHTTPMock {
     }
 
     def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
-      when(mockRegistrationService.createNewRegistration()(Matchers.any()))
-        .thenReturn(serviceResult(VatScheme.blank(registrationId)(Now(new DateTime(2017, 1, 31, 13, 6)))))
+      when(mockRegistrationService.createNewRegistration()(Matchers.any[HeaderCarrier]()))
+        .thenReturn(serviceResult(VatScheme(registrationId, None, None, None)))
     }
 
     def mockFailedCreateNewRegistration(registrationId: String): Unit = {
-      when(mockRegistrationService.createNewRegistration()(Matchers.any()))
+      when(mockRegistrationService.createNewRegistration()(Matchers.any[HeaderCarrier]()))
         .thenReturn(serviceError[VatScheme](GenericError(new RuntimeException("something went wrong"))))
     }
 
