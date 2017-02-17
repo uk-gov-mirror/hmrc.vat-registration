@@ -20,7 +20,7 @@ import cats.data.EitherT
 import common.Now
 import common.exceptions._
 import connectors.{AuthConnector, Authority}
-import models.{VatChoice, VatScheme, VatTradingDetails}
+import models.{VatChoice, VatFinancials, VatScheme, VatTradingDetails}
 import org.joda.time.DateTime
 import org.mockito.Matchers
 import org.mockito.Mockito._
@@ -106,6 +106,16 @@ trait VatMocks extends WSHTTPMock {
     def mockServiceUnavailableUpdateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails, exception: Exception): Unit = {
       when(mockRegistrationService.updateTradingDetails(Matchers.any(), Matchers.any()))
         .thenReturn(serviceError[VatTradingDetails](GenericError(exception)))
+    }
+
+    def mockSuccessfulUpdateVatFinancials(registrationId: String, vatFinancials: VatFinancials): Unit = {
+      when(mockRegistrationService.updateVatFinancials(Matchers.any(), Matchers.any()))
+        .thenReturn(serviceResult(vatFinancials))
+    }
+
+    def mockServiceUnavailableUpdateVatFinancials(registrationId: String, vatFinancials: VatFinancials, exception: Exception): Unit = {
+      when(mockRegistrationService.updateVatFinancials(Matchers.any(), Matchers.any()))
+        .thenReturn(serviceError[VatFinancials](GenericError(exception)))
     }
 
   }

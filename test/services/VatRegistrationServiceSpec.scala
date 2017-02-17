@@ -182,4 +182,44 @@ class VatRegistrationServiceSpec extends VatRegSpec {
     }
   }
 
+
+  "call to updateVatFinancials" should {
+
+    val EstimateValue: Long = 10000000000L
+    val zeroRatedTurnoverEstimate : Long = 10000000000L
+    val vatFinancials = VatFinancials(  Some(VatBankAccount("Reddy", "101010","100000000000")),
+                                        EstimateValue,
+                                        Some(zeroRatedTurnoverEstimate),
+                                        true,
+                                        VatAccountingPeriod(None, "monthly")
+                                    )
+
+    "return Success response " in new Setup {
+      when(mockRegistrationRepository.updateVatFinancials("1", vatFinancials)).thenReturn(vatFinancials)
+
+      val response = service.updateVatFinancials("1", vatFinancials)
+      await(response.value) shouldBe Right(vatFinancials)
+    }
+
+
+    "return Error response " in new Setup {
+      val t = new RuntimeException("Exception")
+      when(mockRegistrationRepository.updateVatFinancials("1", vatFinancials)).thenReturn(Future.failed(t))
+
+      val response = service.updateVatFinancials("1", vatFinancials)
+      await(response.value) shouldBe Left(GenericError(t))
+    }
+
+    "return Error response for MissingRegDocument" in new Setup {
+      val regId = "regId"
+      val t = MissingRegDocument(regId)
+      when(mockRegistrationRepository.updateVatFinancials("1", vatFinancials)).thenReturn(Future.failed(t))
+
+      val response = service.updateVatFinancials("1", vatFinancials)
+
+      await(response.value) shouldBe Left(ResourceNotFound(s"No registration found for registration ID: $regId"))
+    }
+  }
+
+
 }

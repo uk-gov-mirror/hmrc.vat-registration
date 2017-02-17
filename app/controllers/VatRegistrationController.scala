@@ -50,4 +50,6 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
 
   def updateVatChoice(registrationId: String): Action[JsValue] = patch(registrationService.updateVatChoice, registrationId)
 
+  def updateVatFinancials(registrationId: String): Action[JsValue] = patch(registrationService.updateVatFinancials, registrationId)
+
 }

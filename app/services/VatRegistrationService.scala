@@ -39,6 +39,8 @@ trait RegistrationService {
 
   def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): ServiceResult[VatTradingDetails]
 
+  def updateVatFinancials(registrationId: String, financials: VatFinancials): ServiceResult[VatFinancials]
+
   def dropCollection: Future[Unit]
 
 }
@@ -82,5 +84,9 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   override def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): ServiceResult[VatTradingDetails] =
     toEitherT(registrationRepository.updateTradingDetails(registrationId, tradingDetails))
 
+  override def updateVatFinancials(registrationId: String, financials: VatFinancials): ServiceResult[VatFinancials] =
+    toEitherT(registrationRepository.updateVatFinancials(registrationId, financials))
+
   override def dropCollection: Future[Unit] = { registrationRepository.dropCollection}
+
 }

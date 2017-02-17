@@ -16,21 +16,25 @@
 
 package models
 
-import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatChoice(
-                      startDate: DateTime,
-                      necessity: String // "obligatory" or "voluntary"
-                    )
+case class VatFinancials( bankAccount: Option[VatBankAccount],
+                          turnoverEstimate : Long,
+                          zeroRatedTurnoverEstimate : Option[Long],
+                          reclaimVatOnMostReturns: Boolean,
+                          vatAccountingPeriod: VatAccountingPeriod
+                         )
 
-object VatChoice {
-  def blank(startDate: DateTime) : VatChoice = VatChoice(startDate, "false")
 
+object VatFinancials {
 
   implicit val format = (
-    (__ \ "start-date").format[DateTime] and
-      (__ \ "necessity").format[String]) (VatChoice.apply, unlift(VatChoice.unapply))
+    (__ \ "bankAccount").formatNullable[VatBankAccount] and
+      (__ \ "turnoverEstimate").format[Long] and
+      (__ \ "zeroRatedTurnoverEstimate").formatNullable[Long] and
+      (__ \ "reclaimVatOnMostReturns").format[Boolean] and
+      (__ \ "accountingPeriods").format[VatAccountingPeriod]
+    ) (VatFinancials.apply, unlift(VatFinancials.unapply))
 
 }
