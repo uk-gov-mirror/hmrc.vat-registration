@@ -18,10 +18,8 @@ package repository
 
 import java.time.LocalDate
 
-import common.Now
 import common.exceptions.{InsertFailed, MissingRegDocument}
 import models._
-import org.joda.time.DateTime
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import repositories.{MongoDBProvider, RegistrationMongoRepository}

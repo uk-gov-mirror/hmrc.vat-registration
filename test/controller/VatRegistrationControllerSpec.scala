@@ -19,11 +19,9 @@ package controller
 import java.time.LocalDate
 
 import akka.stream.Materializer
-import common.Now
 import controllers.VatRegistrationController
 import helpers.VatRegSpec
 import models.{VatAccountingPeriod, _}
-import org.joda.time.DateTime
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.mvc.Results.Created

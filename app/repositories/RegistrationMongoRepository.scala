@@ -19,10 +19,8 @@ package repositories
 import javax.inject.{Inject, Named}
 
 import cats.data.OptionT
-import common.Now
 import common.exceptions._
 import models._
-import org.joda.time.DateTime
 import play.api.Logger
 import play.modules.reactivemongo.MongoDbConnection
 import reactivemongo.api.DB

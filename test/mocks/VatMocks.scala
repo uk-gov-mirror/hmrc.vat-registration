@@ -17,11 +17,9 @@
 package mocks
 
 import cats.data.EitherT
-import common.Now
 import common.exceptions._
 import connectors.{AuthConnector, Authority}
 import models.{VatChoice, VatFinancials, VatScheme, VatTradingDetails}
-import org.joda.time.DateTime
 import org.mockito.Matchers
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing

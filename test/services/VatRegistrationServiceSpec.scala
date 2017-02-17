@@ -18,13 +18,11 @@ package services
 
 import java.time.LocalDate
 
-import common.Now
 import common.exceptions._
 import connectors._
 import helpers.VatRegSpec
 import models._
 import models.external.CurrentProfile
-import org.joda.time.DateTime
 import org.mockito.Matchers
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
@@ -42,7 +40,6 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
   trait Setup {
     val service = new VatRegistrationService(mockBusRegConnector, mockRegistrationRepository)
-    implicit val defaultTimeOfNow: Now[DateTime] = Now(new DateTime(2017, 1, 31, 13, 6))
   }
 
   implicit val hc = HeaderCarrier()
