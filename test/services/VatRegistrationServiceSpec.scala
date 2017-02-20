@@ -221,5 +221,30 @@ class VatRegistrationServiceSpec extends VatRegSpec {
     }
   }
 
+  "call to deleteVatFinancials" should {
+
+    "return Success response " in new Setup {
+      when(mockRegistrationRepository.deleteVatScheme("1")).thenReturn(Future.successful(true))
+      val response = service.deleteVatScheme("1")
+      await(response.value) shouldBe Right(true)
+    }
+
+
+    "return Error response " in new Setup {
+      val t = new RuntimeException("Exception")
+      when(mockRegistrationRepository.deleteVatScheme("1")).thenReturn(Future.failed(t))
+      val response = service.deleteVatScheme("1")
+      await(response.value) shouldBe Left(GenericError(t))
+    }
+
+    "return Error response for MissingRegDocument" in new Setup {
+      val regId = "regId"
+      val t = MissingRegDocument(regId)
+      when(mockRegistrationRepository.deleteVatScheme("1")).thenReturn(Future.failed(t))
+      val response = service.deleteVatScheme("1")
+      await(response.value) shouldBe Left(ResourceNotFound(s"No registration found for registration ID: $regId"))
+    }
+  }
+
 
 }

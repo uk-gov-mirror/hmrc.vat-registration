@@ -54,9 +54,9 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
 
   def deleteVatScheme(registrationId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      //authenticated { _ =>
+      authenticated { _ =>
         registrationService.deleteVatScheme(registrationId).fold(errorHandler, removed => Ok(Json.toJson(removed)))
-     // }
+      }
   }
 
 }

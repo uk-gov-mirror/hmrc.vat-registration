@@ -120,6 +120,23 @@ class VatRegistrationControllerSpec extends VatRegSpec {
         status(response) shouldBe SERVICE_UNAVAILABLE
       }
 
+      "call to deleteVatScheme return Ok with VatScheme" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+        ServiceMocks.mockDeleteVatScheme(testId)
+        val response: Future[Result] = controller.deleteVatScheme(testId)(
+          FakeRequest()
+        )
+        status(response) shouldBe OK
+        response.map(_ shouldBe true)
+      }
+
+      "call to deleteVatScheme return ServiceUnavailable" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+        ServiceMocks.mockDeleteVatSchemeThrowsException(testId)
+        val response: Future[Result] = controller.deleteVatScheme(testId)(FakeRequest())
+        status(response) shouldBe SERVICE_UNAVAILABLE
+      }
+
     }
 
     "updateVatFinancials" should {

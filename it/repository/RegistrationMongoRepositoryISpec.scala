@@ -123,4 +123,18 @@ class RegistrationMongoRepositoryISpec
     }
   }
 
+  "Calling deleteVatScheme" should {
+
+    "delete a VatScheme object" in new Setup {
+      await(repository.insert(vatScheme))
+      val actual = await(repository.deleteVatScheme(vatScheme.id))
+      actual shouldBe true
+    }
+
+    "return a None when there is no corresponding VatScheme object" in new Setup {
+      await(repository.insert(vatScheme))
+      an[MissingRegDocument] shouldBe thrownBy(await(repository.deleteVatScheme("123")))
+    }
+  }
+
 }
