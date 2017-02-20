@@ -16,15 +16,15 @@
 
 package controller
 
+import java.time.LocalDate
+
 import akka.stream.Materializer
-import common.Now
 import controllers.VatRegistrationController
 import helpers.VatRegSpec
 import models.{VatAccountingPeriod, _}
-import org.joda.time.DateTime
 import play.api.libs.json.Json
 import play.api.mvc.Result
-import play.api.mvc.Results.Created
+import play.api.mvc.Results.{Created, Accepted}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
@@ -35,9 +35,10 @@ import scala.concurrent.Future
 class VatRegistrationControllerSpec extends VatRegSpec {
 
   val testId = "testId"
-  val vatChoice: VatChoice = VatChoice.blank(new DateTime())
+  val date = LocalDate.of(2017, 1, 1)
+  val vatChoice: VatChoice = VatChoice(date, "obligatory")
   val tradingDetails: VatTradingDetails = VatTradingDetails("some-trader-name")
-  val vatScheme: VatScheme = VatScheme.blank(testId)(Now(new DateTime(2017, 1, 31, 13, 6)))
+  val vatScheme: VatScheme = VatScheme(testId, None, None, None)
   val materializer = fakeApplication.injector.instanceOf[Materializer]
 
   class Setup {
@@ -67,12 +68,12 @@ class VatRegistrationControllerSpec extends VatRegSpec {
       status(response) shouldBe SERVICE_UNAVAILABLE
     }
 
-    "call updateVatChoice return CREATED" in new Setup {
+    "call updateVatChoice return ACCEPTED" in new Setup {
       AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
       ServiceMocks.mockSuccessfulUpdateVatChoice(testId, vatChoice)
       val response: Future[Result] = controller.updateVatChoice(testId)(
         FakeRequest().withBody(Json.toJson[VatChoice](vatChoice)))
-      await(response) shouldBe Created(Json.toJson(vatChoice))
+      await(response) shouldBe Accepted(Json.toJson(vatChoice))
     }
 
     "call updateVatChoice return ServiceUnavailable" in new Setup {
@@ -88,11 +89,11 @@ class VatRegistrationControllerSpec extends VatRegSpec {
 
       val fakeRequest = FakeRequest().withBody(Json.toJson(tradingDetails))
 
-      "call updateTradingDetails return CREATED" in new Setup {
+      "call updateTradingDetails return ACCEPTED" in new Setup {
         AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
         ServiceMocks.mockSuccessfulUpdateTradingDetails(testId, tradingDetails)
         val response: Future[Result] = controller.updateTradingDetails(testId)(fakeRequest)
-        await(response) shouldBe Created(Json.toJson(tradingDetails))
+        await(response) shouldBe Accepted(Json.toJson(tradingDetails))
       }
 
       "call updateTradingDetails return ServiceUnavailable" in new Setup {
@@ -143,7 +144,7 @@ class VatRegistrationControllerSpec extends VatRegSpec {
 
       val EstimateValue: Long = 10000000000L
       val zeroRatedTurnoverEstimate : Long = 10000000000L
-      val vatFinancials = VatFinancials(Some(VatBankAccount("Reddy", "101010","100000000000")),
+      val vatFinancials = VatFinancials(Some(VatBankAccount("Reddy", "10-01-01","12345678")),
         EstimateValue,
         Some(zeroRatedTurnoverEstimate),
         true,
@@ -152,11 +153,11 @@ class VatRegistrationControllerSpec extends VatRegSpec {
 
       val fakeRequest = FakeRequest().withBody(Json.toJson(vatFinancials))
 
-      "call updateVatFinancials return CREATED" in new Setup {
+      "call updateVatFinancials return ACCEPTED" in new Setup {
         AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
         ServiceMocks.mockSuccessfulUpdateVatFinancials(testId, vatFinancials)
         val response: Future[Result] = controller.updateVatFinancials(testId)(fakeRequest)
-        await(response) shouldBe Created(Json.toJson(vatFinancials))
+        await(response) shouldBe Accepted(Json.toJson(vatFinancials))
       }
 
       "call updateVatFinancials return ServiceUnavailable" in new Setup {

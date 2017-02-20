@@ -16,13 +16,13 @@
 
 package services
 
-import common.Now
+import java.time.LocalDate
+
 import common.exceptions._
 import connectors._
 import helpers.VatRegSpec
 import models._
 import models.external.CurrentProfile
-import org.joda.time.DateTime
 import org.mockito.Matchers
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
@@ -35,20 +35,21 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
   val mockBusRegConnector = mock[BusinessRegistrationConnector]
   val mockRegistrationRepository = mock[RegistrationRepository]
-  val vatChoice: VatChoice = VatChoice.blank(new DateTime())
-
+  val date = LocalDate.of(2017, 1, 1)
+  val vatChoice: VatChoice = VatChoice(date, "")
 
   trait Setup {
     val service = new VatRegistrationService(mockBusRegConnector, mockRegistrationRepository)
-    implicit val defaultTimeOfNow: Now[DateTime] = Now(new DateTime(2017, 1, 31, 13, 6))
   }
 
   implicit val hc = HeaderCarrier()
 
   "createNewRegistration" should {
+
+    val vatScheme = VatScheme("1", None, None, None)
+
     "return a existing VatScheme response " in new Setup {
       val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
-      val vatScheme = VatScheme.blank("1")
 
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
       when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(Some(vatScheme))
@@ -58,14 +59,12 @@ class VatRegistrationServiceSpec extends VatRegSpec {
     }
 
     "call to retrieveVatScheme return VatScheme from DB" in new Setup {
-      val vatScheme = VatScheme.blank("1")
       when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(Future.successful(Some(vatScheme)))
       val response = service.retrieveVatScheme("1")
       await(response.value) shouldBe Right(vatScheme)
     }
 
     "call to retrieveVatScheme return None from DB " in new Setup {
-      val vatScheme = VatScheme.blank("1")
       when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(Future.successful(None))
       val response = service.retrieveVatScheme("1")
       await(response.value) shouldBe Left(ResourceNotFound("1"))
@@ -73,11 +72,10 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
     "return a new VatScheme response " in new Setup {
       val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
-      val vatScheme = VatScheme.blank("1")
 
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
       when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(None)
-      when(mockRegistrationRepository.createNewVatScheme(Matchers.eq("1"))(any())).thenReturn(vatScheme)
+      when(mockRegistrationRepository.createNewVatScheme(Matchers.eq("1"))).thenReturn(vatScheme)
 
       val response = service.createNewRegistration()
       await(response.value) shouldBe Right(vatScheme)
@@ -85,12 +83,11 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
     "error when creating VatScheme " in new Setup {
       val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
-      val vatScheme = VatScheme.blank("1")
       val t = new Exception("Exception")
 
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
       when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(None)
-      when(mockRegistrationRepository.createNewVatScheme(Matchers.eq("1"))(any())).thenReturn(Future.failed(t))
+      when(mockRegistrationRepository.createNewVatScheme(Matchers.eq("1"))).thenReturn(Future.failed(t))
 
       val response = service.createNewRegistration()
       await(response.value) shouldBe Left(GenericError(t))
@@ -120,7 +117,6 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
   }
 
-
   "call to updateVatChoice" should {
 
     "return Success response " in new Setup {
@@ -129,7 +125,6 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       val response = service.updateVatChoice("1", vatChoice)
       await(response.value) shouldBe Right(vatChoice)
     }
-
 
     "return Error response " in new Setup {
       val t = new RuntimeException("Exception")
@@ -162,7 +157,6 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       await(response.value) shouldBe Right(tradingDetails)
     }
 
-
     "return Error response " in new Setup {
       val t = new RuntimeException("Exception")
       when(mockRegistrationRepository.updateTradingDetails("1", tradingDetails)).thenReturn(Future.failed(t))
@@ -182,7 +176,6 @@ class VatRegistrationServiceSpec extends VatRegSpec {
     }
   }
 
-
   "call to updateVatFinancials" should {
 
     val EstimateValue: Long = 10000000000L
@@ -200,7 +193,6 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       val response = service.updateVatFinancials("1", vatFinancials)
       await(response.value) shouldBe Right(vatFinancials)
     }
-
 
     "return Error response " in new Setup {
       val t = new RuntimeException("Exception")

@@ -16,21 +16,21 @@
 
 package models
 
+import java.time.LocalDate
+
 import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class VatChoice(
-                      startDate: DateTime,
+                      startDate: LocalDate,
                       necessity: String // "obligatory" or "voluntary"
                     )
 
-object VatChoice {
-  def blank(startDate: DateTime) : VatChoice = VatChoice(startDate, "false")
-
+object VatChoice extends VatChoiceValidator {
 
   implicit val format = (
-    (__ \ "start-date").format[DateTime] and
-      (__ \ "necessity").format[String]) (VatChoice.apply, unlift(VatChoice.unapply))
+    (__ \ "start-date").format[LocalDate] and
+      (__ \ "necessity").format[String](necessityValidator)) (VatChoice.apply, unlift(VatChoice.unapply))
 
 }

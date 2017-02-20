@@ -19,13 +19,18 @@ package models
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatBankAccount(accountName: String, accountSortCode: String, accountNumber: String)
+case class VatBankAccount(
+                           accountName: String,
+                           accountSortCode: String,
+                           accountNumber: String
+                         )
+  extends VatBankAccountValidator
 
-object VatBankAccount {
+object VatBankAccount extends VatBankAccountValidator {
 
   implicit val format = (
     (__ \ "accountName").format[String] and
-      (__ \ "accountSortCode").format[String] and
-      (__ \ "accountNumber").format[String]
+      (__ \ "accountSortCode").format[String](accountSortCodeValidator) and
+      (__ \ "accountNumber").format[String](accountNumberValidator)
     ) (VatBankAccount.apply, unlift(VatBankAccount.unapply))
 }

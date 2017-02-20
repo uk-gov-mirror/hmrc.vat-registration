@@ -33,7 +33,7 @@ abstract class VatRegistrationBaseController extends BaseController with Authent
         authenticated { user =>
           withJsonBody((t: T) => serviceCall(regId, t).fold(
             a => a.toResult,
-            b => Created(Json.toJson(b))
+            b => Accepted(Json.toJson(b))
           ))
         }
     }

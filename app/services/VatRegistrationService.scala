@@ -92,7 +92,6 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   override def deleteVatScheme(registrationId: String): ServiceResult[Boolean] =
     toEitherT(registrationRepository.deleteVatScheme(registrationId))
 
-
-  override def dropCollection: Future[Unit] = { registrationRepository.dropCollection}
+  override def dropCollection: Future[Unit] = { registrationRepository.dropCollection }
 
 }
