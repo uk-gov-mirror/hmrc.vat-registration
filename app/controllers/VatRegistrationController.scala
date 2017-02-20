@@ -23,7 +23,7 @@ import common.exceptions.LeftState
 import connectors.AuthConnector
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, Result}
-import services.RegistrationService
+import services._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -51,5 +51,12 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
   def updateVatChoice(registrationId: String): Action[JsValue] = patch(registrationService.updateVatChoice, registrationId)
 
   def updateVatFinancials(registrationId: String): Action[JsValue] = patch(registrationService.updateVatFinancials, registrationId)
+
+  def deleteVatScheme(registrationId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      //authenticated { _ =>
+        registrationService.deleteVatScheme(registrationId).fold(errorHandler, removed => Ok(Json.toJson(removed)))
+     // }
+  }
 
 }

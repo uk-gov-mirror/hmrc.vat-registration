@@ -44,6 +44,8 @@ trait RegistrationRepository {
 
   def updateVatFinancials(registrationId: String, financials: VatFinancials): Future[VatFinancials]
 
+  def deleteVatScheme(registrationId: String): Future[Boolean]
+
   def dropCollection: Future[Unit]
 }
 
@@ -101,6 +103,14 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
 
   override def updateTradingDetails(regId: String, tradingDetails: VatTradingDetails): Future[VatTradingDetails] =
     updateVatScheme(regId, _.copy(tradingDetails = Some(tradingDetails)), _ => tradingDetails)
+
+  override def deleteVatScheme(registrationId: String): Future[Boolean] = {
+    retrieveVatScheme(registrationId) flatMap {
+      case Some(ct) => collection.remove(regIdSelector(registrationId)) map { _ => true }
+      case None => Future.failed(MissingRegDocument(registrationId))
+    }
+  }
+
 
   // $COVERAGE-OFF$
   override def dropCollection: Future[Unit] = {
