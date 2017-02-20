@@ -41,5 +41,73 @@ class VatBankAccountSpec extends UnitSpec with JsonFormatValidation {
 
       Json.fromJson[VatBankAccount](json) shouldBe JsSuccess(tstVatBankAccount)
     }
+
+    "fail from Json with invalid account number" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "accountName":"Test Account Name",
+           |  "accountSortCode":"00-99-22",
+           |  "accountNumber":"123456789"
+           |}
+        """.stripMargin)
+
+      val result = Json.fromJson[VatBankAccount](json)
+      shouldHaveErrors(result, JsPath() \ "accountNumber", Seq(ValidationError("error.pattern")))
+    }
+
+    "fail from Json with invalid sort code" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "accountName":"Test Account Name",
+           |  "accountSortCode":"00-993-22",
+           |  "accountNumber":"12345678"
+           |}
+        """.stripMargin)
+
+      val result = Json.fromJson[VatBankAccount](json)
+      shouldHaveErrors(result, JsPath() \ "accountSortCode", Seq(ValidationError("error.pattern")))
+    }
+
+    "fail from Json with missing account name" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "accountSortCode":"00-99-22",
+           |  "accountNumber":"12345678"
+           |}
+        """.stripMargin)
+
+      val result = Json.fromJson[VatBankAccount](json)
+      shouldHaveErrors(result, JsPath() \ "accountName", Seq(ValidationError("error.path.missing")))
+    }
+
+    "fail from Json with missing account number" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "accountName":"Test Account Name",
+           |  "accountSortCode":"00-99-22"
+           |}
+        """.stripMargin)
+
+      val result = Json.fromJson[VatBankAccount](json)
+      shouldHaveErrors(result, JsPath() \ "accountNumber", Seq(ValidationError("error.path.missing")))
+    }
+
+    "fail from Json with missing sort code" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "accountName":"Test Account Name",
+           |  "accountNumber":"12345678"
+           |}
+        """.stripMargin)
+
+      val result = Json.fromJson[VatBankAccount](json)
+      shouldHaveErrors(result, JsPath() \ "accountSortCode", Seq(ValidationError("error.path.missing")))
+    }
+
   }
 }

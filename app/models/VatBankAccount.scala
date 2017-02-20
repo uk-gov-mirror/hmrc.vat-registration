@@ -26,11 +26,11 @@ case class VatBankAccount(
                          )
   extends VatBankAccountValidator
 
-object VatBankAccount {
+object VatBankAccount extends VatBankAccountValidator {
 
   implicit val format = (
     (__ \ "accountName").format[String] and
-      (__ \ "accountSortCode").format[String] and
-      (__ \ "accountNumber").format[String]
+      (__ \ "accountSortCode").format[String](accountSortCodeValidator) and
+      (__ \ "accountNumber").format[String](accountNumberValidator)
     ) (VatBankAccount.apply, unlift(VatBankAccount.unapply))
 }

@@ -36,7 +36,7 @@ class VatRegistrationControllerSpec extends VatRegSpec {
 
   val testId = "testId"
   val date = LocalDate.of(2017, 1, 1)
-  val vatChoice: VatChoice = VatChoice(date, "")
+  val vatChoice: VatChoice = VatChoice(date, "obligatory")
   val tradingDetails: VatTradingDetails = VatTradingDetails("some-trader-name")
   val vatScheme: VatScheme = VatScheme(testId, None, None, None)
   val materializer = fakeApplication.injector.instanceOf[Materializer]
@@ -127,7 +127,7 @@ class VatRegistrationControllerSpec extends VatRegSpec {
 
       val EstimateValue: Long = 10000000000L
       val zeroRatedTurnoverEstimate : Long = 10000000000L
-      val vatFinancials = VatFinancials(Some(VatBankAccount("Reddy", "101010","100000000000")),
+      val vatFinancials = VatFinancials(Some(VatBankAccount("Reddy", "10-01-01","12345678")),
         EstimateValue,
         Some(zeroRatedTurnoverEstimate),
         true,

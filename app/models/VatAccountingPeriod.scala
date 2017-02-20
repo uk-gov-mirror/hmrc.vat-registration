@@ -24,13 +24,13 @@ import play.api.libs.json._
 
 case class VatAccountingPeriod(
                                 periodStart: Option[LocalDate],
-                                frequency: String
+                                frequency: String // "monthly" or "quarterly"
                               )
 
 
-object VatAccountingPeriod {
+object VatAccountingPeriod extends VatAccountingPeriodValidator {
 
   implicit val format = (
     (__ \ "periodStart").formatNullable[LocalDate] and
-      (__ \ "frequency").format[String]) (VatAccountingPeriod.apply, unlift(VatAccountingPeriod.unapply))
+      (__ \ "frequency").format[String](frequencyValidator)) (VatAccountingPeriod.apply, unlift(VatAccountingPeriod.unapply))
 }

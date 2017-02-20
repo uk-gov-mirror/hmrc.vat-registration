@@ -18,7 +18,8 @@ package models
 
 import java.time.LocalDate
 
-import play.api.libs.json.{JsSuccess, Json}
+import play.api.data.validation.ValidationError
+import play.api.libs.json.{JsPath, JsSuccess, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class VatChoiceSpec extends UnitSpec with JsonFormatValidation {
@@ -27,7 +28,7 @@ class VatChoiceSpec extends UnitSpec with JsonFormatValidation {
 
     val startDate = LocalDate.of(2017, 1, 1)
 
-    "complete successfully from full Json" in {
+    "complete successfully from full Json with obligatory necessity" in {
       val json = Json.parse(
         s"""
            |{
@@ -42,6 +43,61 @@ class VatChoiceSpec extends UnitSpec with JsonFormatValidation {
       )
 
       Json.fromJson[VatChoice](json) shouldBe JsSuccess(tstVatChoice)
+    }
+
+    "complete successfully from full Json with voluntary necessity" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "start-date":"$startDate",
+           |  "necessity":"voluntary"
+           |}
+        """.stripMargin)
+
+      val tstVatChoice = VatChoice(
+        startDate = startDate,
+        necessity = "voluntary"
+      )
+
+      Json.fromJson[VatChoice](json) shouldBe JsSuccess(tstVatChoice)
+    }
+
+    "fail from Json with invalid necessity" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "start-date":"$startDate",
+           |  "necessity":"*garbage*"
+           |}
+        """.stripMargin)
+
+      val result = Json.fromJson[VatChoice](json)
+      shouldHaveErrors(result, JsPath() \ "necessity", Seq(ValidationError("error.pattern")))
+    }
+
+    "fail from Json with missing necessity" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "start-date":"$startDate"
+           |}
+        """.stripMargin)
+
+      val result = Json.fromJson[VatChoice](json)
+      shouldHaveErrors(result, JsPath() \ "necessity", Seq(ValidationError("error.path.missing")))
+    }
+
+    // TODO: when we refactor vat choice make sure to remove this test
+    "fail from Json with missing start date" in {
+      val json = Json.parse(
+        s"""
+           |{
+             "necessity":"voluntary"
+           |}
+        """.stripMargin)
+
+      val result = Json.fromJson[VatChoice](json)
+      shouldHaveErrors(result, JsPath() \ "start-date", Seq(ValidationError("error.path.missing")))
     }
   }
 }

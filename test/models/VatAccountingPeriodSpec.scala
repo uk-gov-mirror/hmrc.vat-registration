@@ -18,7 +18,8 @@ package models
 
 import java.time.LocalDate
 
-import play.api.libs.json.{JsSuccess, Json}
+import play.api.data.validation.ValidationError
+import play.api.libs.json.{JsPath, JsSuccess, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class VatAccountingPeriodSpec extends UnitSpec with JsonFormatValidation {
@@ -27,7 +28,7 @@ class VatAccountingPeriodSpec extends UnitSpec with JsonFormatValidation {
 
     val periodStartDate = LocalDate.of(2017, 1, 1)
 
-    "complete successfully from full Json" in {
+    "complete successfully from full Json with quarterly frequency" in {
       val json = Json.parse(
         s"""
            |{
@@ -43,5 +44,49 @@ class VatAccountingPeriodSpec extends UnitSpec with JsonFormatValidation {
 
       Json.fromJson[VatAccountingPeriod](json) shouldBe JsSuccess(tstVatAccountingPeriod)
     }
+
+    "complete successfully from full Json with monthly frequency" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "periodStart":"$periodStartDate",
+           |  "frequency":"monthly"
+           |}
+        """.stripMargin)
+
+      val tstVatAccountingPeriod = VatAccountingPeriod(
+        periodStart = Some(periodStartDate),
+        frequency = "monthly"
+      )
+
+      Json.fromJson[VatAccountingPeriod](json) shouldBe JsSuccess(tstVatAccountingPeriod)
+    }
+
+    "fail from Json with invalid frequency" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "periodStart":"$periodStartDate",
+           |  "frequency":"yearly"
+           |}
+        """.stripMargin)
+
+      val result = Json.fromJson[VatAccountingPeriod](json)
+      shouldHaveErrors(result, JsPath() \ "frequency", Seq(ValidationError("error.pattern")))
+    }
+
+    "fail from Json with missing frequency" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "periodStart":"$periodStartDate"
+           |}
+        """.stripMargin)
+
+      val result = Json.fromJson[VatAccountingPeriod](json)
+      shouldHaveErrors(result, JsPath() \ "frequency", Seq(ValidationError("error.path.missing")))
+    }
+
+
   }
 }

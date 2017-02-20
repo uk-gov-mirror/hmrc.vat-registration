@@ -27,10 +27,10 @@ case class VatChoice(
                       necessity: String // "obligatory" or "voluntary"
                     )
 
-object VatChoice {
+object VatChoice extends VatChoiceValidator {
 
   implicit val format = (
     (__ \ "start-date").format[LocalDate] and
-      (__ \ "necessity").format[String]) (VatChoice.apply, unlift(VatChoice.unapply))
+      (__ \ "necessity").format[String](necessityValidator)) (VatChoice.apply, unlift(VatChoice.unapply))
 
 }

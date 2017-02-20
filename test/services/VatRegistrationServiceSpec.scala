@@ -117,7 +117,6 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
   }
 
-
   "call to updateVatChoice" should {
 
     "return Success response " in new Setup {
@@ -126,7 +125,6 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       val response = service.updateVatChoice("1", vatChoice)
       await(response.value) shouldBe Right(vatChoice)
     }
-
 
     "return Error response " in new Setup {
       val t = new RuntimeException("Exception")
@@ -159,7 +157,6 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       await(response.value) shouldBe Right(tradingDetails)
     }
 
-
     "return Error response " in new Setup {
       val t = new RuntimeException("Exception")
       when(mockRegistrationRepository.updateTradingDetails("1", tradingDetails)).thenReturn(Future.failed(t))
@@ -179,7 +176,6 @@ class VatRegistrationServiceSpec extends VatRegSpec {
     }
   }
 
-
   "call to updateVatFinancials" should {
 
     val EstimateValue: Long = 10000000000L
@@ -197,7 +193,6 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       val response = service.updateVatFinancials("1", vatFinancials)
       await(response.value) shouldBe Right(vatFinancials)
     }
-
 
     "return Error response " in new Setup {
       val t = new RuntimeException("Exception")
