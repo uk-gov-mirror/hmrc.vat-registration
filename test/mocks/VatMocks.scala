@@ -76,6 +76,17 @@ trait VatMocks extends WSHTTPMock {
         .thenReturn(serviceResult(vatScheme))
     }
 
+    def mockDeleteVatScheme(testId: String): Unit = {
+      when(mockRegistrationService.deleteVatScheme(Matchers.contains(testId)))
+        .thenReturn(serviceResult(true))
+    }
+
+    def mockDeleteVatSchemeThrowsException(testId: String): Unit = {
+      val exception = new Exception("Exception")
+      when(mockRegistrationService.deleteVatScheme(Matchers.any()))
+        .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
+    }
+
     def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
       when(mockRegistrationService.createNewRegistration()(Matchers.any[HeaderCarrier]()))
         .thenReturn(serviceResult(VatScheme(registrationId, None, None, None)))

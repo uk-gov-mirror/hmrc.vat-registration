@@ -41,6 +41,8 @@ trait RegistrationService {
 
   def updateVatFinancials(registrationId: String, financials: VatFinancials): ServiceResult[VatFinancials]
 
+  def deleteVatScheme(registrationId: String): ServiceResult[Boolean]
+
   def dropCollection: Future[Unit]
 
 }
@@ -86,6 +88,9 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
 
   override def updateVatFinancials(registrationId: String, financials: VatFinancials): ServiceResult[VatFinancials] =
     toEitherT(registrationRepository.updateVatFinancials(registrationId, financials))
+
+  override def deleteVatScheme(registrationId: String): ServiceResult[Boolean] =
+    toEitherT(registrationRepository.deleteVatScheme(registrationId))
 
   override def dropCollection: Future[Unit] = { registrationRepository.dropCollection }
 
