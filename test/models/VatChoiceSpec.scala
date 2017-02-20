@@ -22,7 +22,7 @@ import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 
-class VatChoiceSpec extends UnitSpec with JsonFormatValidation {
+class VatChoiceSpec extends JsonFormatValidation {
 
   "Creating a VatChoice model from Json" should {
 

@@ -22,7 +22,7 @@ import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 
-class VatAccountingPeriodSpec extends UnitSpec with JsonFormatValidation {
+class VatAccountingPeriodSpec extends JsonFormatValidation {
 
   "Creating a VatAccountingPeriod model from Json" should {
 

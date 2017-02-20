@@ -20,7 +20,7 @@ import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
 import uk.gov.hmrc.play.test.UnitSpec
 
-class VatBankAccountSpec extends UnitSpec with JsonFormatValidation {
+class VatBankAccountSpec extends JsonFormatValidation {
 
   "Creating a VatBankAccount model from Json" should {
     "complete successfully from full Json" in {

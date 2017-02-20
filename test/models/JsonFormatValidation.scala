@@ -20,8 +20,7 @@ import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsError, JsPath, JsResult, JsSuccess}
 import uk.gov.hmrc.play.test.UnitSpec
 
-trait JsonFormatValidation {
-  this: UnitSpec =>
+trait JsonFormatValidation extends UnitSpec{
 
   def shouldBeSuccess[T](expected: T, result: JsResult[T]) = {
     result match {
