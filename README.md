@@ -40,6 +40,7 @@ To run the service, just `cd` to cloned directory and execute:
 sbt run
 ```
 
+
 The service will come to life  @
 
 http://localhost:9896/
