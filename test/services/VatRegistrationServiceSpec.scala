@@ -30,6 +30,7 @@ import repositories.RegistrationRepository
 import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
+import scala.util.Success
 
 class VatRegistrationServiceSpec extends VatRegSpec {
 
@@ -81,7 +82,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       await(response.value) shouldBe Right(vatScheme)
     }
 
-    "error when creating VatScheme " in new Setup {
+    "error when creating VatScheme" in new Setup {
       val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
       val t = new Exception("Exception")
 
@@ -91,6 +92,18 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
       val response = service.createNewRegistration()
       await(response.value) shouldBe Left(GenericError(t))
+    }
+
+    "error with the DB when creating VatScheme" in new Setup {
+      val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
+      val t = new InsertFailed("regId", "VatScheme")
+
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
+      when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(None)
+      when(mockRegistrationRepository.createNewVatScheme(Matchers.eq("1"))).thenReturn(Future.failed(t))
+
+      val response = service.createNewRegistration()
+      await(response.value) shouldBe Left(GenericDatabaseError(t, Some("regId")))
     }
 
     "call to business service return ForbiddenException response " in new Setup {
@@ -238,5 +251,12 @@ class VatRegistrationServiceSpec extends VatRegSpec {
     }
   }
 
+  "call to dropCollection" should {
 
+    "return Success response " in new Setup {
+      when(mockRegistrationRepository.dropCollection).thenReturn()
+      val response = service.dropCollection
+      await(response.value) shouldBe Some(Success(()))
+    }
+  }
 }
