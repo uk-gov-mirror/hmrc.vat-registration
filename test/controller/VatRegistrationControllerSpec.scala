@@ -68,6 +68,15 @@ class VatRegistrationControllerSpec extends VatRegSpec {
       status(response) shouldBe SERVICE_UNAVAILABLE
     }
 
+    "return 503 if RegistrationService encounters any problems with the DB" in new Setup {
+      AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+      ServiceMocks.mockFailedCreateNewRegistrationWithDbError(testId)
+      val response: Future[Result] = controller.newVatRegistration()(FakeRequest())
+      status(response) shouldBe SERVICE_UNAVAILABLE
+    }
+
+
+
     "call updateVatChoice return ACCEPTED" in new Setup {
       AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
       ServiceMocks.mockSuccessfulUpdateVatChoice(testId, vatChoice)

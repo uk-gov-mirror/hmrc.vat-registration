@@ -97,6 +97,12 @@ trait VatMocks extends WSHTTPMock {
         .thenReturn(serviceError[VatScheme](GenericError(new RuntimeException("something went wrong"))))
     }
 
+    def mockFailedCreateNewRegistrationWithDbError(registrationId: String): Unit = {
+      val exception = new Exception("Exception")
+      when(mockRegistrationService.createNewRegistration()(Matchers.any[HeaderCarrier]()))
+        .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
+    }
+
     def mockSuccessfulUpdateVatChoice(registrationId: String, vatChoice: VatChoice): Unit = {
       when(mockRegistrationService.updateVatChoice(Matchers.any(), Matchers.any()))
         .thenReturn(serviceResult(vatChoice))
