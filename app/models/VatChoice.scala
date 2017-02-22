@@ -18,7 +18,6 @@ package models
 
 import java.time.LocalDate
 
-import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -29,7 +28,7 @@ case class VatChoice(
 
 object VatChoice extends VatChoiceValidator {
 
-  implicit val format = (
+  implicit val format: OFormat[VatChoice] = (
     (__ \ "start-date").format[LocalDate] and
       (__ \ "necessity").format[String](necessityValidator)) (VatChoice.apply, unlift(VatChoice.unapply))
 

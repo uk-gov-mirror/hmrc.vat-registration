@@ -25,8 +25,8 @@ object VatTradingDetails {
   val apiReads: Reads[VatTradingDetails] =
     (__ \ "trading-name").read[String].map(VatTradingDetails(_))
 
-  val apiWrites: Writes[VatTradingDetails] =
+  val apiWrites: OWrites[VatTradingDetails] =
     (__ \ "trading-name").write[String].contramap(_.tradingName)
 
-  implicit val format = Format(apiReads, apiWrites)
+  implicit val format: OFormat[VatTradingDetails] = OFormat(apiReads, apiWrites)
 }

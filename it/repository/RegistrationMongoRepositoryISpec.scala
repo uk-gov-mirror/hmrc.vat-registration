@@ -18,7 +18,7 @@ package repository
 
 import java.time.LocalDate
 
-import common.exceptions.{InsertFailed, MissingRegDocument}
+import common.exceptions.{InsertFailed, MissingRegDocument, UpdateFailed}
 import models._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
@@ -36,14 +36,15 @@ class RegistrationMongoRepositoryISpec
   private val vatScheme: VatScheme = VatScheme(regId, None, None, None)
   private val vatChoice: VatChoice = VatChoice(date, "")
   private val tradingDetails: VatTradingDetails = VatTradingDetails("some-trader-name")
-  val EstimateValue: Long = 10000000000L
-  val zeroRatedTurnoverEstimate : Long = 10000000000L
-  val vatFinancials = VatFinancials(Some(VatBankAccount("Reddy", "101010","100000000000")),
-                                    EstimateValue,
-                                    Some(zeroRatedTurnoverEstimate),
-                                    true,
-                                    VatAccountingPeriod(None, "monthly")
-                                  )
+  val EstimateValue: Long = 1000L
+  val zeroRatedTurnoverEstimate: Long = 1000L
+  val vatFinancials = VatFinancials(
+    bankAccount = Some(VatBankAccount("Reddy", "101010", "100000000000")),
+    turnoverEstimate = EstimateValue,
+    zeroRatedTurnoverEstimate = Some(zeroRatedTurnoverEstimate),
+    reclaimVatOnMostReturns = true,
+    vatAccountingPeriod = VatAccountingPeriod(None, "monthly")
+  )
 
 
   class Setup {
@@ -88,9 +89,9 @@ class RegistrationMongoRepositoryISpec
       result shouldBe vatChoice
     }
 
-    "should throw MissingRegDocument exception when regId not found" in new Setup {
+    "should throw UpdateFailed exception when regId not found" in new Setup {
       await(repository.insert(vatScheme))
-      an[MissingRegDocument] shouldBe thrownBy(await(repository.updateVatChoice("123", vatChoice)))
+      an[UpdateFailed] shouldBe thrownBy(await(repository.updateVatChoice("123", vatChoice)))
     }
 
   }
@@ -103,9 +104,9 @@ class RegistrationMongoRepositoryISpec
       result shouldBe tradingDetails
     }
 
-    "should throw MissingRegDocument exception when regId not found" in new Setup {
+    "should throw UpdateFailed exception when regId not found" in new Setup {
       await(repository.insert(vatScheme))
-      an[MissingRegDocument] shouldBe thrownBy(await(repository.updateTradingDetails("123", tradingDetails)))
+      an[UpdateFailed] shouldBe thrownBy(await(repository.updateTradingDetails("123", tradingDetails)))
     }
   }
 
@@ -117,9 +118,9 @@ class RegistrationMongoRepositoryISpec
       result shouldBe vatFinancials
     }
 
-    "should throw MissingRegDocument exception when regId not found" in new Setup {
+    "should throw UpdateFailed exception when regId not found" in new Setup {
       await(repository.insert(vatScheme))
-      an[MissingRegDocument] shouldBe thrownBy(await(repository.updateVatFinancials("123", vatFinancials)))
+      an[UpdateFailed] shouldBe thrownBy(await(repository.updateVatFinancials("123", vatFinancials)))
     }
   }
 
