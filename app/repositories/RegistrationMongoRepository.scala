@@ -18,13 +18,12 @@ package repositories
 
 import javax.inject.{Inject, Named}
 
-import cats.data.OptionT
 import common.exceptions._
 import models._
 import play.api.Logger
+import play.api.libs.json.OFormat
 import play.modules.reactivemongo.MongoDbConnection
 import reactivemongo.api.DB
-import reactivemongo.api.commands.UpdateWriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
 import uk.gov.hmrc.mongo.ReactiveRepository
@@ -59,8 +58,6 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
     domainFormat = VatScheme.format
   ) with RegistrationRepository {
 
-  import cats.implicits._
-
   import scala.concurrent.ExecutionContext.Implicits.global
 
   private[repositories] def regIdSelector(registrationID: String) = BSONDocument("ID" -> BSONString(registrationID))
@@ -84,23 +81,29 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
     collection.find(regIdSelector(regId)).one[VatScheme]
   }
 
-  private def updateVatScheme[T](regId: String, update: VatScheme => VatScheme, toReturnType: UpdateWriteResult => T): Future[T] = {
-    (for {
-      vatScheme <- OptionT(retrieveVatScheme(regId))
-      res <- OptionT.liftF(collection.update(regIdSelector(regId), update(vatScheme)))
-    } yield res).map(toReturnType).getOrElse {
-      throw MissingRegDocument(regId)
+  private def updateVatScheme[T: OFormat](regId: String, groupToUpdate: (String, T)): Future[T] = {
+    val (groupName, group) = groupToUpdate
+    collection.findAndUpdate(
+      regIdSelector(regId),
+      BSONDocument("$set" -> BSONDocument(groupName -> implicitly[OFormat[T]].writes(group)))
+    ).map {
+      _.value match {
+        case Some(doc) =>
+          doc
+          group
+        case _ => throw UpdateFailed(regId, groupName)
+      }
     }
   }
 
   override def updateVatFinancials(regId: String, financials: VatFinancials): Future[VatFinancials] =
-    updateVatScheme(regId, _.copy(financials = Some(financials)), _ => financials)
+    updateVatScheme(regId, "financials" -> financials)
 
   override def updateVatChoice(regId: String, vatChoice: VatChoice): Future[VatChoice] =
-    updateVatScheme(regId, _.copy(vatChoice = Some(vatChoice)), _ => vatChoice)
+    updateVatScheme(regId, "vat-choice" -> vatChoice)
 
   override def updateTradingDetails(regId: String, tradingDetails: VatTradingDetails): Future[VatTradingDetails] =
-    updateVatScheme(regId, _.copy(tradingDetails = Some(tradingDetails)), _ => tradingDetails)
+    updateVatScheme(regId, "trading-details" -> tradingDetails)
 
   override def deleteVatScheme(registrationId: String): Future[Boolean] = {
     retrieveVatScheme(registrationId) flatMap {
@@ -109,10 +112,10 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
     }
   }
 
-
   // $COVERAGE-OFF$
   override def dropCollection: Future[Unit] = {
     collection.drop()
   }
+
   // $COVERAGE-ON$
 }

@@ -29,7 +29,7 @@ case class VatFinancials( bankAccount: Option[VatBankAccount],
 
 object VatFinancials {
 
-  implicit val format = (
+  implicit val format: OFormat[VatFinancials] = (
     (__ \ "bankAccount").formatNullable[VatBankAccount] and
       (__ \ "turnoverEstimate").format[Long] and
       (__ \ "zeroRatedTurnoverEstimate").formatNullable[Long] and
