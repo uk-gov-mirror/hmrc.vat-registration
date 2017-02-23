@@ -21,7 +21,7 @@ import javax.inject.{Inject, Named}
 import common.exceptions._
 import models._
 import play.api.Logger
-import play.api.libs.json.OFormat
+import play.api.libs.json.OWrites
 import play.modules.reactivemongo.MongoDbConnection
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.{Index, IndexType}
@@ -81,16 +81,14 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
     collection.find(regIdSelector(regId)).one[VatScheme]
   }
 
-  private def updateVatScheme[T: OFormat](regId: String, groupToUpdate: (String, T)): Future[T] = {
+  private def updateVatScheme[T](regId: String, groupToUpdate: (String, T))(implicit format: OWrites[T]): Future[T] = {
     val (groupName, group) = groupToUpdate
     collection.findAndUpdate(
       regIdSelector(regId),
-      BSONDocument("$set" -> BSONDocument(groupName -> implicitly[OFormat[T]].writes(group)))
+      BSONDocument("$set" -> BSONDocument(groupName -> format.writes(group)))
     ).map {
       _.value match {
-        case Some(doc) =>
-          doc
-          group
+        case Some(doc) => group
         case _ => throw UpdateFailed(regId, groupName)
       }
     }
