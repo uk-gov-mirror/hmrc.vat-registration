@@ -26,19 +26,17 @@ class VatAccountingPeriodSpec extends JsonFormatValidation {
 
   "Creating a VatAccountingPeriod model from Json" should {
 
-    val periodStartDate = LocalDate.of(2017, 1, 1)
-
     "complete successfully from full Json with quarterly frequency" in {
       val json = Json.parse(
         s"""
            |{
-           |  "periodStart":"$periodStartDate",
+           |  "periodStart":"mar_jun_sep_dec",
            |  "frequency":"quarterly"
            |}
         """.stripMargin)
 
       val tstVatAccountingPeriod = VatAccountingPeriod(
-        periodStart = Some(periodStartDate),
+        periodStart = Some("mar_jun_sep_dec"),
         frequency = "quarterly"
       )
 
@@ -49,13 +47,29 @@ class VatAccountingPeriodSpec extends JsonFormatValidation {
       val json = Json.parse(
         s"""
            |{
-           |  "periodStart":"$periodStartDate",
+           |  "periodStart":"feb_may_aug_nov",
            |  "frequency":"monthly"
            |}
         """.stripMargin)
 
       val tstVatAccountingPeriod = VatAccountingPeriod(
-        periodStart = Some(periodStartDate),
+        periodStart = Some("feb_may_aug_nov"),
+        frequency = "monthly"
+      )
+
+      Json.fromJson[VatAccountingPeriod](json) shouldBe JsSuccess(tstVatAccountingPeriod)
+    }
+
+    "complete successfully from partial Json with missing periodStart" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "frequency":"monthly"
+           |}
+        """.stripMargin)
+
+      val tstVatAccountingPeriod = VatAccountingPeriod(
+        periodStart = None,
         frequency = "monthly"
       )
 
@@ -66,7 +80,7 @@ class VatAccountingPeriodSpec extends JsonFormatValidation {
       val json = Json.parse(
         s"""
            |{
-           |  "periodStart":"$periodStartDate",
+           |  "periodStart":"jan_apr_jul_oct",
            |  "frequency":"yearly"
            |}
         """.stripMargin)
@@ -75,11 +89,24 @@ class VatAccountingPeriodSpec extends JsonFormatValidation {
       shouldHaveErrors(result, JsPath() \ "frequency", Seq(ValidationError("error.pattern")))
     }
 
+    "fail from Json with invalid periodStart" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "periodStart":"*garbage*",
+           |  "frequency":"quarterly"
+           |}
+        """.stripMargin)
+
+      val result = Json.fromJson[VatAccountingPeriod](json)
+      shouldHaveErrors(result, JsPath() \ "periodStart", Seq(ValidationError("error.pattern")))
+    }
+
     "fail from Json with missing frequency" in {
       val json = Json.parse(
         s"""
            |{
-           |  "periodStart":"$periodStartDate"
+           |  "periodStart":"jan_apr_jul_oct"
            |}
         """.stripMargin)
 

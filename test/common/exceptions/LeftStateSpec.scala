@@ -29,11 +29,11 @@ class LeftStateSpec extends FlatSpec with MustMatchers {
   private def errorJson(statusCode: Int, msg: String): JsObject =
     Json.obj("errorCode" -> statusCode, "errorMessage" -> msg)
 
-  "converting NotFound to Result" should "produce result with 410 status code and JSON body" in {
+  "converting NotFound to Result" should "produce result with 404 status code and JSON body" in {
     val message = "notfound"
     val result: Future[Result] = Future.successful(ResourceNotFound(message).toResult)
-    status(result) mustBe GONE
-    contentAsJson(result) mustBe errorJson(GONE, message)
+    status(result) mustBe NOT_FOUND
+    contentAsJson(result) mustBe errorJson(NOT_FOUND, message)
   }
 
   "converting Forbidden to Result" should "produce result with 403 status code and JSON body" in {

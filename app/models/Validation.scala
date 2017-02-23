@@ -32,6 +32,7 @@ trait VatBankAccountValidator extends Validation{
 
 trait VatAccountingPeriodValidator  extends Validation{
 
+  val periodStartValidator: Format[String] = readToFmt(pattern("^(jan_apr_jul_oct|feb_may_aug_nov|mar_jun_sep_dec)$".r))
   val frequencyValidator: Format[String] = readToFmt(pattern("^(monthly|quarterly)$".r))
 }
 
