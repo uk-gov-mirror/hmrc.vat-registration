@@ -31,6 +31,7 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 import scala.concurrent.Future
 
 trait RegistrationRepository {
+
   def createNewVatScheme(registrationId: String): Future[VatScheme]
 
   def retrieveVatScheme(registrationId: String): Future[Option[VatScheme]]
@@ -43,7 +44,6 @@ trait RegistrationRepository {
 
   def deleteVatScheme(registrationId: String): Future[Boolean]
 
-  def dropCollection: Future[Unit]
 }
 
 // this is here for Guice dependency injection of `() => DB`
@@ -110,10 +110,4 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
     }
   }
 
-  // $COVERAGE-OFF$
-  override def dropCollection: Future[Unit] = {
-    collection.drop()
-  }
-
-  // $COVERAGE-ON$
 }

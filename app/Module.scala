@@ -16,6 +16,7 @@
 
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, Provides}
+import repositories.test.{TestOnlyMongoRepository, TestOnlyRepository}
 import repositories.{MongoDBProvider, RegistrationMongoRepository, RegistrationRepository}
 
 class Module extends AbstractModule {
@@ -24,6 +25,7 @@ class Module extends AbstractModule {
 
   override def configure(): Unit = {
     bind(classOf[RegistrationRepository]).to(classOf[RegistrationMongoRepository])
+    bind(classOf[TestOnlyRepository]).to(classOf[TestOnlyMongoRepository])
     bind(classOf[connectors.AuthConnector]).to(classOf[connectors.VatRegAuthConnector])
     bind(classOf[connectors.BusinessRegistrationConnector]).to(classOf[connectors.VatRegBusinessRegistrationConnector])
     bind(classOf[services.RegistrationService]).to(classOf[services.VatRegistrationService])
