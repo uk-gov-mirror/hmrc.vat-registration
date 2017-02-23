@@ -27,15 +27,16 @@ import org.mockito.Matchers
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import repositories.RegistrationRepository
+import repositories.test.TestOnlyRepository
 import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
-import scala.util.Success
 
 class VatRegistrationServiceSpec extends VatRegSpec {
 
   val mockBusRegConnector = mock[BusinessRegistrationConnector]
   val mockRegistrationRepository = mock[RegistrationRepository]
+  val mockTestOnlyRepo = mock[TestOnlyRepository]
   val date = LocalDate.of(2017, 1, 1)
   val vatChoice: VatChoice = VatChoice(date, "")
 
@@ -96,7 +97,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
     "error with the DB when creating VatScheme" in new Setup {
       val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
-      val t = new InsertFailed("regId", "VatScheme")
+      val t = InsertFailed("regId", "VatScheme")
 
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
       when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(None)
@@ -192,13 +193,14 @@ class VatRegistrationServiceSpec extends VatRegSpec {
   "call to updateVatFinancials" should {
 
     val EstimateValue: Long = 10000000000L
-    val zeroRatedTurnoverEstimate : Long = 10000000000L
-    val vatFinancials = VatFinancials(  Some(VatBankAccount("Reddy", "101010","100000000000")),
-                                        EstimateValue,
-                                        Some(zeroRatedTurnoverEstimate),
-                                        true,
-                                        VatAccountingPeriod(None, "monthly")
-                                    )
+    val zeroRatedTurnoverEstimate: Long = 10000000000L
+    val vatFinancials = VatFinancials(
+      bankAccount = Some(VatBankAccount("Reddy", "101010", "100000000000")),
+      turnoverEstimate = EstimateValue,
+      zeroRatedTurnoverEstimate = Some(zeroRatedTurnoverEstimate),
+      reclaimVatOnMostReturns = true,
+      vatAccountingPeriod = VatAccountingPeriod(None, "monthly")
+    )
 
     "return Success response " in new Setup {
       when(mockRegistrationRepository.updateVatFinancials("1", vatFinancials)).thenReturn(vatFinancials)
@@ -251,12 +253,4 @@ class VatRegistrationServiceSpec extends VatRegSpec {
     }
   }
 
-  "call to dropCollection" should {
-
-    "return Success response " in new Setup {
-      when(mockRegistrationRepository.dropCollection).thenReturn()
-      val response = service.dropCollection
-      await(response.value) shouldBe Some(Success(()))
-    }
-  }
 }
