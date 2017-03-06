@@ -52,8 +52,8 @@ trait RegistrationRepository {
 object RegistrationMongoFormats extends ReactiveMongoFormats {
 
   implicit val mongoFormat = VatBankAccountMongoFormat.format
-  implicit val oFormat = OFormat(VatFinancials.cTReads(mongoFormat), VatFinancials.cTWrites(mongoFormat))
-  implicit val format : Format[VatScheme] = Format(VatScheme.cTReads(oFormat), VatScheme.cTWrites(oFormat))
+  implicit val vatFinancialsFormat = OFormat(VatFinancials.cTReads(mongoFormat), VatFinancials.cTWrites(mongoFormat))
+  implicit val vatSchemeFormat : Format[VatScheme] = Format(VatScheme.cTReads(vatFinancialsFormat), VatScheme.cTWrites(vatFinancialsFormat))
 
 }
 
@@ -66,13 +66,12 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
   extends ReactiveRepository[VatScheme, BSONObjectID](
     collectionName = collectionName,
     mongo = mongoProvider,
-    domainFormat = RegistrationMongoFormats.format
+    domainFormat = RegistrationMongoFormats.vatSchemeFormat
   ) with RegistrationRepository {
 
   import scala.concurrent.ExecutionContext.Implicits.global
-  implicit val mongoFormat = VatBankAccountMongoFormat.format
-  implicit val oFormat = OFormat(VatFinancials.cTReads(mongoFormat), VatFinancials.cTWrites(mongoFormat))
-  implicit val format : Format[VatScheme] = Format(VatScheme.cTReads(oFormat), VatScheme.cTWrites(oFormat))
+  implicit val vatFinancialsFormat = RegistrationMongoFormats.vatFinancialsFormat
+  implicit val format  = RegistrationMongoFormats.vatSchemeFormat
 
   private[repositories] def regIdSelector(registrationID: String) = BSONDocument("ID" -> BSONString(registrationID))
 
@@ -92,8 +91,7 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
   }
 
   override def retrieveVatScheme(regId: String): Future[Option[VatScheme]] = {
-    val vatScheme = collection.find(regIdSelector(regId)).one[VatScheme]
-    vatScheme
+    collection.find(regIdSelector(regId)).one[VatScheme]
   }
 
   private def updateVatScheme[T](regId: String, groupToUpdate: (String, T))(implicit format: OWrites[T]): Future[T] = {
