@@ -21,6 +21,7 @@ import javax.inject.Inject
 import cats.implicits._
 import common.exceptions.LeftState
 import connectors.AuthConnector
+import models.VatBankAccount
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, Result}
 import services._
@@ -29,7 +30,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class VatRegistrationController @Inject()(val auth: AuthConnector, registrationService: RegistrationService)
   extends VatRegistrationBaseController {
-
   val errorHandler: (LeftState) => Result = err => err.toResult
 
   def newVatRegistration: Action[AnyContent] = Action.async {
@@ -42,7 +42,10 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
   def retrieveVatScheme(registrationId: String): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
-        registrationService.retrieveVatScheme(registrationId).fold(errorHandler, vatScheme => Ok(Json.toJson(vatScheme)))
+        registrationService.retrieveVatScheme(registrationId).fold(
+          errorHandler,
+          vatScheme =>
+            Ok(Json.toJson(vatScheme)))
       }
   }
 

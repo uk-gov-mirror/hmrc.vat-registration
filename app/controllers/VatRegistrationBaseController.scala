@@ -26,7 +26,6 @@ import uk.gov.hmrc.play.microservice.controller.BaseController
 import scala.concurrent.ExecutionContext.Implicits.global
 
 abstract class VatRegistrationBaseController extends BaseController with Authenticated {
-
   protected def patch[T: Format : Manifest](serviceCall: (String, T) => ServiceResult[T], regId: String): Action[JsValue] =
     Action.async(parse.json) {
       implicit request =>

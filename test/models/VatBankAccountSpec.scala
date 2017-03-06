@@ -16,13 +16,20 @@
 
 package models
 
+import helpers.VatRegSpec
 import play.api.data.validation.ValidationError
-import play.api.libs.json.{JsPath, JsSuccess, Json}
+import play.api.libs.json.{JsString, _}
+import play.libs.Crypto
+import uk.gov.hmrc.crypto.{CompositeSymmetricCrypto, Crypted, PlainText}
 import uk.gov.hmrc.play.test.UnitSpec
 
-class VatBankAccountSpec extends JsonFormatValidation {
+class VatBankAccountSpec extends VatRegSpec with JsonFormatValidation {
+
 
   "Creating a VatBankAccount model from Json" should {
+
+    implicit val format = VatBankAccountApiFormat.format
+
     "complete successfully from full Json" in {
       val json = Json.parse(
         s"""
@@ -107,6 +114,37 @@ class VatBankAccountSpec extends JsonFormatValidation {
 
       val result = Json.fromJson[VatBankAccount](json)
       shouldHaveErrors(result, JsPath() \ "accountSortCode", Seq(ValidationError("error.path.missing")))
+    }
+
+  }
+
+
+
+  "Creating a VatBankAccountMongoFormat model from Json" should {
+
+    implicit val mongoFormat = VatBankAccountMongoFormat.format
+
+    "complete successfully from full Json" in {
+      val jsonValue =  s"""
+                         |{
+                         |  "accountName":"Test Account Name",
+                         |  "accountSortCode":"00-99-22",
+                         |  "accountNumber":"12345678"
+                         |}
+                      """
+
+      val tstVatBankAccount = VatBankAccount(
+        accountName = "Test Account Name",
+        accountSortCode = "00-99-22",
+        accountNumber = "12345678"
+      )
+
+      val writeResult = mongoFormat.writes(tstVatBankAccount)
+      val readResult = mongoFormat.reads(Json.toJson(writeResult))
+      val result : VatBankAccount = readResult.get
+
+      result shouldBe tstVatBankAccount
+
     }
 
   }

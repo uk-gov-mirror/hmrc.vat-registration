@@ -16,6 +16,7 @@
 
 package models
 
+import auth.Crypto
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -26,11 +27,22 @@ case class VatBankAccount(
                          )
   extends VatBankAccountValidator
 
-object VatBankAccount extends VatBankAccountValidator {
+object VatBankAccountApiFormat extends VatBankAccountValidator {
 
-  implicit val format = (
+  implicit val format: OFormat[VatBankAccount] = (
     (__ \ "accountName").format[String] and
       (__ \ "accountSortCode").format[String](accountSortCodeValidator) and
       (__ \ "accountNumber").format[String](accountNumberValidator)
-    ) (VatBankAccount.apply, unlift(VatBankAccount.unapply))
+    ) (VatBankAccount.apply _, unlift(VatBankAccount.unapply _))
+
+}
+
+object VatBankAccountMongoFormat {
+  implicit val format: OFormat[VatBankAccount] = mongoFormat(Crypto.rds,Crypto.wts)
+
+  def mongoFormat(cryptoRds: Reads[String], cryptoWts: Writes[String]) : OFormat[VatBankAccount] = (
+    (__ \ "accountName").format[String] and
+      (__ \ "accountSortCode").format[String] and
+      (__ \ "accountNumber").format[String](cryptoRds)(cryptoWts)
+    ) (VatBankAccount.apply _, unlift(VatBankAccount.unapply _))
 }
