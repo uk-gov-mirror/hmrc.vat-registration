@@ -28,10 +28,25 @@ case class VatScheme(
 
 object VatScheme {
 
-  implicit val format = (
-    (__ \ "ID").format[String] and
-      (__ \ "trading-details").formatNullable[VatTradingDetails] and
-      (__ \ "vat-choice").formatNullable[VatChoice] and
-      (__ \ "financials").formatNullable[VatFinancials]
-    ) (VatScheme.apply, unlift(VatScheme.unapply))
+  implicit val financialsFormat = VatFinancials.format
+
+  def  cTReads(rdsAck: Reads[VatFinancials]) : Reads[VatScheme] = (
+    (__ \ "ID").read[String] and
+      (__ \ "trading-details").readNullable[VatTradingDetails] and
+      (__ \ "vat-choice").readNullable[VatChoice] and
+      (__ \ "financials").readNullable[VatFinancials](rdsAck)
+    )(VatScheme.apply _)
+
+
+  def cTWrites(wtsAck: Writes[VatFinancials]) : OWrites[VatScheme] = (
+
+    (__ \ "ID").write[String] and
+      (__ \ "trading-details").writeNullable[VatTradingDetails] and
+      (__ \ "vat-choice").writeNullable[VatChoice] and
+      (__ \ "financials").writeNullable[VatFinancials] (wtsAck)
+    )(unlift(VatScheme.unapply))
+
+  implicit val format: OFormat[VatScheme] = OFormat(cTReads(financialsFormat), cTWrites(financialsFormat))
+
+
 }

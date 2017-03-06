@@ -18,15 +18,17 @@ package repositories
 
 import javax.inject.{Inject, Named}
 
+import auth.Crypto
 import common.exceptions._
-import models._
+import models.{VatFinancials, _}
 import play.api.Logger
-import play.api.libs.json.OWrites
+import play.api.libs.json.{Format, Json, OFormat, OWrites}
 import play.modules.reactivemongo.MongoDbConnection
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
 import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
 import scala.concurrent.Future
 
@@ -46,6 +48,15 @@ trait RegistrationRepository {
 
 }
 
+
+object RegistrationMongoFormats extends ReactiveMongoFormats {
+
+  implicit val mongoFormat = VatBankAccountMongoFormat.format
+  implicit val oFormat = OFormat(VatFinancials.cTReads(mongoFormat), VatFinancials.cTWrites(mongoFormat))
+  implicit val format : Format[VatScheme] = Format(VatScheme.cTReads(oFormat), VatScheme.cTWrites(oFormat))
+
+}
+
 // this is here for Guice dependency injection of `() => DB`
 class MongoDBProvider extends Function0[DB] with MongoDbConnection {
   def apply: DB = db()
@@ -55,10 +66,13 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
   extends ReactiveRepository[VatScheme, BSONObjectID](
     collectionName = collectionName,
     mongo = mongoProvider,
-    domainFormat = VatScheme.format
+    domainFormat = RegistrationMongoFormats.format
   ) with RegistrationRepository {
 
   import scala.concurrent.ExecutionContext.Implicits.global
+  implicit val mongoFormat = VatBankAccountMongoFormat.format
+  implicit val oFormat = OFormat(VatFinancials.cTReads(mongoFormat), VatFinancials.cTWrites(mongoFormat))
+  implicit val format : Format[VatScheme] = Format(VatScheme.cTReads(oFormat), VatScheme.cTWrites(oFormat))
 
   private[repositories] def regIdSelector(registrationID: String) = BSONDocument("ID" -> BSONString(registrationID))
 
@@ -78,7 +92,8 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
   }
 
   override def retrieveVatScheme(regId: String): Future[Option[VatScheme]] = {
-    collection.find(regIdSelector(regId)).one[VatScheme]
+    val vatScheme = collection.find(regIdSelector(regId)).one[VatScheme]
+    vatScheme
   }
 
   private def updateVatScheme[T](regId: String, groupToUpdate: (String, T))(implicit format: OWrites[T]): Future[T] = {
