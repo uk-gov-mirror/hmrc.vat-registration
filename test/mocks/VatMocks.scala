@@ -87,6 +87,39 @@ trait VatMocks extends WSHTTPMock {
         .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
     }
 
+    def mockDeleteBankAccountDetails(testId: String): Unit = {
+      when(mockRegistrationService.deleteBankAccountDetails(Matchers.contains(testId)))
+        .thenReturn(serviceResult(true))
+    }
+
+    def mockDeleteBankAccountDetailsThrowsException(testId: String): Unit = {
+      val exception = new Exception("Exception")
+      when(mockRegistrationService.deleteBankAccountDetails(Matchers.any()))
+        .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
+    }
+
+    def mockDeleteAccountingPeriodStart(testId: String): Unit = {
+      when(mockRegistrationService.deleteAccountingPeriodStart(Matchers.contains(testId)))
+        .thenReturn(serviceResult(true))
+    }
+
+    def mockDeleteAccountingPeriodStartThrowsException(testId: String): Unit = {
+      val exception = new Exception("Exception")
+      when(mockRegistrationService.deleteAccountingPeriodStart(Matchers.any()))
+        .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
+    }
+
+    def mockDeleteZeroRatedTurnover(testId: String): Unit = {
+      when(mockRegistrationService.deleteZeroRatedTurnover(Matchers.contains(testId)))
+        .thenReturn(serviceResult(true))
+    }
+
+    def mockDeleteZeroRatedTurnoverThrowsException(testId: String): Unit = {
+      val exception = new Exception("Exception")
+      when(mockRegistrationService.deleteZeroRatedTurnover(Matchers.any()))
+        .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
+    }
+
     def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
       when(mockRegistrationService.createNewRegistration()(Matchers.any[HeaderCarrier]()))
         .thenReturn(serviceResult(VatScheme(registrationId, None, None, None)))

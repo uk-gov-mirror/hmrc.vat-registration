@@ -62,4 +62,25 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
       }
   }
 
+  def deleteBankAccountDetails(registrationId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      authenticated { _ =>
+        registrationService.deleteBankAccountDetails(registrationId).fold(errorHandler, removed => Ok(Json.toJson(removed)))
+      }
+  }
+
+  def deleteZeroRatedTurnover(registrationId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      authenticated { _ =>
+        registrationService.deleteZeroRatedTurnover(registrationId).fold(errorHandler, removed => Ok(Json.toJson(removed)))
+      }
+  }
+
+  def deleteAccountingPeriodStart(registrationId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      authenticated { _ =>
+        registrationService.deleteAccountingPeriodStart(registrationId).fold(errorHandler, removed => Ok(Json.toJson(removed)))
+      }
+  }
+
 }

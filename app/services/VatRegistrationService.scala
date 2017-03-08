@@ -43,6 +43,12 @@ trait RegistrationService {
 
   def deleteVatScheme(registrationId: String): ServiceResult[Boolean]
 
+  def deleteBankAccountDetails(registrationId: String): ServiceResult[Boolean]
+
+  def deleteZeroRatedTurnover(registrationId: String): ServiceResult[Boolean]
+
+  def deleteAccountingPeriodStart(registrationId: String): ServiceResult[Boolean]
+
 }
 
 class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnector,
@@ -89,5 +95,14 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
 
   override def deleteVatScheme(registrationId: String): ServiceResult[Boolean] =
     toEitherT(registrationRepository.deleteVatScheme(registrationId))
+
+  override def deleteBankAccountDetails(registrationId: String): ServiceResult[Boolean] =
+    toEitherT(registrationRepository.deleteBankAccountDetails(registrationId))
+
+  override def deleteZeroRatedTurnover(registrationId: String): ServiceResult[Boolean] =
+    toEitherT(registrationRepository.deleteZeroRatedTurnover(registrationId))
+
+  override def deleteAccountingPeriodStart(registrationId: String): ServiceResult[Boolean] =
+    toEitherT(registrationRepository.deleteAccountingPeriodStart(registrationId))
 
 }

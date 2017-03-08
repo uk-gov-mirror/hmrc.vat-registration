@@ -30,7 +30,8 @@ abstract class VatRegistrationBaseController extends BaseController with Authent
     Action.async(parse.json) {
       implicit request =>
         authenticated { user =>
-          withJsonBody((t: T) => serviceCall(regId, t).fold(
+          withJsonBody((t: T) =>
+            serviceCall(regId, t).fold(
             a => a.toResult,
             b => Accepted(Json.toJson(b))
           ))

@@ -75,8 +75,6 @@ class VatRegistrationControllerSpec extends VatRegSpec {
       status(response) shouldBe SERVICE_UNAVAILABLE
     }
 
-
-
     "call updateVatChoice return ACCEPTED" in new Setup {
       AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
       ServiceMocks.mockSuccessfulUpdateVatChoice(testId, vatChoice)
@@ -129,7 +127,9 @@ class VatRegistrationControllerSpec extends VatRegSpec {
         val response: Future[Result] = controller.retrieveVatScheme(testId)(FakeRequest())
         status(response) shouldBe SERVICE_UNAVAILABLE
       }
+    }
 
+    "deleteVatScheme" should {
       "call to deleteVatScheme return Ok with VatScheme" in new Setup {
         AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
         ServiceMocks.mockDeleteVatScheme(testId)
@@ -146,7 +146,63 @@ class VatRegistrationControllerSpec extends VatRegSpec {
         val response: Future[Result] = controller.deleteVatScheme(testId)(FakeRequest())
         status(response) shouldBe SERVICE_UNAVAILABLE
       }
+    }
 
+    "deleteAccountingPeriodStart" should {
+      "call to deleteAccountingPeriodStart return Ok with VatScheme" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+        ServiceMocks.mockDeleteAccountingPeriodStart(testId)
+        val response: Future[Result] = controller.deleteAccountingPeriodStart(testId)(
+          FakeRequest()
+        )
+        status(response) shouldBe OK
+        response.map(_ shouldBe true)
+      }
+
+      "call to deleteAccountingPeriodStart return ServiceUnavailable" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+        ServiceMocks.mockDeleteAccountingPeriodStartThrowsException(testId)
+        val response: Future[Result] = controller.deleteAccountingPeriodStart(testId)(FakeRequest())
+        status(response) shouldBe SERVICE_UNAVAILABLE
+      }
+    }
+
+    "deleteBankAccountDetails" should {
+      "call to deleteAccountingPeriodStart return Ok with VatScheme" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+        ServiceMocks.mockDeleteBankAccountDetails(testId)
+        val response: Future[Result] = controller.deleteBankAccountDetails(testId)(
+          FakeRequest()
+        )
+        status(response) shouldBe OK
+        response.map(_ shouldBe true)
+      }
+
+      "call to deleteBankAccountDetails return ServiceUnavailable" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+        ServiceMocks.mockDeleteBankAccountDetailsThrowsException(testId)
+        val response: Future[Result] = controller.deleteBankAccountDetails(testId)(FakeRequest())
+        status(response) shouldBe SERVICE_UNAVAILABLE
+      }
+    }
+
+    "deleteZeroRatedTurnover" should {
+      "call to deleteAccountingPeriodStart return Ok with VatScheme" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+        ServiceMocks.mockDeleteZeroRatedTurnover(testId)
+        val response: Future[Result] = controller.deleteZeroRatedTurnover(testId)(
+          FakeRequest()
+        )
+        status(response) shouldBe OK
+        response.map(_ shouldBe true)
+      }
+
+      "call to deleteZeroRatedTurnover return ServiceUnavailable" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(testId))
+        ServiceMocks.mockDeleteZeroRatedTurnoverThrowsException(testId)
+        val response: Future[Result] = controller.deleteZeroRatedTurnover(testId)(FakeRequest())
+        status(response) shouldBe SERVICE_UNAVAILABLE
+      }
     }
 
     "updateVatFinancials" should {
