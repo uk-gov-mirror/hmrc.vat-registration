@@ -33,7 +33,6 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import scala.concurrent.Future
 
 trait RegistrationRepository {
-
   def createNewVatScheme(registrationId: String): Future[VatScheme]
 
   def retrieveVatScheme(registrationId: String): Future[Option[VatScheme]]
@@ -45,6 +44,12 @@ trait RegistrationRepository {
   def updateVatFinancials(registrationId: String, financials: VatFinancials): Future[VatFinancials]
 
   def deleteVatScheme(registrationId: String): Future[Boolean]
+
+  def deleteBankAccountDetails(registrationId: String): Future[Boolean]
+
+  def deleteZeroRatedTurnover(registrationId: String): Future[Boolean]
+
+  def deleteAccountingPeriodStart(registrationId: String): Future[Boolean]
 
 }
 
@@ -107,6 +112,18 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
     }
   }
 
+  private def unsetElement(regId: String, element: String): Future[Boolean] = {
+    collection.findAndUpdate(
+      regIdSelector(regId),
+      BSONDocument("$unset" -> BSONDocument(element -> ""))
+    ).map {
+      _.value match {
+        case Some(_) => true
+        case _ => throw UpdateFailed(regId, element)
+      }
+    }
+  }
+
   override def updateVatFinancials(regId: String, financials: VatFinancials): Future[VatFinancials] =
     updateVatScheme(regId, "financials" -> financials)
 
@@ -122,5 +139,14 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
       case None => Future.failed(MissingRegDocument(registrationId))
     }
   }
+
+  override def deleteBankAccountDetails(regId: String): Future[Boolean] =
+    unsetElement(regId, "financials.bankAccount")
+
+  override def deleteZeroRatedTurnover(regId: String): Future[Boolean] =
+    unsetElement(regId, "financials.zeroRatedTurnoverEstimate")
+
+  override def deleteAccountingPeriodStart(regId: String): Future[Boolean] =
+    unsetElement(regId, "financials.accountingPeriods.periodStart")
 
 }

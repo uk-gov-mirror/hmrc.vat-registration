@@ -228,7 +228,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
     }
   }
 
-  "call to deleteVatFinancials" should {
+  "call to deleteVatScheme" should {
 
     "return Success response " in new Setup {
       when(mockRegistrationRepository.deleteVatScheme("1")).thenReturn(Future.successful(true))
@@ -250,6 +250,51 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockRegistrationRepository.deleteVatScheme("1")).thenReturn(Future.failed(t))
       val response = service.deleteVatScheme("1")
       await(response.value) shouldBe Left(ResourceNotFound(s"No registration found for registration ID: $regId"))
+    }
+  }
+
+  "call to deleteBankAccountDetails" should {
+    "return Success response " in new Setup {
+      when(mockRegistrationRepository.deleteBankAccountDetails("1")).thenReturn(Future.successful(true))
+      val response = service.deleteBankAccountDetails("1")
+      await(response.value) shouldBe Right(true)
+    }
+
+    "return Error response " in new Setup {
+      val t = new RuntimeException("Exception")
+      when(mockRegistrationRepository.deleteBankAccountDetails("1")).thenReturn(Future.failed(t))
+      val response = service.deleteBankAccountDetails("1")
+      await(response.value) shouldBe Left(GenericError(t))
+    }
+  }
+
+  "call to deleteAccountingPeriodStart" should {
+    "return Success response " in new Setup {
+      when(mockRegistrationRepository.deleteAccountingPeriodStart("1")).thenReturn(Future.successful(true))
+      val response = service.deleteAccountingPeriodStart("1")
+      await(response.value) shouldBe Right(true)
+    }
+
+    "return Error response " in new Setup {
+      val t = new RuntimeException("Exception")
+      when(mockRegistrationRepository.deleteAccountingPeriodStart("1")).thenReturn(Future.failed(t))
+      val response = service.deleteAccountingPeriodStart("1")
+      await(response.value) shouldBe Left(GenericError(t))
+    }
+  }
+
+  "call to deleteZeroRatedTurnover" should {
+    "return Success response " in new Setup {
+      when(mockRegistrationRepository.deleteZeroRatedTurnover("1")).thenReturn(Future.successful(true))
+      val response = service.deleteZeroRatedTurnover("1")
+      await(response.value) shouldBe Right(true)
+    }
+
+    "return Error response " in new Setup {
+      val t = new RuntimeException("Exception")
+      when(mockRegistrationRepository.deleteZeroRatedTurnover("1")).thenReturn(Future.failed(t))
+      val response = service.deleteZeroRatedTurnover("1")
+      await(response.value) shouldBe Left(GenericError(t))
     }
   }
 
