@@ -190,6 +190,37 @@ class VatRegistrationServiceSpec extends VatRegSpec {
     }
   }
 
+  "call to updateSicAndCompliance" should {
+
+    val sicAndCompliance = VatSicAndCompliance("some-business-description")
+
+    "return Success response " in new Setup {
+      when(mockRegistrationRepository.updateSicAndCompliance("1", sicAndCompliance)).thenReturn(sicAndCompliance)
+
+      val response = service.updateSicAndCompliance("1", sicAndCompliance)
+      await(response.value) shouldBe Right(sicAndCompliance)
+    }
+
+    "return Error response " in new Setup {
+      val t = new RuntimeException("Exception")
+      when(mockRegistrationRepository.updateSicAndCompliance("1", sicAndCompliance)).thenReturn(Future.failed(t))
+
+      val response = service.updateSicAndCompliance("1", sicAndCompliance)
+      await(response.value) shouldBe Left(GenericError(t))
+    }
+
+    "return Error response for MissingRegDocument" in new Setup {
+      val regId = "regId"
+      val t = MissingRegDocument(regId)
+      when(mockRegistrationRepository.updateSicAndCompliance("1", sicAndCompliance)).thenReturn(Future.failed(t))
+
+      val response = service.updateSicAndCompliance("1", sicAndCompliance)
+
+      await(response.value) shouldBe Left(ResourceNotFound(s"No registration found for registration ID: $regId"))
+    }
+  }
+
+
   "call to updateVatFinancials" should {
 
     val EstimateValue: Long = 10000000000L

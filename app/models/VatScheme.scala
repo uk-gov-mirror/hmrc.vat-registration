@@ -21,30 +21,32 @@ import play.api.libs.json._
 
 case class VatScheme(
                       id: String,
-                      tradingDetails: Option[VatTradingDetails],
-                      vatChoice: Option[VatChoice],
-                      financials: Option[VatFinancials]
+                      tradingDetails: Option[VatTradingDetails] = None,
+                      vatChoice: Option[VatChoice] = None, //why is this not in schema https://github.tools.tax.service.gov.uk/HMRC/business-registration-interface/blob/master/des/vat/schema/json-schema/btr.vat.scheme.schema.json
+                      financials: Option[VatFinancials] = None, //why is all option?
+                      sicAndCompliance: Option[VatSicAndCompliance] = None
                     )
 
 object VatScheme {
 
   implicit val financialsFormat = VatFinancials.format
 
-  def  cTReads(rdsAck: Reads[VatFinancials]) : Reads[VatScheme] = (
+  def cTReads(rdsAck: Reads[VatFinancials]): Reads[VatScheme] = (
     (__ \ "ID").read[String] and
       (__ \ "trading-details").readNullable[VatTradingDetails] and
       (__ \ "vat-choice").readNullable[VatChoice] and
-      (__ \ "financials").readNullable[VatFinancials](rdsAck)
-    )(VatScheme.apply _)
+      (__ \ "financials").readNullable[VatFinancials](rdsAck) and
+      (__ \ "sic-and-compliance").readNullable[VatSicAndCompliance]
+    ) (VatScheme.apply _)
 
 
-  def cTWrites(wtsAck: Writes[VatFinancials]) : OWrites[VatScheme] = (
-
+  def cTWrites(wtsAck: Writes[VatFinancials]): OWrites[VatScheme] = (
     (__ \ "ID").write[String] and
       (__ \ "trading-details").writeNullable[VatTradingDetails] and
       (__ \ "vat-choice").writeNullable[VatChoice] and
-      (__ \ "financials").writeNullable[VatFinancials] (wtsAck)
-    )(unlift(VatScheme.unapply))
+      (__ \ "financials").writeNullable[VatFinancials](wtsAck) and
+      (__ \ "sic-and-compliance").writeNullable[VatSicAndCompliance]
+    ) (unlift(VatScheme.unapply))
 
   implicit val format: OFormat[VatScheme] = OFormat(cTReads(financialsFormat), cTWrites(financialsFormat))
 

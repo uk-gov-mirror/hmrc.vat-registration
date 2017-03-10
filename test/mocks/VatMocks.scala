@@ -19,7 +19,7 @@ package mocks
 import cats.data.EitherT
 import common.exceptions._
 import connectors.{AuthConnector, Authority}
-import models.{VatChoice, VatFinancials, VatScheme, VatTradingDetails}
+import models._
 import org.mockito.Matchers
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
@@ -151,9 +151,19 @@ trait VatMocks extends WSHTTPMock {
         .thenReturn(serviceResult(tradingDetails))
     }
 
-    def mockServiceUnavailableUpdateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails, exception: Exception): Unit = {
+    def mockServiceUnavailableUpdateTradingDetails(registrationId: String, exception: Exception): Unit = {
       when(mockRegistrationService.updateTradingDetails(Matchers.any(), Matchers.any()))
         .thenReturn(serviceError[VatTradingDetails](GenericError(exception)))
+    }
+
+    def mockSuccessfulUpdateSicAndCompliance(registrationId: String, sicAndCompliance: VatSicAndCompliance): Unit = {
+      when(mockRegistrationService.updateSicAndCompliance(Matchers.any(), Matchers.any()))
+        .thenReturn(serviceResult(sicAndCompliance))
+    }
+
+    def mockServiceUnavailableUpdateSicAndCompliance(registrationId: String, exception: Exception): Unit = {
+      when(mockRegistrationService.updateSicAndCompliance(Matchers.any(), Matchers.any()))
+        .thenReturn(serviceError[VatSicAndCompliance](GenericError(exception)))
     }
 
     def mockSuccessfulUpdateVatFinancials(registrationId: String, vatFinancials: VatFinancials): Unit = {

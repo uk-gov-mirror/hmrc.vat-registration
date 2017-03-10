@@ -33,21 +33,23 @@ trait RegistrationService {
 
   def createNewRegistration()(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme]
 
-  def retrieveVatScheme(registrationId: String): ServiceResult[VatScheme]
+  def retrieveVatScheme(regId: String): ServiceResult[VatScheme]
 
-  def updateVatChoice(registrationId: String, vatChoice: VatChoice): ServiceResult[VatChoice]
+  def updateVatChoice(regId: String, vatChoice: VatChoice): ServiceResult[VatChoice]
 
-  def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): ServiceResult[VatTradingDetails]
+  def updateTradingDetails(regId: String, tradingDetails: VatTradingDetails): ServiceResult[VatTradingDetails]
 
-  def updateVatFinancials(registrationId: String, financials: VatFinancials): ServiceResult[VatFinancials]
+  def updateSicAndCompliance(regId: String, sicAndCompliance: VatSicAndCompliance): ServiceResult[VatSicAndCompliance]
 
-  def deleteVatScheme(registrationId: String): ServiceResult[Boolean]
+  def updateVatFinancials(regId: String, financials: VatFinancials): ServiceResult[VatFinancials]
 
-  def deleteBankAccountDetails(registrationId: String): ServiceResult[Boolean]
+  def deleteVatScheme(regId: String): ServiceResult[Boolean]
 
-  def deleteZeroRatedTurnover(registrationId: String): ServiceResult[Boolean]
+  def deleteBankAccountDetails(regId: String): ServiceResult[Boolean]
 
-  def deleteAccountingPeriodStart(registrationId: String): ServiceResult[Boolean]
+  def deleteZeroRatedTurnover(regId: String): ServiceResult[Boolean]
+
+  def deleteAccountingPeriodStart(regId: String): ServiceResult[Boolean]
 
 }
 
@@ -78,31 +80,34 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
       vatScheme <- EitherT(getOrCreateVatScheme(profile))
     } yield vatScheme
 
-  override def retrieveVatScheme(registrationId: String): ServiceResult[VatScheme] =
-    EitherT(registrationRepository.retrieveVatScheme(registrationId).map[Either[LeftState, VatScheme]] {
+  override def retrieveVatScheme(regId: String): ServiceResult[VatScheme] =
+    EitherT(registrationRepository.retrieveVatScheme(regId).map[Either[LeftState, VatScheme]] {
       case Some(vatScheme) => Right(vatScheme)
-      case None => Left(ResourceNotFound(registrationId))
+      case None => Left(ResourceNotFound(regId))
     })
 
-  override def updateVatChoice(registrationId: String, vatChoice: VatChoice): ServiceResult[VatChoice] =
-    toEitherT(registrationRepository.updateVatChoice(registrationId, vatChoice))
+  override def updateVatChoice(regId: String, vatChoice: VatChoice): ServiceResult[VatChoice] =
+    toEitherT(registrationRepository.updateVatChoice(regId, vatChoice))
 
-  override def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): ServiceResult[VatTradingDetails] =
-    toEitherT(registrationRepository.updateTradingDetails(registrationId, tradingDetails))
+  override def updateTradingDetails(regId: String, tradingDetails: VatTradingDetails): ServiceResult[VatTradingDetails] =
+    toEitherT(registrationRepository.updateTradingDetails(regId, tradingDetails))
 
-  override def updateVatFinancials(registrationId: String, financials: VatFinancials): ServiceResult[VatFinancials] =
-    toEitherT(registrationRepository.updateVatFinancials(registrationId, financials))
+  override def updateSicAndCompliance(regId: String, sicAndCompliance: VatSicAndCompliance): ServiceResult[VatSicAndCompliance] =
+    toEitherT(registrationRepository.updateSicAndCompliance(regId, sicAndCompliance))
 
-  override def deleteVatScheme(registrationId: String): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteVatScheme(registrationId))
+  override def updateVatFinancials(regId: String, financials: VatFinancials): ServiceResult[VatFinancials] =
+    toEitherT(registrationRepository.updateVatFinancials(regId, financials))
 
-  override def deleteBankAccountDetails(registrationId: String): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteBankAccountDetails(registrationId))
+  override def deleteVatScheme(regId: String): ServiceResult[Boolean] =
+    toEitherT(registrationRepository.deleteVatScheme(regId))
 
-  override def deleteZeroRatedTurnover(registrationId: String): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteZeroRatedTurnover(registrationId))
+  override def deleteBankAccountDetails(regId: String): ServiceResult[Boolean] =
+    toEitherT(registrationRepository.deleteBankAccountDetails(regId))
 
-  override def deleteAccountingPeriodStart(registrationId: String): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteAccountingPeriodStart(registrationId))
+  override def deleteZeroRatedTurnover(regId: String): ServiceResult[Boolean] =
+    toEitherT(registrationRepository.deleteZeroRatedTurnover(regId))
+
+  override def deleteAccountingPeriodStart(regId: String): ServiceResult[Boolean] =
+    toEitherT(registrationRepository.deleteAccountingPeriodStart(regId))
 
 }

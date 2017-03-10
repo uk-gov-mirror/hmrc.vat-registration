@@ -18,11 +18,10 @@ package repositories
 
 import javax.inject.{Inject, Named}
 
-import auth.Crypto
 import common.exceptions._
 import models.{VatFinancials, _}
 import play.api.Logger
-import play.api.libs.json.{Format, Json, OFormat, OWrites}
+import play.api.libs.json.{Format, OFormat, OWrites}
 import play.modules.reactivemongo.MongoDbConnection
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.{Index, IndexType}
@@ -33,23 +32,26 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import scala.concurrent.Future
 
 trait RegistrationRepository {
-  def createNewVatScheme(registrationId: String): Future[VatScheme]
 
-  def retrieveVatScheme(registrationId: String): Future[Option[VatScheme]]
+  def createNewVatScheme(regId: String): Future[VatScheme]
 
-  def updateVatChoice(registrationId: String, vatChoice: VatChoice): Future[VatChoice]
+  def retrieveVatScheme(regId: String): Future[Option[VatScheme]]
 
-  def updateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Future[VatTradingDetails]
+  def updateVatChoice(regId: String, vatChoice: VatChoice): Future[VatChoice]
 
-  def updateVatFinancials(registrationId: String, financials: VatFinancials): Future[VatFinancials]
+  def updateTradingDetails(regId: String, tradingDetails: VatTradingDetails): Future[VatTradingDetails]
 
-  def deleteVatScheme(registrationId: String): Future[Boolean]
+  def updateSicAndCompliance(regId: String, sicAndCompliance: VatSicAndCompliance): Future[VatSicAndCompliance]
 
-  def deleteBankAccountDetails(registrationId: String): Future[Boolean]
+  def updateVatFinancials(regId: String, financials: VatFinancials): Future[VatFinancials]
 
-  def deleteZeroRatedTurnover(registrationId: String): Future[Boolean]
+  def deleteVatScheme(regId: String): Future[Boolean]
 
-  def deleteAccountingPeriodStart(registrationId: String): Future[Boolean]
+  def deleteBankAccountDetails(regId: String): Future[Boolean]
+
+  def deleteZeroRatedTurnover(regId: String): Future[Boolean]
+
+  def deleteAccountingPeriodStart(regId: String): Future[Boolean]
 
 }
 
@@ -58,7 +60,7 @@ object RegistrationMongoFormats extends ReactiveMongoFormats {
 
   implicit val mongoFormat = VatBankAccountMongoFormat.format
   implicit val vatFinancialsFormat = OFormat(VatFinancials.cTReads(mongoFormat), VatFinancials.cTWrites(mongoFormat))
-  implicit val vatSchemeFormat : Format[VatScheme] = Format(VatScheme.cTReads(vatFinancialsFormat), VatScheme.cTWrites(vatFinancialsFormat))
+  implicit val vatSchemeFormat: Format[VatScheme] = Format(VatScheme.cTReads(vatFinancialsFormat), VatScheme.cTWrites(vatFinancialsFormat))
 
 }
 
@@ -75,23 +77,24 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
   ) with RegistrationRepository {
 
   import scala.concurrent.ExecutionContext.Implicits.global
+
   implicit val vatFinancialsFormat = RegistrationMongoFormats.vatFinancialsFormat
-  implicit val format  = RegistrationMongoFormats.vatSchemeFormat
+  implicit val format = RegistrationMongoFormats.vatSchemeFormat
 
   private[repositories] def regIdSelector(registrationID: String) = BSONDocument("ID" -> BSONString(registrationID))
 
   override def indexes: Seq[Index] = Seq(Index(
     name = Some("RegId"),
-    key = Seq("registrationId" -> IndexType.Ascending),
+    key = Seq("regId" -> IndexType.Ascending),
     unique = true
   ))
 
-  override def createNewVatScheme(registrationId: String): Future[VatScheme] = {
-    val newReg = VatScheme(registrationId, None, None, None)
+  override def createNewVatScheme(regId: String): Future[VatScheme] = {
+    val newReg = VatScheme(regId, None, None, None)
     collection.insert(newReg) map (_ => newReg) recover {
       case e =>
-        Logger.error(s"Unable to insert new VAT Scheme for registration ID $registrationId, Error: ${e.getMessage}")
-        throw InsertFailed(registrationId, "VatScheme")
+        Logger.error(s"Unable to insert new VAT Scheme for registration ID $regId, Error: ${e.getMessage}")
+        throw InsertFailed(regId, "VatScheme")
     }
   }
 
@@ -133,10 +136,13 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
   override def updateTradingDetails(regId: String, tradingDetails: VatTradingDetails): Future[VatTradingDetails] =
     updateVatScheme(regId, "trading-details" -> tradingDetails)
 
-  override def deleteVatScheme(registrationId: String): Future[Boolean] = {
-    retrieveVatScheme(registrationId) flatMap {
-      case Some(ct) => collection.remove(regIdSelector(registrationId)) map { _ => true }
-      case None => Future.failed(MissingRegDocument(registrationId))
+  override def updateSicAndCompliance(regId: String, sicAndCompliance: VatSicAndCompliance): Future[VatSicAndCompliance] =
+    updateVatScheme(regId, "sic-and-compliance" -> sicAndCompliance)
+
+  override def deleteVatScheme(regId: String): Future[Boolean] = {
+    retrieveVatScheme(regId) flatMap {
+      case Some(ct) => collection.remove(regIdSelector(regId)) map { _ => true }
+      case None => Future.failed(MissingRegDocument(regId))
     }
   }
 

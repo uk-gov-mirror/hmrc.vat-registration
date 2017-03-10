@@ -19,7 +19,7 @@ package controllers
 import auth.Authenticated
 import cats.implicits._
 import play.api.libs.json.{Format, JsValue, Json}
-import play.api.mvc.Action
+import play.api.mvc.{Action, AnyContent}
 import services.ServiceResult
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
@@ -32,10 +32,19 @@ abstract class VatRegistrationBaseController extends BaseController with Authent
         authenticated { user =>
           withJsonBody((t: T) =>
             serviceCall(regId, t).fold(
-            a => a.toResult,
-            b => Accepted(Json.toJson(b))
-          ))
+              a => a.toResult,
+              b => Accepted(Json.toJson(b))
+            ))
         }
+    }
+
+  protected def delete[T](serviceCall: String => ServiceResult[Boolean], regId: String): Action[AnyContent] =
+    Action.async { implicit request =>
+      authenticated { _ =>
+        serviceCall(regId).fold(
+          a => a.toResult,
+          b => Ok(Json.toJson(true)))
+      }
     }
 
 }
