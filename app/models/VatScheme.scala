@@ -36,7 +36,7 @@ object VatScheme {
       (__ \ "trading-details").readNullable[VatTradingDetails] and
       (__ \ "vat-choice").readNullable[VatChoice] and
       (__ \ "financials").readNullable[VatFinancials](rdsAck) and
-      (__ \ "sic-and-compliance").readNullable[VatSicAndCompliance]
+      (__ \ "sicAndCompliance").readNullable[VatSicAndCompliance]
     ) (VatScheme.apply _)
 
 
@@ -45,7 +45,7 @@ object VatScheme {
       (__ \ "trading-details").writeNullable[VatTradingDetails] and
       (__ \ "vat-choice").writeNullable[VatChoice] and
       (__ \ "financials").writeNullable[VatFinancials](wtsAck) and
-      (__ \ "sic-and-compliance").writeNullable[VatSicAndCompliance]
+      (__ \ "sicAndCompliance").writeNullable[VatSicAndCompliance]
     ) (unlift(VatScheme.unapply))
 
   implicit val format: OFormat[VatScheme] = OFormat(cTReads(financialsFormat), cTWrites(financialsFormat))

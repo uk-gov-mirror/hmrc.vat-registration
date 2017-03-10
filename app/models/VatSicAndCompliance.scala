@@ -26,10 +26,10 @@ case class VatSicAndCompliance(description: String)
 object VatSicAndCompliance {
 
   val apiReads: Reads[VatSicAndCompliance] =
-    (__ \ "trading-name").read[String].map(VatSicAndCompliance(_))
+    (__ \ "description").read[String].map(VatSicAndCompliance(_))
 
   val apiWrites: OWrites[VatSicAndCompliance] =
-    (__ \ "trading-name").write[String].contramap(_.description)
+    (__ \ "description").write[String].contramap(_.description)
 
   implicit val format: OFormat[VatSicAndCompliance] = OFormat(apiReads, apiWrites)
 

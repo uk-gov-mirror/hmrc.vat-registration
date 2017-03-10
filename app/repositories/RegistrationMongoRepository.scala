@@ -137,7 +137,7 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
     updateVatScheme(regId, "trading-details" -> tradingDetails)
 
   override def updateSicAndCompliance(regId: String, sicAndCompliance: VatSicAndCompliance): Future[VatSicAndCompliance] =
-    updateVatScheme(regId, "sic-and-compliance" -> sicAndCompliance)
+    updateVatScheme(regId, "sicAndCompliance" -> sicAndCompliance)
 
   override def deleteVatScheme(regId: String): Future[Boolean] = {
     retrieveVatScheme(regId) flatMap {
