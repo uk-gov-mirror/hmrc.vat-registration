@@ -21,7 +21,6 @@ import javax.inject.Inject
 import cats.implicits._
 import common.exceptions.LeftState
 import connectors.AuthConnector
-import models.VatBankAccount
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, Result}
 import services._
@@ -39,48 +38,35 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
       }
   }
 
-  def retrieveVatScheme(registrationId: String): Action[AnyContent] = Action.async {
+  def retrieveVatScheme(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
-        registrationService.retrieveVatScheme(registrationId).fold(
+        registrationService.retrieveVatScheme(regId).fold(
           errorHandler,
           vatScheme =>
             Ok(Json.toJson(vatScheme)))
       }
   }
 
-  def updateTradingDetails(registrationId: String): Action[JsValue] = patch(registrationService.updateTradingDetails, registrationId)
+  def updateTradingDetails(regId: String): Action[JsValue] = patch(registrationService.updateTradingDetails, regId)
 
-  def updateVatChoice(registrationId: String): Action[JsValue] = patch(registrationService.updateVatChoice, registrationId)
+  def updateVatChoice(regId: String): Action[JsValue] = patch(registrationService.updateVatChoice, regId)
 
-  def updateVatFinancials(registrationId: String): Action[JsValue] = patch(registrationService.updateVatFinancials, registrationId)
+  def updateVatFinancials(regId: String): Action[JsValue] = patch(registrationService.updateVatFinancials, regId)
 
-  def deleteVatScheme(registrationId: String): Action[AnyContent] = Action.async {
+  def updateSicAndCompliance(regId: String): Action[JsValue] = patch(registrationService.updateSicAndCompliance, regId)
+
+  def deleteVatScheme(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
-        registrationService.deleteVatScheme(registrationId).fold(errorHandler, removed => Ok(Json.toJson(removed)))
+        registrationService.deleteVatScheme(regId).fold(errorHandler, removed => Ok(Json.toJson(removed)))
       }
   }
 
-  def deleteBankAccountDetails(registrationId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authenticated { _ =>
-        registrationService.deleteBankAccountDetails(registrationId).fold(errorHandler, removed => Ok(Json.toJson(removed)))
-      }
-  }
+  def deleteBankAccountDetails(regId: String): Action[AnyContent] = delete(registrationService.deleteBankAccountDetails, regId)
 
-  def deleteZeroRatedTurnover(registrationId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authenticated { _ =>
-        registrationService.deleteZeroRatedTurnover(registrationId).fold(errorHandler, removed => Ok(Json.toJson(removed)))
-      }
-  }
+  def deleteZeroRatedTurnover(regId: String): Action[AnyContent] = delete(registrationService.deleteZeroRatedTurnover, regId)
 
-  def deleteAccountingPeriodStart(registrationId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authenticated { _ =>
-        registrationService.deleteAccountingPeriodStart(registrationId).fold(errorHandler, removed => Ok(Json.toJson(removed)))
-      }
-  }
+  def deleteAccountingPeriodStart(regId: String): Action[AnyContent] = delete(registrationService.deleteAccountingPeriodStart, regId)
 
 }

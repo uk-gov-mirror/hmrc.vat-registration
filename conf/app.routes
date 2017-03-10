@@ -1,10 +1,14 @@
 # microservice specific routes
 
 POST         /new                                   controllers.VatRegistrationController.newVatRegistration
+
+GET          /:regID/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regID)
+
 PATCH        /:regID/vat-choice                     controllers.VatRegistrationController.updateVatChoice(regID)
 PATCH        /:regID/trading-details                controllers.VatRegistrationController.updateTradingDetails(regID)
 PATCH        /:regID/vat-financials                 controllers.VatRegistrationController.updateVatFinancials(regID)
-GET          /:regID/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regID)
+PATCH        /:regID/sic-and-compliance             controllers.VatRegistrationController.updateSicAndCompliance(regID)
+
 DELETE       /:regID/delete-scheme                  controllers.VatRegistrationController.deleteVatScheme(regID)
 DELETE       /:regID/delete-bank-account            controllers.VatRegistrationController.deleteBankAccountDetails(regID)
 DELETE       /:regID/delete-zero-rated_turnover     controllers.VatRegistrationController.deleteZeroRatedTurnover(regID)

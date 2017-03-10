@@ -36,6 +36,7 @@ class RegistrationMongoRepositoryISpec
   private val vatScheme: VatScheme = VatScheme(regId, None, None, None)
   private val vatChoice: VatChoice = VatChoice(date, "")
   private val tradingDetails: VatTradingDetails = VatTradingDetails("some-trader-name")
+  private val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description")
   val EstimateValue: Long = 1000L
   val zeroRatedTurnoverEstimate: Long = 1000L
   val vatFinancials = VatFinancials(
@@ -109,6 +110,21 @@ class RegistrationMongoRepositoryISpec
       an[UpdateFailed] shouldBe thrownBy(await(repository.updateTradingDetails("123", tradingDetails)))
     }
   }
+
+  "Calling updateSicAndCompliance" should {
+
+    "should update VatSicAndCompliance success" in new Setup {
+      await(repository.insert(vatScheme))
+      val result = await(repository.updateSicAndCompliance(regId, sicAndCompliance))
+      result shouldBe sicAndCompliance
+    }
+
+    "should throw UpdateFailed exception when regId not found" in new Setup {
+      await(repository.insert(vatScheme))
+      an[UpdateFailed] shouldBe thrownBy(await(repository.updateSicAndCompliance("123", sicAndCompliance)))
+    }
+  }
+
 
   "Calling updateVatFinancials" should {
 
