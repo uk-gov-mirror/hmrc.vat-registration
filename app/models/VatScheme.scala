@@ -22,8 +22,8 @@ import play.api.libs.json._
 case class VatScheme(
                       id: String,
                       tradingDetails: Option[VatTradingDetails] = None,
-                      vatChoice: Option[VatChoice] = None, //why is this not in schema https://github.tools.tax.service.gov.uk/HMRC/business-registration-interface/blob/master/des/vat/schema/json-schema/btr.vat.scheme.schema.json
-                      financials: Option[VatFinancials] = None, //why is all option?
+                      vatChoice: Option[VatChoice] = None,
+                      financials: Option[VatFinancials] = None,
                       sicAndCompliance: Option[VatSicAndCompliance] = None
                     )
 
