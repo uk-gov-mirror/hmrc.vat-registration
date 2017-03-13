@@ -19,6 +19,7 @@ package controllers
 import javax.inject.Inject
 
 import cats.implicits._
+import common.RegistrationId
 import common.exceptions.LeftState
 import connectors.AuthConnector
 import play.api.libs.json.{JsValue, Json}
@@ -38,35 +39,35 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
       }
   }
 
-  def retrieveVatScheme(regId: String): Action[AnyContent] = Action.async {
+  def retrieveVatScheme(rid: String): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
-        registrationService.retrieveVatScheme(regId).fold(
+        registrationService.retrieveVatScheme(RegistrationId(rid)).fold(
           errorHandler,
           vatScheme =>
             Ok(Json.toJson(vatScheme)))
       }
   }
 
-  def updateTradingDetails(regId: String): Action[JsValue] = patch(registrationService.updateTradingDetails, regId)
+  def updateTradingDetails(rid: String): Action[JsValue] = patch(registrationService.updateTradingDetails, RegistrationId(rid))
 
-  def updateVatChoice(regId: String): Action[JsValue] = patch(registrationService.updateVatChoice, regId)
+  def updateVatChoice(rid: String): Action[JsValue] = patch(registrationService.updateVatChoice, RegistrationId(rid))
 
-  def updateVatFinancials(regId: String): Action[JsValue] = patch(registrationService.updateVatFinancials, regId)
+  def updateVatFinancials(rid: String): Action[JsValue] = patch(registrationService.updateVatFinancials, RegistrationId(rid))
 
-  def updateSicAndCompliance(regId: String): Action[JsValue] = patch(registrationService.updateSicAndCompliance, regId)
+  def updateSicAndCompliance(rid: String): Action[JsValue] = patch(registrationService.updateSicAndCompliance, RegistrationId(rid))
 
-  def deleteVatScheme(regId: String): Action[AnyContent] = Action.async {
+  def deleteVatScheme(rid: String): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
-        registrationService.deleteVatScheme(regId).fold(errorHandler, removed => Ok(Json.toJson(removed)))
+        registrationService.deleteVatScheme(RegistrationId(rid)).fold(errorHandler, removed => Ok(Json.toJson(removed)))
       }
   }
 
-  def deleteBankAccountDetails(regId: String): Action[AnyContent] = delete(registrationService.deleteBankAccountDetails, regId)
+  def deleteBankAccountDetails(rid: String): Action[AnyContent] = delete(registrationService.deleteBankAccountDetails, RegistrationId(rid))
 
-  def deleteZeroRatedTurnover(regId: String): Action[AnyContent] = delete(registrationService.deleteZeroRatedTurnover, regId)
+  def deleteZeroRatedTurnover(rid: String): Action[AnyContent] = delete(registrationService.deleteZeroRatedTurnover, RegistrationId(rid))
 
-  def deleteAccountingPeriodStart(regId: String): Action[AnyContent] = delete(registrationService.deleteAccountingPeriodStart, regId)
+  def deleteAccountingPeriodStart(rid: String): Action[AnyContent] = delete(registrationService.deleteAccountingPeriodStart, RegistrationId(rid))
 
 }

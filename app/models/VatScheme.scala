@@ -16,11 +16,12 @@
 
 package models
 
+import common.RegistrationId
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class VatScheme(
-                      id: String,
+                      id: RegistrationId,
                       tradingDetails: Option[VatTradingDetails] = None,
                       vatChoice: Option[VatChoice] = None,
                       financials: Option[VatFinancials] = None,
@@ -32,7 +33,7 @@ object VatScheme {
   implicit val financialsFormat = VatFinancials.format
 
   def cTReads(rdsAck: Reads[VatFinancials]): Reads[VatScheme] = (
-    (__ \ "ID").read[String] and
+    (__ \ "ID").read[RegistrationId] and
       (__ \ "trading-details").readNullable[VatTradingDetails] and
       (__ \ "vat-choice").readNullable[VatChoice] and
       (__ \ "financials").readNullable[VatFinancials](rdsAck) and
@@ -41,7 +42,7 @@ object VatScheme {
 
 
   def cTWrites(wtsAck: Writes[VatFinancials]): OWrites[VatScheme] = (
-    (__ \ "ID").write[String] and
+    (__ \ "ID").write[RegistrationId] and
       (__ \ "trading-details").writeNullable[VatTradingDetails] and
       (__ \ "vat-choice").writeNullable[VatChoice] and
       (__ \ "financials").writeNullable[VatFinancials](wtsAck) and

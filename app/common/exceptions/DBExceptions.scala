@@ -16,20 +16,22 @@
 
 package common.exceptions
 
+import common.RegistrationId
+
 import scala.util.control.NoStackTrace
 
 sealed trait DBExceptions {
-  val regId:String
+  val rid: RegistrationId
 }
 
-final case class PreExistingRegDocument(regId: String) extends NoStackTrace with DBExceptions
+final case class PreExistingRegDocument(rid: RegistrationId) extends NoStackTrace with DBExceptions
 
-final case class MissingRegDocument(regId: String) extends NoStackTrace with DBExceptions
+final case class MissingRegDocument(rid: RegistrationId) extends NoStackTrace with DBExceptions
 
-final case class UpdateFailed(regId: String, attemptedModel: String) extends NoStackTrace with DBExceptions
+final case class UpdateFailed(rid: RegistrationId, attemptedModel: String) extends NoStackTrace with DBExceptions
 
-final case class InsertFailed(regId: String, attemptedModel: String) extends NoStackTrace with DBExceptions
+final case class InsertFailed(rid: RegistrationId, attemptedModel: String) extends NoStackTrace with DBExceptions
 
-final case class DeleteFailed(regId: String, msg: String) extends NoStackTrace with DBExceptions
+final case class DeleteFailed(rid: RegistrationId, msg: String) extends NoStackTrace with DBExceptions
 
-final case class RetrieveFailed(regId: String) extends NoStackTrace with DBExceptions
+final case class RetrieveFailed(rid: RegistrationId) extends NoStackTrace with DBExceptions
