@@ -16,7 +16,7 @@
 
 package models
 
-import common.RegistrationId
+import common.Identifiers.RegistrationId
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 

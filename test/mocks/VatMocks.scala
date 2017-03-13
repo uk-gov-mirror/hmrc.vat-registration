@@ -17,6 +17,7 @@
 package mocks
 
 import cats.data.EitherT
+import common.Identifiers.RegistrationId
 import common.exceptions._
 import connectors.{AuthConnector, Authority}
 import models._
@@ -120,60 +121,30 @@ trait VatMocks extends WSHTTPMock {
         .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
     }
 
-    def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
+    def mockSuccessfulCreateNewRegistration(registrationId: RegistrationId): Unit = {
       when(mockRegistrationService.createNewRegistration()(Matchers.any[HeaderCarrier]()))
         .thenReturn(serviceResult(VatScheme(registrationId, None, None, None)))
     }
 
-    def mockFailedCreateNewRegistration(registrationId: String): Unit = {
+    def mockFailedCreateNewRegistration(registrationId: RegistrationId): Unit = {
       when(mockRegistrationService.createNewRegistration()(Matchers.any[HeaderCarrier]()))
         .thenReturn(serviceError[VatScheme](GenericError(new RuntimeException("something went wrong"))))
     }
 
-    def mockFailedCreateNewRegistrationWithDbError(registrationId: String): Unit = {
+    def mockFailedCreateNewRegistrationWithDbError(registrationId: RegistrationId): Unit = {
       val exception = new Exception("Exception")
       when(mockRegistrationService.createNewRegistration()(Matchers.any[HeaderCarrier]()))
         .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
     }
 
-    def mockSuccessfulUpdateVatChoice(registrationId: String, vatChoice: VatChoice): Unit = {
-      when(mockRegistrationService.updateVatChoice(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceResult(vatChoice))
+    def mockSuccessfulUpdateLogicalGroup[G](registrationId: RegistrationId, group: G): Unit = {
+      when(mockRegistrationService.updateLogicalGroup(Matchers.eq(registrationId), Matchers.any[G]()))
+        .thenReturn(serviceResult(group))
     }
 
-    def mockServiceUnavailableUpdateVatChoice(registrationId: String, vatChoice: VatChoice, exception: Exception): Unit = {
-      when(mockRegistrationService.updateVatChoice(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceError[VatChoice](GenericError(exception)))
-    }
-
-    def mockSuccessfulUpdateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Unit = {
-      when(mockRegistrationService.updateTradingDetails(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceResult(tradingDetails))
-    }
-
-    def mockServiceUnavailableUpdateTradingDetails(registrationId: String, exception: Exception): Unit = {
-      when(mockRegistrationService.updateTradingDetails(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceError[VatTradingDetails](GenericError(exception)))
-    }
-
-    def mockSuccessfulUpdateSicAndCompliance(registrationId: String, sicAndCompliance: VatSicAndCompliance): Unit = {
-      when(mockRegistrationService.updateSicAndCompliance(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceResult(sicAndCompliance))
-    }
-
-    def mockServiceUnavailableUpdateSicAndCompliance(registrationId: String, exception: Exception): Unit = {
-      when(mockRegistrationService.updateSicAndCompliance(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceError[VatSicAndCompliance](GenericError(exception)))
-    }
-
-    def mockSuccessfulUpdateVatFinancials(registrationId: String, vatFinancials: VatFinancials): Unit = {
-      when(mockRegistrationService.updateVatFinancials(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceResult(vatFinancials))
-    }
-
-    def mockServiceUnavailableUpdateVatFinancials(registrationId: String, vatFinancials: VatFinancials, exception: Exception): Unit = {
-      when(mockRegistrationService.updateVatFinancials(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceError[VatFinancials](GenericError(exception)))
+    def mockServiceUnavailableUpdateLogicalGroup[G](registrationId: RegistrationId, exception: Exception): Unit = {
+      when(mockRegistrationService.updateLogicalGroup(Matchers.eq(registrationId), Matchers.any[G]()))
+        .thenReturn(serviceError[G](GenericError(exception)))
     }
 
   }

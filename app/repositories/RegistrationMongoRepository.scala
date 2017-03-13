@@ -18,11 +18,12 @@ package repositories
 
 import javax.inject.{Inject, Named}
 
-import common.RegistrationId
+import common.Identifiers.RegistrationId
+import common.LogicalGroup
 import common.exceptions._
-import models.{VatFinancials, _}
+import models._
 import play.api.Logger
-import play.api.libs.json.{Format, OFormat, OWrites}
+import play.api.libs.json.{Format, OFormat, Writes}
 import play.modules.reactivemongo.MongoDbConnection
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.{Index, IndexType}
@@ -38,13 +39,7 @@ trait RegistrationRepository {
 
   def retrieveVatScheme(rid: RegistrationId): Future[Option[VatScheme]]
 
-  def updateVatChoice(rid: RegistrationId, vatChoice: VatChoice): Future[VatChoice]
-
-  def updateTradingDetails(rid: RegistrationId, tradingDetails: VatTradingDetails): Future[VatTradingDetails]
-
-  def updateSicAndCompliance(rid: RegistrationId, sicAndCompliance: VatSicAndCompliance): Future[VatSicAndCompliance]
-
-  def updateVatFinancials(rid: RegistrationId, financials: VatFinancials): Future[VatFinancials]
+  def updateLogicalGroup[G: LogicalGroup : Writes](rid: RegistrationId, group: G): Future[G]
 
   def deleteVatScheme(rid: RegistrationId): Future[Boolean]
 
@@ -66,11 +61,11 @@ object RegistrationMongoFormats extends ReactiveMongoFormats {
 }
 
 // this is here for Guice dependency injection of `() => DB`
-class MongoDBProvider extends Function0[DB] with MongoDbConnection {
+class MongoDBProvider extends (() => DB) with MongoDbConnection {
   def apply: DB = db()
 }
 
-class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named("collectionName") collectionName: String)
+class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("collectionName") collectionName: String)
   extends ReactiveRepository[VatScheme, BSONObjectID](
     collectionName = collectionName,
     mongo = mongoProvider,
@@ -103,11 +98,11 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
     collection.find(ridSelector(rid)).one[VatScheme]
   }
 
-  private def updateVatScheme[T](rid: RegistrationId, groupToUpdate: (String, T))(implicit format: OWrites[T]): Future[T] = {
+  private def updateVatScheme[T](rid: RegistrationId, groupToUpdate: (String, T))(implicit writes: Writes[T]): Future[T] = {
     val (groupName, group) = groupToUpdate
     collection.findAndUpdate(
       ridSelector(rid),
-      BSONDocument("$set" -> BSONDocument(groupName -> format.writes(group)))
+      BSONDocument("$set" -> BSONDocument(groupName -> writes.writes(group)))
     ).map {
       _.value match {
         case Some(doc) => group
@@ -128,17 +123,8 @@ class RegistrationMongoRepository @Inject()(mongoProvider: Function0[DB], @Named
     }
   }
 
-  override def updateVatFinancials(rid: RegistrationId, financials: VatFinancials): Future[VatFinancials] =
-    updateVatScheme(rid, "financials" -> financials)
-
-  override def updateVatChoice(rid: RegistrationId, vatChoice: VatChoice): Future[VatChoice] =
-    updateVatScheme(rid, "vat-choice" -> vatChoice)
-
-  override def updateTradingDetails(rid: RegistrationId, tradingDetails: VatTradingDetails): Future[VatTradingDetails] =
-    updateVatScheme(rid, "trading-details" -> tradingDetails)
-
-  override def updateSicAndCompliance(rid: RegistrationId, sicAndCompliance: VatSicAndCompliance): Future[VatSicAndCompliance] =
-    updateVatScheme(rid, "sicAndCompliance" -> sicAndCompliance)
+  override def updateLogicalGroup[G: LogicalGroup : Writes](rid: RegistrationId, group: G): Future[G] =
+    updateVatScheme(rid, LogicalGroup[G].name -> group)
 
   override def deleteVatScheme(rid: RegistrationId): Future[Boolean] = {
     retrieveVatScheme(rid) flatMap {

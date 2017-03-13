@@ -19,11 +19,13 @@ package services
 import javax.inject.Inject
 
 import cats.data.EitherT
-import common.RegistrationId
+import common.Identifiers.RegistrationId
+import common.LogicalGroup
 import common.exceptions._
 import connectors._
 import models._
 import models.external.CurrentProfile
+import play.api.libs.json.Format
 import repositories.RegistrationRepository
 import uk.gov.hmrc.play.http.HeaderCarrier
 
@@ -36,13 +38,7 @@ trait RegistrationService {
 
   def retrieveVatScheme(rid: RegistrationId): ServiceResult[VatScheme]
 
-  def updateVatChoice(rid: RegistrationId, vatChoice: VatChoice): ServiceResult[VatChoice]
-
-  def updateTradingDetails(rid: RegistrationId, tradingDetails: VatTradingDetails): ServiceResult[VatTradingDetails]
-
-  def updateSicAndCompliance(rid: RegistrationId, sicAndCompliance: VatSicAndCompliance): ServiceResult[VatSicAndCompliance]
-
-  def updateVatFinancials(rid: RegistrationId, financials: VatFinancials): ServiceResult[VatFinancials]
+  def updateLogicalGroup[G: LogicalGroup : Format](rid: RegistrationId, group: G): ServiceResult[G]
 
   def deleteVatScheme(rid: RegistrationId): ServiceResult[Boolean]
 
@@ -88,17 +84,8 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
       case None => Left(ResourceNotFound(rid.id))
     })
 
-  override def updateVatChoice(rid: RegistrationId, vatChoice: VatChoice): ServiceResult[VatChoice] =
-    toEitherT(registrationRepository.updateVatChoice(rid, vatChoice))
-
-  override def updateTradingDetails(rid: RegistrationId, tradingDetails: VatTradingDetails): ServiceResult[VatTradingDetails] =
-    toEitherT(registrationRepository.updateTradingDetails(rid, tradingDetails))
-
-  override def updateSicAndCompliance(rid: RegistrationId, sicAndCompliance: VatSicAndCompliance): ServiceResult[VatSicAndCompliance] =
-    toEitherT(registrationRepository.updateSicAndCompliance(rid, sicAndCompliance))
-
-  override def updateVatFinancials(rid: RegistrationId, financials: VatFinancials): ServiceResult[VatFinancials] =
-    toEitherT(registrationRepository.updateVatFinancials(rid, financials))
+  override def updateLogicalGroup[G: LogicalGroup : Format](rid: RegistrationId, group: G): ServiceResult[G] =
+    toEitherT(registrationRepository.updateLogicalGroup(rid, group))
 
   override def deleteVatScheme(rid: RegistrationId): ServiceResult[Boolean] =
     toEitherT(registrationRepository.deleteVatScheme(rid))

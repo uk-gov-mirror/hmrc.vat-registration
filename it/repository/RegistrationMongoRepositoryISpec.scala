@@ -18,7 +18,7 @@ package repository
 
 import java.time.LocalDate
 
-import common.exceptions.{InsertFailed, MissingRegDocument, UpdateFailed}
+import common.exceptions._
 import models._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
@@ -86,58 +86,15 @@ class RegistrationMongoRepositoryISpec
 
     "should update to VatChoice success" in new Setup {
       await(repository.insert(vatScheme))
-      val result = await(repository.updateVatChoice(regId, vatChoice))
+      val result = await(repository.updateLogicalGroup(regId, vatChoice))
       result shouldBe vatChoice
     }
 
     "should throw UpdateFailed exception when regId not found" in new Setup {
       await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.updateVatChoice("123", vatChoice)))
+      an[UpdateFailed] shouldBe thrownBy(await(repository.updateLogicalGroup("123", vatChoice)))
     }
 
-  }
-
-  "Calling updateTradingDetails" should {
-
-    "should update VatTradingDetails success" in new Setup {
-      await(repository.insert(vatScheme))
-      val result = await(repository.updateTradingDetails(regId, tradingDetails))
-      result shouldBe tradingDetails
-    }
-
-    "should throw UpdateFailed exception when regId not found" in new Setup {
-      await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.updateTradingDetails("123", tradingDetails)))
-    }
-  }
-
-  "Calling updateSicAndCompliance" should {
-
-    "should update VatSicAndCompliance success" in new Setup {
-      await(repository.insert(vatScheme))
-      val result = await(repository.updateSicAndCompliance(regId, sicAndCompliance))
-      result shouldBe sicAndCompliance
-    }
-
-    "should throw UpdateFailed exception when regId not found" in new Setup {
-      await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.updateSicAndCompliance("123", sicAndCompliance)))
-    }
-  }
-
-
-  "Calling updateVatFinancials" should {
-
-    "should update updateVatFinancials success" in new Setup {
-      await(repository.insert(vatScheme))
-      val result = await(repository.updateVatFinancials(regId, vatFinancials))
-      result shouldBe vatFinancials
-    }
-
-    "should throw UpdateFailed exception when regId not found" in new Setup {
-      await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.updateVatFinancials("123", vatFinancials)))
-    }
   }
 
   "Calling deleteVatScheme" should {

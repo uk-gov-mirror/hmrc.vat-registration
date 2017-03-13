@@ -16,21 +16,19 @@
 
 package common
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json.{OFormat, OWrites, Reads, __}
+import play.api.libs.json._
 
+object Identifiers {
 
-class RegistrationId(val id: String) extends AnyVal
+  implicit class RegistrationId(val id: String) extends AnyVal
 
-object RegistrationId {
+  object RegistrationId {
 
-  def apply(id: String): RegistrationId = new RegistrationId(id)
+    implicit val rs = Reads.of[String].map(new RegistrationId(_))
 
-  val apiReads: Reads[RegistrationId] =
-    __.read[String].map(RegistrationId(_))
+    implicit val ws = Writes[RegistrationId](rid => JsString(rid.id))
 
-  val apiWrites: OWrites[RegistrationId] =
-    __.write[String].contramap(_.id)
+    implicit val format = Format(rs, ws)
+  }
 
-  implicit val format: OFormat[RegistrationId] = OFormat(apiReads, apiWrites)
 }

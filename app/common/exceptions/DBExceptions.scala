@@ -16,7 +16,8 @@
 
 package common.exceptions
 
-import common.RegistrationId
+
+import common.Identifiers.RegistrationId
 
 import scala.util.control.NoStackTrace
 
