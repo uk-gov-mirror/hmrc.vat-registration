@@ -20,7 +20,9 @@ import play.api.libs.json._
 
 object Identifiers {
 
-  implicit class RegistrationId(val id: String) extends AnyVal
+  implicit class RegistrationId(val id: String) extends AnyVal {
+    override def toString = id
+  }
 
   object RegistrationId {
 

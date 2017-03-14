@@ -18,6 +18,7 @@ package mocks
 
 import cats.data.EitherT
 import common.Identifiers.RegistrationId
+import common.LogicalGroup
 import common.exceptions._
 import connectors.{AuthConnector, Authority}
 import models._
@@ -25,6 +26,7 @@ import org.mockito.Matchers
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
+import play.api.libs.json.Format
 import services.{RegistrationService, ServiceResult}
 import uk.gov.hmrc.play.http.HeaderCarrier
 
@@ -68,7 +70,7 @@ trait VatMocks extends WSHTTPMock {
 
     def mockRetrieveVatSchemeThrowsException(testId: String): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.retrieveVatScheme(Matchers.any()))
+      when(mockRegistrationService.retrieveVatScheme(testId))
         .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
     }
 
@@ -78,24 +80,24 @@ trait VatMocks extends WSHTTPMock {
     }
 
     def mockDeleteVatScheme(testId: String): Unit = {
-      when(mockRegistrationService.deleteVatScheme(Matchers.contains(testId)))
+      when(mockRegistrationService.deleteVatScheme(testId))
         .thenReturn(serviceResult(true))
     }
 
     def mockDeleteVatSchemeThrowsException(testId: String): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.deleteVatScheme(Matchers.any()))
+      when(mockRegistrationService.deleteVatScheme(testId))
         .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
     }
 
     def mockDeleteBankAccountDetails(testId: String): Unit = {
-      when(mockRegistrationService.deleteBankAccountDetails(Matchers.contains(testId)))
+      when(mockRegistrationService.deleteBankAccountDetails(testId))
         .thenReturn(serviceResult(true))
     }
 
     def mockDeleteBankAccountDetailsThrowsException(testId: String): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.deleteBankAccountDetails(Matchers.any()))
+      when(mockRegistrationService.deleteBankAccountDetails(testId))
         .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
     }
 
@@ -106,7 +108,7 @@ trait VatMocks extends WSHTTPMock {
 
     def mockDeleteAccountingPeriodStartThrowsException(testId: String): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.deleteAccountingPeriodStart(Matchers.any()))
+      when(mockRegistrationService.deleteAccountingPeriodStart(testId))
         .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
     }
 
@@ -117,7 +119,7 @@ trait VatMocks extends WSHTTPMock {
 
     def mockDeleteZeroRatedTurnoverThrowsException(testId: String): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.deleteZeroRatedTurnover(Matchers.any()))
+      when(mockRegistrationService.deleteZeroRatedTurnover(testId))
         .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
     }
 
@@ -137,13 +139,15 @@ trait VatMocks extends WSHTTPMock {
         .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
     }
 
-    def mockSuccessfulUpdateLogicalGroup[G](registrationId: RegistrationId, group: G): Unit = {
-      when(mockRegistrationService.updateLogicalGroup(Matchers.eq(registrationId), Matchers.any[G]()))
+    def mockSuccessfulUpdateLogicalGroup[G](registrationId: RegistrationId, group: G)
+                                           (implicit lg: LogicalGroup[G], fmt: Format[G]): Unit = {
+      when(mockRegistrationService.updateLogicalGroup(registrationId, group))
         .thenReturn(serviceResult(group))
     }
 
-    def mockServiceUnavailableUpdateLogicalGroup[G](registrationId: RegistrationId, exception: Exception): Unit = {
-      when(mockRegistrationService.updateLogicalGroup(Matchers.eq(registrationId), Matchers.any[G]()))
+    def mockServiceUnavailableUpdateLogicalGroup[G](registrationId: RegistrationId, group: G, exception: Exception)
+                                                   (implicit lg: LogicalGroup[G], fmt: Format[G]): Unit = {
+      when(mockRegistrationService.updateLogicalGroup(registrationId, group))
         .thenReturn(serviceError[G](GenericError(exception)))
     }
 

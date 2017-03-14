@@ -18,6 +18,7 @@ package services
 
 import java.time.LocalDate
 
+import common.Identifiers.RegistrationId
 import common.exceptions._
 import connectors._
 import helpers.VatRegSpec
@@ -76,8 +77,8 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
 
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
-      when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(None)
-      when(mockRegistrationRepository.createNewVatScheme(Matchers.eq("1"))).thenReturn(vatScheme)
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(None)
+      when(mockRegistrationRepository.createNewVatScheme("1")).thenReturn(vatScheme)
 
       val response = service.createNewRegistration()
       await(response.value) shouldBe Right(vatScheme)
@@ -89,7 +90,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
       when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(None)
-      when(mockRegistrationRepository.createNewVatScheme(Matchers.eq("1"))).thenReturn(Future.failed(t))
+      when(mockRegistrationRepository.createNewVatScheme("1")).thenReturn(Future.failed(t))
 
       val response = service.createNewRegistration()
       await(response.value) shouldBe Left(GenericError(t))
@@ -101,7 +102,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
       when(mockRegistrationRepository.retrieveVatScheme("1")).thenReturn(None)
-      when(mockRegistrationRepository.createNewVatScheme(Matchers.eq("1"))).thenReturn(Future.failed(t))
+      when(mockRegistrationRepository.createNewVatScheme("1")).thenReturn(Future.failed(t))
 
       val response = service.createNewRegistration()
       await(response.value) shouldBe Left(GenericDatabaseError(t, Some("regId")))
@@ -131,129 +132,30 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
   }
 
-  "call to updateVatChoice" should {
-
-    "return Success response " in new Setup {
-      when(mockRegistrationRepository.updateVatChoice("1", vatChoice)).thenReturn(vatChoice)
-
-      val response = service.updateVatChoice("1", vatChoice)
-      await(response.value) shouldBe Right(vatChoice)
-    }
-
-    "return Error response " in new Setup {
-      val t = new RuntimeException("Exception")
-      when(mockRegistrationRepository.updateVatChoice("1", vatChoice)).thenReturn(Future.failed(t))
-
-      val response = service.updateVatChoice("1", vatChoice)
-      await(response.value) shouldBe Left(GenericError(t))
-    }
-
-    "return Error response for MissingRegDocument" in new Setup {
-      val regId = "regId"
-      val t = MissingRegDocument(regId)
-      when(mockRegistrationRepository.updateVatChoice("1", vatChoice)).thenReturn(Future.failed(t))
-
-      val response = service.updateVatChoice("1", vatChoice)
-
-      await(response.value) shouldBe Left(ResourceNotFound(s"No registration found for registration ID: $regId"))
-    }
-
-  }
-
-  "call to updateTradingDetails" should {
+  "call to updateLogicalGroup" should {
 
     val tradingDetails = VatTradingDetails("some-trader-name")
 
     "return Success response " in new Setup {
-      when(mockRegistrationRepository.updateTradingDetails("1", tradingDetails)).thenReturn(tradingDetails)
-
-      val response = service.updateTradingDetails("1", tradingDetails)
+      when(mockRegistrationRepository.updateLogicalGroup("1", tradingDetails)).thenReturn(tradingDetails)
+      val response = service.updateLogicalGroup("1", tradingDetails)
       await(response.value) shouldBe Right(tradingDetails)
     }
 
     "return Error response " in new Setup {
       val t = new RuntimeException("Exception")
-      when(mockRegistrationRepository.updateTradingDetails("1", tradingDetails)).thenReturn(Future.failed(t))
+      when(mockRegistrationRepository.updateLogicalGroup("1", tradingDetails)).thenReturn(Future.failed(t))
 
-      val response = service.updateTradingDetails("1", tradingDetails)
+      val response = service.updateLogicalGroup("1", tradingDetails)
       await(response.value) shouldBe Left(GenericError(t))
     }
 
     "return Error response for MissingRegDocument" in new Setup {
       val regId = "regId"
       val t = MissingRegDocument(regId)
-      when(mockRegistrationRepository.updateTradingDetails("1", tradingDetails)).thenReturn(Future.failed(t))
+      when(mockRegistrationRepository.updateLogicalGroup(regId, tradingDetails)).thenReturn(Future.failed(t))
 
-      val response = service.updateTradingDetails("1", tradingDetails)
-
-      await(response.value) shouldBe Left(ResourceNotFound(s"No registration found for registration ID: $regId"))
-    }
-  }
-
-  "call to updateSicAndCompliance" should {
-
-    val sicAndCompliance = VatSicAndCompliance("some-business-description")
-
-    "return Success response " in new Setup {
-      when(mockRegistrationRepository.updateSicAndCompliance("1", sicAndCompliance)).thenReturn(sicAndCompliance)
-
-      val response = service.updateSicAndCompliance("1", sicAndCompliance)
-      await(response.value) shouldBe Right(sicAndCompliance)
-    }
-
-    "return Error response " in new Setup {
-      val t = new RuntimeException("Exception")
-      when(mockRegistrationRepository.updateSicAndCompliance("1", sicAndCompliance)).thenReturn(Future.failed(t))
-
-      val response = service.updateSicAndCompliance("1", sicAndCompliance)
-      await(response.value) shouldBe Left(GenericError(t))
-    }
-
-    "return Error response for MissingRegDocument" in new Setup {
-      val regId = "regId"
-      val t = MissingRegDocument(regId)
-      when(mockRegistrationRepository.updateSicAndCompliance("1", sicAndCompliance)).thenReturn(Future.failed(t))
-
-      val response = service.updateSicAndCompliance("1", sicAndCompliance)
-
-      await(response.value) shouldBe Left(ResourceNotFound(s"No registration found for registration ID: $regId"))
-    }
-  }
-
-
-  "call to updateVatFinancials" should {
-
-    val EstimateValue: Long = 10000000000L
-    val zeroRatedTurnoverEstimate: Long = 10000000000L
-    val vatFinancials = VatFinancials(
-      bankAccount = Some(VatBankAccount("Reddy", "101010", "100000000000")),
-      turnoverEstimate = EstimateValue,
-      zeroRatedTurnoverEstimate = Some(zeroRatedTurnoverEstimate),
-      reclaimVatOnMostReturns = true,
-      vatAccountingPeriod = VatAccountingPeriod(None, "monthly")
-    )
-
-    "return Success response " in new Setup {
-      when(mockRegistrationRepository.updateVatFinancials("1", vatFinancials)).thenReturn(vatFinancials)
-
-      val response = service.updateVatFinancials("1", vatFinancials)
-      await(response.value) shouldBe Right(vatFinancials)
-    }
-
-    "return Error response " in new Setup {
-      val t = new RuntimeException("Exception")
-      when(mockRegistrationRepository.updateVatFinancials("1", vatFinancials)).thenReturn(Future.failed(t))
-
-      val response = service.updateVatFinancials("1", vatFinancials)
-      await(response.value) shouldBe Left(GenericError(t))
-    }
-
-    "return Error response for MissingRegDocument" in new Setup {
-      val regId = "regId"
-      val t = MissingRegDocument(regId)
-      when(mockRegistrationRepository.updateVatFinancials("1", vatFinancials)).thenReturn(Future.failed(t))
-
-      val response = service.updateVatFinancials("1", vatFinancials)
+      val response = service.updateLogicalGroup(regId, tradingDetails)
 
       await(response.value) shouldBe Left(ResourceNotFound(s"No registration found for registration ID: $regId"))
     }

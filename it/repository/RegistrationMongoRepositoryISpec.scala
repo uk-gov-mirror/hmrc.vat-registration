@@ -82,7 +82,7 @@ class RegistrationMongoRepositoryISpec
   }
 
 
-  "Calling updateVatChoice" should {
+  "Calling updateLogicalGroup" should {
 
     "should update to VatChoice success" in new Setup {
       await(repository.insert(vatScheme))
