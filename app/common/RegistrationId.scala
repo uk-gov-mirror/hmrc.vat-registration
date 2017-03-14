@@ -18,19 +18,14 @@ package common
 
 import play.api.libs.json._
 
-object Identifiers {
+case class RegistrationId(value: String) extends AnyVal {
+  override def toString = value
+}
 
-  implicit class RegistrationId(val value: String) extends AnyVal {
-    override def toString = value
-  }
+object RegistrationId {
 
-  object RegistrationId {
+  implicit val rs = Reads.of[String].map(RegistrationId.apply)
 
-    implicit val rs = Reads.of[String].map(new RegistrationId(_))
-
-    implicit val ws = Writes[RegistrationId](id => JsString(id.value))
-
-    implicit val format = Format(rs, ws)
-  }
+  implicit val ws = Writes[RegistrationId](id => JsString(id.value))
 
 }

@@ -24,12 +24,12 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 trait MicroService {
 
   import uk.gov.hmrc._
-  import DefaultBuildSettings._
   import TestPhases._
   import uk.gov.hmrc.SbtAutoBuildPlugin
   import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
   import uk.gov.hmrc.versioning.SbtGitVersioning
-  import play.sbt.routes.RoutesKeys.routesGenerator
+  import DefaultBuildSettings._
+  import play.sbt.routes.RoutesKeys.routesImport
 
   val appName: String
 
@@ -59,7 +59,11 @@ trait MicroService {
     .settings(
       libraryDependencies ++= appDependencies,
       retrieveManaged := true,
-      evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
+      evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
+      routesImport ++= Seq(
+        "config.ValueClassBinder._",
+        "common.RegistrationId"
+      )
     )
     .configs(IntegrationTest)
     .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)

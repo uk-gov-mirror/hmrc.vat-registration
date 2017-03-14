@@ -18,12 +18,13 @@ package repositories
 
 import javax.inject.{Inject, Named}
 
-import common.Identifiers.RegistrationId
+import cats.data.OptionT
+import common.RegistrationId
 import common.LogicalGroup
 import common.exceptions._
 import models._
 import play.api.Logger
-import play.api.libs.json.{Format, OFormat, Writes}
+import play.api.libs.json.{OFormat, Writes}
 import play.modules.reactivemongo.MongoDbConnection
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.{Index, IndexType}
@@ -39,7 +40,7 @@ trait RegistrationRepository {
 
   def retrieveVatScheme(id: RegistrationId): Future[Option[VatScheme]]
 
-  def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G): Future[G]
+  def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G]): Future[G]
 
   def deleteVatScheme(id: RegistrationId): Future[Boolean]
 
@@ -54,9 +55,8 @@ trait RegistrationRepository {
 
 object RegistrationMongoFormats extends ReactiveMongoFormats {
 
-  implicit val mongoFormat = VatBankAccountMongoFormat.format
-  implicit val vatFinancialsFormat = OFormat(VatFinancials.cTReads(mongoFormat), VatFinancials.cTWrites(mongoFormat))
-  implicit val vatSchemeFormat: Format[VatScheme] = Format(VatScheme.cTReads(vatFinancialsFormat), VatScheme.cTWrites(vatFinancialsFormat))
+  val encryptedFinancials: OFormat[VatFinancials] = VatFinancials.format(VatBankAccountMongoFormat.encryptedFormat)
+  val vatSchemeFormat: OFormat[VatScheme] = OFormat(VatScheme.reads(encryptedFinancials), VatScheme.writes(encryptedFinancials))
 
 }
 
@@ -72,10 +72,9 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
     domainFormat = RegistrationMongoFormats.vatSchemeFormat
   ) with RegistrationRepository {
 
-  import scala.concurrent.ExecutionContext.Implicits.global
+  import cats.instances.future._
 
-  implicit val vatFinancialsFormat = RegistrationMongoFormats.vatFinancialsFormat
-  implicit val format = RegistrationMongoFormats.vatSchemeFormat
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   private[repositories] def ridSelector(id: RegistrationId) = BSONDocument("ID" -> BSONString(id.value))
 
@@ -98,39 +97,19 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
     collection.find(ridSelector(id)).one[VatScheme]
   }
 
-  private def updateVatScheme[T](id: RegistrationId, groupToUpdate: (String, T))(implicit writes: Writes[T]): Future[T] = {
-    val (groupName, group) = groupToUpdate
-    collection.findAndUpdate(
-      ridSelector(id),
-      BSONDocument("$set" -> BSONDocument(groupName -> writes.writes(group)))
-    ).map {
-      _.value match {
-        case Some(doc) => group
-        case _ => throw UpdateFailed(id, groupName)
-      }
-    }
+  override def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G]): Future[G] = {
+    OptionT(collection.findAndUpdate(ridSelector(id), BSONDocument("$set" -> BSONDocument(logicalGroup.name -> w.writes(group))))
+      .map(_.value)).map(_ => group).getOrElse(throw UpdateFailed(id, logicalGroup.name))
   }
 
-  private def unsetElement(id: RegistrationId, element: String): Future[Boolean] = {
-    collection.findAndUpdate(
-      ridSelector(id),
-      BSONDocument("$unset" -> BSONDocument(element -> ""))
-    ).map {
-      _.value match {
-        case Some(_) => true
-        case _ => throw UpdateFailed(id, element)
-      }
-    }
-  }
+  private def unsetElement(id: RegistrationId, element: String): Future[Boolean] =
+    OptionT(collection.findAndUpdate(ridSelector(id), BSONDocument("$unset" -> BSONDocument(element -> "")))
+      .map(_.value)).map(_ => true).getOrElse(throw UpdateFailed(id, element))
 
-  override def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G): Future[G] =
-    updateVatScheme(id, LogicalGroup[G].name -> group)
 
-  override def deleteVatScheme(id: RegistrationId): Future[Boolean] = {
-    retrieveVatScheme(id) flatMap {
-      case Some(ct) => collection.remove(ridSelector(id)) map { _ => true }
-      case None => Future.failed(MissingRegDocument(id))
-    }
+  override def deleteVatScheme(id: RegistrationId): Future[Boolean] = retrieveVatScheme(id) flatMap {
+    case Some(ct) => collection.remove(ridSelector(id)) map { _ => true }
+    case None => Future.failed(MissingRegDocument(id))
   }
 
   override def deleteBankAccountDetails(id: RegistrationId): Future[Boolean] =

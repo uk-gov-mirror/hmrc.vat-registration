@@ -18,7 +18,7 @@ package controllers
 
 import auth.Authenticated
 import cats.implicits._
-import common.Identifiers.RegistrationId
+import common.RegistrationId
 import common.LogicalGroup
 import play.api.libs.json.{Format, JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
@@ -33,11 +33,16 @@ abstract class VatRegistrationBaseController extends BaseController with Authent
     Action.async(parse.json) {
       implicit request =>
         authenticated { user =>
-          withJsonBody((g: G) =>
-            service.updateLogicalGroup(id, g).fold(
+          withJsonBody((g: G) => {
+            println(s"service: $service, id: $id, group: $g")
+            val updated = service.updateLogicalGroup(id, g)
+            println(s"updated: $updated")
+            updated.fold(
               a => a.toResult,
               b => Accepted(Json.toJson(b))
-            ))
+            )
+          })
+
         }
     }
 

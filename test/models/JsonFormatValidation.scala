@@ -20,12 +20,12 @@ import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsError, JsPath, JsResult, JsSuccess}
 import uk.gov.hmrc.play.test.UnitSpec
 
-trait JsonFormatValidation extends UnitSpec{
+trait JsonFormatValidation extends UnitSpec {
 
   def shouldBeSuccess[T](expected: T, result: JsResult[T]) = {
     result match {
-      case JsSuccess(value, path) => value shouldBe expected
-      case JsError(errors) => fail(s"Test produced errors - ${errors}")
+      case JsSuccess(t, path) => t shouldBe expected
+      case JsError(errors) => fail(s"Test produced errors - $errors")
     }
   }
 
@@ -39,20 +39,16 @@ trait JsonFormatValidation extends UnitSpec{
 
   def shouldHaveErrors[T](result: JsResult[T], expectedErrors: Map[JsPath, Seq[ValidationError]]): Unit = {
     result match {
-      case JsSuccess(value, path) => fail(s"read should have failed and didn't - produced ${value}")
-      case JsError(errors) => {
+      case JsSuccess(t, path) => fail(s"read should have failed and didn't - produced $t")
+      case JsError(errors) =>
         errors.length shouldBe expectedErrors.keySet.toSeq.length
-
-        for( error <- errors ) {
+        for (error <- errors) {
           error match {
-            case (path, valErrs) => {
+            case (path, valErrs) =>
               expectedErrors.keySet should contain(path)
               expectedErrors(path) shouldBe valErrs
-            }
           }
         }
-
-      }
     }
   }
 

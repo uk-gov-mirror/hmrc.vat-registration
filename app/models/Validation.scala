@@ -24,19 +24,19 @@ trait Validation {
   def readToFmt(rds: Reads[String])(implicit wts: Writes[String]): Format[String] = Format(rds, wts)
 }
 
-trait VatBankAccountValidator extends Validation{
+trait VatBankAccountValidator extends Validation {
 
   val accountNumberValidator: Format[String] = readToFmt(pattern("^(\\d){8}$".r))
   val accountSortCodeValidator: Format[String] = readToFmt(pattern("^(\\d){2}-(\\d){2}-(\\d){2}$".r))
 }
 
-trait VatAccountingPeriodValidator  extends Validation{
+trait VatAccountingPeriodValidator extends Validation {
 
   val periodStartValidator: Format[String] = readToFmt(pattern("^(jan_apr_jul_oct|feb_may_aug_nov|mar_jun_sep_dec)$".r))
   val frequencyValidator: Format[String] = readToFmt(pattern("^(monthly|quarterly)$".r))
 }
 
-trait VatChoiceValidator  extends Validation{
+trait VatChoiceValidator extends Validation {
 
   val necessityValidator: Format[String] = readToFmt(pattern("^(voluntary|obligatory)$".r))
 }

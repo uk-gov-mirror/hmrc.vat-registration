@@ -27,22 +27,21 @@ case class VatBankAccount(
                          )
   extends VatBankAccountValidator
 
-object VatBankAccountApiFormat extends VatBankAccountValidator {
+object VatBankAccount extends VatBankAccountValidator {
 
   implicit val format: OFormat[VatBankAccount] = (
     (__ \ "accountName").format[String] and
       (__ \ "accountSortCode").format[String](accountSortCodeValidator) and
       (__ \ "accountNumber").format[String](accountNumberValidator)
-    ) (VatBankAccount.apply _, unlift(VatBankAccount.unapply _))
+    ) (VatBankAccount.apply, unlift(VatBankAccount.unapply))
 
 }
 
 object VatBankAccountMongoFormat {
-  implicit val format: OFormat[VatBankAccount] = mongoFormat(Crypto.rds,Crypto.wts)
 
-  def mongoFormat(cryptoRds: Reads[String], cryptoWts: Writes[String]) : OFormat[VatBankAccount] = (
+  implicit val encryptedFormat: OFormat[VatBankAccount] = (
     (__ \ "accountName").format[String] and
       (__ \ "accountSortCode").format[String] and
-      (__ \ "accountNumber").format[String](cryptoRds)(cryptoWts)
-    ) (VatBankAccount.apply _, unlift(VatBankAccount.unapply _))
+      (__ \ "accountNumber").format[String](Crypto.rds)(Crypto.wts)
+    ) (VatBankAccount.apply, unlift(VatBankAccount.unapply))
 }

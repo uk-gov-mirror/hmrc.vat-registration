@@ -19,13 +19,13 @@ package services
 import javax.inject.Inject
 
 import cats.data.EitherT
-import common.Identifiers.RegistrationId
+import common.RegistrationId
 import common.LogicalGroup
 import common.exceptions._
 import connectors._
 import models._
 import models.external.CurrentProfile
-import play.api.libs.json.Format
+import play.api.libs.json.Writes
 import repositories.RegistrationRepository
 import uk.gov.hmrc.play.http.HeaderCarrier
 
@@ -38,7 +38,7 @@ trait RegistrationService {
 
   def retrieveVatScheme(id: RegistrationId): ServiceResult[VatScheme]
 
-  def updateLogicalGroup[G: LogicalGroup : Format](id: RegistrationId, group: G): ServiceResult[G]
+  def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G): ServiceResult[G]
 
   def deleteVatScheme(id: RegistrationId): ServiceResult[Boolean]
 
@@ -84,7 +84,7 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
       case None => Left(ResourceNotFound(id.value))
     })
 
-  override def updateLogicalGroup[G: LogicalGroup : Format](id: RegistrationId, group: G): ServiceResult[G] =
+  override def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G): ServiceResult[G] =
     toEitherT(registrationRepository.updateLogicalGroup(id, group))
 
   override def deleteVatScheme(id: RegistrationId): ServiceResult[Boolean] =
