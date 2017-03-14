@@ -20,15 +20,15 @@ import play.api.libs.json._
 
 object Identifiers {
 
-  implicit class RegistrationId(val id: String) extends AnyVal {
-    override def toString = id
+  implicit class RegistrationId(val value: String) extends AnyVal {
+    override def toString = value
   }
 
   object RegistrationId {
 
     implicit val rs = Reads.of[String].map(new RegistrationId(_))
 
-    implicit val ws = Writes[RegistrationId](rid => JsString(rid.id))
+    implicit val ws = Writes[RegistrationId](id => JsString(id.value))
 
     implicit val format = Format(rs, ws)
   }

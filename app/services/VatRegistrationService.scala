@@ -36,17 +36,17 @@ trait RegistrationService {
 
   def createNewRegistration()(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme]
 
-  def retrieveVatScheme(rid: RegistrationId): ServiceResult[VatScheme]
+  def retrieveVatScheme(id: RegistrationId): ServiceResult[VatScheme]
 
-  def updateLogicalGroup[G: LogicalGroup : Format](rid: RegistrationId, group: G): ServiceResult[G]
+  def updateLogicalGroup[G: LogicalGroup : Format](id: RegistrationId, group: G): ServiceResult[G]
 
-  def deleteVatScheme(rid: RegistrationId): ServiceResult[Boolean]
+  def deleteVatScheme(id: RegistrationId): ServiceResult[Boolean]
 
-  def deleteBankAccountDetails(rid: RegistrationId): ServiceResult[Boolean]
+  def deleteBankAccountDetails(id: RegistrationId): ServiceResult[Boolean]
 
-  def deleteZeroRatedTurnover(rid: RegistrationId): ServiceResult[Boolean]
+  def deleteZeroRatedTurnover(id: RegistrationId): ServiceResult[Boolean]
 
-  def deleteAccountingPeriodStart(rid: RegistrationId): ServiceResult[Boolean]
+  def deleteAccountingPeriodStart(id: RegistrationId): ServiceResult[Boolean]
 
 }
 
@@ -57,8 +57,8 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   import cats.implicits._
 
   private def repositoryErrorHandler[T]: PartialFunction[Throwable, Either[LeftState, T]] = {
-    case e: MissingRegDocument => Left(ResourceNotFound(s"No registration found for registration ID: ${e.rid}"))
-    case dbe: DBExceptions => Left(GenericDatabaseError(dbe, Some(dbe.rid.id)))
+    case e: MissingRegDocument => Left(ResourceNotFound(s"No registration found for registration ID: ${e.id}"))
+    case dbe: DBExceptions => Left(GenericDatabaseError(dbe, Some(dbe.id.value)))
     case t: Throwable => Left(GenericError(t))
   }
 
@@ -78,25 +78,25 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
       vatScheme <- EitherT(getOrCreateVatScheme(profile))
     } yield vatScheme
 
-  override def retrieveVatScheme(rid: RegistrationId): ServiceResult[VatScheme] =
-    EitherT(registrationRepository.retrieveVatScheme(rid).map[Either[LeftState, VatScheme]] {
+  override def retrieveVatScheme(id: RegistrationId): ServiceResult[VatScheme] =
+    EitherT(registrationRepository.retrieveVatScheme(id).map[Either[LeftState, VatScheme]] {
       case Some(vatScheme) => Right(vatScheme)
-      case None => Left(ResourceNotFound(rid.id))
+      case None => Left(ResourceNotFound(id.value))
     })
 
-  override def updateLogicalGroup[G: LogicalGroup : Format](rid: RegistrationId, group: G): ServiceResult[G] =
-    toEitherT(registrationRepository.updateLogicalGroup(rid, group))
+  override def updateLogicalGroup[G: LogicalGroup : Format](id: RegistrationId, group: G): ServiceResult[G] =
+    toEitherT(registrationRepository.updateLogicalGroup(id, group))
 
-  override def deleteVatScheme(rid: RegistrationId): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteVatScheme(rid))
+  override def deleteVatScheme(id: RegistrationId): ServiceResult[Boolean] =
+    toEitherT(registrationRepository.deleteVatScheme(id))
 
-  override def deleteBankAccountDetails(rid: RegistrationId): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteBankAccountDetails(rid))
+  override def deleteBankAccountDetails(id: RegistrationId): ServiceResult[Boolean] =
+    toEitherT(registrationRepository.deleteBankAccountDetails(id))
 
-  override def deleteZeroRatedTurnover(rid: RegistrationId): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteZeroRatedTurnover(rid))
+  override def deleteZeroRatedTurnover(id: RegistrationId): ServiceResult[Boolean] =
+    toEitherT(registrationRepository.deleteZeroRatedTurnover(id))
 
-  override def deleteAccountingPeriodStart(rid: RegistrationId): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteAccountingPeriodStart(rid))
+  override def deleteAccountingPeriodStart(id: RegistrationId): ServiceResult[Boolean] =
+    toEitherT(registrationRepository.deleteAccountingPeriodStart(id))
 
 }

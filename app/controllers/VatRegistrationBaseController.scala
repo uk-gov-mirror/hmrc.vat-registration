@@ -29,22 +29,22 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 abstract class VatRegistrationBaseController extends BaseController with Authenticated {
 
-  protected def patch[G: LogicalGroup : Format : Manifest](service: RegistrationService, rid: RegistrationId): Action[JsValue] =
+  protected def patch[G: LogicalGroup : Format : Manifest](service: RegistrationService, id: RegistrationId): Action[JsValue] =
     Action.async(parse.json) {
       implicit request =>
         authenticated { user =>
           withJsonBody((g: G) =>
-            service.updateLogicalGroup(rid, g).fold(
+            service.updateLogicalGroup(id, g).fold(
               a => a.toResult,
               b => Accepted(Json.toJson(b))
             ))
         }
     }
 
-  protected def delete[T](serviceCall: RegistrationId => ServiceResult[Boolean], rid: RegistrationId): Action[AnyContent] =
+  protected def delete[T](serviceCall: RegistrationId => ServiceResult[Boolean], id: RegistrationId): Action[AnyContent] =
     Action.async { implicit request =>
       authenticated { _ =>
-        serviceCall(rid).fold(
+        serviceCall(id).fold(
           a => a.toResult,
           b => Ok(Json.toJson(true)))
       }

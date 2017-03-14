@@ -40,35 +40,35 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
       }
   }
 
-  def retrieveVatScheme(rid: String): Action[AnyContent] = Action.async {
+  def retrieveVatScheme(id: String): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
-        registrationService.retrieveVatScheme(rid).fold(
+        registrationService.retrieveVatScheme(id).fold(
           errorHandler,
           vatScheme =>
             Ok(Json.toJson(vatScheme)))
       }
   }
 
-  def updateTradingDetails(rid: String): Action[JsValue] = patch[VatTradingDetails](registrationService, rid)
+  def updateTradingDetails(id: String): Action[JsValue] = patch[VatTradingDetails](registrationService, id)
 
-  def updateVatChoice(rid: String): Action[JsValue] = patch[VatChoice](registrationService, rid)
+  def updateVatChoice(id: String): Action[JsValue] = patch[VatChoice](registrationService, id)
 
-  def updateVatFinancials(rid: String): Action[JsValue] = patch[VatFinancials](registrationService, rid)
+  def updateVatFinancials(id: String): Action[JsValue] = patch[VatFinancials](registrationService, id)
 
-  def updateSicAndCompliance(rid: String): Action[JsValue] = patch[VatSicAndCompliance](registrationService, rid)
+  def updateSicAndCompliance(id: String): Action[JsValue] = patch[VatSicAndCompliance](registrationService, id)
 
-  def deleteVatScheme(rid: String): Action[AnyContent] = Action.async {
+  def deleteVatScheme(id: String): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
-        registrationService.deleteVatScheme(rid).fold(errorHandler, removed => Ok(Json.toJson(removed)))
+        registrationService.deleteVatScheme(id).fold(errorHandler, removed => Ok(Json.toJson(removed)))
       }
   }
 
-  def deleteBankAccountDetails(rid: String): Action[AnyContent] = delete(registrationService.deleteBankAccountDetails, rid)
+  def deleteBankAccountDetails(id: String): Action[AnyContent] = delete(registrationService.deleteBankAccountDetails, id)
 
-  def deleteZeroRatedTurnover(rid: String): Action[AnyContent] = delete(registrationService.deleteZeroRatedTurnover, rid)
+  def deleteZeroRatedTurnover(id: String): Action[AnyContent] = delete(registrationService.deleteZeroRatedTurnover, id)
 
-  def deleteAccountingPeriodStart(rid: String): Action[AnyContent] = delete(registrationService.deleteAccountingPeriodStart, rid)
+  def deleteAccountingPeriodStart(id: String): Action[AnyContent] = delete(registrationService.deleteAccountingPeriodStart, id)
 
 }

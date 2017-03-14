@@ -35,19 +35,19 @@ import scala.concurrent.Future
 
 trait RegistrationRepository {
 
-  def createNewVatScheme(rid: RegistrationId): Future[VatScheme]
+  def createNewVatScheme(id: RegistrationId): Future[VatScheme]
 
-  def retrieveVatScheme(rid: RegistrationId): Future[Option[VatScheme]]
+  def retrieveVatScheme(id: RegistrationId): Future[Option[VatScheme]]
 
-  def updateLogicalGroup[G: LogicalGroup : Writes](rid: RegistrationId, group: G): Future[G]
+  def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G): Future[G]
 
-  def deleteVatScheme(rid: RegistrationId): Future[Boolean]
+  def deleteVatScheme(id: RegistrationId): Future[Boolean]
 
-  def deleteBankAccountDetails(rid: RegistrationId): Future[Boolean]
+  def deleteBankAccountDetails(id: RegistrationId): Future[Boolean]
 
-  def deleteZeroRatedTurnover(rid: RegistrationId): Future[Boolean]
+  def deleteZeroRatedTurnover(id: RegistrationId): Future[Boolean]
 
-  def deleteAccountingPeriodStart(rid: RegistrationId): Future[Boolean]
+  def deleteAccountingPeriodStart(id: RegistrationId): Future[Boolean]
 
 }
 
@@ -77,7 +77,7 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
   implicit val vatFinancialsFormat = RegistrationMongoFormats.vatFinancialsFormat
   implicit val format = RegistrationMongoFormats.vatSchemeFormat
 
-  private[repositories] def ridSelector(rid: RegistrationId) = BSONDocument("ID" -> BSONString(rid.id))
+  private[repositories] def ridSelector(id: RegistrationId) = BSONDocument("ID" -> BSONString(id.value))
 
   override def indexes: Seq[Index] = Seq(Index(
     name = Some("RegId"),
@@ -85,61 +85,61 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
     unique = true
   ))
 
-  override def createNewVatScheme(rid: RegistrationId): Future[VatScheme] = {
-    val newReg = VatScheme(rid, None, None, None)
+  override def createNewVatScheme(id: RegistrationId): Future[VatScheme] = {
+    val newReg = VatScheme(id, None, None, None)
     collection.insert(newReg) map (_ => newReg) recover {
       case e =>
-        Logger.error(s"Unable to insert new VAT Scheme for registration ID $rid, Error: ${e.getMessage}")
-        throw InsertFailed(rid, "VatScheme")
+        Logger.error(s"Unable to insert new VAT Scheme for registration ID $id, Error: ${e.getMessage}")
+        throw InsertFailed(id, "VatScheme")
     }
   }
 
-  override def retrieveVatScheme(rid: RegistrationId): Future[Option[VatScheme]] = {
-    collection.find(ridSelector(rid)).one[VatScheme]
+  override def retrieveVatScheme(id: RegistrationId): Future[Option[VatScheme]] = {
+    collection.find(ridSelector(id)).one[VatScheme]
   }
 
-  private def updateVatScheme[T](rid: RegistrationId, groupToUpdate: (String, T))(implicit writes: Writes[T]): Future[T] = {
+  private def updateVatScheme[T](id: RegistrationId, groupToUpdate: (String, T))(implicit writes: Writes[T]): Future[T] = {
     val (groupName, group) = groupToUpdate
     collection.findAndUpdate(
-      ridSelector(rid),
+      ridSelector(id),
       BSONDocument("$set" -> BSONDocument(groupName -> writes.writes(group)))
     ).map {
       _.value match {
         case Some(doc) => group
-        case _ => throw UpdateFailed(rid, groupName)
+        case _ => throw UpdateFailed(id, groupName)
       }
     }
   }
 
-  private def unsetElement(rid: RegistrationId, element: String): Future[Boolean] = {
+  private def unsetElement(id: RegistrationId, element: String): Future[Boolean] = {
     collection.findAndUpdate(
-      ridSelector(rid),
+      ridSelector(id),
       BSONDocument("$unset" -> BSONDocument(element -> ""))
     ).map {
       _.value match {
         case Some(_) => true
-        case _ => throw UpdateFailed(rid, element)
+        case _ => throw UpdateFailed(id, element)
       }
     }
   }
 
-  override def updateLogicalGroup[G: LogicalGroup : Writes](rid: RegistrationId, group: G): Future[G] =
-    updateVatScheme(rid, LogicalGroup[G].name -> group)
+  override def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G): Future[G] =
+    updateVatScheme(id, LogicalGroup[G].name -> group)
 
-  override def deleteVatScheme(rid: RegistrationId): Future[Boolean] = {
-    retrieveVatScheme(rid) flatMap {
-      case Some(ct) => collection.remove(ridSelector(rid)) map { _ => true }
-      case None => Future.failed(MissingRegDocument(rid))
+  override def deleteVatScheme(id: RegistrationId): Future[Boolean] = {
+    retrieveVatScheme(id) flatMap {
+      case Some(ct) => collection.remove(ridSelector(id)) map { _ => true }
+      case None => Future.failed(MissingRegDocument(id))
     }
   }
 
-  override def deleteBankAccountDetails(rid: RegistrationId): Future[Boolean] =
-    unsetElement(rid, "financials.bankAccount")
+  override def deleteBankAccountDetails(id: RegistrationId): Future[Boolean] =
+    unsetElement(id, "financials.bankAccount")
 
-  override def deleteZeroRatedTurnover(rid: RegistrationId): Future[Boolean] =
-    unsetElement(rid, "financials.zeroRatedTurnoverEstimate")
+  override def deleteZeroRatedTurnover(id: RegistrationId): Future[Boolean] =
+    unsetElement(id, "financials.zeroRatedTurnoverEstimate")
 
-  override def deleteAccountingPeriodStart(rid: RegistrationId): Future[Boolean] =
-    unsetElement(rid, "financials.accountingPeriods.periodStart")
+  override def deleteAccountingPeriodStart(id: RegistrationId): Future[Boolean] =
+    unsetElement(id, "financials.accountingPeriods.periodStart")
 
 }
