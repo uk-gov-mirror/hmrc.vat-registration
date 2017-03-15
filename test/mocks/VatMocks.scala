@@ -17,12 +17,13 @@
 package mocks
 
 import cats.data.EitherT
+import common.RegistrationId
 import common.exceptions._
 import connectors.{AuthConnector, Authority}
 import models._
 import org.mockito.Matchers
+import org.mockito.Matchers._
 import org.mockito.Mockito._
-import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
 import services.{RegistrationService, ServiceResult}
 import uk.gov.hmrc.play.http.HeaderCarrier
@@ -38,18 +39,18 @@ trait VatMocks extends WSHTTPMock {
 
   object AuthorisationMocks {
 
-    def mockSuccessfulAuthorisation(authority: Authority): OngoingStubbing[Future[Option[Authority]]] = {
-      when(mockAuthConnector.getCurrentAuthority()(Matchers.any()))
+    def mockSuccessfulAuthorisation(authority: Authority): Unit = {
+      when(mockAuthConnector.getCurrentAuthority()(any[HeaderCarrier]()))
         .thenReturn(Future.successful(Some(authority)))
     }
 
-    def mockNotLoggedInOrAuthorised: OngoingStubbing[Future[Option[Authority]]] = {
-      when(mockAuthConnector.getCurrentAuthority()(Matchers.any[HeaderCarrier]()))
+    def mockNotLoggedInOrAuthorised(): Unit = {
+      when(mockAuthConnector.getCurrentAuthority()(any[HeaderCarrier]()))
         .thenReturn(Future.successful(None))
     }
 
-    def mockNotAuthorised(authority: Authority): OngoingStubbing[Future[Option[Authority]]] = {
-      when(mockAuthConnector.getCurrentAuthority()(Matchers.any()))
+    def mockNotAuthorised(authority: Authority): Unit = {
+      when(mockAuthConnector.getCurrentAuthority()(any[HeaderCarrier]()))
         .thenReturn(Future.successful(Some(authority)))
     }
 
@@ -65,115 +66,91 @@ trait VatMocks extends WSHTTPMock {
       EitherT[Future, LeftState, B](Future.successful(Left(a)))
     }
 
-    def mockRetrieveVatSchemeThrowsException(testId: String): Unit = {
+    def mockRetrieveVatSchemeThrowsException(id: RegistrationId): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.retrieveVatScheme(Matchers.any()))
+      when(mockRegistrationService.retrieveVatScheme(id))
         .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
     }
 
-    def mockRetrieveVatScheme(testId: String, vatScheme: VatScheme): Unit = {
-      when(mockRegistrationService.retrieveVatScheme(Matchers.contains(testId)))
+    def mockRetrieveVatScheme(id: RegistrationId, vatScheme: VatScheme): Unit = {
+      when(mockRegistrationService.retrieveVatScheme(id))
         .thenReturn(serviceResult(vatScheme))
     }
 
-    def mockDeleteVatScheme(testId: String): Unit = {
-      when(mockRegistrationService.deleteVatScheme(Matchers.contains(testId)))
+    def mockDeleteVatScheme(id: RegistrationId): Unit = {
+      when(mockRegistrationService.deleteVatScheme(id))
         .thenReturn(serviceResult(true))
     }
 
-    def mockDeleteVatSchemeThrowsException(testId: String): Unit = {
+    def mockDeleteVatSchemeThrowsException(id: RegistrationId): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.deleteVatScheme(Matchers.any()))
+      when(mockRegistrationService.deleteVatScheme(id))
         .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
     }
 
-    def mockDeleteBankAccountDetails(testId: String): Unit = {
-      when(mockRegistrationService.deleteBankAccountDetails(Matchers.contains(testId)))
+    def mockDeleteBankAccountDetails(id: RegistrationId): Unit = {
+      when(mockRegistrationService.deleteBankAccountDetails(id))
         .thenReturn(serviceResult(true))
     }
 
-    def mockDeleteBankAccountDetailsThrowsException(testId: String): Unit = {
+    def mockDeleteBankAccountDetailsThrowsException(id: RegistrationId): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.deleteBankAccountDetails(Matchers.any()))
+      when(mockRegistrationService.deleteBankAccountDetails(id))
         .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
     }
 
-    def mockDeleteAccountingPeriodStart(testId: String): Unit = {
-      when(mockRegistrationService.deleteAccountingPeriodStart(Matchers.contains(testId)))
+    def mockDeleteAccountingPeriodStart(id: RegistrationId): Unit = {
+      when(mockRegistrationService.deleteAccountingPeriodStart(id))
         .thenReturn(serviceResult(true))
     }
 
-    def mockDeleteAccountingPeriodStartThrowsException(testId: String): Unit = {
+    def mockDeleteAccountingPeriodStartThrowsException(id: RegistrationId): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.deleteAccountingPeriodStart(Matchers.any()))
+      when(mockRegistrationService.deleteAccountingPeriodStart(id))
         .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
     }
 
-    def mockDeleteZeroRatedTurnover(testId: String): Unit = {
-      when(mockRegistrationService.deleteZeroRatedTurnover(Matchers.contains(testId)))
+    def mockDeleteZeroRatedTurnover(id: RegistrationId): Unit = {
+      when(mockRegistrationService.deleteZeroRatedTurnover(id))
         .thenReturn(serviceResult(true))
     }
 
-    def mockDeleteZeroRatedTurnoverThrowsException(testId: String): Unit = {
+    def mockDeleteZeroRatedTurnoverThrowsException(id: RegistrationId): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.deleteZeroRatedTurnover(Matchers.any()))
+      when(mockRegistrationService.deleteZeroRatedTurnover(id))
         .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
     }
 
-    def mockSuccessfulCreateNewRegistration(registrationId: String): Unit = {
-      when(mockRegistrationService.createNewRegistration()(Matchers.any[HeaderCarrier]()))
+    def mockSuccessfulCreateNewRegistration(registrationId: RegistrationId): Unit = {
+      when(mockRegistrationService.createNewRegistration()(any[HeaderCarrier]()))
         .thenReturn(serviceResult(VatScheme(registrationId, None, None, None)))
     }
 
-    def mockFailedCreateNewRegistration(registrationId: String): Unit = {
-      when(mockRegistrationService.createNewRegistration()(Matchers.any[HeaderCarrier]()))
+    def mockFailedCreateNewRegistration(registrationId: RegistrationId): Unit = {
+      when(mockRegistrationService.createNewRegistration()(any[HeaderCarrier]()))
         .thenReturn(serviceError[VatScheme](GenericError(new RuntimeException("something went wrong"))))
     }
 
-    def mockFailedCreateNewRegistrationWithDbError(registrationId: String): Unit = {
+    def mockFailedCreateNewRegistrationWithDbError(registrationId: RegistrationId): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.createNewRegistration()(Matchers.any[HeaderCarrier]()))
+      when(mockRegistrationService.createNewRegistration()(any[HeaderCarrier]()))
         .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
     }
 
-    def mockSuccessfulUpdateVatChoice(registrationId: String, vatChoice: VatChoice): Unit = {
-      when(mockRegistrationService.updateVatChoice(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceResult(vatChoice))
+    def mockSuccessfulUpdateLogicalGroup[G](group: G): Unit = {
+      // required to do like this because of how Mockito matchers work with Scala Value Classes
+      //http://stackoverflow.com/a/34934179/81520
+      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
+      when(mockRegistrationService.updateLogicalGroup(idMatcher, Matchers.any[G]())(Matchers.any(), Matchers.any()))
+        .thenReturn(serviceResult(group))
     }
 
-    def mockServiceUnavailableUpdateVatChoice(registrationId: String, vatChoice: VatChoice, exception: Exception): Unit = {
-      when(mockRegistrationService.updateVatChoice(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceError[VatChoice](GenericError(exception)))
-    }
-
-    def mockSuccessfulUpdateTradingDetails(registrationId: String, tradingDetails: VatTradingDetails): Unit = {
-      when(mockRegistrationService.updateTradingDetails(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceResult(tradingDetails))
-    }
-
-    def mockServiceUnavailableUpdateTradingDetails(registrationId: String, exception: Exception): Unit = {
-      when(mockRegistrationService.updateTradingDetails(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceError[VatTradingDetails](GenericError(exception)))
-    }
-
-    def mockSuccessfulUpdateSicAndCompliance(registrationId: String, sicAndCompliance: VatSicAndCompliance): Unit = {
-      when(mockRegistrationService.updateSicAndCompliance(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceResult(sicAndCompliance))
-    }
-
-    def mockServiceUnavailableUpdateSicAndCompliance(registrationId: String, exception: Exception): Unit = {
-      when(mockRegistrationService.updateSicAndCompliance(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceError[VatSicAndCompliance](GenericError(exception)))
-    }
-
-    def mockSuccessfulUpdateVatFinancials(registrationId: String, vatFinancials: VatFinancials): Unit = {
-      when(mockRegistrationService.updateVatFinancials(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceResult(vatFinancials))
-    }
-
-    def mockServiceUnavailableUpdateVatFinancials(registrationId: String, vatFinancials: VatFinancials, exception: Exception): Unit = {
-      when(mockRegistrationService.updateVatFinancials(Matchers.any(), Matchers.any()))
-        .thenReturn(serviceError[VatFinancials](GenericError(exception)))
+    def mockServiceUnavailableUpdateLogicalGroup[G](group: G, exception: Exception): Unit = {
+      // required to do like this because of how Mockito matchers work with Scala Value Classes
+      //http://stackoverflow.com/a/34934179/81520
+      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
+      when(mockRegistrationService.updateLogicalGroup(idMatcher, Matchers.any[G]())(Matchers.any(), Matchers.any()))
+        .thenReturn(serviceError[G](GenericError(exception)))
     }
 
   }

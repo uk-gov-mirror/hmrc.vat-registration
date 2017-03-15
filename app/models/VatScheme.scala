@@ -16,11 +16,12 @@
 
 package models
 
+import common.RegistrationId
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class VatScheme(
-                      id: String,
+                      id: RegistrationId,
                       tradingDetails: Option[VatTradingDetails] = None,
                       vatChoice: Option[VatChoice] = None,
                       financials: Option[VatFinancials] = None,
@@ -29,26 +30,23 @@ case class VatScheme(
 
 object VatScheme {
 
-  implicit val financialsFormat = VatFinancials.format
-
-  def cTReads(rdsAck: Reads[VatFinancials]): Reads[VatScheme] = (
-    (__ \ "ID").read[String] and
+  def reads(implicit r: Reads[VatFinancials]): Reads[VatScheme] = (
+    (__ \ "ID").read[RegistrationId] and
       (__ \ "trading-details").readNullable[VatTradingDetails] and
       (__ \ "vat-choice").readNullable[VatChoice] and
-      (__ \ "financials").readNullable[VatFinancials](rdsAck) and
+      (__ \ "financials").readNullable[VatFinancials](r) and
       (__ \ "sicAndCompliance").readNullable[VatSicAndCompliance]
     ) (VatScheme.apply _)
 
 
-  def cTWrites(wtsAck: Writes[VatFinancials]): OWrites[VatScheme] = (
-    (__ \ "ID").write[String] and
+  def writes(implicit w: Writes[VatFinancials]): OWrites[VatScheme] = (
+    (__ \ "ID").write[RegistrationId] and
       (__ \ "trading-details").writeNullable[VatTradingDetails] and
       (__ \ "vat-choice").writeNullable[VatChoice] and
-      (__ \ "financials").writeNullable[VatFinancials](wtsAck) and
+      (__ \ "financials").writeNullable[VatFinancials](w) and
       (__ \ "sicAndCompliance").writeNullable[VatSicAndCompliance]
     ) (unlift(VatScheme.unapply))
 
-  implicit val format: OFormat[VatScheme] = OFormat(cTReads(financialsFormat), cTWrites(financialsFormat))
-
+  implicit def format(implicit f: OFormat[VatFinancials]): OFormat[VatScheme] = OFormat(reads(f), writes(f))
 
 }

@@ -19,16 +19,20 @@ package controllers
 import javax.inject.Inject
 
 import cats.implicits._
+import common.RegistrationId
 import common.exceptions.LeftState
 import connectors.AuthConnector
-import play.api.libs.json.{JsValue, Json}
+import models.{VatChoice, VatFinancials, VatSicAndCompliance, VatTradingDetails}
+import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, Result}
+import repositories.RegistrationMongoFormats.encryptedFinancials
 import services._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class VatRegistrationController @Inject()(val auth: AuthConnector, registrationService: RegistrationService)
   extends VatRegistrationBaseController {
+
   val errorHandler: (LeftState) => Result = err => err.toResult
 
   def newVatRegistration: Action[AnyContent] = Action.async {
@@ -38,35 +42,35 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
       }
   }
 
-  def retrieveVatScheme(regId: String): Action[AnyContent] = Action.async {
+  def retrieveVatScheme(id: RegistrationId): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
-        registrationService.retrieveVatScheme(regId).fold(
-          errorHandler,
-          vatScheme =>
-            Ok(Json.toJson(vatScheme)))
+        registrationService.retrieveVatScheme(id).fold(errorHandler, vatScheme => Ok(Json.toJson(vatScheme)))
       }
   }
 
-  def updateTradingDetails(regId: String): Action[JsValue] = patch(registrationService.updateTradingDetails, regId)
+  def updateVatFinancials(id: RegistrationId): Action[JsValue] = {
+    implicit val format: Format[VatFinancials] = Format(VatFinancials.format, encryptedFinancials)
+    patch[VatFinancials](registrationService, id)
+  }
 
-  def updateVatChoice(regId: String): Action[JsValue] = patch(registrationService.updateVatChoice, regId)
+  def updateTradingDetails(id: RegistrationId): Action[JsValue] = patch[VatTradingDetails](registrationService, id)
 
-  def updateVatFinancials(regId: String): Action[JsValue] = patch(registrationService.updateVatFinancials, regId)
+  def updateVatChoice(id: RegistrationId): Action[JsValue] = patch[VatChoice](registrationService, id)
 
-  def updateSicAndCompliance(regId: String): Action[JsValue] = patch(registrationService.updateSicAndCompliance, regId)
+  def updateSicAndCompliance(id: RegistrationId): Action[JsValue] = patch[VatSicAndCompliance](registrationService, id)
 
-  def deleteVatScheme(regId: String): Action[AnyContent] = Action.async {
+  def deleteVatScheme(id: RegistrationId): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
-        registrationService.deleteVatScheme(regId).fold(errorHandler, removed => Ok(Json.toJson(removed)))
+        registrationService.deleteVatScheme(id).fold(errorHandler, removed => Ok(Json.toJson(removed)))
       }
   }
 
-  def deleteBankAccountDetails(regId: String): Action[AnyContent] = delete(registrationService.deleteBankAccountDetails, regId)
+  def deleteBankAccountDetails(id: RegistrationId): Action[AnyContent] = delete(registrationService.deleteBankAccountDetails, id)
 
-  def deleteZeroRatedTurnover(regId: String): Action[AnyContent] = delete(registrationService.deleteZeroRatedTurnover, regId)
+  def deleteZeroRatedTurnover(id: RegistrationId): Action[AnyContent] = delete(registrationService.deleteZeroRatedTurnover, id)
 
-  def deleteAccountingPeriodStart(regId: String): Action[AnyContent] = delete(registrationService.deleteAccountingPeriodStart, regId)
+  def deleteAccountingPeriodStart(id: RegistrationId): Action[AnyContent] = delete(registrationService.deleteAccountingPeriodStart, id)
 
 }

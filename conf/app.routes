@@ -2,15 +2,15 @@
 
 POST         /new                                   controllers.VatRegistrationController.newVatRegistration
 
-GET          /:regID/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regID)
+GET          /:regID/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regID: common.RegistrationId)
 
-PATCH        /:regID/vat-choice                     controllers.VatRegistrationController.updateVatChoice(regID)
-PATCH        /:regID/trading-details                controllers.VatRegistrationController.updateTradingDetails(regID)
-PATCH        /:regID/vat-financials                 controllers.VatRegistrationController.updateVatFinancials(regID)
-PATCH        /:regID/sic-and-compliance             controllers.VatRegistrationController.updateSicAndCompliance(regID)
+PATCH        /:regID/vat-choice                     controllers.VatRegistrationController.updateVatChoice(regID: common.RegistrationId)
+PATCH        /:regID/trading-details                controllers.VatRegistrationController.updateTradingDetails(regID: common.RegistrationId)
+PATCH        /:regID/vat-financials                 controllers.VatRegistrationController.updateVatFinancials(regID: common.RegistrationId)
+PATCH        /:regID/sic-and-compliance             controllers.VatRegistrationController.updateSicAndCompliance(regID: common.RegistrationId)
 
-DELETE       /:regID/delete-scheme                  controllers.VatRegistrationController.deleteVatScheme(regID)
-DELETE       /:regID/delete-bank-account            controllers.VatRegistrationController.deleteBankAccountDetails(regID)
-DELETE       /:regID/delete-zero-rated_turnover     controllers.VatRegistrationController.deleteZeroRatedTurnover(regID)
-DELETE       /:regID/delete-accounting-period       controllers.VatRegistrationController.deleteAccountingPeriodStart(regID)
+DELETE       /:regID/delete-scheme                  controllers.VatRegistrationController.deleteVatScheme(regID: common.RegistrationId)
+DELETE       /:regID/delete-bank-account            controllers.VatRegistrationController.deleteBankAccountDetails(regID: common.RegistrationId)
+DELETE       /:regID/delete-zero-rated_turnover     controllers.VatRegistrationController.deleteZeroRatedTurnover(regID: common.RegistrationId)
+DELETE       /:regID/delete-accounting-period       controllers.VatRegistrationController.deleteAccountingPeriodStart(regID: common.RegistrationId)
 

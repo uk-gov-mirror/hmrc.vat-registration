@@ -18,7 +18,8 @@ package repository
 
 import java.time.LocalDate
 
-import common.exceptions.{InsertFailed, MissingRegDocument, UpdateFailed}
+import common.RegistrationId
+import common.exceptions._
 import models._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
@@ -32,7 +33,7 @@ class RegistrationMongoRepositoryISpec
   extends UnitSpec with MongoSpecSupport with BeforeAndAfterEach with ScalaFutures with Eventually with WithFakeApplication {
 
   private val date = LocalDate.of(2017, 1, 1)
-  private val regId = "AC234321"
+  private val regId = RegistrationId("AC234321")
   private val vatScheme: VatScheme = VatScheme(regId, None, None, None)
   private val vatChoice: VatChoice = VatChoice(date, "")
   private val tradingDetails: VatTradingDetails = VatTradingDetails("some-trader-name")
@@ -77,67 +78,24 @@ class RegistrationMongoRepositoryISpec
 
     "return a None when there is no corresponding VatScheme object" in new Setup {
       await(repository.insert(vatScheme))
-      await(repository.retrieveVatScheme("NOT_THERE")) shouldBe None
+      await(repository.retrieveVatScheme(RegistrationId("NOT_THERE"))) shouldBe None
     }
   }
 
 
-  "Calling updateVatChoice" should {
+  "Calling updateLogicalGroup" should {
 
     "should update to VatChoice success" in new Setup {
       await(repository.insert(vatScheme))
-      val result = await(repository.updateVatChoice(regId, vatChoice))
+      val result = await(repository.updateLogicalGroup(regId, vatChoice))
       result shouldBe vatChoice
     }
 
     "should throw UpdateFailed exception when regId not found" in new Setup {
       await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.updateVatChoice("123", vatChoice)))
+      an[UpdateFailed] shouldBe thrownBy(await(repository.updateLogicalGroup(RegistrationId("123"), vatChoice)))
     }
 
-  }
-
-  "Calling updateTradingDetails" should {
-
-    "should update VatTradingDetails success" in new Setup {
-      await(repository.insert(vatScheme))
-      val result = await(repository.updateTradingDetails(regId, tradingDetails))
-      result shouldBe tradingDetails
-    }
-
-    "should throw UpdateFailed exception when regId not found" in new Setup {
-      await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.updateTradingDetails("123", tradingDetails)))
-    }
-  }
-
-  "Calling updateSicAndCompliance" should {
-
-    "should update VatSicAndCompliance success" in new Setup {
-      await(repository.insert(vatScheme))
-      val result = await(repository.updateSicAndCompliance(regId, sicAndCompliance))
-      result shouldBe sicAndCompliance
-    }
-
-    "should throw UpdateFailed exception when regId not found" in new Setup {
-      await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.updateSicAndCompliance("123", sicAndCompliance)))
-    }
-  }
-
-
-  "Calling updateVatFinancials" should {
-
-    "should update updateVatFinancials success" in new Setup {
-      await(repository.insert(vatScheme))
-      val result = await(repository.updateVatFinancials(regId, vatFinancials))
-      result shouldBe vatFinancials
-    }
-
-    "should throw UpdateFailed exception when regId not found" in new Setup {
-      await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.updateVatFinancials("123", vatFinancials)))
-    }
   }
 
   "Calling deleteVatScheme" should {
@@ -150,7 +108,7 @@ class RegistrationMongoRepositoryISpec
 
     "return a None when there is no corresponding VatScheme object" in new Setup {
       await(repository.insert(vatScheme))
-      an[MissingRegDocument] shouldBe thrownBy(await(repository.deleteVatScheme("123")))
+      an[MissingRegDocument] shouldBe thrownBy(await(repository.deleteVatScheme(RegistrationId("123"))))
     }
   }
 
@@ -171,7 +129,7 @@ class RegistrationMongoRepositoryISpec
 
     "return a None when there is no corresponding VatScheme object" in new Setup {
       await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.deleteBankAccountDetails("123")))
+      an[UpdateFailed] shouldBe thrownBy(await(repository.deleteBankAccountDetails(RegistrationId("123"))))
     }
   }
 
@@ -192,7 +150,7 @@ class RegistrationMongoRepositoryISpec
 
     "return a None when there is no corresponding VatScheme object" in new Setup {
       await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.deleteZeroRatedTurnover("123")))
+      an[UpdateFailed] shouldBe thrownBy(await(repository.deleteZeroRatedTurnover(RegistrationId("123"))))
     }
   }
 
@@ -214,7 +172,7 @@ class RegistrationMongoRepositoryISpec
 
     "return a None when there is no corresponding VatScheme object" in new Setup {
       await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.deleteAccountingPeriodStart("123")))
+      an[UpdateFailed] shouldBe thrownBy(await(repository.deleteAccountingPeriodStart(RegistrationId("123"))))
     }
   }
 

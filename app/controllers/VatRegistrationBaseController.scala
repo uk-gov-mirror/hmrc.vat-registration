@@ -18,30 +18,38 @@ package controllers
 
 import auth.Authenticated
 import cats.implicits._
+import common.RegistrationId
+import common.LogicalGroup
 import play.api.libs.json.{Format, JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
-import services.ServiceResult
+import services.{RegistrationService, ServiceResult}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 abstract class VatRegistrationBaseController extends BaseController with Authenticated {
-  protected def patch[T: Format : Manifest](serviceCall: (String, T) => ServiceResult[T], regId: String): Action[JsValue] =
+
+  protected def patch[G: LogicalGroup : Format : Manifest](service: RegistrationService, id: RegistrationId): Action[JsValue] =
     Action.async(parse.json) {
       implicit request =>
         authenticated { user =>
-          withJsonBody((t: T) =>
-            serviceCall(regId, t).fold(
+          withJsonBody((g: G) => {
+            println(s"service: $service, id: $id, group: $g")
+            val updated = service.updateLogicalGroup(id, g)
+            println(s"updated: $updated")
+            updated.fold(
               a => a.toResult,
               b => Accepted(Json.toJson(b))
-            ))
+            )
+          })
+
         }
     }
 
-  protected def delete[T](serviceCall: String => ServiceResult[Boolean], regId: String): Action[AnyContent] =
+  protected def delete[T](serviceCall: RegistrationId => ServiceResult[Boolean], id: RegistrationId): Action[AnyContent] =
     Action.async { implicit request =>
       authenticated { _ =>
-        serviceCall(regId).fold(
+        serviceCall(id).fold(
           a => a.toResult,
           b => Ok(Json.toJson(true)))
       }

@@ -20,35 +20,21 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class VatFinancials(
-                         bankAccount: Option[VatBankAccount],
-                         turnoverEstimate: Long,
-                         zeroRatedTurnoverEstimate: Option[Long],
-                         reclaimVatOnMostReturns: Boolean,
-                         vatAccountingPeriod: VatAccountingPeriod
+                          bankAccount: Option[VatBankAccount],
+                          turnoverEstimate: Long,
+                          zeroRatedTurnoverEstimate: Option[Long],
+                          reclaimVatOnMostReturns: Boolean,
+                          vatAccountingPeriod: VatAccountingPeriod
                         )
 
 object VatFinancials {
 
-  implicit val vatBankAccountFormat = VatBankAccountApiFormat.format
-
-  def cTReads(rdsAck: Reads[VatBankAccount]) = {
-    (
-      (__ \ "bankAccount").readNullable[VatBankAccount](rdsAck) and
-        (__ \ "turnoverEstimate").read[Long] and
-        (__ \ "zeroRatedTurnoverEstimate").readNullable[Long] and
-        (__ \ "reclaimVatOnMostReturns").read[Boolean] and
-        (__ \ "accountingPeriods").read[VatAccountingPeriod]
-      ) (VatFinancials.apply _)
-  }
-
-  def cTWrites(wtsAck: Writes[VatBankAccount]): OWrites[VatFinancials] = (
-    (__ \ "bankAccount").writeNullable[VatBankAccount](wtsAck) and
-      (__ \ "turnoverEstimate").write[Long] and
-      (__ \ "zeroRatedTurnoverEstimate").writeNullable[Long] and
-      (__ \ "reclaimVatOnMostReturns").write[Boolean] and
-      (__ \ "accountingPeriods").write[VatAccountingPeriod]
-    ) (unlift(VatFinancials.unapply))
-
-  implicit val format: OFormat[VatFinancials] = OFormat(cTReads(vatBankAccountFormat), cTWrites(vatBankAccountFormat))
+  implicit def format(implicit f: OFormat[VatBankAccount]): OFormat[VatFinancials] =
+    ((__ \ "bankAccount").formatNullable[VatBankAccount](f) and
+      (__ \ "turnoverEstimate").format[Long] and
+      (__ \ "zeroRatedTurnoverEstimate").formatNullable[Long] and
+      (__ \ "reclaimVatOnMostReturns").format[Boolean] and
+      (__ \ "accountingPeriods").format[VatAccountingPeriod]
+      ) (VatFinancials.apply, unlift(VatFinancials.unapply))
 
 }
