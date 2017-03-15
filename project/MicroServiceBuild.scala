@@ -12,7 +12,7 @@ private object AppDependencies {
   import play.core.PlayVersion
   import play.sbt.PlayImport._
 
-  private val hmrcTestVersion = "2.2.0"
+  private val hmrcTestVersion = "2.3.0"
   private val scalaTestVersion_test = "3.0.1"
   private val scalaTestVersion_it = "2.2.6"
   private val scalaTestPlusVersion = "1.5.1"
@@ -22,15 +22,15 @@ private object AppDependencies {
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc" %% "play-reactivemongo" % "5.1.0",
-    "uk.gov.hmrc" %% "microservice-bootstrap" % "5.8.0",
-    "uk.gov.hmrc" %% "play-authorisation" % "4.2.0",
-    "uk.gov.hmrc" %% "play-health" % "2.0.0",
-    "uk.gov.hmrc" %% "play-url-binders" % "2.0.0",
-    "uk.gov.hmrc" %% "play-config" % "3.0.0",
+    "uk.gov.hmrc" %% "play-reactivemongo" % "5.2.0",
+    "uk.gov.hmrc" %% "microservice-bootstrap" % "5.13.0",
+    "uk.gov.hmrc" %% "play-authorisation" % "4.3.0",
+    "uk.gov.hmrc" %% "play-health" % "2.1.0",
+    "uk.gov.hmrc" %% "play-url-binders" % "2.1.0",
+    "uk.gov.hmrc" %% "play-config" % "4.3.0",
     "uk.gov.hmrc" %% "play-json-logger" % "3.0.0",
-    "uk.gov.hmrc" %% "domain" % "4.0.0",
-    "uk.gov.hmrc" %% "crypto" % "3.1.0",
+    "uk.gov.hmrc" %% "domain" % "4.1.0",
+    "uk.gov.hmrc" %% "crypto" % "4.2.0",
     "org.typelevel" %% "cats" % "0.9.0"
   )
 
@@ -48,7 +48,7 @@ private object AppDependencies {
         "org.pegdown" % "pegdown" % pegdownVersion % scope,
         "org.scoverage" % "scalac-scoverage-runtime_2.11" % scoverageVersion % scope,
         "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
-        "uk.gov.hmrc" %% "reactivemongo-test" % "1.6.0" % scope,
+        "uk.gov.hmrc" %% "reactivemongo-test" % "2.0.0" % scope,
         "org.mockito" % "mockito-core" % "1.9.5"
       )
     }.test
@@ -66,7 +66,7 @@ private object AppDependencies {
         "org.pegdown" % "pegdown" % pegdownVersion % scope,
         "org.scoverage" % "scalac-scoverage-runtime_2.11" % scoverageVersion % scope,
         "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
-        "uk.gov.hmrc" %% "reactivemongo-test" % "1.6.0" % scope,
+        "uk.gov.hmrc" %% "reactivemongo-test" % "2.0.0" % scope,
         "com.github.tomakehurst" % "wiremock" % "2.5.0" % scope
       )
     }.test
