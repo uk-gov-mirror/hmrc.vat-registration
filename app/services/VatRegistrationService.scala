@@ -54,7 +54,7 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
                                        registrationRepository: RegistrationRepository
                                       ) extends RegistrationService {
 
-  import cats.implicits._
+  import cats.instances.future._
 
   private def repositoryErrorHandler[T]: PartialFunction[Throwable, Either[LeftState, T]] = {
     case e: MissingRegDocument => Left(ResourceNotFound(s"No registration found for registration ID: ${e.id}"))

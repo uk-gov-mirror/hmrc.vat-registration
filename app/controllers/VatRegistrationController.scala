@@ -18,7 +18,6 @@ package controllers
 
 import javax.inject.Inject
 
-import cats.implicits._
 import common.RegistrationId
 import common.exceptions.LeftState
 import connectors.AuthConnector
@@ -28,6 +27,7 @@ import play.api.mvc.{Action, AnyContent, Result}
 import repositories.RegistrationMongoFormats.encryptedFinancials
 import services._
 
+import cats.instances.future._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class VatRegistrationController @Inject()(val auth: AuthConnector, registrationService: RegistrationService)
