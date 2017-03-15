@@ -17,7 +17,6 @@
 package controllers
 
 import auth.Authenticated
-import cats.implicits._
 import common.RegistrationId
 import common.LogicalGroup
 import play.api.libs.json.{Format, JsValue, Json}
@@ -25,6 +24,7 @@ import play.api.mvc.{Action, AnyContent}
 import services.{RegistrationService, ServiceResult}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
+import cats.instances.future._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 abstract class VatRegistrationBaseController extends BaseController with Authenticated {
@@ -34,9 +34,7 @@ abstract class VatRegistrationBaseController extends BaseController with Authent
       implicit request =>
         authenticated { user =>
           withJsonBody((g: G) => {
-            println(s"service: $service, id: $id, group: $g")
             val updated = service.updateLogicalGroup(id, g)
-            println(s"updated: $updated")
             updated.fold(
               a => a.toResult,
               b => Accepted(Json.toJson(b))
