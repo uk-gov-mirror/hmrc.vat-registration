@@ -34,6 +34,7 @@ alternatively, create an alias for starting the services required for the backen
 alias vatreg='docker start graphite && sm --start AUTH AUTH_LOGIN_STUB AUTHENTICATOR BUS_REG CA_FRONTEND GG GG_STUBS USER_DETAILS KEYSTORE SAVE4LATER DATASTREAM ASSETS_FRONTEND -f'
 ```
 
+
 To run the service, just `cd` to cloned directory and execute:
 
 ```
