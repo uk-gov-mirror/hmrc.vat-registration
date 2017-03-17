@@ -1,2 +1,2 @@
-sbt -Dapplication.router=testOnlyDoNotUseInAppConf.Routes run
+sbt -Dbackend -Dapplication.router=testOnlyDoNotUseInAppConf.Routes run
 
