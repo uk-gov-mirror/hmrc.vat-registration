@@ -121,15 +121,6 @@ class VatBankAccountSpec extends VatRegSpec with JsonFormatValidation {
     implicit val mongoFormat = VatBankAccountMongoFormat.encryptedFormat
 
     "complete successfully from full Json" in {
-      val jsonValue =
-        s"""
-           |{
-           |  "accountName":"Test Account Name",
-           |  "accountSortCode":"00-99-22",
-           |  "accountNumber":"12345678"
-           |}
-                      """
-
       val tstVatBankAccount = VatBankAccount(
         accountName = "Test Account Name",
         accountSortCode = "00-99-22",
