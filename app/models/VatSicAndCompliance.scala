@@ -25,7 +25,7 @@ case class VatSicAndCompliance(description: String, culturalCompliance: Option[V
 
 object VatSicAndCompliance {
 
-  implicit val format = (
+  implicit val format: OFormat[VatSicAndCompliance] = (
     (__ \ "description").format[String] and
       (__ \ "culturalCompliance").formatNullable[VatCulturalCompliance]) (VatSicAndCompliance.apply, unlift(VatSicAndCompliance.unapply))
 

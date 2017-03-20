@@ -35,7 +35,7 @@ object VatScheme {
       (__ \ "trading-details").readNullable[VatTradingDetails] and
       (__ \ "vat-choice").readNullable[VatChoice] and
       (__ \ "financials").readNullable[VatFinancials](r) and
-      (__ \ "sicAndCompliance").readNullable[VatSicAndCompliance]
+      (__ \ "vatSicAndCompliance").readNullable[VatSicAndCompliance]
     ) (VatScheme.apply _)
 
 
