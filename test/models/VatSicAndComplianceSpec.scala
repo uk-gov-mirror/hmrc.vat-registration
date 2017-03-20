@@ -27,7 +27,7 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
       val json = Json.parse(
         s"""
            |{
-           |  "description":"some text",
+           |  "businessDescription":"some text",
            |  "culturalCompliance": {
            |    "notForProfit": true
            |   }
@@ -47,7 +47,7 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
     val json = Json.parse(
       s"""
          |{
-         |  "description":"some text"
+         |  "businessDescription":"some text"
          |}
         """.stripMargin)
 
