@@ -44,7 +44,7 @@ object VatScheme {
       (__ \ "trading-details").writeNullable[VatTradingDetails] and
       (__ \ "vat-choice").writeNullable[VatChoice] and
       (__ \ "financials").writeNullable[VatFinancials](w) and
-      (__ \ "sicAndCompliance").writeNullable[VatSicAndCompliance]
+      (__ \ "vatSicAndCompliance").writeNullable[VatSicAndCompliance]
     ) (unlift(VatScheme.unapply))
 
   implicit def format(implicit f: OFormat[VatFinancials]): OFormat[VatScheme] = OFormat(reads(f), writes(f))

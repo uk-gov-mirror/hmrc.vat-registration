@@ -40,7 +40,7 @@ class VatRegistrationControllerSpec extends VatRegSpec {
   val date = LocalDate.of(2017, 1, 1)
   val vatChoice: VatChoice = VatChoice(date, "obligatory")
   val tradingDetails: VatTradingDetails = VatTradingDetails("some-trader-name")
-  val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description")
+  val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description", None)
   val vatScheme: VatScheme = VatScheme(regId, None, None, None)
 
   class Setup {

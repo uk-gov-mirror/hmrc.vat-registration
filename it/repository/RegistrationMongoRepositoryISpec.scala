@@ -21,6 +21,7 @@ import java.time.LocalDate
 import common.RegistrationId
 import common.exceptions._
 import models._
+import models.compliance.VatCulturalCompliance
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import repositories.{MongoDBProvider, RegistrationMongoRepository}
@@ -37,7 +38,8 @@ class RegistrationMongoRepositoryISpec
   private val vatScheme: VatScheme = VatScheme(regId, None, None, None)
   private val vatChoice: VatChoice = VatChoice(date, "")
   private val tradingDetails: VatTradingDetails = VatTradingDetails("some-trader-name")
-  private val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description")
+  private val culturalSicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description", Some(VatCulturalCompliance(true)))
+
   val EstimateValue: Long = 1000L
   val zeroRatedTurnoverEstimate: Long = 1000L
   val vatFinancials = VatFinancials(
@@ -89,6 +91,12 @@ class RegistrationMongoRepositoryISpec
       await(repository.insert(vatScheme))
       val result = await(repository.updateLogicalGroup(regId, vatChoice))
       result shouldBe vatChoice
+    }
+
+    "should update to VatSicAndCompliance success" in new Setup {
+      await(repository.insert(vatScheme))
+      val result = await(repository.updateLogicalGroup(regId, culturalSicAndCompliance))
+      result shouldBe culturalSicAndCompliance
     }
 
     "should throw UpdateFailed exception when regId not found" in new Setup {
