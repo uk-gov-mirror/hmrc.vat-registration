@@ -27,7 +27,7 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
       val json = Json.parse(
         s"""
            |{
-           |  "description":"some text",
+           |  "businessDescription":"some text",
            |  "culturalCompliance": {
            |    "notForProfit": true
            |   }
@@ -35,7 +35,7 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
         """.stripMargin)
 
       val expected = VatSicAndCompliance(
-        description = "some text",
+        businessDescription = "some text",
         culturalCompliance = Some(VatCulturalCompliance(true))
       )
 
@@ -47,12 +47,12 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
     val json = Json.parse(
       s"""
          |{
-         |  "description":"some text"
+         |  "businessDescription":"some text"
          |}
         """.stripMargin)
 
     val expected = VatSicAndCompliance(
-      description = "some text",
+      businessDescription = "some text",
       culturalCompliance = None
     )
 
@@ -65,7 +65,7 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
 
     "complete successfully without culturalCompliance" in {
       val sac = VatSicAndCompliance(
-        description = "some text",
+        businessDescription = "some text",
         culturalCompliance = None
       )
 
@@ -78,7 +78,7 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
 
     "complete successfully with culturalCompliance" in {
       val sac = VatSicAndCompliance(
-        description = "some text",
+        businessDescription = "some text",
         culturalCompliance = Some(VatCulturalCompliance(true))
       )
 
