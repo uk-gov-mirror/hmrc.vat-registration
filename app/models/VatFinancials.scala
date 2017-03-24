@@ -20,11 +20,11 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class VatFinancials(
-                          bankAccount: Option[VatBankAccount],
+                          bankAccount: Option[VatBankAccount] = None,
                           turnoverEstimate: Long,
-                          zeroRatedTurnoverEstimate: Option[Long],
+                          zeroRatedTurnoverEstimate: Option[Long] = None,
                           reclaimVatOnMostReturns: Boolean,
-                          vatAccountingPeriod: VatAccountingPeriod
+                          accountingPeriods: VatAccountingPeriod
                         )
 
 object VatFinancials {

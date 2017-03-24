@@ -16,20 +16,18 @@
 
 package models
 
-import java.time.LocalDate
-
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class VatChoice(
-                      startDate: LocalDate,
-                      necessity: String // "obligatory" or "voluntary"
+                      necessity: String, // "obligatory" or "voluntary"
+                      vatStartDate: VatStartDate
                     )
 
 object VatChoice extends VatChoiceValidator {
 
   implicit val format: OFormat[VatChoice] = (
-    (__ \ "start-date").format[LocalDate] and
-      (__ \ "necessity").format[String](necessityValidator)) (VatChoice.apply, unlift(VatChoice.unapply))
+    (__ \ "necessity").format[String](necessityValidator) and
+      (__ \ "vatStartDate").format[VatStartDate]) (VatChoice.apply, unlift(VatChoice.unapply))
 
 }

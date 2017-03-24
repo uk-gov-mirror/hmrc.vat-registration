@@ -17,16 +17,16 @@
 package models
 
 import models.compliance.VatCulturalCompliance
-import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 
-case class VatSicAndCompliance(businessDescription: String, culturalCompliance: Option[VatCulturalCompliance])
+case class VatSicAndCompliance(
+                                businessDescription: String,
+                                culturalCompliance: Option[VatCulturalCompliance] = None
+                              )
 
 object VatSicAndCompliance {
 
-  implicit val format: OFormat[VatSicAndCompliance] = (
-    (__ \ "businessDescription").format[String] and
-      (__ \ "culturalCompliance").formatNullable[VatCulturalCompliance]) (VatSicAndCompliance.apply, unlift(VatSicAndCompliance.unapply))
+  implicit val format: OFormat[VatSicAndCompliance] = Json.format[VatSicAndCompliance]
 
 }

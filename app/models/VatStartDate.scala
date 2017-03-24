@@ -16,15 +16,19 @@
 
 package models
 
+import java.time.LocalDate
+
+import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatTradingDetails(
-                              vatChoice: VatChoice,
-                              tradingName: TradingName
-                            )
 
-object VatTradingDetails {
+case class VatStartDate(selection: String, startDate: Option[LocalDate])
 
-  implicit val format: OFormat[VatTradingDetails] = Json.format[VatTradingDetails]
+object VatStartDate extends VatStartDateValidator {
+
+  implicit val format: OFormat[VatStartDate] = (
+    (__ \ "selection").format[String](vatStartDateValidator) and
+      (__ \ "startDate").formatNullable[LocalDate]
+    ) (VatStartDate.apply, unlift(VatStartDate.unapply))
 
 }

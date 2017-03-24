@@ -16,15 +16,12 @@
 
 package models
 
-import play.api.libs.json._
+import play.api.libs.json.Json
 
-case class VatTradingDetails(
-                              vatChoice: VatChoice,
-                              tradingName: TradingName
-                            )
+case class TradingName(selection: Boolean, tradingName: Option[String])
 
-object VatTradingDetails {
+object TradingName {
 
-  implicit val format: OFormat[VatTradingDetails] = Json.format[VatTradingDetails]
+  implicit val format = Json.format[TradingName]
 
 }

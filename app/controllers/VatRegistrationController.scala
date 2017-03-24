@@ -18,16 +18,16 @@ package controllers
 
 import javax.inject.Inject
 
+import cats.instances.future._
 import common.RegistrationId
 import common.exceptions.LeftState
 import connectors.AuthConnector
-import models.{VatChoice, VatFinancials, VatSicAndCompliance, VatTradingDetails}
+import models.{VatFinancials, VatSicAndCompliance, VatTradingDetails}
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, Result}
 import repositories.RegistrationMongoFormats.encryptedFinancials
 import services._
 
-import cats.instances.future._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class VatRegistrationController @Inject()(val auth: AuthConnector, registrationService: RegistrationService)
@@ -55,8 +55,6 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
   }
 
   def updateTradingDetails(id: RegistrationId): Action[JsValue] = patch[VatTradingDetails](registrationService, id)
-
-  def updateVatChoice(id: RegistrationId): Action[JsValue] = patch[VatChoice](registrationService, id)
 
   def updateSicAndCompliance(id: RegistrationId): Action[JsValue] = patch[VatSicAndCompliance](registrationService, id)
 

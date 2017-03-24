@@ -38,7 +38,13 @@ class VatRegistrationServiceSpec extends VatRegSpec {
   val mockRegistrationRepository = mock[RegistrationRepository]
   val mockTestOnlyRepo = mock[TestOnlyRepository]
   val date = LocalDate.of(2017, 1, 1)
-  val vatChoice: VatChoice = VatChoice(date, "")
+  val vatChoice: VatChoice = VatChoice(
+    necessity = "voluntary",
+    vatStartDate = VatStartDate(
+      selection = "SPECIFIC_DATE",
+      startDate = Some(date)
+    )
+  )
 
   trait Setup {
     val service = new VatRegistrationService(mockBusRegConnector, mockRegistrationRepository)
@@ -133,7 +139,11 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
   "call to updateLogicalGroup" should {
 
-    val tradingDetails = VatTradingDetails("some-trader-name")
+    val tradingDetails = VatTradingDetails(
+      vatChoice = vatChoice,
+      tradingName = TradingName(
+        selection = true,
+        tradingName = Some("some-trader-name")))
 
     "return Success response " in new Setup {
       when(mockRegistrationRepository.updateLogicalGroup(RegistrationId("1"), tradingDetails)).thenReturn(tradingDetails)

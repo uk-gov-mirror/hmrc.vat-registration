@@ -22,20 +22,11 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 trait JsonFormatValidation extends UnitSpec {
 
-  def shouldBeSuccess[T](expected: T, result: JsResult[T]) = {
-    result match {
-      case JsSuccess(t, path) => t shouldBe expected
-      case JsError(errors) => fail(s"Test produced errors - $errors")
-    }
-  }
+  def shouldHaveErrors[T](result: JsResult[T], errorPath: JsPath, expectedError: ValidationError): Unit =
+    shouldHaveErrors(result, Map(errorPath -> Seq(expectedError)))
 
-  def shouldHaveErrors[T](result: JsResult[T], errorPath: JsPath, expectedError: ValidationError): Unit = {
-    shouldHaveErrors[T](result, Map(errorPath -> Seq(expectedError)))
-  }
-
-  def shouldHaveErrors[T](result: JsResult[T], errorPath: JsPath, expectedErrors: Seq[ValidationError]): Unit = {
-    shouldHaveErrors[T](result, Map(errorPath -> expectedErrors))
-  }
+  def shouldHaveErrors[T](result: JsResult[T], errorPath: JsPath, expectedErrors: Seq[ValidationError]): Unit =
+    shouldHaveErrors(result, Map(errorPath -> expectedErrors))
 
   def shouldHaveErrors[T](result: JsResult[T], expectedErrors: Map[JsPath, Seq[ValidationError]]): Unit = {
     result match {
