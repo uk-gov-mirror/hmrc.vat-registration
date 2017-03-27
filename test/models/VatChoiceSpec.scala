@@ -18,6 +18,7 @@ package models
 
 import java.time.LocalDate
 
+import models.api.{VatChoice, VatStartDate}
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
 

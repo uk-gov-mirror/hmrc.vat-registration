@@ -20,8 +20,7 @@ import java.time.LocalDate
 
 import common.RegistrationId
 import common.exceptions._
-import models._
-import models.compliance.VatCulturalCompliance
+import models.api._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import repositories.{MongoDBProvider, RegistrationMongoRepository}
@@ -52,7 +51,7 @@ class RegistrationMongoRepositoryISpec
   private val culturalSicAndCompliance =
     VatSicAndCompliance(
       businessDescription = "some-business-description",
-      culturalCompliance = Some(VatCulturalCompliance(true)))
+      culturalCompliance = Some(VatComplianceCultural(true)))
 
   val EstimateValue: Long = 1000L
   val zeroRatedTurnoverEstimate: Long = 1000L

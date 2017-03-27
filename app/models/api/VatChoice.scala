@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-package models.compliance
+package models.api
 
+import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatCulturalCompliance(notForProfit: Boolean)
+case class VatChoice(
+                      necessity: String, // "obligatory" or "voluntary"
+                      vatStartDate: VatStartDate
+                    )
 
-object VatCulturalCompliance {
+object VatChoice extends VatChoiceValidator {
 
-  implicit val format: OFormat[VatCulturalCompliance] = Json.format[VatCulturalCompliance]
+  implicit val format: OFormat[VatChoice] = (
+    (__ \ "necessity").format[String](necessityValidator) and
+      (__ \ "vatStartDate").format[VatStartDate]) (VatChoice.apply, unlift(VatChoice.unapply))
 
 }

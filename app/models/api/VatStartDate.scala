@@ -14,14 +14,21 @@
  * limitations under the License.
  */
 
-package models
+package models.api
 
-import play.api.libs.json.Json
+import java.time.LocalDate
 
-case class TradingName(selection: Boolean, tradingName: Option[String])
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
-object TradingName {
 
-  implicit val format = Json.format[TradingName]
+case class VatStartDate(selection: String, startDate: Option[LocalDate])
+
+object VatStartDate extends VatStartDateValidator {
+
+  implicit val format: OFormat[VatStartDate] = (
+    (__ \ "selection").format[String](vatStartDateValidator) and
+      (__ \ "startDate").formatNullable[LocalDate]
+    ) (VatStartDate.apply, unlift(VatStartDate.unapply))
 
 }

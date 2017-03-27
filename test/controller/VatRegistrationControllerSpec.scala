@@ -22,6 +22,7 @@ import common.RegistrationId
 import controllers.VatRegistrationController
 import helpers.VatRegSpec
 import models._
+import models.api._
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.mvc.Results.Accepted

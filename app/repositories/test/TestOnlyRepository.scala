@@ -18,7 +18,7 @@ package repositories.test
 
 import javax.inject.{Inject, Named}
 
-import models.VatScheme
+import models.api.VatScheme
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID

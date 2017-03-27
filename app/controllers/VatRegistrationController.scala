@@ -22,7 +22,7 @@ import cats.instances.future._
 import common.RegistrationId
 import common.exceptions.LeftState
 import connectors.AuthConnector
-import models.{VatFinancials, VatSicAndCompliance, VatTradingDetails}
+import models.api.{VatFinancials, VatSicAndCompliance, VatTradingDetails}
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, Result}
 import repositories.RegistrationMongoFormats.encryptedFinancials

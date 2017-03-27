@@ -23,6 +23,7 @@ import common.exceptions._
 import connectors._
 import helpers.VatRegSpec
 import models._
+import models.api._
 import models.external.CurrentProfile
 import org.mockito.Matchers.any
 import org.mockito.Mockito._

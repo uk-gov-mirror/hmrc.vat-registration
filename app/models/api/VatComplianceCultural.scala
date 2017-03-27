@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package models
+package models.api
 
-import models.compliance.VatCulturalCompliance
 import play.api.libs.json._
 
+case class VatComplianceCultural(notForProfit: Boolean)
 
-case class VatSicAndCompliance(
-                                businessDescription: String,
-                                culturalCompliance: Option[VatCulturalCompliance] = None
-                              )
+object VatComplianceCultural {
 
-object VatSicAndCompliance {
-
-  implicit val format: OFormat[VatSicAndCompliance] = Json.format[VatSicAndCompliance]
+  implicit val format: OFormat[VatComplianceCultural] = Json.format[VatComplianceCultural]
 
 }
