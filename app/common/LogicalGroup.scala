@@ -34,7 +34,7 @@ object LogicalGroup {
     val name: String = s
   }
 
-  implicit val vatTradingDetails = LogicalGroup[VatTradingDetails]("trading-details")
+  implicit val vatTradingDetails = LogicalGroup[VatTradingDetails]("tradingDetails")
   implicit val vatSicAndCompliance = LogicalGroup[VatSicAndCompliance]("vatSicAndCompliance")
   implicit val vatFinancials = LogicalGroup[VatFinancials]("financials")
 
