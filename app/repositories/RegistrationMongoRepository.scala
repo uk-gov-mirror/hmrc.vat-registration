@@ -23,6 +23,7 @@ import common.RegistrationId
 import common.LogicalGroup
 import common.exceptions._
 import models._
+import models.api.{VatBankAccountMongoFormat, VatFinancials, VatScheme}
 import play.api.Logger
 import play.api.libs.json.{OFormat, Writes}
 import play.modules.reactivemongo.MongoDbConnection

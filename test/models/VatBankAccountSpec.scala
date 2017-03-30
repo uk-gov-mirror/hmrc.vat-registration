@@ -17,6 +17,7 @@
 package models
 
 import helpers.VatRegSpec
+import models.api.{VatBankAccount, VatBankAccountMongoFormat}
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
 

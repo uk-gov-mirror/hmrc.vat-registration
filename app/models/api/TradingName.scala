@@ -14,28 +14,14 @@
  * limitations under the License.
  */
 
-package common
+package models.api
 
-import models._
-import models.api.{VatFinancials, VatSicAndCompliance, VatTradingDetails}
+import play.api.libs.json.Json
 
-trait LogicalGroup[T] {
+case class TradingName(selection: Boolean, tradingName: Option[String])
 
-  val name: String
+object TradingName {
 
-}
-
-
-object LogicalGroup {
-
-  def apply[T]()(implicit t: LogicalGroup[T]): LogicalGroup[T] = t
-
-  def apply[T](s: String): LogicalGroup[T] = new LogicalGroup[T] {
-    val name: String = s
-  }
-
-  implicit val vatTradingDetails = LogicalGroup[VatTradingDetails]("tradingDetails")
-  implicit val vatSicAndCompliance = LogicalGroup[VatSicAndCompliance]("vatSicAndCompliance")
-  implicit val vatFinancials = LogicalGroup[VatFinancials]("financials")
+  implicit val format = Json.format[TradingName]
 
 }

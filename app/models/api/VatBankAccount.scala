@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models
+package models.api
 
 import auth.Crypto
 import play.api.libs.functional.syntax._

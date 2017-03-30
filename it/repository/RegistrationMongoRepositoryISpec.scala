@@ -20,8 +20,7 @@ import java.time.LocalDate
 
 import common.RegistrationId
 import common.exceptions._
-import models._
-import models.compliance.VatCulturalCompliance
+import models.api._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import repositories.{MongoDBProvider, RegistrationMongoRepository}
@@ -35,10 +34,24 @@ class RegistrationMongoRepositoryISpec
 
   private val date = LocalDate.of(2017, 1, 1)
   private val regId = RegistrationId("AC234321")
-  private val vatScheme: VatScheme = VatScheme(regId, None, None, None)
-  private val vatChoice: VatChoice = VatChoice(date, "")
-  private val tradingDetails: VatTradingDetails = VatTradingDetails("some-trader-name")
-  private val culturalSicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description", Some(VatCulturalCompliance(true)))
+  private val vatScheme = VatScheme(regId)
+  private val vatChoice = VatChoice(
+    necessity = "voluntary",
+    vatStartDate = VatStartDate(
+      selection = "SPECIFIC_DATE",
+      startDate = Some(date)))
+  private val tradingName = TradingName(selection = true, Some("some-trading-name"))
+  private val vatTradingDetails = VatTradingDetails(
+    vatChoice = vatChoice,
+    tradingName = tradingName
+  )
+  private val tradingDetails = VatTradingDetails(
+    vatChoice = vatChoice,
+    tradingName = tradingName)
+  private val culturalSicAndCompliance =
+    VatSicAndCompliance(
+      businessDescription = "some-business-description",
+      culturalCompliance = Some(VatComplianceCultural(true)))
 
   val EstimateValue: Long = 1000L
   val zeroRatedTurnoverEstimate: Long = 1000L
@@ -47,7 +60,7 @@ class RegistrationMongoRepositoryISpec
     turnoverEstimate = EstimateValue,
     zeroRatedTurnoverEstimate = Some(zeroRatedTurnoverEstimate),
     reclaimVatOnMostReturns = true,
-    vatAccountingPeriod = VatAccountingPeriod(None, "monthly")
+    accountingPeriods = VatAccountingPeriod("monthly")
   )
 
 
@@ -87,10 +100,10 @@ class RegistrationMongoRepositoryISpec
 
   "Calling updateLogicalGroup" should {
 
-    "should update to VatChoice success" in new Setup {
+    "should update to VatTradingDetails success" in new Setup {
       await(repository.insert(vatScheme))
-      val result = await(repository.updateLogicalGroup(regId, vatChoice))
-      result shouldBe vatChoice
+      val result = await(repository.updateLogicalGroup(regId, vatTradingDetails))
+      result shouldBe vatTradingDetails
     }
 
     "should update to VatSicAndCompliance success" in new Setup {
@@ -99,9 +112,17 @@ class RegistrationMongoRepositoryISpec
       result shouldBe culturalSicAndCompliance
     }
 
+
+    "should update to VatFinancials success" in new Setup {
+      await(repository.insert(vatScheme))
+      val result = await(repository.updateLogicalGroup(regId, vatFinancials))
+      result shouldBe vatFinancials
+    }
+
+
     "should throw UpdateFailed exception when regId not found" in new Setup {
       await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.updateLogicalGroup(RegistrationId("123"), vatChoice)))
+      an[UpdateFailed] shouldBe thrownBy(await(repository.updateLogicalGroup(RegistrationId("123"), vatTradingDetails)))
     }
 
   }
@@ -165,7 +186,7 @@ class RegistrationMongoRepositoryISpec
   "Calling deleteAccountingPeriodStart" should {
 
     "delete AccountingPeriodStart object when one exists" in new Setup {
-      val vatFinancialsWithPeriodStart = vatFinancials.copy(vatAccountingPeriod = VatAccountingPeriod(Some("jan_apr_jul_oct"), "quarterly"))
+      val vatFinancialsWithPeriodStart = vatFinancials.copy(accountingPeriods = VatAccountingPeriod("quarterly", Some("jan_apr_jul_oct")))
       val vatSchemeWithPeriodStart = vatScheme.copy(financials = Some(vatFinancialsWithPeriodStart))
       await(repository.insert(vatSchemeWithPeriodStart))
       val actual = await(repository.deleteAccountingPeriodStart(vatSchemeWithPeriodStart.id))

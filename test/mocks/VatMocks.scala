@@ -21,6 +21,7 @@ import common.RegistrationId
 import common.exceptions._
 import connectors.{AuthConnector, Authority}
 import models._
+import models.api.VatScheme
 import org.mockito.Matchers
 import org.mockito.Matchers._
 import org.mockito.Mockito._

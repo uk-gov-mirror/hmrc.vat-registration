@@ -18,6 +18,7 @@ package models
 
 import java.time.LocalDate
 
+import models.api.{VatChoice, VatStartDate}
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
 
@@ -31,41 +32,56 @@ class VatChoiceSpec extends JsonFormatValidation {
       val json = Json.parse(
         s"""
            |{
-           |  "start-date":"$startDate",
+           |  "vatStartDate": {
+           |    "selection": "COMPANY_REGISTRATION_DATE",
+           |    "startDate": "$startDate"
+           |    },
            |  "necessity":"obligatory"
            |}
         """.stripMargin)
 
-      val tstVatChoice = VatChoice(
-        startDate = startDate,
-        necessity = "obligatory"
+      val expectedVatChoice = VatChoice(
+        necessity = "obligatory",
+        vatStartDate = VatStartDate(
+          selection = "COMPANY_REGISTRATION_DATE",
+          startDate = Some(startDate)
+        )
       )
 
-      Json.fromJson[VatChoice](json) shouldBe JsSuccess(tstVatChoice)
+      Json.fromJson[VatChoice](json) shouldBe JsSuccess(expectedVatChoice)
     }
 
     "complete successfully from full Json with voluntary necessity" in {
       val json = Json.parse(
         s"""
            |{
-           |  "start-date":"$startDate",
+           |  "vatStartDate": {
+           |    "selection": "SPECIFIC_DATE",
+           |    "startDate": "$startDate"
+           |    },
            |  "necessity":"voluntary"
            |}
         """.stripMargin)
 
-      val tstVatChoice = VatChoice(
-        startDate = startDate,
-        necessity = "voluntary"
+      val expectedVatChoice = VatChoice(
+        necessity = "voluntary",
+        vatStartDate = VatStartDate(
+          selection = "SPECIFIC_DATE",
+          startDate = Some(startDate)
+        )
       )
 
-      Json.fromJson[VatChoice](json) shouldBe JsSuccess(tstVatChoice)
+      Json.fromJson[VatChoice](json) shouldBe JsSuccess(expectedVatChoice)
     }
 
     "fail from Json with invalid necessity" in {
       val json = Json.parse(
         s"""
            |{
-           |  "start-date":"$startDate",
+           |  "vatStartDate": {
+           |    "selection": "SPECIFIC_DATE",
+           |    "startDate": "$startDate"
+           |    },
            |  "necessity":"*garbage*"
            |}
         """.stripMargin)
@@ -78,7 +94,10 @@ class VatChoiceSpec extends JsonFormatValidation {
       val json = Json.parse(
         s"""
            |{
-           |  "start-date":"$startDate"
+           |  "vatStartDate": {
+           |   "selection": "SPECIFIC_DATE",
+           |   "startDate": "$startDate"
+           |   }
            |}
         """.stripMargin)
 
@@ -86,17 +105,5 @@ class VatChoiceSpec extends JsonFormatValidation {
       shouldHaveErrors(result, JsPath() \ "necessity", Seq(ValidationError("error.path.missing")))
     }
 
-    // TODO: when we refactor vat choice make sure to remove this test
-    "fail from Json with missing start date" in {
-      val json = Json.parse(
-        s"""
-           |{
-             "necessity":"voluntary"
-           |}
-        """.stripMargin)
-
-      val result = Json.fromJson[VatChoice](json)
-      shouldHaveErrors(result, JsPath() \ "start-date", Seq(ValidationError("error.path.missing")))
-    }
   }
 }

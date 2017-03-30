@@ -14,22 +14,18 @@
  * limitations under the License.
  */
 
-package models
+package models.api
 
-import java.time.LocalDate
-
-import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatChoice(
-                      startDate: LocalDate,
-                      necessity: String // "obligatory" or "voluntary"
-                    )
 
-object VatChoice extends VatChoiceValidator {
+case class VatSicAndCompliance(
+                                businessDescription: String,
+                                culturalCompliance: Option[VatComplianceCultural] = None
+                              )
 
-  implicit val format: OFormat[VatChoice] = (
-    (__ \ "start-date").format[LocalDate] and
-      (__ \ "necessity").format[String](necessityValidator)) (VatChoice.apply, unlift(VatChoice.unapply))
+object VatSicAndCompliance {
+
+  implicit val format: OFormat[VatSicAndCompliance] = Json.format[VatSicAndCompliance]
 
 }

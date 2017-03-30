@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package models
+package models.api
 
-import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatTradingDetails(tradingName: String)
+case class VatComplianceCultural(notForProfit: Boolean)
 
-object VatTradingDetails {
-  val apiReads: Reads[VatTradingDetails] =
-    (__ \ "trading-name").read[String].map(VatTradingDetails(_))
+object VatComplianceCultural {
 
-  val apiWrites: OWrites[VatTradingDetails] =
-    (__ \ "trading-name").write[String].contramap(_.tradingName)
+  implicit val format: OFormat[VatComplianceCultural] = Json.format[VatComplianceCultural]
 
-  implicit val format: OFormat[VatTradingDetails] = OFormat(apiReads, apiWrites)
 }

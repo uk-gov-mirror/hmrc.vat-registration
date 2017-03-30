@@ -24,6 +24,7 @@ import common.LogicalGroup
 import common.exceptions._
 import connectors._
 import models._
+import models.api.VatScheme
 import models.external.CurrentProfile
 import play.api.libs.json.Writes
 import repositories.RegistrationRepository
