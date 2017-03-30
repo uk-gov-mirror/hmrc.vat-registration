@@ -16,7 +16,6 @@
 
 package common
 
-import models._
 import models.api.{VatFinancials, VatSicAndCompliance, VatTradingDetails}
 
 trait LogicalGroup[T] {
