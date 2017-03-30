@@ -16,7 +16,7 @@
 
 package models
 
-import models.api.{VatComplianceCultural, VatSicAndCompliance}
+import models.api.{VatComplianceCultural, VatLabourCompliance, VatSicAndCompliance}
 import play.api.libs.json.{JsSuccess, Json}
 
 class VatSicAndComplianceSpec extends JsonFormatValidation {
@@ -30,20 +30,27 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
            |  "businessDescription":"some text",
            |  "culturalCompliance": {
            |    "notForProfit": true
+           |   },
+           |  "labourCompliance": {
+           |    "labour": true,
+           |    "workers": 10,
+           |    "temporaryContracts": true,
+           |    "skilledWorkers": true
            |   }
-           |}
+           |   }
         """.stripMargin)
 
       val expected = VatSicAndCompliance(
         businessDescription = "some text",
-        culturalCompliance = Some(VatComplianceCultural(true))
+        culturalCompliance = Some(VatComplianceCultural(true)),
+        labourCompliance = Some(VatLabourCompliance(true, Some(10), Some(true), Some(true)))
       )
 
       Json.fromJson[VatSicAndCompliance](json) shouldBe JsSuccess(expected)
     }
   }
 
-  "complete successfully without culturalCompliance" in {
+  "complete successfully without culturalCompliance and labourCompliance" in {
     val json = Json.parse(
       s"""
          |{
@@ -53,7 +60,8 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
 
     val expected = VatSicAndCompliance(
       businessDescription = "some text",
-      culturalCompliance = None
+      culturalCompliance = None,
+      labourCompliance = None
     )
 
     Json.fromJson[VatSicAndCompliance](json) shouldBe JsSuccess(expected)
@@ -63,10 +71,11 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
 
     implicit val format = VatSicAndCompliance.format
 
-    "complete successfully without culturalCompliance" in {
+    "complete successfully without culturalCompliance and labourCompliance" in {
       val sac = VatSicAndCompliance(
         businessDescription = "some text",
-        culturalCompliance = None
+        culturalCompliance = None,
+        labourCompliance = None
       )
 
       val writeResult = format.writes(sac)
@@ -76,10 +85,11 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
       result shouldBe sac
     }
 
-    "complete successfully with culturalCompliance" in {
+    "complete successfully with culturalCompliance and labourCompliance" in {
       val sac = VatSicAndCompliance(
         businessDescription = "some text",
-        culturalCompliance = Some(VatComplianceCultural(true))
+        culturalCompliance = Some(VatComplianceCultural(true)),
+        labourCompliance = Some(VatLabourCompliance(true, Some(10), Some(true), Some(true)))
       )
 
       val writeResult = format.writes(sac)
