@@ -44,11 +44,7 @@ trait RegistrationRepository {
 
   def deleteVatScheme(id: RegistrationId): Future[Boolean]
 
-  def deleteBankAccountDetails(id: RegistrationId): Future[Boolean]
-
-  def deleteZeroRatedTurnover(id: RegistrationId): Future[Boolean]
-
-  def deleteAccountingPeriodStart(id: RegistrationId): Future[Boolean]
+  def deleteByElement(id: RegistrationId, elementPath: String): Future[Boolean]
 
 }
 
@@ -112,13 +108,17 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
     case None => Future.failed(MissingRegDocument(id))
   }
 
-  override def deleteBankAccountDetails(id: RegistrationId): Future[Boolean] =
-    unsetElement(id, "financials.bankAccount")
 
-  override def deleteZeroRatedTurnover(id: RegistrationId): Future[Boolean] =
-    unsetElement(id, "financials.zeroRatedTurnoverEstimate")
+  override def deleteByElement(id: RegistrationId, elementPath: String): Future[Boolean] =
+    unsetElement(id, elementPath)
 
-  override def deleteAccountingPeriodStart(id: RegistrationId): Future[Boolean] =
-    unsetElement(id, "financials.accountingPeriods.periodStart")
+//  override def deleteBankAccountDetails(id: RegistrationId): Future[Boolean] =
+//    unsetElement(id, "financials.bankAccount")
+//
+//  override def deleteZeroRatedTurnover(id: RegistrationId): Future[Boolean] =
+//    unsetElement(id, "financials.zeroRatedTurnoverEstimate")
+//
+//  override def deleteAccountingPeriodStart(id: RegistrationId): Future[Boolean] =
+//    unsetElement(id, "financials.accountingPeriods.periodStart")
 
 }

@@ -67,10 +67,20 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
       }
   }
 
-  def deleteBankAccountDetails(id: RegistrationId): Action[AnyContent] = delete(registrationService.deleteBankAccountDetails, id)
 
-  def deleteZeroRatedTurnover(id: RegistrationId): Action[AnyContent] = delete(registrationService.deleteZeroRatedTurnover, id)
+  def deleteBankAccountDetails(id: RegistrationId): Action[AnyContent] = delete(registrationService, id, "financials.bankAccount")
 
-  def deleteAccountingPeriodStart(id: RegistrationId): Action[AnyContent] = delete(registrationService.deleteAccountingPeriodStart, id)
+  def deleteZeroRatedTurnover(id: RegistrationId): Action[AnyContent] = delete(registrationService, id, "financials.zeroRatedTurnoverEstimate")
+
+  def deleteAccountingPeriodStart(id: RegistrationId): Action[AnyContent] = delete(registrationService, id, "financials.accountingPeriods.periodStart")
 
 }
+
+//  override def deleteBankAccountDetails(id: RegistrationId): ServiceResult[Boolean] =
+//    toEitherT(registrationRepository.deleteByElement(id, "financials.bankAccount"))
+//
+//  override def deleteZeroRatedTurnover(id: RegistrationId): ServiceResult[Boolean] =
+//    toEitherT(registrationRepository.deleteByElement(id, "financials.zeroRatedTurnoverEstimate"))
+//
+//  override def deleteAccountingPeriodStart(id: RegistrationId): ServiceResult[Boolean] =
+//    toEitherT(registrationRepository.deleteByElement(id, "financials.accountingPeriods.periodStart"))

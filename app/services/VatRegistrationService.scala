@@ -42,11 +42,13 @@ trait RegistrationService {
 
   def deleteVatScheme(id: RegistrationId): ServiceResult[Boolean]
 
-  def deleteBankAccountDetails(id: RegistrationId): ServiceResult[Boolean]
+  def deleteByElement(id: RegistrationId, elementPath: String): ServiceResult[Boolean]
 
-  def deleteZeroRatedTurnover(id: RegistrationId): ServiceResult[Boolean]
-
-  def deleteAccountingPeriodStart(id: RegistrationId): ServiceResult[Boolean]
+//  def deleteBankAccountDetails(id: RegistrationId): ServiceResult[Boolean]
+//
+//  def deleteZeroRatedTurnover(id: RegistrationId): ServiceResult[Boolean]
+//
+//  def deleteAccountingPeriodStart(id: RegistrationId): ServiceResult[Boolean]
 
 }
 
@@ -90,13 +92,24 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   override def deleteVatScheme(id: RegistrationId): ServiceResult[Boolean] =
     toEitherT(registrationRepository.deleteVatScheme(id))
 
-  override def deleteBankAccountDetails(id: RegistrationId): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteBankAccountDetails(id))
+  override def deleteByElement(id: RegistrationId, elementPath: String): ServiceResult[Boolean] =
+    toEitherT(registrationRepository.deleteByElement(id, elementPath))
 
-  override def deleteZeroRatedTurnover(id: RegistrationId): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteZeroRatedTurnover(id))
-
-  override def deleteAccountingPeriodStart(id: RegistrationId): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteAccountingPeriodStart(id))
+//  override def deleteBankAccountDetails(id: RegistrationId): ServiceResult[Boolean] =
+//    toEitherT(registrationRepository.deleteByElement(id, "financials.bankAccount"))
+//
+//  override def deleteZeroRatedTurnover(id: RegistrationId): ServiceResult[Boolean] =
+//    toEitherT(registrationRepository.deleteByElement(id, "financials.zeroRatedTurnoverEstimate"))
+//
+//  override def deleteAccountingPeriodStart(id: RegistrationId): ServiceResult[Boolean] =
+//    toEitherT(registrationRepository.deleteByElement(id, "financials.accountingPeriods.periodStart"))
 
 }
+//  override def deleteBankAccountDetails(id: RegistrationId): Future[Boolean] =
+//    unsetElement(id, "financials.bankAccount")
+//
+//  override def deleteZeroRatedTurnover(id: RegistrationId): Future[Boolean] =
+//    unsetElement(id, "financials.zeroRatedTurnoverEstimate")
+//
+//  override def deleteAccountingPeriodStart(id: RegistrationId): Future[Boolean] =
+//    unsetElement(id, "financials.accountingPeriods.periodStart")

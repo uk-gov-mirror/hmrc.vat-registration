@@ -10,7 +10,7 @@ PATCH        /:regID/vat-financials                 controllers.VatRegistrationC
 PATCH        /:regID/sic-and-compliance             controllers.VatRegistrationController.updateSicAndCompliance(regID: common.RegistrationId)
 
 DELETE       /:regID/delete-scheme                  controllers.VatRegistrationController.deleteVatScheme(regID: common.RegistrationId)
-DELETE       /:regID/delete-bank-account            controllers.VatRegistrationController.deleteBankAccountDetails(regID: common.RegistrationId)
-DELETE       /:regID/delete-zero-rated_turnover     controllers.VatRegistrationController.deleteZeroRatedTurnover(regID: common.RegistrationId)
-DELETE       /:regID/delete-accounting-period       controllers.VatRegistrationController.deleteAccountingPeriodStart(regID: common.RegistrationId)
+DELETE       /:regID/delete/bank-account            controllers.VatRegistrationController.deleteBankAccountDetails(regID: common.RegistrationId)
+DELETE       /:regID/delete/zero-rated-turnover     controllers.VatRegistrationController.deleteZeroRatedTurnover(regID: common.RegistrationId)
+DELETE       /:regID/delete/accounting-period       controllers.VatRegistrationController.deleteAccountingPeriodStart(regID: common.RegistrationId)
 

@@ -44,10 +44,11 @@ abstract class VatRegistrationBaseController extends BaseController with Authent
         }
     }
 
-  protected def delete[T](serviceCall: RegistrationId => ServiceResult[Boolean], id: RegistrationId): Action[AnyContent] =
+  protected def delete[T](service: RegistrationService,
+                          id: RegistrationId, elementPath: String): Action[AnyContent] =
     Action.async { implicit request =>
       authenticated { _ =>
-        serviceCall(id).fold(
+        service.deleteByElement(id, elementPath).fold(
           a => a.toResult,
           b => Ok(Json.toJson(true)))
       }
