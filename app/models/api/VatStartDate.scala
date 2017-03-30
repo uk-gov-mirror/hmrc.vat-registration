@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-package models
+package models.api
+
+import java.time.LocalDate
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatAccountingPeriod(
-                                periodStart: Option[String], // "jan_apr_jul_oct", "feb_may_aug_nov" or "mar_jun_sep_dec"
-                                frequency: String // "monthly" or "quarterly"
-                              )
 
+case class VatStartDate(selection: String, startDate: Option[LocalDate])
 
-object VatAccountingPeriod extends VatAccountingPeriodValidator {
+object VatStartDate extends VatStartDateValidator {
 
-  implicit val format = (
-    (__ \ "periodStart").formatNullable[String](periodStartValidator) and
-      (__ \ "frequency").format[String](frequencyValidator)) (VatAccountingPeriod.apply, unlift(VatAccountingPeriod.unapply))
+  implicit val format: OFormat[VatStartDate] = (
+    (__ \ "selection").format[String](vatStartDateValidator) and
+      (__ \ "startDate").formatNullable[LocalDate]
+    ) (VatStartDate.apply, unlift(VatStartDate.unapply))
+
 }

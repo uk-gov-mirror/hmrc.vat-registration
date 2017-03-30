@@ -4,7 +4,6 @@ POST         /new                                   controllers.VatRegistrationC
 
 GET          /:regID/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regID: common.RegistrationId)
 
-PATCH        /:regID/vat-choice                     controllers.VatRegistrationController.updateVatChoice(regID: common.RegistrationId)
 PATCH        /:regID/trading-details                controllers.VatRegistrationController.updateTradingDetails(regID: common.RegistrationId)
 PATCH        /:regID/vat-financials                 controllers.VatRegistrationController.updateVatFinancials(regID: common.RegistrationId)
 PATCH        /:regID/sic-and-compliance             controllers.VatRegistrationController.updateSicAndCompliance(regID: common.RegistrationId)

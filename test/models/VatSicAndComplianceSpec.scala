@@ -16,7 +16,7 @@
 
 package models
 
-import models.compliance.VatCulturalCompliance
+import models.api.{VatComplianceCultural, VatSicAndCompliance}
 import play.api.libs.json.{JsSuccess, Json}
 
 class VatSicAndComplianceSpec extends JsonFormatValidation {
@@ -36,7 +36,7 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
 
       val expected = VatSicAndCompliance(
         businessDescription = "some text",
-        culturalCompliance = Some(VatCulturalCompliance(true))
+        culturalCompliance = Some(VatComplianceCultural(true))
       )
 
       Json.fromJson[VatSicAndCompliance](json) shouldBe JsSuccess(expected)
@@ -79,7 +79,7 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
     "complete successfully with culturalCompliance" in {
       val sac = VatSicAndCompliance(
         businessDescription = "some text",
-        culturalCompliance = Some(VatCulturalCompliance(true))
+        culturalCompliance = Some(VatComplianceCultural(true))
       )
 
       val writeResult = format.writes(sac)
