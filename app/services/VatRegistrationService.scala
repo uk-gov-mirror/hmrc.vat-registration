@@ -90,9 +90,3 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
     toEitherT(registrationRepository.deleteByElement(id, elementPath))
 
 }
-/*
-  def deleteBankAccountDetails(id: RegistrationId): Action[AnyContent] = delete(registrationService, id, "financials.bankAccount")
-  def deleteZeroRatedTurnover(id: RegistrationId): Action[AnyContent] = delete(registrationService, id, "financials.zeroRatedTurnoverEstimate")
-  def deleteAccountingPeriodStart(id: RegistrationId): Action[AnyContent] = delete(registrationService, id, "financials.accountingPeriods.periodStart")
-
- */

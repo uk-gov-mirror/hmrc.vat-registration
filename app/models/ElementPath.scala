@@ -48,7 +48,7 @@ case object ZeroRatedTurnoverEstimatePath extends ElementPath {
   override val name = "zero-rated-turnover-estimate"
 }
 
-case object AccountingPeriodStartPath extends ElementPath {
+case object AccountingPeriodStartPath extends ElementPath {pre
   override val path = "financials.accountingPeriods.periodStart"
   override val name = "accounting-period-start"
 }

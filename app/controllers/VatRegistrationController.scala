@@ -66,11 +66,5 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
       }
   }
 
-//  def deleteBankAccountDetails(id: RegistrationId): Action[AnyContent] = delete(registrationService, id, models.VatBankAccountPath)
-//
-//  def deleteZeroRatedTurnover(id: RegistrationId): Action[AnyContent] = delete(registrationService, id, models.ZeroRatedTurnoverEstimatePath)
-//
-//  def deleteAccountingPeriodStart(id: RegistrationId): Action[AnyContent] = delete(registrationService, id, models.AccountingPeriodStartPath)
-
   def deleteByElement(id: RegistrationId, elementPath: ElementPath): Action[AnyContent] = delete(registrationService, id, elementPath)
 }
