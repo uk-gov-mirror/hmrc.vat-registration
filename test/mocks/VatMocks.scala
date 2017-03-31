@@ -17,11 +17,11 @@
 package mocks
 
 import cats.data.EitherT
-import common.{LogicalGroup, RegistrationId}
+import common.RegistrationId
 import common.exceptions._
 import connectors.{AuthConnector, Authority}
 import models._
-import models.api.{VatFinancials, VatScheme}
+import models.api.VatScheme
 import org.mockito.Matchers
 import org.mockito.Matchers._
 import org.mockito.Mockito._
@@ -149,9 +149,6 @@ trait VatMocks extends WSHTTPMock {
     def mockServiceUnavailableUpdateLogicalGroup[G](group: G, exception: Exception): Unit = {
       // required to do like this because of how Mockito matchers work with Scala Value Classes
       //http://stackoverflow.com/a/34934179/81520
-
-      LogicalGroup[VatFinancials].name
-
       val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
       when(mockRegistrationService.updateLogicalGroup(idMatcher, Matchers.any[G]())(Matchers.any(), Matchers.any()))
         .thenReturn(serviceError[G](GenericError(exception)))
