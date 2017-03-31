@@ -53,7 +53,7 @@ class RegistrationMongoRepositoryISpec
     VatSicAndCompliance(
       businessDescription = "some-business-description",
       culturalCompliance = Some(VatComplianceCultural(true)),
-      labourCompliance = Some(VatLabourCompliance(true, Some(10), Some(true), Some(true)))
+      labourCompliance = Some(VatComplianceLabour(true, Some(10), Some(true), Some(true)))
     )
 
   val EstimateValue: Long = 1000L
