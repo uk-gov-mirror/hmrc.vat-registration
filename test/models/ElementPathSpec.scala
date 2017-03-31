@@ -17,8 +17,9 @@
 package models
 
 import play.api.libs.json._
+import uk.gov.hmrc.play.test.UnitSpec
 
-class ElementPathSpec extends JsonFormatValidation  {
+class ElementPathSpec extends UnitSpec  {
 
   val format  = ElementPath.ElementPathFormatter
 
