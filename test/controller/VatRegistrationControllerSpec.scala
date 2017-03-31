@@ -48,7 +48,7 @@ class VatRegistrationControllerSpec extends VatRegSpec {
     tradingName = TradingName(
       selection = true,
       tradingName = Some("some-trader-name")))
-  val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description")
+  val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description", None, None)
   val vatScheme: VatScheme = VatScheme(regId)
 
   class Setup {
