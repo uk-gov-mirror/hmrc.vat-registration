@@ -23,8 +23,9 @@ import play.api.libs.json.{Format, JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
 import services.{RegistrationService, ServiceResult}
 import uk.gov.hmrc.play.microservice.controller.BaseController
-
 import cats.instances.future._
+import models.ElementPath
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 abstract class VatRegistrationBaseController extends BaseController with Authenticated {
@@ -45,7 +46,7 @@ abstract class VatRegistrationBaseController extends BaseController with Authent
     }
 
   protected def delete[T](service: RegistrationService,
-                          id: RegistrationId, elementPath: String): Action[AnyContent] =
+                          id: RegistrationId, elementPath: ElementPath): Action[AnyContent] =
     Action.async { implicit request =>
       authenticated { _ =>
         service.deleteByElement(id, elementPath).fold(

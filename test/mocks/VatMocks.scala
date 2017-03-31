@@ -89,36 +89,14 @@ trait VatMocks extends WSHTTPMock {
         .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
     }
 
-    def mockDeleteBankAccountDetails(id: RegistrationId): Unit = {
-      when(mockRegistrationService.deleteBankAccountDetails(id))
+    def mockDeleteByElement(id: RegistrationId, elementPath: ElementPath): Unit = {
+      when(mockRegistrationService.deleteByElement(id, elementPath))
         .thenReturn(serviceResult(true))
     }
 
-    def mockDeleteBankAccountDetailsThrowsException(id: RegistrationId): Unit = {
+    def mockDeleteByElementThrowsException(id: RegistrationId, elementPath: ElementPath): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.deleteBankAccountDetails(id))
-        .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
-    }
-
-    def mockDeleteAccountingPeriodStart(id: RegistrationId): Unit = {
-      when(mockRegistrationService.deleteAccountingPeriodStart(id))
-        .thenReturn(serviceResult(true))
-    }
-
-    def mockDeleteAccountingPeriodStartThrowsException(id: RegistrationId): Unit = {
-      val exception = new Exception("Exception")
-      when(mockRegistrationService.deleteAccountingPeriodStart(id))
-        .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
-    }
-
-    def mockDeleteZeroRatedTurnover(id: RegistrationId): Unit = {
-      when(mockRegistrationService.deleteZeroRatedTurnover(id))
-        .thenReturn(serviceResult(true))
-    }
-
-    def mockDeleteZeroRatedTurnoverThrowsException(id: RegistrationId): Unit = {
-      val exception = new Exception("Exception")
-      when(mockRegistrationService.deleteZeroRatedTurnover(id))
+      when(mockRegistrationService.deleteByElement(id, elementPath))
         .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
     }
 

@@ -2,14 +2,13 @@
 
 POST         /new                                   controllers.VatRegistrationController.newVatRegistration
 
-GET          /:regID/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regID: common.RegistrationId)
+GET          /:regID/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regID: RegistrationId)
 
-PATCH        /:regID/trading-details                controllers.VatRegistrationController.updateTradingDetails(regID: common.RegistrationId)
-PATCH        /:regID/vat-financials                 controllers.VatRegistrationController.updateVatFinancials(regID: common.RegistrationId)
-PATCH        /:regID/sic-and-compliance             controllers.VatRegistrationController.updateSicAndCompliance(regID: common.RegistrationId)
+PATCH        /:regID/trading-details                controllers.VatRegistrationController.updateTradingDetails(regID: RegistrationId)
+PATCH        /:regID/vat-financials                 controllers.VatRegistrationController.updateVatFinancials(regID: RegistrationId)
+PATCH        /:regID/sic-and-compliance             controllers.VatRegistrationController.updateSicAndCompliance(regID: RegistrationId)
 
-DELETE       /:regID/delete-scheme                  controllers.VatRegistrationController.deleteVatScheme(regID: common.RegistrationId)
-DELETE       /:regID/delete/bank-account            controllers.VatRegistrationController.deleteBankAccountDetails(regID: common.RegistrationId)
-DELETE       /:regID/delete/zero-rated-turnover     controllers.VatRegistrationController.deleteZeroRatedTurnover(regID: common.RegistrationId)
-DELETE       /:regID/delete/accounting-period       controllers.VatRegistrationController.deleteAccountingPeriodStart(regID: common.RegistrationId)
+DELETE       /:regID/delete-scheme                  controllers.VatRegistrationController.deleteVatScheme(regID: RegistrationId)
+
+DELETE       /:regID/delete/:element                controllers.VatRegistrationController.deleteByElement(regID: RegistrationId, element: ElementPath)
 

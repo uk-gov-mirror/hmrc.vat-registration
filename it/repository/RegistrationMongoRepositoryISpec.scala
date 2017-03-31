@@ -20,6 +20,7 @@ import java.time.LocalDate
 
 import common.RegistrationId
 import common.exceptions._
+import models.VatBankAccountPath
 import models.api._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
@@ -141,67 +142,24 @@ class RegistrationMongoRepositoryISpec
     }
   }
 
-  "Calling deleteBankAccountDetails" should {
+  "Calling deleteByElement" should {
 
     "delete BankAccountDetails object when one exists" in new Setup {
       val vatSchemeWithBankAccount = vatScheme.copy(financials = Some(vatFinancials))
       await(repository.insert(vatSchemeWithBankAccount))
-      val actual = await(repository.deleteBankAccountDetails(vatSchemeWithBankAccount.id))
+      val actual = await(repository.deleteByElement(vatSchemeWithBankAccount.id, VatBankAccountPath))
       actual shouldBe true
     }
 
     "delete BankAccountDetails object when one does not exist" in new Setup {
       await(repository.insert(vatScheme))
-      val actual = await(repository.deleteBankAccountDetails(vatScheme.id))
+      val actual = await(repository.deleteByElement(vatScheme.id, VatBankAccountPath))
       actual shouldBe true
     }
 
     "return a None when there is no corresponding VatScheme object" in new Setup {
       await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.deleteBankAccountDetails(RegistrationId("123"))))
-    }
-  }
-
-  "Calling deleteZeroRatedTurnover" should {
-
-    "delete ZeroRatedTurnover object when one exists" in new Setup {
-      val vatSchemeWithBankAccount = vatScheme.copy(financials = Some(vatFinancials))
-      await(repository.insert(vatSchemeWithBankAccount))
-      val actual = await(repository.deleteZeroRatedTurnover(vatSchemeWithBankAccount.id))
-      actual shouldBe true
-    }
-
-    "delete ZeroRatedTurnover object when one does not exist" in new Setup {
-      await(repository.insert(vatScheme))
-      val actual = await(repository.deleteZeroRatedTurnover(vatScheme.id))
-      actual shouldBe true
-    }
-
-    "return a None when there is no corresponding VatScheme object" in new Setup {
-      await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.deleteZeroRatedTurnover(RegistrationId("123"))))
-    }
-  }
-
-  "Calling deleteAccountingPeriodStart" should {
-
-    "delete AccountingPeriodStart object when one exists" in new Setup {
-      val vatFinancialsWithPeriodStart = vatFinancials.copy(accountingPeriods = VatAccountingPeriod("quarterly", Some("jan_apr_jul_oct")))
-      val vatSchemeWithPeriodStart = vatScheme.copy(financials = Some(vatFinancialsWithPeriodStart))
-      await(repository.insert(vatSchemeWithPeriodStart))
-      val actual = await(repository.deleteAccountingPeriodStart(vatSchemeWithPeriodStart.id))
-      actual shouldBe true
-    }
-
-    "delete AccountingPeriodStart object when one does not exist" in new Setup {
-      await(repository.insert(vatScheme))
-      val actual = await(repository.deleteAccountingPeriodStart(vatScheme.id))
-      actual shouldBe true
-    }
-
-    "return a None when there is no corresponding VatScheme object" in new Setup {
-      await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.deleteAccountingPeriodStart(RegistrationId("123"))))
+      an[UpdateFailed] shouldBe thrownBy(await(repository.deleteByElement(RegistrationId("123"), VatBankAccountPath)))
     }
   }
 

@@ -22,6 +22,7 @@ import cats.instances.future._
 import common.RegistrationId
 import common.exceptions.LeftState
 import connectors.AuthConnector
+import models.ElementPath
 import models.api.{VatFinancials, VatSicAndCompliance, VatTradingDetails}
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, Result}
@@ -65,20 +66,11 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
       }
   }
 
+//  def deleteBankAccountDetails(id: RegistrationId): Action[AnyContent] = delete(registrationService, id, models.VatBankAccountPath)
+//
+//  def deleteZeroRatedTurnover(id: RegistrationId): Action[AnyContent] = delete(registrationService, id, models.ZeroRatedTurnoverEstimatePath)
+//
+//  def deleteAccountingPeriodStart(id: RegistrationId): Action[AnyContent] = delete(registrationService, id, models.AccountingPeriodStartPath)
 
-  def deleteBankAccountDetails(id: RegistrationId): Action[AnyContent] = delete(registrationService, id, "financials.bankAccount")
-
-  def deleteZeroRatedTurnover(id: RegistrationId): Action[AnyContent] = delete(registrationService, id, "financials.zeroRatedTurnoverEstimate")
-
-  def deleteAccountingPeriodStart(id: RegistrationId): Action[AnyContent] = delete(registrationService, id, "financials.accountingPeriods.periodStart")
-
+  def deleteByElement(id: RegistrationId, elementPath: ElementPath): Action[AnyContent] = delete(registrationService, id, elementPath)
 }
-
-//  override def deleteBankAccountDetails(id: RegistrationId): ServiceResult[Boolean] =
-//    toEitherT(registrationRepository.deleteByElement(id, "financials.bankAccount"))
-//
-//  override def deleteZeroRatedTurnover(id: RegistrationId): ServiceResult[Boolean] =
-//    toEitherT(registrationRepository.deleteByElement(id, "financials.zeroRatedTurnoverEstimate"))
-//
-//  override def deleteAccountingPeriodStart(id: RegistrationId): ServiceResult[Boolean] =
-//    toEitherT(registrationRepository.deleteByElement(id, "financials.accountingPeriods.periodStart"))
