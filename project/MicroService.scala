@@ -61,8 +61,9 @@ trait MicroService {
       retrieveManaged := true,
       evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
       routesImport ++= Seq(
-        "config.ValueClassBinder._",
-        "common.RegistrationId"
+        "config.CustomPathBinder._",
+        "common.RegistrationId",
+        "models.ElementPath"
       )
     )
     .configs(IntegrationTest)

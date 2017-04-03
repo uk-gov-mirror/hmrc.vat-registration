@@ -19,11 +19,10 @@ package services
 import javax.inject.Inject
 
 import cats.data.EitherT
-import common.RegistrationId
-import common.LogicalGroup
+import common.{LogicalGroup, RegistrationId}
 import common.exceptions._
 import connectors._
-import models._
+import models.ElementPath
 import models.api.VatScheme
 import models.external.CurrentProfile
 import play.api.libs.json.Writes
@@ -43,11 +42,7 @@ trait RegistrationService {
 
   def deleteVatScheme(id: RegistrationId): ServiceResult[Boolean]
 
-  def deleteBankAccountDetails(id: RegistrationId): ServiceResult[Boolean]
-
-  def deleteZeroRatedTurnover(id: RegistrationId): ServiceResult[Boolean]
-
-  def deleteAccountingPeriodStart(id: RegistrationId): ServiceResult[Boolean]
+  def deleteByElement(id: RegistrationId, elementPath: ElementPath): ServiceResult[Boolean]
 
 }
 
@@ -91,13 +86,7 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   override def deleteVatScheme(id: RegistrationId): ServiceResult[Boolean] =
     toEitherT(registrationRepository.deleteVatScheme(id))
 
-  override def deleteBankAccountDetails(id: RegistrationId): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteBankAccountDetails(id))
-
-  override def deleteZeroRatedTurnover(id: RegistrationId): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteZeroRatedTurnover(id))
-
-  override def deleteAccountingPeriodStart(id: RegistrationId): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteAccountingPeriodStart(id))
+  override def deleteByElement(id: RegistrationId, elementPath: ElementPath): ServiceResult[Boolean] =
+    toEitherT(registrationRepository.deleteByElement(id, elementPath))
 
 }

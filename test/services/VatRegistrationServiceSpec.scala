@@ -196,47 +196,17 @@ class VatRegistrationServiceSpec extends VatRegSpec {
     }
   }
 
-  "call to deleteBankAccountDetails" should {
+  "call to deleteByElement" should {
     "return Success response " in new Setup {
-      when(mockRegistrationRepository.deleteBankAccountDetails(RegistrationId("1"))).thenReturn(Future.successful(true))
-      val response = service.deleteBankAccountDetails(RegistrationId("1"))
+      when(mockRegistrationRepository.deleteByElement(RegistrationId("1"), VatBankAccountPath)).thenReturn(Future.successful(true))
+      val response = service.deleteByElement(RegistrationId("1"), VatBankAccountPath)
       await(response.value) shouldBe Right(true)
     }
 
     "return Error response " in new Setup {
       val t = new RuntimeException("Exception")
-      when(mockRegistrationRepository.deleteBankAccountDetails(RegistrationId("1"))).thenReturn(Future.failed(t))
-      val response = service.deleteBankAccountDetails(RegistrationId("1"))
-      await(response.value) shouldBe Left(GenericError(t))
-    }
-  }
-
-  "call to deleteAccountingPeriodStart" should {
-    "return Success response " in new Setup {
-      when(mockRegistrationRepository.deleteAccountingPeriodStart(RegistrationId("1"))).thenReturn(Future.successful(true))
-      val response = service.deleteAccountingPeriodStart(RegistrationId("1"))
-      await(response.value) shouldBe Right(true)
-    }
-
-    "return Error response " in new Setup {
-      val t = new RuntimeException("Exception")
-      when(mockRegistrationRepository.deleteAccountingPeriodStart(RegistrationId("1"))).thenReturn(Future.failed(t))
-      val response = service.deleteAccountingPeriodStart(RegistrationId("1"))
-      await(response.value) shouldBe Left(GenericError(t))
-    }
-  }
-
-  "call to deleteZeroRatedTurnover" should {
-    "return Success response " in new Setup {
-      when(mockRegistrationRepository.deleteZeroRatedTurnover(RegistrationId("1"))).thenReturn(Future.successful(true))
-      val response = service.deleteZeroRatedTurnover(RegistrationId("1"))
-      await(response.value) shouldBe Right(true)
-    }
-
-    "return Error response " in new Setup {
-      val t = new RuntimeException("Exception")
-      when(mockRegistrationRepository.deleteZeroRatedTurnover(RegistrationId("1"))).thenReturn(Future.failed(t))
-      val response = service.deleteZeroRatedTurnover(RegistrationId("1"))
+      when(mockRegistrationRepository.deleteByElement(RegistrationId("1"), VatBankAccountPath)).thenReturn(Future.failed(t))
+      val response = service.deleteByElement(RegistrationId("1"), VatBankAccountPath)
       await(response.value) shouldBe Left(GenericError(t))
     }
   }

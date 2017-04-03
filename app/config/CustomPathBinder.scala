@@ -17,15 +17,18 @@
 package config
 
 import common.RegistrationId
+import models.ElementPath
 import play.api.libs.json.{JsError, JsString, JsSuccess, Reads}
 import play.api.mvc.PathBindable
 
-object ValueClassBinder {
+object CustomPathBinder {
 
-  implicit val registrationIdBinder: PathBindable[RegistrationId] = valueClassBinder(_.value)
+  implicit val registrationIdBinder: PathBindable[RegistrationId] = customPathBinder(_.value)
+  implicit val elementPathBinder: PathBindable[ElementPath] = customPathBinder(_.name)
 
-  def valueClassBinder[A: Reads](fromAtoString: A => String)
-                                (implicit stringBinder: PathBindable[String]): PathBindable[A] = {
+  def customPathBinder[A : Reads](fromAtoString: A => String)
+                                 (implicit stringBinder: PathBindable[String]): PathBindable[A] = {
+
 
     def parseString(str: String) = {
       JsString(str).validate[A] match {

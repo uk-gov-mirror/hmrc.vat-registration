@@ -22,6 +22,7 @@ import cats.instances.future._
 import common.RegistrationId
 import common.exceptions.LeftState
 import connectors.AuthConnector
+import models.ElementPath
 import models.api.{VatFinancials, VatSicAndCompliance, VatTradingDetails}
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, Result}
@@ -65,10 +66,5 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
       }
   }
 
-  def deleteBankAccountDetails(id: RegistrationId): Action[AnyContent] = delete(registrationService.deleteBankAccountDetails, id)
-
-  def deleteZeroRatedTurnover(id: RegistrationId): Action[AnyContent] = delete(registrationService.deleteZeroRatedTurnover, id)
-
-  def deleteAccountingPeriodStart(id: RegistrationId): Action[AnyContent] = delete(registrationService.deleteAccountingPeriodStart, id)
-
+  def deleteByElement(id: RegistrationId, elementPath: ElementPath): Action[AnyContent] = delete(registrationService, id, elementPath)
 }
