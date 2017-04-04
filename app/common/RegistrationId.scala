@@ -19,7 +19,7 @@ package common
 import play.api.libs.json._
 
 case class RegistrationId(value: String) extends AnyVal {
-  override def toString = value
+  override def toString: String = value
 }
 
 object RegistrationId {

@@ -73,7 +73,7 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  private[repositories] def ridSelector(id: RegistrationId) = BSONDocument("ID" -> BSONString(id.value))
+  private[repositories] def ridSelector(id: RegistrationId) = BSONDocument("registrationId" -> BSONString(id.value))
 
   override def indexes: Seq[Index] = Seq(Index(
     name = Some("RegId"),
