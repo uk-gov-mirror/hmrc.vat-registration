@@ -18,7 +18,7 @@ package models.api
 
 import play.api.libs.json._
 
-case class VatComplianceLabour(labour: Boolean, workers: Option[Long], temporaryContracts: Option[Boolean], skilledWorkers: Option[Boolean])
+case class VatComplianceLabour(labour: Boolean, workers: Option[Int], temporaryContracts: Option[Boolean], skilledWorkers: Option[Boolean])
 
 object VatComplianceLabour {
 
