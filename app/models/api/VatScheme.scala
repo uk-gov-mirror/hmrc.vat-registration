@@ -30,7 +30,7 @@ case class VatScheme(
 object VatScheme {
 
   def reads(implicit r: Reads[VatFinancials]): Reads[VatScheme] = (
-    (__ \ "ID").read[RegistrationId] and
+    (__ \ "registrationId").read[RegistrationId] and
       (__ \ "tradingDetails").readNullable[VatTradingDetails] and
       (__ \ "financials").readNullable[VatFinancials](r) and
       (__ \ "vatSicAndCompliance").readNullable[VatSicAndCompliance]
@@ -38,7 +38,7 @@ object VatScheme {
 
 
   def writes(implicit w: Writes[VatFinancials]): OWrites[VatScheme] = (
-    (__ \ "ID").write[RegistrationId] and
+    (__ \ "registrationId").write[RegistrationId] and
       (__ \ "tradingDetails").writeNullable[VatTradingDetails] and
       (__ \ "financials").writeNullable[VatFinancials](w) and
       (__ \ "vatSicAndCompliance").writeNullable[VatSicAndCompliance]
