@@ -74,6 +74,49 @@ class VatChoiceSpec extends JsonFormatValidation {
       Json.fromJson[VatChoice](json) shouldBe JsSuccess(expectedVatChoice)
     }
 
+    "complete successfully from full Json with voluntary necessity and a reason" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "vatStartDate": {
+           |    "selection": "SPECIFIC_DATE",
+           |    "startDate": "$startDate"
+           |    },
+           |  "necessity":"voluntary",
+           |  "reason": "COMPANY_ALREADY_SELLS_TAXABLE_GOODS_OR_SERVICES"
+           |}
+        """.stripMargin)
+
+      val expectedVatChoice = VatChoice(
+        necessity = "voluntary",
+        vatStartDate = VatStartDate(
+          selection = "SPECIFIC_DATE",
+          startDate = Some(startDate)
+        ),
+        reason = Some("COMPANY_ALREADY_SELLS_TAXABLE_GOODS_OR_SERVICES")
+      )
+
+      Json.fromJson[VatChoice](json) shouldBe JsSuccess(expectedVatChoice)
+    }
+
+    "fail from Json with invalid reason" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "vatStartDate": {
+           |    "selection": "SPECIFIC_DATE",
+           |    "startDate": "$startDate"
+           |    },
+           |  "necessity":"voluntary",
+           |  "reason": "COMPANY_LIKES_TO_PAY_TAXES"
+           |}
+        """.stripMargin)
+
+      val result = Json.fromJson[VatChoice](json)
+      shouldHaveErrors(result, JsPath() \ "reason", Seq(ValidationError("error.pattern")))
+
+    }
+
     "fail from Json with invalid necessity" in {
       val json = Json.parse(
         s"""
