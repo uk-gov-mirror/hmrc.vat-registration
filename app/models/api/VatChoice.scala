@@ -21,13 +21,16 @@ import play.api.libs.json._
 
 case class VatChoice(
                       necessity: String, // "obligatory" or "voluntary"
-                      vatStartDate: VatStartDate
+                      vatStartDate: VatStartDate,
+                      reason: Option[String] = None
                     )
 
 object VatChoice extends VatChoiceValidator {
 
   implicit val format: OFormat[VatChoice] = (
     (__ \ "necessity").format[String](necessityValidator) and
-      (__ \ "vatStartDate").format[VatStartDate]) (VatChoice.apply, unlift(VatChoice.unapply))
+      (__ \ "vatStartDate").format[VatStartDate] and
+      (__ \ "reason").formatNullable[String](reasonValidator)
+    ) (VatChoice.apply, unlift(VatChoice.unapply))
 
 }
