@@ -45,12 +45,12 @@ class RegistrationMongoRepositoryISpec
   private val vatTradingDetails = VatTradingDetails(
     vatChoice = vatChoice,
     tradingName = tradingName,
-    euTrading = VatEUTrading(true, Some(true))
+    euTrading = VatEuTrading(true, Some(true))
   )
   private val tradingDetails = VatTradingDetails(
     vatChoice = vatChoice,
     tradingName = tradingName,
-    euTrading = VatEUTrading(true, Some(true))
+    euTrading = VatEuTrading(true, Some(true))
   )
   private val culturalSicAndCompliance =
     VatSicAndCompliance(

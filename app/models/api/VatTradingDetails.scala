@@ -21,7 +21,7 @@ import play.api.libs.json._
 case class VatTradingDetails(
                               vatChoice: VatChoice,
                               tradingName: TradingName,
-                              euTrading: VatEUTrading
+                              euTrading: VatEuTrading
                             )
 
 object VatTradingDetails {

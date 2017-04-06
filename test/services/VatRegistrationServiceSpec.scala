@@ -145,7 +145,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       tradingName = TradingName(
         selection = true,
         tradingName = Some("some-trader-name")),
-      euTrading = VatEUTrading(true, Some(true)))
+      euTrading = VatEuTrading(true, Some(true)))
 
     "return Success response " in new Setup {
       when(mockRegistrationRepository.updateLogicalGroup(RegistrationId("1"), tradingDetails)).thenReturn(tradingDetails)
