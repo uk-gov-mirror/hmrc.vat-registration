@@ -44,11 +44,14 @@ class RegistrationMongoRepositoryISpec
   private val tradingName = TradingName(selection = true, Some("some-trading-name"))
   private val vatTradingDetails = VatTradingDetails(
     vatChoice = vatChoice,
-    tradingName = tradingName
+    tradingName = tradingName,
+    euTrading = VatEUTrading(true, Some(true))
   )
   private val tradingDetails = VatTradingDetails(
     vatChoice = vatChoice,
-    tradingName = tradingName)
+    tradingName = tradingName,
+    euTrading = VatEUTrading(true, Some(true))
+  )
   private val culturalSicAndCompliance =
     VatSicAndCompliance(
       businessDescription = "some-business-description",

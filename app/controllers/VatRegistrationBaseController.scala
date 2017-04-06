@@ -33,7 +33,7 @@ abstract class VatRegistrationBaseController extends BaseController with Authent
   protected def patch[G: LogicalGroup : Format : Manifest](service: RegistrationService, id: RegistrationId): Action[JsValue] =
     Action.async(parse.json) {
       implicit request =>
-        authenticated { user =>
+      //  authenticated { user =>
           withJsonBody((g: G) => {
             val updated = service.updateLogicalGroup(id, g)
             updated.fold(
@@ -42,7 +42,7 @@ abstract class VatRegistrationBaseController extends BaseController with Authent
             )
           })
 
-        }
+   //     }
     }
 
   protected def delete[T](service: RegistrationService,
