@@ -51,6 +51,9 @@ class VatRegistrationControllerSpec extends VatRegSpec {
     euTrading = VatEuTrading(true, Some(true))
   )
   val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description", None, None)
+  val vatDigitalContact = VatDigitalContact(Some("test@test.com"), Some("12345678910"), Some("12345678910"))
+  val vatContact = DigitalWebsiteContact(vatDigitalContact)
+
   val vatScheme: VatScheme = VatScheme(regId)
 
   class Setup {
@@ -174,6 +177,26 @@ class VatRegistrationControllerSpec extends VatRegSpec {
 
     }
 
+    "updateVatContact" should {
+
+      val fakeRequest = FakeRequest().withBody(Json.toJson(vatContact))
+
+      "call updateVatContact return ACCEPTED" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
+        ServiceMocks.mockSuccessfulUpdateLogicalGroup(vatContact)
+        val response: Future[Result] = controller.updateVatContact(regId)(fakeRequest)
+        await(response) shouldBe Accepted(Json.toJson(vatContact))
+      }
+
+      "call updateVatContact return ServiceUnavailable" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
+        val exception = new Exception("Exception")
+        ServiceMocks.mockServiceUnavailableUpdateLogicalGroup(vatContact, exception)
+        val response: Future[Result] = controller.updateVatContact(regId)(fakeRequest)
+        status(response) shouldBe SERVICE_UNAVAILABLE
+      }
+
+    }
 
     "deleteVatScheme" should {
       "call to deleteVatScheme return Ok with VatScheme" in new Setup {
