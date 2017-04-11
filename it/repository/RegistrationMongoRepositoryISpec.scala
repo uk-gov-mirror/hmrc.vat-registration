@@ -73,9 +73,9 @@ class RegistrationMongoRepositoryISpec
     accountingPeriods = VatAccountingPeriod("monthly")
   )
 
-  val vatDigitalContact = VatDigitalContact(Some("test@test.com"), Some("12345678910"), Some("12345678910"))
+  val vatDigitalContact = VatDigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
 
-  val vatContact = DigitalWebsiteContact(vatDigitalContact)
+  val vatContact = VatContact(vatDigitalContact)
 
   class Setup {
     val repository = new RegistrationMongoRepository(new MongoDBProvider(), "integration-testing")
@@ -133,7 +133,7 @@ class RegistrationMongoRepositoryISpec
     }
 
 
-    "should update to DigitalWebsiteContact success" in new Setup {
+    "should update to VatContact success" in new Setup {
       await(repository.insert(vatScheme))
       val result = await(repository.updateLogicalGroup(regId, vatContact))
       result shouldBe vatContact

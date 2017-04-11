@@ -18,10 +18,10 @@ package models.api
 
 import play.api.libs.json._
 
-case class DigitalWebsiteContact(digitalContact: VatDigitalContact)
+case class VatContact(digitalContact: VatDigitalContact, website: Option[String] = None)
 
-object DigitalWebsiteContact {
+object VatContact {
 
-  implicit val format: OFormat[DigitalWebsiteContact] = Json.format[DigitalWebsiteContact]
+  implicit val format: OFormat[VatContact] = Json.format[VatContact]
 
 }

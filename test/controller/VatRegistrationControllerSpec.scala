@@ -51,8 +51,8 @@ class VatRegistrationControllerSpec extends VatRegSpec {
     euTrading = VatEuTrading(true, Some(true))
   )
   val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description", None, None)
-  val vatDigitalContact = VatDigitalContact(Some("test@test.com"), Some("12345678910"), Some("12345678910"))
-  val vatContact = DigitalWebsiteContact(vatDigitalContact)
+  val vatDigitalContact = VatDigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
+  val vatContact = VatContact(vatDigitalContact)
 
   val vatScheme: VatScheme = VatScheme(regId)
 

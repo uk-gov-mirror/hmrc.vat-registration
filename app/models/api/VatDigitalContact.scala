@@ -16,12 +16,16 @@
 
 package models.api
 
+import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatDigitalContact(email: Option[String], tel: Option[String], mobile: Option[String])
+case class VatDigitalContact(email: String, tel: Option[String], mobile: Option[String])
 
-object VatDigitalContact {
+object VatDigitalContact extends VatDigitalContactValidator {
 
-  implicit val format: OFormat[VatDigitalContact] = Json.format[VatDigitalContact]
-
+  implicit val format: OFormat[VatDigitalContact] = (
+    (__ \ "email").format[String](emailValidator) and
+      (__ \ "tel").formatNullable[String](teleValidator) and
+      (__ \ "mobile").formatNullable[String](mobileValidator)
+    ) (VatDigitalContact.apply, unlift(VatDigitalContact.unapply))
 }
