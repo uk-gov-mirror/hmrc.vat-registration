@@ -66,3 +66,12 @@ trait VatStartDateValidator extends Validation {
     acceptOnly("COMPANY_REGISTRATION_DATE", "BUSINESS_START_DATE", "SPECIFIC_DATE")
 
 }
+
+
+trait VatDigitalContactValidator extends Validation {
+
+  val emailValidator: Format[String] = readToFmt(pattern("^[A-Za-z0-9\\-_.]{1,70}@[A-Za-z0-9\\-_.]{1,70}$".r))
+  val teleValidator: Format[String] = readToFmt(pattern("^(\\d){1,20}$".r))
+  val mobileValidator: Format[String] = readToFmt(pattern("^(\\d){1,20}$".r))
+
+}
