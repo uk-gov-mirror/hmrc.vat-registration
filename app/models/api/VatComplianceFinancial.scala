@@ -22,7 +22,7 @@ case class VatComplianceFinancial(adviceOrConsultancyOnly: Boolean,
                                   actAsIntermediary: Boolean,
                                   chargeFees: Option[Boolean] = None,
                                   additionalNonSecuritiesWork: Option[Boolean] = None,
-                                  discretionaryiInvestmentManagementServices: Option[Boolean] = None,
+                                  discretionaryInvestmentManagementServices: Option[Boolean] = None,
                                   vehicleOrEquipmentLeasing: Option[Boolean] = None,
                                   investmentFundManagementServices: Option[Boolean] = None,
                                   manageFundsAdditonal: Option[Boolean] = None
