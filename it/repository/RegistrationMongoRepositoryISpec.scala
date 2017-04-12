@@ -60,7 +60,8 @@ class RegistrationMongoRepositoryISpec
         labour = true,
         workers = Some(10),
         temporaryContracts = Some(true),
-        skilledWorkers = Some(true)))
+        skilledWorkers = Some(true))),
+      financialCompliance = Some(VatComplianceFinancial(true, true))
     )
 
   val EstimateValue: Long = 1000L

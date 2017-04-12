@@ -20,7 +20,6 @@ import helpers.VatRegSpec
 import models.api.VatDigitalContact
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
-
 class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
 
 
@@ -42,7 +41,7 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
       Json.fromJson[VatDigitalContact](json) shouldBe JsSuccess(tstVatDigitalContact)
     }
 
-    "fail from Json with invalid email" in {
+    "fail from Json with invalid char email" in {
       val json = Json.parse(
         s"""
            |{
@@ -54,6 +53,20 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
 
       val result = Json.fromJson[VatDigitalContact](json)
       shouldHaveErrors(result, JsPath() \ "email", Seq(ValidationError("error.pattern")))
+    }
+
+    "fail from Json with invalid email length" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "email":"testtesttesttesttesttestesttesttesttestteyyyysttettesttesttesttesttesttestteuutttttt@test.com",
+           |  "tel":"12345678910",
+           |  "mobile":"12345678910"
+           |}
+        """.stripMargin)
+
+      val result = Json.fromJson[VatDigitalContact](json)
+     shouldContainsErrors(result, Map(JsPath() \ "email" -> Seq(ValidationError("error.maxLength"))))
     }
 
     "fail from Json with invalid Telephone" in {

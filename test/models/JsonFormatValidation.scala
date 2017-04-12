@@ -43,4 +43,17 @@ trait JsonFormatValidation extends UnitSpec {
     }
   }
 
+  def shouldContainsErrors[T](result: JsResult[T], expectedErrors: Map[JsPath, Seq[ValidationError]]): Unit = {
+    result match {
+      case JsSuccess(t, path) => fail(s"read should have failed and didn't - produced $t")
+      case JsError(errors) =>
+        errors.length shouldBe expectedErrors.keySet.toSeq.length
+        for (error <- errors) {
+          error match {
+            case (path, valErrs) =>
+              expectedErrors.keySet should contain(path)
+          }
+        }
+    }
+  }
 }
