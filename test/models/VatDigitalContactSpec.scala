@@ -42,11 +42,25 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
       Json.fromJson[VatDigitalContact](json) shouldBe JsSuccess(tstVatDigitalContact)
     }
 
-    "fail from Json with invalid email" in {
+    "fail from Json with invalid char email" in {
       val json = Json.parse(
         s"""
            |{
            |  "email":"test%£@test.com",
+           |  "tel":"12345678910",
+           |  "mobile":"12345678910"
+           |}
+        """.stripMargin)
+
+      val result = Json.fromJson[VatDigitalContact](json)
+      shouldHaveErrors(result, JsPath() \ "email", Seq(ValidationError("error.pattern")))
+    }
+
+    "fail from Json with invalid email length" in {
+      val json = Json.parse(
+        s"""
+           |{
+           |  "email":"testtesttesttesttesttestesttesttesttesttesttettesttesttesttesttesttestteuutttttt@test.com",
            |  "tel":"12345678910",
            |  "mobile":"12345678910"
            |}
