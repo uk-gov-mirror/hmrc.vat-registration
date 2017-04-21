@@ -33,6 +33,7 @@ object ElementPath {
         case ZeroRatedTurnoverEstimatePath.name => JsSuccess(ZeroRatedTurnoverEstimatePath)
         case AccountingPeriodStartPath.name => JsSuccess(AccountingPeriodStartPath)
         // $COVERAGE-OFF$
+        case FinancialCompliancePath.name => JsSuccess(FinancialCompliancePath)
         case FinChargeFeesPath.name => JsSuccess(FinChargeFeesPath)
         case FinAdditionalNonSecuritiesWorkPath.name => JsSuccess(FinAdditionalNonSecuritiesWorkPath)
         case FinDiscretionaryInvestmentManagementServicesPath.name => JsSuccess(FinDiscretionaryInvestmentManagementServicesPath)
@@ -62,6 +63,11 @@ case object AccountingPeriodStartPath extends ElementPath {
 }
 
 // $COVERAGE-OFF$
+
+case object FinancialCompliancePath extends ElementPath {
+  override val path = "vatSicAndCompliance.financialCompliance"
+  override val name = "financial-compliance"
+}
 
 case object FinChargeFeesPath extends ElementPath {
   override val path = "vatSicAndCompliance.financialCompliance.chargeFees"
