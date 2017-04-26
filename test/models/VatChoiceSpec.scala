@@ -113,7 +113,7 @@ class VatChoiceSpec extends JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatChoice](json)
-      shouldHaveErrors(result, JsPath() \ "reason", Seq(ValidationError("error.pattern")))
+      result shouldHaveErrors ( JsPath() \ "reason" -> ValidationError("error.pattern"))
 
     }
 
@@ -130,7 +130,7 @@ class VatChoiceSpec extends JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatChoice](json)
-      shouldHaveErrors(result, JsPath() \ "necessity", Seq(ValidationError("error.pattern")))
+      result shouldHaveErrors ( JsPath() \ "necessity" -> ValidationError("error.pattern"))
     }
 
     "fail from Json with missing necessity" in {
@@ -145,7 +145,7 @@ class VatChoiceSpec extends JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatChoice](json)
-      shouldHaveErrors(result, JsPath() \ "necessity", Seq(ValidationError("error.path.missing")))
+      result shouldHaveErrors ( JsPath() \ "necessity" -> ValidationError("error.path.missing"))
     }
 
   }

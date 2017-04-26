@@ -58,7 +58,7 @@ class VatBankAccountSpec extends VatRegSpec with JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatBankAccount](json)
-      shouldHaveErrors(result, JsPath() \ "accountNumber", Seq(ValidationError("error.pattern")))
+      result shouldHaveErrors (JsPath() \ "accountNumber" -> ValidationError("error.pattern"))
     }
 
     "fail from Json with invalid sort code" in {
@@ -72,7 +72,7 @@ class VatBankAccountSpec extends VatRegSpec with JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatBankAccount](json)
-      shouldHaveErrors(result, JsPath() \ "accountSortCode", Seq(ValidationError("error.pattern")))
+      result shouldHaveErrors (JsPath() \ "accountSortCode" -> ValidationError("error.pattern"))
     }
 
     "fail from Json with missing account name" in {
@@ -85,7 +85,7 @@ class VatBankAccountSpec extends VatRegSpec with JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatBankAccount](json)
-      shouldHaveErrors(result, JsPath() \ "accountName", Seq(ValidationError("error.path.missing")))
+      result shouldHaveErrors (JsPath() \ "accountName" -> ValidationError("error.path.missing"))
     }
 
     "fail from Json with missing account number" in {
@@ -98,7 +98,7 @@ class VatBankAccountSpec extends VatRegSpec with JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatBankAccount](json)
-      shouldHaveErrors(result, JsPath() \ "accountNumber", Seq(ValidationError("error.path.missing")))
+      result shouldHaveErrors (JsPath() \ "accountNumber" -> ValidationError("error.path.missing"))
     }
 
     "fail from Json with missing sort code" in {
@@ -111,7 +111,7 @@ class VatBankAccountSpec extends VatRegSpec with JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatBankAccount](json)
-      shouldHaveErrors(result, JsPath() \ "accountSortCode", Seq(ValidationError("error.path.missing")))
+      result shouldHaveErrors (JsPath() \ "accountSortCode" -> ValidationError("error.path.missing"))
     }
 
   }
