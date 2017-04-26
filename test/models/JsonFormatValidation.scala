@@ -22,38 +22,19 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 trait JsonFormatValidation extends UnitSpec {
 
-  def shouldHaveErrors[T](result: JsResult[T], errorPath: JsPath, expectedError: ValidationError): Unit =
-    shouldHaveErrors(result, Map(errorPath -> Seq(expectedError)))
-
-  def shouldHaveErrors[T](result: JsResult[T], errorPath: JsPath, expectedErrors: Seq[ValidationError]): Unit =
-    shouldHaveErrors(result, Map(errorPath -> expectedErrors))
-
-  def shouldHaveErrors[T](result: JsResult[T], expectedErrors: Map[JsPath, Seq[ValidationError]]): Unit = {
-    result match {
-      case JsSuccess(t, path) => fail(s"read should have failed and didn't - produced $t")
-      case JsError(errors) =>
-        errors.length shouldBe expectedErrors.keySet.toSeq.length
-        for (error <- errors) {
-          error match {
-            case (path, valErrs) =>
-              expectedErrors.keySet should contain(path)
-              expectedErrors(path) shouldBe valErrs
+  implicit class JsResultOps[T](res: JsResult[T]) {
+    def shouldHaveErrors(expectedErrors: (JsPath, ValidationError)*): Unit = {
+      val errorMap = Map(expectedErrors: _*)
+      res match {
+        case JsSuccess(t, _) => fail(s"read should have failed and didn't - produced $t")
+        case JsError(errors) =>
+          errors.size shouldBe errorMap.size
+          for ((path, validationErrors) <- errors) {
+            errorMap.keySet should contain(path)
+            validationErrors should contain(errorMap(path))
           }
-        }
+      }
     }
   }
 
-  def shouldContainsErrors[T](result: JsResult[T], expectedErrors: Map[JsPath, Seq[ValidationError]]): Unit = {
-    result match {
-      case JsSuccess(t, path) => fail(s"read should have failed and didn't - produced $t")
-      case JsError(errors) =>
-        errors.length shouldBe expectedErrors.keySet.toSeq.length
-        for (error <- errors) {
-          error match {
-            case (path, valErrs) =>
-              expectedErrors.keySet should contain(path)
-          }
-        }
-    }
-  }
 }

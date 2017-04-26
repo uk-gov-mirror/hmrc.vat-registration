@@ -20,6 +20,7 @@ import helpers.VatRegSpec
 import models.api.VatDigitalContact
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
+
 class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
 
 
@@ -52,7 +53,7 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatDigitalContact](json)
-      shouldHaveErrors(result, JsPath() \ "email", Seq(ValidationError("error.pattern")))
+      result shouldHaveErrors (JsPath() \ "email" -> ValidationError("error.pattern"))
     }
 
     "fail from Json with invalid email length" in {
@@ -66,7 +67,7 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatDigitalContact](json)
-     shouldContainsErrors(result, Map(JsPath() \ "email" -> Seq(ValidationError("error.maxLength"))))
+      result shouldHaveErrors (JsPath() \ "email" -> ValidationError("error.maxLength", 70))
     }
 
     "fail from Json with invalid Telephone" in {
@@ -80,7 +81,7 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatDigitalContact](json)
-      shouldHaveErrors(result, JsPath() \ "tel", Seq(ValidationError("error.pattern")))
+      result shouldHaveErrors (JsPath() \ "tel" -> ValidationError("error.pattern"))
     }
 
     "fail from Json with invalid Mobile" in {
@@ -94,7 +95,7 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatDigitalContact](json)
-      shouldHaveErrors(result, JsPath() \ "mobile", Seq(ValidationError("error.pattern")))
+      result shouldHaveErrors (JsPath() \ "mobile" -> ValidationError("error.pattern"))
     }
 
   }

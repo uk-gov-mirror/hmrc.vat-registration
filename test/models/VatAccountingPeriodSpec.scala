@@ -84,7 +84,7 @@ class VatAccountingPeriodSpec extends JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatAccountingPeriod](json)
-      shouldHaveErrors(result, JsPath() \ "frequency", Seq(ValidationError("error.pattern")))
+      result shouldHaveErrors (JsPath() \ "frequency" -> ValidationError("error.pattern"))
     }
 
     "fail from Json with invalid periodStart" in {
@@ -97,7 +97,7 @@ class VatAccountingPeriodSpec extends JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatAccountingPeriod](json)
-      shouldHaveErrors(result, JsPath() \ "periodStart", Seq(ValidationError("error.pattern")))
+      result shouldHaveErrors (JsPath() \ "periodStart" -> ValidationError("error.pattern"))
     }
 
     "fail from Json with missing frequency" in {
@@ -109,7 +109,7 @@ class VatAccountingPeriodSpec extends JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatAccountingPeriod](json)
-      shouldHaveErrors(result, JsPath() \ "frequency", Seq(ValidationError("error.path.missing")))
+      result shouldHaveErrors (JsPath() \ "frequency" -> ValidationError("error.path.missing"))
     }
 
 
