@@ -23,7 +23,7 @@ import common.RegistrationId
 import common.exceptions.LeftState
 import connectors.AuthConnector
 import models.ElementPath
-import models.api.{VatContact, VatFinancials, VatSicAndCompliance, VatTradingDetails}
+import models.api._
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, Result}
 import repositories.RegistrationMongoFormats.encryptedFinancials
@@ -61,6 +61,8 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
 
   def updateVatContact(id: RegistrationId): Action[JsValue] = patch[VatContact](registrationService, id)
 
+  def updateVatEligibility(id: RegistrationId): Action[JsValue] = patch[VatServiceEligibility](registrationService, id)
+
   def deleteVatScheme(id: RegistrationId): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
@@ -69,4 +71,5 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
   }
 
   def deleteByElement(id: RegistrationId, elementPath: ElementPath): Action[AnyContent] = delete(registrationService, id, elementPath)
+
 }
