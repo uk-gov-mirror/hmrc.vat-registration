@@ -53,6 +53,13 @@ class VatRegistrationControllerSpec extends VatRegSpec {
   val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description", None, None)
   val vatDigitalContact = VatDigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
   val vatContact = VatContact(vatDigitalContact)
+  val vatEligibility = VatServiceEligibility(
+    haveNino = Some(true),
+    doingBusinessAbroad = Some(true),
+    doAnyApplyToYou = Some(true),
+    applyingForAnyOf = Some(true),
+    companyWillDoAnyOf = Some(true)
+  )
 
   val vatScheme: VatScheme = VatScheme(regId)
 
@@ -198,6 +205,27 @@ class VatRegistrationControllerSpec extends VatRegSpec {
 
     }
 
+    "updateVatEligibility" should {
+
+      val fakeRequest = FakeRequest().withBody(Json.toJson(vatEligibility))
+
+      "call updateVatEligibility return ACCEPTED" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
+        ServiceMocks.mockSuccessfulUpdateLogicalGroup(vatEligibility)
+        val response: Future[Result] = controller.updateVatEligibility(regId)(fakeRequest)
+        await(response) shouldBe Accepted(Json.toJson(vatEligibility))
+      }
+
+      "call updateVatEligibility return ServiceUnavailable" in new Setup {
+        AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
+        val exception = new Exception("Exception")
+        ServiceMocks.mockServiceUnavailableUpdateLogicalGroup(vatEligibility, exception)
+        val response: Future[Result] = controller.updateVatEligibility(regId)(fakeRequest)
+        status(response) shouldBe SERVICE_UNAVAILABLE
+      }
+
+    }
+
     "deleteVatScheme" should {
       "call to deleteVatScheme return Ok with VatScheme" in new Setup {
         AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
@@ -224,7 +252,7 @@ class VatRegistrationControllerSpec extends VatRegSpec {
 
       "call to deleteBankAccountDetails return ServiceUnavailable" in new Setup {
         AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
-        ServiceMocks.mockDeleteByElementThrowsException(regId,VatBankAccountPath)
+        ServiceMocks.mockDeleteByElementThrowsException(regId, VatBankAccountPath)
         val response: Future[Result] = controller.deleteByElement(regId, VatBankAccountPath)(FakeRequest())
         status(response) shouldBe SERVICE_UNAVAILABLE
       }

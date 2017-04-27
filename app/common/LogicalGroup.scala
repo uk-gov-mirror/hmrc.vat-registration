@@ -16,7 +16,7 @@
 
 package common
 
-import models.api.{VatContact, VatFinancials, VatSicAndCompliance, VatTradingDetails}
+import models.api._
 
 trait LogicalGroup[T] {
 
@@ -37,6 +37,7 @@ object LogicalGroup {
   implicit val vatSicAndCompliance = LogicalGroup[VatSicAndCompliance]("vatSicAndCompliance")
   implicit val vatFinancials = LogicalGroup[VatFinancials]("financials")
   implicit val vatContact = LogicalGroup[VatContact]("vatContact")
+  implicit val vatEligibility = LogicalGroup[VatServiceEligibility]("vatEligibility")
 
 
 }
