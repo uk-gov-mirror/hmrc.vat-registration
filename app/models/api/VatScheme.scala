@@ -23,6 +23,7 @@ import play.api.libs.json._
 case class VatScheme(
                       id: RegistrationId,
                       tradingDetails: Option[VatTradingDetails] = None,
+                      lodgingOfficer: Option[VatLodgingOfficer] = None,
                       financials: Option[VatFinancials] = None,
                       vatSicAndCompliance: Option[VatSicAndCompliance] = None,
                       vatContact: Option[VatContact] = None,
@@ -34,6 +35,7 @@ object VatScheme {
   def reads(implicit r: Reads[VatFinancials]): Reads[VatScheme] = (
     (__ \ "registrationId").read[RegistrationId] and
       (__ \ "tradingDetails").readNullable[VatTradingDetails] and
+      (__ \ "lodgingOfficer").readNullable[VatLodgingOfficer] and
       (__ \ "financials").readNullable[VatFinancials](r) and
       (__ \ "vatSicAndCompliance").readNullable[VatSicAndCompliance] and
       (__ \ "vatContact").readNullable[VatContact] and
@@ -44,6 +46,7 @@ object VatScheme {
   def writes(implicit w: Writes[VatFinancials]): OWrites[VatScheme] = (
     (__ \ "registrationId").write[RegistrationId] and
       (__ \ "tradingDetails").writeNullable[VatTradingDetails] and
+      (__ \ "lodgingOfficer").writeNullable[VatLodgingOfficer] and
       (__ \ "financials").writeNullable[VatFinancials](w) and
       (__ \ "vatSicAndCompliance").writeNullable[VatSicAndCompliance] and
       (__ \ "vatContact").writeNullable[VatContact] and
