@@ -78,6 +78,9 @@ class RegistrationMongoRepositoryISpec
 
   val vatContact = VatContact(vatDigitalContact)
 
+  val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
+  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress)
+
   class Setup {
     val repository = new RegistrationMongoRepository(new MongoDBProvider(), "integration-testing")
     await(repository.drop)
@@ -139,6 +142,14 @@ class RegistrationMongoRepositoryISpec
       val result = await(repository.updateLogicalGroup(regId, vatContact))
       result shouldBe vatContact
     }
+
+
+    "should update to VatLodgingOfficer success" in new Setup {
+      await(repository.insert(vatScheme))
+      val result = await(repository.updateLogicalGroup(regId, vatLodgingOfficer))
+      result shouldBe vatLodgingOfficer
+    }
+
 
 
     "should throw UpdateFailed exception when regId not found" in new Setup {

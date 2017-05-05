@@ -9,6 +9,8 @@ PATCH        /:regID/vat-financials                 controllers.VatRegistrationC
 PATCH        /:regID/sic-and-compliance             controllers.VatRegistrationController.updateSicAndCompliance(regID: RegistrationId)
 PATCH        /:regID/vat-contact                    controllers.VatRegistrationController.updateVatContact(regID: RegistrationId)
 PATCH        /:regID/service-eligibility            controllers.VatRegistrationController.updateVatEligibility(regID: RegistrationId)
+PATCH        /:regID/lodging-officer                controllers.VatRegistrationController.updateLodgingOfficer(regID: RegistrationId)
+
 
 DELETE       /:regID/delete-scheme                  controllers.VatRegistrationController.deleteVatScheme(regID: RegistrationId)
 
