@@ -61,7 +61,7 @@ class VatRegistrationControllerSpec extends VatRegSpec {
     companyWillDoAnyOf = Some(true)
   )
   val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
-  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress)
+  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1,1,1980), "")
 
   val vatScheme: VatScheme = VatScheme(regId)
 

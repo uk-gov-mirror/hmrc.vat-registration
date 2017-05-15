@@ -16,7 +16,7 @@
 
 package models
 
-import models.api.{ScrsAddress, VatLodgingOfficer}
+import models.api.{DateOfBirth, ScrsAddress, VatLodgingOfficer}
 import play.api.libs.json.Json
 
 class VatLodgingOfficerSpec extends JsonFormatValidation {
@@ -28,7 +28,9 @@ class VatLodgingOfficerSpec extends JsonFormatValidation {
     "complete successfully with currentAddress" in {
       val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
       val vatLodgingOfficer = VatLodgingOfficer(
-        currentAddress = scrsAddress
+        scrsAddress,
+        DateOfBirth(1,1,1990),
+        "NB686868C"
       )
 
       val writeResult = format.writes(vatLodgingOfficer)

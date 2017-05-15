@@ -79,7 +79,7 @@ class RegistrationMongoRepositoryISpec
   val vatContact = VatContact(vatDigitalContact)
 
   val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
-  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress)
+  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1,1,1980), "NB686868C")
 
   class Setup {
     val repository = new RegistrationMongoRepository(new MongoDBProvider(), "integration-testing")
