@@ -16,10 +16,17 @@
 
 package models.api
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 case class VatLodgingOfficer(currentAddress: ScrsAddress, dob: DateOfBirth, nino: String)
 
-object VatLodgingOfficer {
-  implicit val format: OFormat[VatLodgingOfficer] = Json.format[VatLodgingOfficer]
+object VatLodgingOfficer extends VatLodgingOfficerValidator {
+
+  implicit val format = (
+    (__ \ "currentAddress").format[ScrsAddress] and
+      (__ \ "dob").format[DateOfBirth] and
+      (__ \ "nino").format[String](ninoValidator)
+    ) (VatLodgingOfficer.apply, unlift(VatLodgingOfficer.unapply))
+
 }

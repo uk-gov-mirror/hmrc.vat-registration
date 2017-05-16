@@ -16,11 +16,16 @@
 
 package models.api
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json._
+import play.api.libs.json.Reads._
+import play.api.libs.functional.syntax._
 
 case class DateOfBirth(day: Int, month: Int, year: Int)
 
 object DateOfBirth {
-  implicit val format: OFormat[DateOfBirth] = Json.format[DateOfBirth]
+  implicit val format = (
+    (__ \ "day").format[Int](min(1) keepAnd max(31)) and
+      (__ \ "month").format[Int](min(1) keepAnd max(12)) and
+      (__ \ "year").format[Int](min(1000) keepAnd max(9999))
+  ) (DateOfBirth.apply, unlift(DateOfBirth.unapply))
 }
-
