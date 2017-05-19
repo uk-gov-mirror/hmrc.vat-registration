@@ -63,20 +63,17 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Some(vatScheme))
 
-      val response = service.createNewRegistration()
-      await(response.value) shouldBe Right(vatScheme)
+      service.createNewRegistration() returnsRight vatScheme
     }
 
     "call to retrieveVatScheme return VatScheme from DB" in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(Some(vatScheme)))
-      val response = service.retrieveVatScheme(RegistrationId("1"))
-      await(response.value) shouldBe Right(vatScheme)
+      service.retrieveVatScheme(RegistrationId("1")) returnsRight vatScheme
     }
 
     "call to retrieveVatScheme return None from DB " in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(None))
-      val response = service.retrieveVatScheme(RegistrationId("1"))
-      await(response.value) shouldBe Left(ResourceNotFound("1"))
+      service.retrieveVatScheme(RegistrationId("1")) returnsLeft ResourceNotFound("1")
     }
 
     "return a new VatScheme response " in new Setup {
@@ -86,8 +83,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(None)
       when(mockRegistrationRepository.createNewVatScheme(RegistrationId("1"))).thenReturn(vatScheme)
 
-      val response = service.createNewRegistration()
-      await(response.value) shouldBe Right(vatScheme)
+      service.createNewRegistration() returnsRight vatScheme
     }
 
     "error when creating VatScheme" in new Setup {
@@ -98,8 +94,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(None)
       when(mockRegistrationRepository.createNewVatScheme(RegistrationId("1"))).thenReturn(Future.failed(t))
 
-      val response = service.createNewRegistration()
-      await(response.value) shouldBe Left(GenericError(t))
+      service.createNewRegistration() returnsLeft GenericError(t)
     }
 
     "error with the DB when creating VatScheme" in new Setup {
@@ -110,30 +105,26 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(None)
       when(mockRegistrationRepository.createNewVatScheme(RegistrationId("1"))).thenReturn(Future.failed(t))
 
-      val response = service.createNewRegistration()
-      await(response.value) shouldBe Left(GenericDatabaseError(t, Some("regId")))
+      service.createNewRegistration() returnsLeft GenericDatabaseError(t, Some("regId"))
     }
 
     "call to business service return ForbiddenException response " in new Setup {
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(ForbiddenAccess("forbidden")))
 
-      val response = service.createNewRegistration()
-      await(response.value) shouldBe Left(ForbiddenAccess("forbidden"))
+      service.createNewRegistration() returnsLeft ForbiddenAccess("forbidden")
     }
 
     "call to business service return NotFoundException response " in new Setup {
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(ResourceNotFound("notfound")))
 
-      val response = service.createNewRegistration()
-      await(response.value) shouldBe Left(ResourceNotFound("notfound"))
+      service.createNewRegistration() returnsLeft ResourceNotFound("notfound")
     }
 
     "call to business service return ErrorResponse response " in new Setup {
       val t = new RuntimeException("Exception")
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(GenericError(t)))
 
-      val response = service.createNewRegistration()
-      await(response.value) shouldBe Left(GenericError(t))
+      service.createNewRegistration() returnsLeft GenericError(t)
     }
 
   }
@@ -145,20 +136,18 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       tradingName = TradingName(
         selection = true,
         tradingName = Some("some-trader-name")),
-      euTrading = VatEuTrading(true, Some(true)))
+      euTrading = VatEuTrading(selection = true, eoriApplication = Some(true)))
 
     "return Success response " in new Setup {
       when(mockRegistrationRepository.updateLogicalGroup(RegistrationId("1"), tradingDetails)).thenReturn(tradingDetails)
-      val response = service.updateLogicalGroup(RegistrationId("1"), tradingDetails)
-      await(response.value) shouldBe Right(tradingDetails)
+      service.updateLogicalGroup(RegistrationId("1"), tradingDetails) returnsRight tradingDetails
     }
 
     "return Error response " in new Setup {
       val t = new RuntimeException("Exception")
       when(mockRegistrationRepository.updateLogicalGroup(RegistrationId("1"), tradingDetails)).thenReturn(Future.failed(t))
 
-      val response = service.updateLogicalGroup(RegistrationId("1"), tradingDetails)
-      await(response.value) shouldBe Left(GenericError(t))
+      service.updateLogicalGroup(RegistrationId("1"), tradingDetails) returnsLeft GenericError(t)
     }
 
     "return Error response for MissingRegDocument" in new Setup {
@@ -166,9 +155,7 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       val t = MissingRegDocument(regId)
       when(mockRegistrationRepository.updateLogicalGroup(regId, tradingDetails)).thenReturn(Future.failed(t))
 
-      val response = service.updateLogicalGroup(regId, tradingDetails)
-
-      await(response.value) shouldBe Left(ResourceNotFound(s"No registration found for registration ID: $regId"))
+      service.updateLogicalGroup(regId, tradingDetails) returnsLeft ResourceNotFound(s"No registration found for registration ID: $regId")
     }
   }
 
@@ -176,39 +163,34 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
     "return Success response " in new Setup {
       when(mockRegistrationRepository.deleteVatScheme(RegistrationId("1"))).thenReturn(Future.successful(true))
-      val response = service.deleteVatScheme(RegistrationId("1"))
-      await(response.value) shouldBe Right(true)
+      service.deleteVatScheme(RegistrationId("1")) returnsRight true
     }
 
 
     "return Error response " in new Setup {
       val t = new RuntimeException("Exception")
       when(mockRegistrationRepository.deleteVatScheme(RegistrationId("1"))).thenReturn(Future.failed(t))
-      val response = service.deleteVatScheme(RegistrationId("1"))
-      await(response.value) shouldBe Left(GenericError(t))
+      service.deleteVatScheme(RegistrationId("1")) returnsLeft GenericError(t)
     }
 
     "return Error response for MissingRegDocument" in new Setup {
       val regId = RegistrationId("regId")
       val t = MissingRegDocument(regId)
       when(mockRegistrationRepository.deleteVatScheme(RegistrationId("1"))).thenReturn(Future.failed(t))
-      val response = service.deleteVatScheme(RegistrationId("1"))
-      await(response.value) shouldBe Left(ResourceNotFound(s"No registration found for registration ID: $regId"))
+      service.deleteVatScheme(RegistrationId("1")) returnsLeft ResourceNotFound(s"No registration found for registration ID: $regId")
     }
   }
 
   "call to deleteByElement" should {
     "return Success response " in new Setup {
       when(mockRegistrationRepository.deleteByElement(RegistrationId("1"), VatBankAccountPath)).thenReturn(Future.successful(true))
-      val response = service.deleteByElement(RegistrationId("1"), VatBankAccountPath)
-      await(response.value) shouldBe Right(true)
+      service.deleteByElement(RegistrationId("1"), VatBankAccountPath) returnsRight true
     }
 
     "return Error response " in new Setup {
       val t = new RuntimeException("Exception")
       when(mockRegistrationRepository.deleteByElement(RegistrationId("1"), VatBankAccountPath)).thenReturn(Future.failed(t))
-      val response = service.deleteByElement(RegistrationId("1"), VatBankAccountPath)
-      await(response.value) shouldBe Left(GenericError(t))
+      service.deleteByElement(RegistrationId("1"), VatBankAccountPath) returnsLeft GenericError(t)
     }
   }
 
