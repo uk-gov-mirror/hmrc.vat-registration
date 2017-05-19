@@ -16,67 +16,64 @@
 
 package models
 
-import models.api.{DateOfBirth, ScrsAddress, VatLodgingOfficer}
+import models.api.{DateOfBirth, Name, ScrsAddress, VatLodgingOfficer}
 import play.api.data.validation.ValidationError
-import play.api.libs.json.{JsPath, Json}
+import play.api.libs.json.{Format, JsPath, Json}
 
 class VatLodgingOfficerSpec extends JsonFormatValidation {
 
-  "Creating a Json from a VatLodgingOfficer model" should {
+  private def writeAndRead[T](t: T)(implicit fmt: Format[T]) = fmt.reads(Json.toJson(fmt.writes(t)))
 
-    implicit val format = VatLodgingOfficer.format
+  implicit val format = VatLodgingOfficer.format
 
-    val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
+  val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
+  val name = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
+  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1990), "NB686868C", "director", name)
 
-    val vatLodgingOfficer = VatLodgingOfficer(
-      scrsAddress,
-      DateOfBirth(1,1,1990),
-      "NB686868C"
-    )
+  "Creating a Json from a valid VatLodgingOfficer model" should {
 
-    "complete successfully with currentAddress" in {
-      val writeResult = format.writes(vatLodgingOfficer)
-      val readResult = format.reads(Json.toJson(writeResult))
-      val result = readResult.get
-
-      result shouldBe vatLodgingOfficer
+    "complete successfully" in {
+      writeAndRead(vatLodgingOfficer) resultsIn vatLodgingOfficer
     }
 
-    "fail from Json with invalid NINO" in {
-      val lodgingOfficer = vatLodgingOfficer.copy(nino = "NB888")
+  }
 
-      val writeResult = format.writes(lodgingOfficer)
-      val readResult = format.reads(Json.toJson(writeResult))
+  "Creating a Json from an invalid VatLodgingOfficer model" should {
 
-      readResult shouldHaveErrors (JsPath() \ "nino" -> ValidationError("error.pattern"))
+    "fail with a ValidationError" when {
+
+      "NINO is invalid" in {
+        val lodgingOfficer = vatLodgingOfficer.copy(nino = "NB888")
+        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "nino" -> ValidationError("error.pattern"))
+      }
+
+      "DOB day is invalid" in {
+        val lodgingOfficer = vatLodgingOfficer.copy(dob = DateOfBirth(41, 1, 1990))
+        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "dob" \ "day" -> ValidationError("error.max", 31))
+      }
+
+      "DOB month is invalid" in {
+        val lodgingOfficer = vatLodgingOfficer.copy(dob = DateOfBirth(1, 0, 1990))
+        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "dob" \ "month" -> ValidationError("error.min", 1))
+      }
+
+      "DOB year is invalid" in {
+        val lodgingOfficer = vatLodgingOfficer.copy(dob = DateOfBirth(1, 1, 990))
+        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "dob" \ "year" -> ValidationError("error.min", 1000))
+      }
+
+      "Role is invalid" in {
+        val lodgingOfficer = vatLodgingOfficer.copy(role = "magician")
+        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "role" -> ValidationError("error.pattern"))
+      }
+
+      "Name is invalid" in {
+        val lodgingOfficer = vatLodgingOfficer.copy(name = Name(forename = Some("$%@$%^@#%@$^@$^$%@#$%@#$")))
+        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "name" \ "forename" -> ValidationError("error.pattern"))
+      }
+
     }
 
-    "fail from Json with invalid DOB day" in {
-      val lodgingOfficer = vatLodgingOfficer.copy(dob = DateOfBirth(41,1,1990))
-
-      val writeResult = format.writes(lodgingOfficer)
-      val readResult = format.reads(Json.toJson(writeResult))
-
-      readResult shouldHaveErrors (JsPath() \ "dob" \ "day" -> ValidationError("error.max", 31))
-    }
-
-    "fail from Json with invalid DOB month" in {
-      val lodgingOfficer = vatLodgingOfficer.copy(dob = DateOfBirth(1,0,1990))
-
-      val writeResult = format.writes(lodgingOfficer)
-      val readResult = format.reads(Json.toJson(writeResult))
-
-      readResult shouldHaveErrors (JsPath() \ "dob" \ "month" -> ValidationError("error.min", 1))
-    }
-
-    "fail from Json with invalid DOB year" in {
-      val lodgingOfficer = vatLodgingOfficer.copy(dob = DateOfBirth(1,1,990))
-
-      val writeResult = format.writes(lodgingOfficer)
-      val readResult = format.reads(Json.toJson(writeResult))
-
-      readResult shouldHaveErrors (JsPath() \ "dob" \ "year" -> ValidationError("error.min", 1000))
-    }
   }
 
 }
