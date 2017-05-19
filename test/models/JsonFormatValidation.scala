@@ -16,6 +16,7 @@
 
 package models
 
+import org.scalatest.Assertion
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsError, JsPath, JsResult, JsSuccess}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -23,6 +24,12 @@ import uk.gov.hmrc.play.test.UnitSpec
 trait JsonFormatValidation extends UnitSpec {
 
   implicit class JsResultOps[T](res: JsResult[T]) {
+
+    def resultsIn(t: T): Assertion = res match {
+      case JsSuccess(deserialisedT, path) => deserialisedT shouldBe t
+      case JsError(errors) => fail(s"found errors: $errors when expected: $t")
+    }
+
     def shouldHaveErrors(expectedErrors: (JsPath, ValidationError)*): Unit = {
       val errorMap = Map(expectedErrors: _*)
       res match {
