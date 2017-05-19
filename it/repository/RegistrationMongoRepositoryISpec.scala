@@ -18,41 +18,42 @@ package repository
 
 import java.time.LocalDate
 
-import common.RegistrationId
 import common.exceptions._
+import common.{LogicalGroup, RegistrationId}
+import itutil.FutureAssertions
 import models.VatBankAccountPath
 import models.api._
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.concurrent.{Eventually, ScalaFutures}
+import play.api.libs.json.Writes
 import repositories.{MongoDBProvider, RegistrationMongoRepository}
 import uk.gov.hmrc.mongo.MongoSpecSupport
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class RegistrationMongoRepositoryISpec
-  extends UnitSpec with MongoSpecSupport with BeforeAndAfterEach with ScalaFutures with Eventually with WithFakeApplication {
+  extends UnitSpec with MongoSpecSupport with FutureAssertions with BeforeAndAfterEach with WithFakeApplication {
 
   private val date = LocalDate.of(2017, 1, 1)
-  private val regId = RegistrationId("AC234321")
+  private val regId = RegistrationId("123")
   private val vatScheme = VatScheme(regId)
-  private val vatChoice = VatChoice(
-    necessity = "voluntary",
-    vatStartDate = VatStartDate(
-      selection = "SPECIFIC_DATE",
-      startDate = Some(date)))
+  private val vatChoice = VatChoice(necessity = "voluntary", vatStartDate = VatStartDate(selection = "SPECIFIC_DATE", startDate = Some(date)))
   private val tradingName = TradingName(selection = true, Some("some-trading-name"))
   private val vatTradingDetails = VatTradingDetails(
     vatChoice = vatChoice,
     tradingName = tradingName,
-    euTrading = VatEuTrading(true, Some(true))
+    euTrading = VatEuTrading(
+      selection = true,
+      eoriApplication = Some(true)
+    )
   )
   private val tradingDetails = VatTradingDetails(
     vatChoice = vatChoice,
     tradingName = tradingName,
-    euTrading = VatEuTrading(true, Some(true))
+    euTrading = VatEuTrading(selection = true, eoriApplication = Some(true))
   )
-  private val culturalSicAndCompliance =
+  private val compliance =
     VatSicAndCompliance(
       businessDescription = "some-business-description",
       culturalCompliance = Some(VatComplianceCultural(true)),
@@ -61,7 +62,7 @@ class RegistrationMongoRepositoryISpec
         workers = Some(10),
         temporaryContracts = Some(true),
         skilledWorkers = Some(true))),
-      financialCompliance = Some(VatComplianceFinancial(true, true))
+      financialCompliance = Some(VatComplianceFinancial(adviceOrConsultancyOnly = true, actAsIntermediary = true))
     )
 
   val EstimateValue: Long = 1000L
@@ -75,15 +76,18 @@ class RegistrationMongoRepositoryISpec
   )
 
   val vatDigitalContact = VatDigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
-
   val vatContact = VatContact(vatDigitalContact)
 
   val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
   val name = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
-  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1,1,1980), "NB686868C", "director", name)
+  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB686868C", "director", name)
 
   class Setup {
     val repository = new RegistrationMongoRepository(new MongoDBProvider(), "integration-testing")
+
+    protected def updateLogicalGroup[G: LogicalGroup : Writes](g: G, rid: RegistrationId = regId): Future[G] =
+      repository.updateLogicalGroup(rid, g)
+
     await(repository.drop)
     await(repository.ensureIndexes)
   }
@@ -91,71 +95,52 @@ class RegistrationMongoRepositoryISpec
   "Calling createNewVatScheme" should {
 
     "create a new, blank VatScheme with the correct ID" in new Setup {
-      val actual = await(repository.createNewVatScheme(regId))
-      actual shouldBe vatScheme
+      repository.createNewVatScheme(regId) returns vatScheme
     }
 
     "throw an InsertFailed exception when creating a new VAT scheme when one already exists" in new Setup {
-      await(repository.createNewVatScheme(vatScheme.id))
-      an[InsertFailed] shouldBe thrownBy(await(repository.createNewVatScheme(vatScheme.id)))
+      repository.createNewVatScheme(vatScheme.id).flatMap(_ => repository.createNewVatScheme(vatScheme.id)) failedWith classOf[InsertFailed]
     }
+
   }
 
   "Calling retrieveVatScheme" should {
 
     "retrieve a VatScheme object" in new Setup {
-      await(repository.insert(vatScheme))
-      val actual = await(repository.retrieveVatScheme(vatScheme.id))
-      actual shouldBe Some(vatScheme)
+      repository.insert(vatScheme).flatMap(_ => repository.retrieveVatScheme(vatScheme.id)) returns Some(vatScheme)
     }
 
     "return a None when there is no corresponding VatScheme object" in new Setup {
-      await(repository.insert(vatScheme))
-      await(repository.retrieveVatScheme(RegistrationId("NOT_THERE"))) shouldBe None
+      repository.insert(vatScheme).flatMap(_ => repository.retrieveVatScheme(RegistrationId("NOT_THERE"))) returns None
     }
+
   }
 
 
   "Calling updateLogicalGroup" should {
 
     "should update to VatTradingDetails success" in new Setup {
-      await(repository.insert(vatScheme))
-      val result = await(repository.updateLogicalGroup(regId, vatTradingDetails))
-      result shouldBe vatTradingDetails
+      repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(vatTradingDetails)) returns vatTradingDetails
     }
 
     "should update to VatSicAndCompliance success" in new Setup {
-      await(repository.insert(vatScheme))
-      val result = await(repository.updateLogicalGroup(regId, culturalSicAndCompliance))
-      result shouldBe culturalSicAndCompliance
+      repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(compliance)) returns compliance
     }
-
 
     "should update to VatFinancials success" in new Setup {
-      await(repository.insert(vatScheme))
-      val result = await(repository.updateLogicalGroup(regId, vatFinancials))
-      result shouldBe vatFinancials
+      repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(vatFinancials)) returns vatFinancials
     }
-
 
     "should update to VatContact success" in new Setup {
-      await(repository.insert(vatScheme))
-      val result = await(repository.updateLogicalGroup(regId, vatContact))
-      result shouldBe vatContact
+      repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(vatContact)) returns vatContact
     }
-
 
     "should update to VatLodgingOfficer success" in new Setup {
-      await(repository.insert(vatScheme))
-      val result = await(repository.updateLogicalGroup(regId, vatLodgingOfficer))
-      result shouldBe vatLodgingOfficer
+      repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(vatLodgingOfficer)) returns vatLodgingOfficer
     }
 
-
-
     "should throw UpdateFailed exception when regId not found" in new Setup {
-      await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.updateLogicalGroup(RegistrationId("123"), vatTradingDetails)))
+      repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(vatTradingDetails, RegistrationId("0"))) failedWith classOf[UpdateFailed]
     }
 
   }
@@ -163,35 +148,27 @@ class RegistrationMongoRepositoryISpec
   "Calling deleteVatScheme" should {
 
     "delete a VatScheme object" in new Setup {
-      await(repository.insert(vatScheme))
-      val actual = await(repository.deleteVatScheme(vatScheme.id))
-      actual shouldBe true
+      repository.insert(vatScheme).flatMap(_ => repository.deleteVatScheme(vatScheme.id)) returns true
     }
 
     "return a None when there is no corresponding VatScheme object" in new Setup {
-      await(repository.insert(vatScheme))
-      an[MissingRegDocument] shouldBe thrownBy(await(repository.deleteVatScheme(RegistrationId("123"))))
+      repository.insert(vatScheme).flatMap(_ => repository.deleteVatScheme(RegistrationId("0"))) failedWith classOf[MissingRegDocument]
     }
   }
 
   "Calling deleteByElement" should {
 
     "delete BankAccountDetails object when one exists" in new Setup {
-      val vatSchemeWithBankAccount = vatScheme.copy(financials = Some(vatFinancials))
-      await(repository.insert(vatSchemeWithBankAccount))
-      val actual = await(repository.deleteByElement(vatSchemeWithBankAccount.id, VatBankAccountPath))
-      actual shouldBe true
+      val schemeWithAccount = vatScheme.copy(financials = Some(vatFinancials))
+      repository.insert(schemeWithAccount).flatMap(_ => repository.deleteByElement(schemeWithAccount.id, VatBankAccountPath)) returns true
     }
 
     "delete BankAccountDetails object when one does not exist" in new Setup {
-      await(repository.insert(vatScheme))
-      val actual = await(repository.deleteByElement(vatScheme.id, VatBankAccountPath))
-      actual shouldBe true
+      repository.insert(vatScheme).flatMap(_ => repository.deleteByElement(vatScheme.id, VatBankAccountPath)) returns true
     }
 
     "return a None when there is no corresponding VatScheme object" in new Setup {
-      await(repository.insert(vatScheme))
-      an[UpdateFailed] shouldBe thrownBy(await(repository.deleteByElement(RegistrationId("123"), VatBankAccountPath)))
+      repository.insert(vatScheme).flatMap(_ => repository.deleteByElement(RegistrationId("0"), VatBankAccountPath)) failedWith classOf[UpdateFailed]
     }
   }
 

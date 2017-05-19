@@ -22,7 +22,7 @@ import org.scalatest.Inside
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
-abstract class VatRegSpec extends UnitSpec with WithFakeApplication with Inside with MockitoSugar with VatMocks {
+abstract class VatRegSpec extends UnitSpec with WithFakeApplication with Inside with MockitoSugar with VatMocks with FutureAssertions {
 
   protected def testAuthority(userId: String): Authority = Authority(userId, userId, userId, UserIds(userId, userId))
 
