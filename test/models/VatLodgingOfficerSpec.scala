@@ -28,7 +28,7 @@ class VatLodgingOfficerSpec extends JsonFormatValidation {
 
   val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
   val name = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
-  val contact = OfficerContactDetails(Some("test@test.com"), None, None)
+  val contact = VatDigitalContact("test@test.com", None, None)
   val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1990), "NB686868C", "director", name, contact)
 
   "Creating a Json from a valid VatLodgingOfficer model" should {
@@ -74,17 +74,17 @@ class VatLodgingOfficerSpec extends JsonFormatValidation {
       }
 
       "Contact email is invalid" in {
-        val lodgingOfficer = vatLodgingOfficer.copy(contact = OfficerContactDetails(Some("£$%^&&*"), None, None))
+        val lodgingOfficer = vatLodgingOfficer.copy(contact = VatDigitalContact("£$%^&&*", None, None))
         writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "contact" \ "email" -> ValidationError("error.pattern"))
       }
 
       "Contact tel is invalid" in {
-        val lodgingOfficer = vatLodgingOfficer.copy(contact = OfficerContactDetails(None, Some("£$%^&&*"), None))
+        val lodgingOfficer = vatLodgingOfficer.copy(contact = VatDigitalContact("test@test.com", Some("£$%^&&*"), None))
         writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "contact" \ "tel" -> ValidationError("error.pattern"))
       }
 
       "Contact mob is invalid" in {
-        val lodgingOfficer = vatLodgingOfficer.copy(contact = OfficerContactDetails(None, None, Some("£$%^&&*")))
+        val lodgingOfficer = vatLodgingOfficer.copy(contact = VatDigitalContact("test@test.com", None, Some("£$%^&&*")))
         writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "contact" \ "mobile" -> ValidationError("error.pattern"))
       }
     }

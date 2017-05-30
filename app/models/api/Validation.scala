@@ -23,10 +23,6 @@ import play.api.libs.json._
 
 trait Validation {
 
-  val emailRegex = "^([A-Z|a-z|0-9|._-]+)@([A-Z|a-z|0-9|._-]+)$"
-  val teleRegex = "^(\\d){1,20}$"
-  val mobRegex = "^(\\d){1,20}$"
-
   protected def readToFmt(rds: Reads[String])(implicit wts: Writes[String]): Format[String] = Format(rds, wts)
 
   protected def acceptOnly(validStrings: String*)(implicit wts: Writes[String]): Format[String] =
@@ -73,9 +69,9 @@ trait VatStartDateValidator extends Validation {
 
 
 trait VatDigitalContactValidator extends Validation {
-  val emailValidator: Format[String] = readToFmt(pattern(emailRegex.r))
-  val teleValidator: Format[String] = readToFmt(pattern(teleRegex.r))
-  val mobileValidator: Format[String] = readToFmt(pattern(mobRegex.r))
+  val emailValidator: Format[String] = readToFmt(pattern("^([A-Z|a-z|0-9|._-]+)@([A-Z|a-z|0-9|._-]+)$".r))
+  val teleValidator: Format[String] = readToFmt(pattern("^(\\d){1,20}$".r))
+  val mobileValidator: Format[String] = readToFmt(pattern("^(\\d){1,20}$".r))
 
 }
 
@@ -86,8 +82,5 @@ trait VatLodgingOfficerValidator extends Validation {
   val titleRegex = """^[A-Za-z]{1,20}$""".r
   val titleValidator: Format[String] = readToFmt(pattern(titleRegex))
   val nameValidator: Format[String] = readToFmt(pattern(nameRegex))
-  val emailValidator: Format[String] = readToFmt(pattern(emailRegex.r))
-  val teleValidator: Format[String] = readToFmt(pattern(teleRegex.r))
-  val mobileValidator: Format[String] = readToFmt(pattern(mobRegex.r))
 }
 
