@@ -19,7 +19,7 @@ package models.api
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatLodgingOfficer(currentAddress: ScrsAddress, dob: DateOfBirth, nino: String, role: String, name: Name)
+case class VatLodgingOfficer(currentAddress: ScrsAddress, dob: DateOfBirth, nino: String, role: String, name: Name, contact: VatDigitalContact)
 
 object VatLodgingOfficer extends VatLodgingOfficerValidator {
 
@@ -28,7 +28,8 @@ object VatLodgingOfficer extends VatLodgingOfficerValidator {
       (__ \ "dob").format[DateOfBirth] and
       (__ \ "nino").format[String](ninoValidator) and
       (__ \ "role").format[String](roleValidator) and
-      (__ \ "name").format[Name]
+      (__ \ "name").format[Name] and
+      (__ \ "contact").format[VatDigitalContact]
     ) (VatLodgingOfficer.apply, unlift(VatLodgingOfficer.unapply))
 
 }

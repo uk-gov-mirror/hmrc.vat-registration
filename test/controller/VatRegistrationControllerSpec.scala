@@ -57,7 +57,9 @@ class VatRegistrationControllerSpec extends VatRegSpec {
   )
   val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
   val name = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
-  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB666666C", "director", name)
+  val contact = VatDigitalContact("test@test.com", None, None)
+
+  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB666666C", "director", name, contact)
 
   val vatScheme: VatScheme = VatScheme(regId)
   val exception = new Exception("Exception")
