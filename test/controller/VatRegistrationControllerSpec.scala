@@ -16,10 +16,8 @@
 
 package controller
 
-import java.time.LocalDate
-
-import common.RegistrationId
 import controllers.VatRegistrationController
+import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models._
 import models.api._
@@ -28,41 +26,9 @@ import play.api.mvc.Results.Accepted
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
-class VatRegistrationControllerSpec extends VatRegSpec {
+class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
-  val regId = RegistrationId("testId")
-  val userId = "userId"
-  val date = LocalDate.of(2017, 1, 1)
-  val vatChoice: VatChoice = VatChoice(
-    necessity = "obligatory",
-    vatStartDate = VatStartDate(
-      selection = "SPECIFIC_DATE",
-      startDate = Some(date)))
-  val tradingDetails: VatTradingDetails = VatTradingDetails(
-    vatChoice = vatChoice,
-    tradingName = TradingName(
-      selection = true,
-      tradingName = Some("some-trader-name")),
-    euTrading = VatEuTrading(selection = true, eoriApplication = Some(true))
-  )
-  val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description", None, None)
-  val vatDigitalContact = VatDigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
-  val vatContact = VatContact(vatDigitalContact)
-  val vatEligibility = VatServiceEligibility(
-    haveNino = Some(true),
-    doingBusinessAbroad = Some(true),
-    doAnyApplyToYou = Some(true),
-    applyingForAnyOf = Some(true),
-    companyWillDoAnyOf = Some(true)
-  )
-  val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
-  val name = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
-  val contact = VatDigitalContact("test@test.com", None, None)
-
-  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB666666C", "director", name, contact)
-
-  val vatScheme: VatScheme = VatScheme(regId)
-  val exception = new Exception("Exception")
+  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB666666C", "director", name, formerName, contact)
 
   class Setup {
     val controller = new VatRegistrationController(mockAuthConnector, mockRegistrationService)

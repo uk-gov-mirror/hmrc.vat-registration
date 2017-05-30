@@ -16,20 +16,18 @@
 
 package models
 
+import fixtures.VatRegistrationFixture
 import models.api._
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{Format, JsPath, Json}
 
-class VatLodgingOfficerSpec extends JsonFormatValidation {
+class VatLodgingOfficerSpec extends JsonFormatValidation with VatRegistrationFixture {
 
   private def writeAndRead[T](t: T)(implicit fmt: Format[T]) = fmt.reads(Json.toJson(fmt.writes(t)))
 
   implicit val format = VatLodgingOfficer.format
 
-  val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
-  val name = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
-  val contact = VatDigitalContact("test@test.com", None, None)
-  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1990), "NB686868C", "director", name, contact)
+  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1990), "NB686868C", "director", name, formerName, contact)
 
   "Creating a Json from a valid VatLodgingOfficer model" should {
 
