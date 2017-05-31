@@ -21,13 +21,15 @@ import play.api.libs.json._
 import play.api.libs.json.Reads._
 
 
-case class VatDigitalContact(email: String, tel: Option[String], mobile: Option[String])
+case class OfficerContactDetails(email: Option[String], tel: Option[String], mobile: Option[String])
 
-object VatDigitalContact extends VatDigitalContactValidator {
 
-  implicit val format: OFormat[VatDigitalContact] = (
-    (__ \ "email").format[String](maxLength[String](70) keepAnd emailValidator) and
+object OfficerContactDetails extends VatLodgingOfficerValidator {
+
+  implicit val format: OFormat[OfficerContactDetails] = (
+    (__ \ "email").formatNullable[String](emailValidator) and
       (__ \ "tel").formatNullable[String](telValidator) and
       (__ \ "mobile").formatNullable[String](mobileValidator)
-    ) (VatDigitalContact.apply, unlift(VatDigitalContact.unapply))
+    ) (OfficerContactDetails.apply, unlift(OfficerContactDetails.unapply))
+
 }
