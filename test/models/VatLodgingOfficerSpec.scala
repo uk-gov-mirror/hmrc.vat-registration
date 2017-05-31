@@ -72,17 +72,17 @@ class VatLodgingOfficerSpec extends JsonFormatValidation with VatRegistrationFix
       }
 
       "Contact email is invalid" in {
-        val lodgingOfficer = vatLodgingOfficer.copy(contact = VatDigitalContact("£$%^&&*", None, None))
+        val lodgingOfficer = vatLodgingOfficer.copy(contact = OfficerContactDetails(Some("£$%^&&*"), None, None))
         writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "contact" \ "email" -> ValidationError("error.pattern"))
       }
 
       "Contact tel is invalid" in {
-        val lodgingOfficer = vatLodgingOfficer.copy(contact = VatDigitalContact("test@test.com", Some("£$%^&&*"), None))
+        val lodgingOfficer = vatLodgingOfficer.copy(contact = OfficerContactDetails(None, Some("£$%^&&*"), None))
         writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "contact" \ "tel" -> ValidationError("error.pattern"))
       }
 
       "Contact mob is invalid" in {
-        val lodgingOfficer = vatLodgingOfficer.copy(contact = VatDigitalContact("test@test.com", None, Some("£$%^&&*")))
+        val lodgingOfficer = vatLodgingOfficer.copy(contact = OfficerContactDetails(None, None, Some("£$%^&&*")))
         writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "contact" \ "mobile" -> ValidationError("error.pattern"))
       }
     }

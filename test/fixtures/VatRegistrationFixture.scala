@@ -51,7 +51,7 @@ trait VatRegistrationFixture {
   val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
   val name = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
   val formerName = FormerName(true, Some("Bob Smith"))
-  val contact = VatDigitalContact("test@test.com", None, None)
+  val contact = OfficerContactDetails(Some("test@test.com"), None, None)
   val vatScheme: VatScheme = VatScheme(regId)
   val exception = new Exception("Exception")
 
