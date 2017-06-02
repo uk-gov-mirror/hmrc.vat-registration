@@ -27,7 +27,7 @@ class VatLodgingOfficerSpec extends JsonFormatValidation with VatRegistrationFix
 
   implicit val format = VatLodgingOfficer.format
 
-  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1990), "NB686868C", "director", name, formerName, Some(currentOrPreviousAddress), contact)
+  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1990), "NB686868C", "director", name, formerName, currentOrPreviousAddress, contact)
 
   "Creating a Json from a valid VatLodgingOfficer model" should {
 
