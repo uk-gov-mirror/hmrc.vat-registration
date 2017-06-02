@@ -54,5 +54,6 @@ trait VatRegistrationFixture {
   val contact = OfficerContactDetails(Some("test@test.com"), None, None)
   val vatScheme: VatScheme = VatScheme(regId)
   val exception = new Exception("Exception")
+  val currentOrPreviousAddress = CurrentOrPreviousAddress(false, scrsAddress)
 
 }

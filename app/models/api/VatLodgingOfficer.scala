@@ -25,6 +25,7 @@ case class VatLodgingOfficer(currentAddress: ScrsAddress,
                              role: String,
                              name: Name,
                              formerName: FormerName,
+                             currentOrPreviousAddress : CurrentOrPreviousAddress,
                              contact: OfficerContactDetails)
 
 object VatLodgingOfficer extends VatLodgingOfficerValidator {
@@ -36,6 +37,7 @@ object VatLodgingOfficer extends VatLodgingOfficerValidator {
       (__ \ "role").format[String](roleValidator) and
       (__ \ "name").format[Name] and
       (__ \ "formerName").format[FormerName] and
+      (__ \ "currentOrPreviousAddress").format[CurrentOrPreviousAddress] and
       (__ \ "contact").format[OfficerContactDetails]
     ) (VatLodgingOfficer.apply, unlift(VatLodgingOfficer.unapply))
 
