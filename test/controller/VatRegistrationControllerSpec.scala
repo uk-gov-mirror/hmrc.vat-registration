@@ -28,7 +28,7 @@ import play.api.test.Helpers._
 
 class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
-  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB666666C", "director", name, formerName, currentOrPreviousAddress, contact)
+  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB666666C", "director", name, formerName, Some(currentOrPreviousAddress), contact)
 
   class Setup {
     val controller = new VatRegistrationController(mockAuthConnector, mockRegistrationService)
