@@ -82,7 +82,8 @@ class RegistrationMongoRepositoryISpec
   val name = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
   val contact = OfficerContactDetails(Some("test@test.com"), None, None)
   val formerName = FormerName(true, Some("Bob Smith"))
-  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB686868C", "director", name, formerName, contact)
+  val currentOrPreviousAddress = CurrentOrPreviousAddress(false, Some(scrsAddress))
+  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB686868C", "director", name, formerName, currentOrPreviousAddress, contact)
 
   class Setup {
     val repository = new RegistrationMongoRepository(new MongoDBProvider(), "integration-testing")
