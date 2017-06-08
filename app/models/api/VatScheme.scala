@@ -27,7 +27,8 @@ case class VatScheme(
                       financials: Option[VatFinancials] = None,
                       vatSicAndCompliance: Option[VatSicAndCompliance] = None,
                       vatContact: Option[VatContact] = None,
-                      vatEligibility: Option[VatServiceEligibility] = None
+                      vatEligibility: Option[VatServiceEligibility] = None,
+                      ppob: Option[ScrsAddress] = None
                     )
 
 object VatScheme {
@@ -39,7 +40,8 @@ object VatScheme {
       (__ \ "financials").readNullable[VatFinancials](r) and
       (__ \ "vatSicAndCompliance").readNullable[VatSicAndCompliance] and
       (__ \ "vatContact").readNullable[VatContact] and
-      (__ \ "vatEligibility").readNullable[VatServiceEligibility]
+      (__ \ "vatEligibility").readNullable[VatServiceEligibility] and
+      (__ \ "ppob").readNullable[ScrsAddress]
     ) (VatScheme.apply _)
 
 
@@ -50,7 +52,8 @@ object VatScheme {
       (__ \ "financials").writeNullable[VatFinancials](w) and
       (__ \ "vatSicAndCompliance").writeNullable[VatSicAndCompliance] and
       (__ \ "vatContact").writeNullable[VatContact] and
-      (__ \ "vatEligibility").writeNullable[VatServiceEligibility]
+      (__ \ "vatEligibility").writeNullable[VatServiceEligibility] and
+      (__ \ "ppob").writeNullable[ScrsAddress]
     ) (unlift(VatScheme.unapply))
 
   implicit def format(implicit f: OFormat[VatFinancials]): OFormat[VatScheme] = OFormat(reads(f), writes(f))

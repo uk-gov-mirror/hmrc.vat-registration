@@ -168,6 +168,21 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       }
     }
 
+    "updatePpob" should {
+
+      val fakeRequest = FakeRequest().withBody(Json.toJson(scrsAddress))
+
+      "call updatePpob return ACCEPTED" in new Setup {
+        ServiceMocks.mockSuccessfulUpdateLogicalGroup(scrsAddress)
+        controller.updatePpob(regId)(fakeRequest) returns Accepted(Json.toJson(scrsAddress))
+      }
+
+      "call updatePpob return ServiceUnavailable" in new Setup {
+        ServiceMocks.mockServiceUnavailableUpdateLogicalGroup(scrsAddress, exception)
+        controller.updatePpob(regId)(fakeRequest) returnsStatus SERVICE_UNAVAILABLE
+      }
+    }
+
     "deleteVatScheme" should {
       "call to deleteVatScheme return Ok with VatScheme" in new Setup {
         ServiceMocks.mockDeleteVatScheme(regId)

@@ -65,6 +65,9 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
 
   def updateLodgingOfficer(id: RegistrationId): Action[JsValue] = patch[VatLodgingOfficer](registrationService, id)
 
+  def updatePpob(id: RegistrationId): Action[JsValue] = patch[ScrsAddress](registrationService, id)
+
+
   def deleteVatScheme(id: RegistrationId): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
