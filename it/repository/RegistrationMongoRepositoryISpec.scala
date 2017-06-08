@@ -142,6 +142,10 @@ class RegistrationMongoRepositoryISpec
       repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(vatLodgingOfficer)) returns vatLodgingOfficer
     }
 
+    "should update to PPOB success" in new Setup {
+      repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(scrsAddress)) returns scrsAddress
+    }
+
     "should throw UpdateFailed exception when regId not found" in new Setup {
       repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(vatTradingDetails, RegistrationId("0"))) failedWith classOf[UpdateFailed]
     }
