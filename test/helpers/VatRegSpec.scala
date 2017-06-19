@@ -18,13 +18,24 @@ package helpers
 
 import connectors.{Authority, UserIds}
 import mocks.VatMocks
-import org.scalatest.Inside
+import org.mockito.Mockito.reset
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{BeforeAndAfterEach, Inside}
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
-abstract class VatRegSpec extends UnitSpec with WithFakeApplication with Inside with MockitoSugar with VatMocks with FutureAssertions {
+abstract class VatRegSpec extends UnitSpec with WithFakeApplication
+  with Inside with MockitoSugar with VatMocks with FutureAssertions with BeforeAndAfterEach {
 
   protected def testAuthority(userId: String): Authority = Authority(userId, userId, userId, UserIds(userId, userId))
 
-
+  override def beforeEach() {
+    reset(mockRegistrationService)
+    reset(mockAuthConnector)
+    reset(mockWSHttp)
+    reset(mockAuthorisationResource)
+    reset(mockBusRegConnector)
+    reset(mockRegistrationRepository)
+    reset(mockTestOnlyRepo)
+    reset(mockHttp)
+  }
 }

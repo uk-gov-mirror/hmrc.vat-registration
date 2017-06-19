@@ -28,19 +28,13 @@ import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-class AuthenticationSpec extends VatRegSpec with BeforeAndAfter {
+class AuthenticationSpec extends VatRegSpec {
 
   implicit val hc = HeaderCarrier()
   implicit val uuh = () => Forbidden
 
-  val mockAuth = mock[AuthConnector]
-
   object Authenticated extends Authenticated {
-    val auth = mockAuth
-  }
-
-  before {
-    reset(mockAuth)
+    val auth = mockAuthConnector
   }
 
   "The authentication helper" should {
@@ -48,7 +42,7 @@ class AuthenticationSpec extends VatRegSpec with BeforeAndAfter {
     "provided a logged in auth result when there is a valid bearer token" in {
 
       val a = Authority("x", "y", "z", UserIds("tiid", "teid"))
-      when(mockAuth.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
+      when(mockAuthConnector.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
 
       status(Authenticated.authenticated { authResult =>
         authResult shouldBe a
@@ -58,7 +52,7 @@ class AuthenticationSpec extends VatRegSpec with BeforeAndAfter {
 
     "indicate there's no logged in user where there isn't a valid bearer token" in {
 
-      when(mockAuth.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(None))
+      when(mockAuthConnector.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(None))
 
       status(Authenticated.authenticated { authResult =>
         Results.Ok

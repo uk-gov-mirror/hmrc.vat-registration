@@ -31,13 +31,19 @@ object ElementPath {
       VatBankAccountPath,
       ZeroRatedTurnoverEstimatePath,
       AccountingPeriodStartPath,
+      CulturalCompliancePath,
+      LabourCompliancePath,
       FinancialCompliancePath,
       FinChargeFeesPath,
       FinAdditionalNonSecuritiesWorkPath,
       FinDiscretionaryInvestmentManagementServicesPath,
       FinVehicleOrEquipmentLeasingPath,
       FinInvestmentFundManagementServicesPath,
-      FinManageFundsAdditionalPath
+      FinManageFundsAdditionalPath,
+      LabProvidesWorkersPath,
+      LabWorkersPath,
+      LabTempContractsPath,
+      LabSkilledWorkersPath
     ).map(ep => (ep.name, ep)).toMap
 
     override def writes(e: ElementPath): JsValue = JsString(e.name)
@@ -65,6 +71,36 @@ case object AccountingPeriodStartPath extends ElementPath {
 }
 
 // $COVERAGE-OFF$
+
+case object CulturalCompliancePath extends ElementPath {
+  override val path = "vatSicAndCompliance.culturalCompliance"
+  override val name = "cultural-compliance"
+}
+
+case object LabourCompliancePath extends ElementPath {
+  override val path = "vatSicAndCompliance.labourCompliance"
+  override val name = "labour-compliance"
+}
+
+case object LabProvidesWorkersPath extends ElementPath {
+  override val path = "vatSicAndCompliance.labourCompliance.labour"
+  override val name = "labour-labour"
+}
+
+case object LabWorkersPath extends ElementPath {
+  override val path = "vatSicAndCompliance.labourCompliance.workers"
+  override val name = "labour-workers"
+}
+
+case object LabTempContractsPath extends ElementPath {
+  override val path = "vatSicAndCompliance.labourCompliance.temporaryContracts"
+  override val name = "labour-temporaryContracts"
+}
+
+case object LabSkilledWorkersPath extends ElementPath {
+  override val path = "vatSicAndCompliance.labourCompliance.skilledWorkers"
+  override val name = "labour-skilledWorkers"
+}
 
 case object FinancialCompliancePath extends ElementPath {
   override val path = "vatSicAndCompliance.financialCompliance"
