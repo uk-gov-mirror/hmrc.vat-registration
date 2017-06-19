@@ -20,24 +20,18 @@ import java.time.LocalDate
 
 import common.RegistrationId
 import common.exceptions._
-import connectors._
 import helpers.VatRegSpec
 import models._
 import models.api._
 import models.external.CurrentProfile
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
-import repositories.RegistrationRepository
-import repositories.test.TestOnlyRepository
 import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
 
 class VatRegistrationServiceSpec extends VatRegSpec {
 
-  val mockBusRegConnector = mock[BusinessRegistrationConnector]
-  val mockRegistrationRepository = mock[RegistrationRepository]
-  val mockTestOnlyRepo = mock[TestOnlyRepository]
   val date = LocalDate.of(2017, 1, 1)
   val vatChoice: VatChoice = VatChoice(
     necessity = "voluntary",

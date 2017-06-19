@@ -21,7 +21,6 @@ import java.util.UUID
 import helpers.VatRegSpec
 import org.mockito.Matchers
 import org.mockito.Mockito._
-import org.scalatest.BeforeAndAfter
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.play.http.logging.SessionId
@@ -32,11 +31,9 @@ import scala.concurrent.Future
 /**
   * Created by crispy on 03/08/16.
   */
-class AuthConnectorSpec extends VatRegSpec with BeforeAndAfter {
+class AuthConnectorSpec extends VatRegSpec {
 
   implicit val hc = HeaderCarrier()
-
-  val mockHttp = mock[HttpGet with HttpPost]
 
   object TestAuthConnector extends AuthConnector {
     lazy val serviceUrl = "localhost"
@@ -62,10 +59,6 @@ class AuthConnectorSpec extends VatRegSpec with BeforeAndAfter {
            "internalId":"$internalId",
            "externalId":"$externalId"
         }""")
-
-  before {
-    reset(mockHttp)
-  }
 
   "The auth connector" should {
     val ggid = "testGGID"

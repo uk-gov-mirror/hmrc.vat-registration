@@ -22,13 +22,12 @@ import helpers.VatRegSpec
 import models.external.CurrentProfile
 import org.mockito.Matchers
 import org.mockito.Mockito._
+import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.play.http.{ForbiddenException, HeaderCarrier, NotFoundException}
 
 import scala.concurrent.Future
 
 class BusinessRegistrationConnectorSpec extends VatRegSpec with BusinessRegistrationFixture {
-
-  val mockBusRegConnector = mock[BusinessRegistrationConnector]
 
   trait Setup {
     val connector = new BusinessRegistrationConnector {
