@@ -16,18 +16,21 @@
 
 package mocks
 
+import auth.AuthorisationResource
 import cats.data.EitherT
 import common.RegistrationId
 import common.exceptions._
-import connectors.{AuthConnector, Authority}
+import connectors.{AuthConnector, Authority, BusinessRegistrationConnector}
 import models._
 import models.api.VatScheme
 import org.mockito.Matchers
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
+import repositories.RegistrationRepository
+import repositories.test.TestOnlyRepository
 import services.{RegistrationService, ServiceResult}
-import uk.gov.hmrc.play.http.HeaderCarrier
+import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost}
 
 import scala.concurrent.Future
 
@@ -37,6 +40,12 @@ trait VatMocks extends WSHTTPMock {
 
   lazy val mockAuthConnector = mock[AuthConnector]
   lazy val mockRegistrationService = mock[RegistrationService]
+  lazy val mockAuthorisationResource = mock[AuthorisationResource[String]]
+  lazy val mockBusRegConnector = mock[BusinessRegistrationConnector]
+  lazy val mockRegistrationRepository = mock[RegistrationRepository]
+  lazy val mockTestOnlyRepo = mock[TestOnlyRepository]
+  lazy val mockHttp = mock[HttpGet with HttpPost]
+
 
   object AuthorisationMocks {
 
