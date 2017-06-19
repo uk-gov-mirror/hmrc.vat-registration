@@ -36,13 +36,13 @@ class SequenceMongo @Inject()() extends MongoDbConnection with ReactiveMongoForm
   val store = new SequenceMongoRepository(db)
 }
 
-trait SequenceRepository extends Repository[Sequence, BSONObjectID]{
+trait SequenceRepository extends Repository[Sequence, BSONObjectID] {
   def getNext(sequenceID: String): Future[Int]
 }
 
 class SequenceMongoRepository(mongo: () => DB)
   extends ReactiveRepository[Sequence, BSONObjectID]("sequence", mongo, Sequence.formats, ReactiveMongoFormats.objectIdFormats)
-    with SequenceRepository{
+    with SequenceRepository {
 
   def getNext(sequenceID: String): Future[Int] = {
     val selector = BSONDocument("_id" -> sequenceID)
@@ -51,11 +51,10 @@ class SequenceMongoRepository(mongo: () => DB)
     collection.findAndUpdate(selector, modifier, fetchNewObject = true, upsert = true) map {
       _.result[JsValue] match {
         // $COVERAGE-OFF$
-        case None => {
+        case None =>
           Logger.error("[SequenceRepository] - [getNext] returned a None when Upserting")
           class InvalidSequence extends NoStackTrace
           throw new InvalidSequence
-        }
         // $COVERAGE-ON$
         case Some(res) => (res \ "seq").as[Int]
       }

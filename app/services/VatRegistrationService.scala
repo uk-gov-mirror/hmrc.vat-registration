@@ -18,15 +18,15 @@ package services
 
 import javax.inject.Inject
 
-import cats.data.EitherT
-import common.{LogicalGroup, RegistrationId}
+import cats.data.{EitherT, OptionT}
+import cats.instances.FutureInstances
+import cats.syntax.ApplicativeSyntax
 import common.exceptions._
+import common.{LogicalGroup, RegistrationId}
 import connectors._
-import models.{AcknowledgementReferencePath, ElementPath}
 import models.api.VatScheme
 import models.external.CurrentProfile
-import play.api.Logger
-import cats.MonadCombine._
+import models.{AcknowledgementReferencePath, ElementPath}
 import play.api.libs.json.Writes
 import repositories.RegistrationRepository
 import uk.gov.hmrc.play.http.HeaderCarrier
@@ -48,15 +48,13 @@ trait RegistrationService {
 
   def retrieveAcknowledgementReference(id: RegistrationId): ServiceResult[String]
 
-  def saveAcknowledgementReference(id: RegistrationId, ackRef: String):  ServiceResult[String]
+  def saveAcknowledgementReference(id: RegistrationId, ackRef: String): ServiceResult[String]
 
 }
 
 class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnector,
                                        registrationRepository: RegistrationRepository
-                                      ) extends RegistrationService {
-
-  import cats.instances.future._
+                                      ) extends RegistrationService with ApplicativeSyntax with FutureInstances {
 
   private def repositoryErrorHandler[T]: PartialFunction[Throwable, Either[LeftState, T]] = {
     case e: MissingRegDocument => Left(ResourceNotFound(s"No registration found for registration ID: ${e.id}"))
@@ -74,28 +72,15 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
         .map(Right(_)).recover(repositoryErrorHandler)
     }
 
+  import cats.syntax.either._
 
-  override def saveAcknowledgementReference(id: RegistrationId, ackRef: String):  ServiceResult[String] = {
-    /*EitherT(registrationRepository.retrieveVatScheme(id).map[Either[LeftState, String]] {
-      case Some(vatScheme) if vatScheme.acknowledgementReference.isEmpty => Right(registrationRepository.updateByElement(id, AcknowledgementReferencePath, ackRef))
-      case None => Left(AcknowledgementReferenceExistsException(s"""Acknowledgement reference for ${id} already exists"""))
-    })*/
-
-    EitherT(registrationRepository.retrieveVatScheme(id).flatMap[Either[LeftState, String]] {
-      case Some(vatScheme) if vatScheme.acknowledgementReference.isEmpty =>
-          for{
-            x <- registrationRepository.updateByElement(id, AcknowledgementReferencePath, ackRef)
-          }yield Right(x)
-      case None => Future.successful(Left(AcknowledgementReferenceExistsException(s"""Acknowledgement reference for ${id} already exists""")))
-    })
-  }
-
-  /*
-  for {
-        newAckref <- generateAcknowledgementReference
-        _ <- registrationRepository.saveAcknowledgementReference(regId, newAckref)
-      } yield newAckref
-   */
+  override def saveAcknowledgementReference(id: RegistrationId, ackRef: String): ServiceResult[String] =
+    OptionT(registrationRepository.retrieveVatScheme(id)).toRight(ResourceNotFound(s"VatScheme ID: $id missing"))
+      .flatMap(vs => vs.acknowledgementReference match {
+        case Some(ar) =>
+          (AcknowledgementReferenceExists(s"""Registration ID $id already has an acknowledgement reference of: $ar"""): LeftState).asLeft[String].toEitherT
+        case None => EitherT.liftT(registrationRepository.updateByElement(id, AcknowledgementReferencePath, ackRef))
+      })
 
   override def createNewRegistration()(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme] =
     for {
@@ -118,10 +103,9 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   override def deleteByElement(id: RegistrationId, elementPath: ElementPath): ServiceResult[Boolean] =
     toEitherT(registrationRepository.deleteByElement(id, elementPath))
 
-  override def retrieveAcknowledgementReference(id: RegistrationId):  ServiceResult[String] = {
-    retrieveVatScheme(id).map(_.acknowledgementReference)
-  }
+  override def retrieveAcknowledgementReference(id: RegistrationId): ServiceResult[String] =
+    retrieveVatScheme(id).subflatMap(_.acknowledgementReference.toRight(ResourceNotFound("AcknowledgementId")))
 
+  //TODO ResourceNotFound review if appropriate
 
 }
-

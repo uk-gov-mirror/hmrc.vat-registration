@@ -19,8 +19,7 @@ package repositories
 import javax.inject.{Inject, Named}
 
 import cats.data.OptionT
-import common.RegistrationId
-import common.LogicalGroup
+import common.{LogicalGroup, RegistrationId}
 import common.exceptions._
 import models._
 import models.api.{VatBankAccountMongoFormat, VatFinancials, VatScheme}
@@ -92,14 +91,12 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
     }
   }
 
-  override def retrieveVatScheme(id: RegistrationId): Future[Option[VatScheme]] = {
+  override def retrieveVatScheme(id: RegistrationId): Future[Option[VatScheme]] =
     collection.find(ridSelector(id)).one[VatScheme]
-  }
 
-  override def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G]): Future[G] = {
+  override def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G]): Future[G] =
     OptionT(collection.findAndUpdate(ridSelector(id), BSONDocument("$set" -> BSONDocument(logicalGroup.name -> w.writes(group))))
       .map(_.value)).map(_ => group).getOrElse(throw UpdateFailed(id, logicalGroup.name))
-  }
 
   private def unsetElement(id: RegistrationId, element: String): Future[Boolean] =
     OptionT(collection.findAndUpdate(ridSelector(id), BSONDocument("$unset" -> BSONDocument(element -> "")))
