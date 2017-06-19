@@ -89,7 +89,7 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
     } yield vatScheme
 
   override def retrieveVatScheme(id: RegistrationId): ServiceResult[VatScheme] =
-    EitherT(registrationRepository.retrieveVatScheme(id).map(ovs => ovs.toRight(ResourceNotFound(id.value))))
+    OptionT(registrationRepository.retrieveVatScheme(id)).toRight(ResourceNotFound(id.value))
 
   override def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G): ServiceResult[G] =
     toEitherT(registrationRepository.updateLogicalGroup(id, group))
