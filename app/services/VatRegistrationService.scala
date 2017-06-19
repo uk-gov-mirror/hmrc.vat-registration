@@ -78,7 +78,7 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
     OptionT(registrationRepository.retrieveVatScheme(id)).toRight(ResourceNotFound(s"VatScheme ID: $id missing"))
       .flatMap(vs => vs.acknowledgementReference match {
         case Some(ar) =>
-          (AcknowledgementReferenceExists(s"""Registration ID $id already has an acknowledgement reference of: $ar"""): LeftState).asLeft[String].toEitherT
+          Left[LeftState, String](AcknowledgementReferenceExists(s"""Registration ID $id already has an acknowledgement reference of: $ar""")).toEitherT
         case None => EitherT.liftT(registrationRepository.updateByElement(id, AcknowledgementReferencePath, ackRef))
       })
 
@@ -89,10 +89,7 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
     } yield vatScheme
 
   override def retrieveVatScheme(id: RegistrationId): ServiceResult[VatScheme] =
-    EitherT(registrationRepository.retrieveVatScheme(id).map[Either[LeftState, VatScheme]] {
-      case Some(vatScheme) => Right(vatScheme)
-      case None => Left(ResourceNotFound(id.value))
-    })
+    EitherT(registrationRepository.retrieveVatScheme(id).map(ovs => ovs.toRight(ResourceNotFound(id.value))))
 
   override def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G): ServiceResult[G] =
     toEitherT(registrationRepository.updateLogicalGroup(id, group))
