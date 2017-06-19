@@ -45,6 +45,8 @@ trait RegistrationRepository {
 
   def deleteVatScheme(id: RegistrationId): Future[Boolean]
 
+  def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String): Future[String]
+
   def deleteByElement(id: RegistrationId, elementPath: ElementPath): Future[Boolean]
 
 }
@@ -103,6 +105,9 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
     OptionT(collection.findAndUpdate(ridSelector(id), BSONDocument("$unset" -> BSONDocument(element -> "")))
       .map(_.value)).map(_ => true).getOrElse(throw UpdateFailed(id, element))
 
+  private def setElement(id: RegistrationId, element: String, value: String): Future[String] =
+    OptionT(collection.findAndUpdate(ridSelector(id), BSONDocument("$set" -> BSONDocument(element -> value)))
+      .map(_.value)).map(_ => value).getOrElse(throw UpdateFailed(id, element))
 
   override def deleteVatScheme(id: RegistrationId): Future[Boolean] = retrieveVatScheme(id) flatMap {
     case Some(ct) => collection.remove(ridSelector(id)) map { _ => true }
@@ -112,5 +117,8 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
 
   override def deleteByElement(id: RegistrationId, elementPath: ElementPath): Future[Boolean] =
     unsetElement(id, elementPath.path)
+
+  override def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String): Future[String] =
+    setElement(id, elementPath.path, value)
 
 }

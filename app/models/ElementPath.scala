@@ -101,4 +101,9 @@ case object FinManageFundsAdditionalPath extends ElementPath {
   override val name = "fc-manage-funds-additional"
 }
 
+case object AcknowledgementReferencePath extends ElementPath {
+  override val path = "acknowledgementReference"
+  override val name = "acknowledgement-reference"
+}
+
 // $COVERAGE-ON$

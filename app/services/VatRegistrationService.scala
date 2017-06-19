@@ -22,9 +22,11 @@ import cats.data.EitherT
 import common.{LogicalGroup, RegistrationId}
 import common.exceptions._
 import connectors._
-import models.ElementPath
+import models.{AcknowledgementReferencePath, ElementPath}
 import models.api.VatScheme
 import models.external.CurrentProfile
+import play.api.Logger
+import cats.MonadCombine._
 import play.api.libs.json.Writes
 import repositories.RegistrationRepository
 import uk.gov.hmrc.play.http.HeaderCarrier
@@ -43,6 +45,10 @@ trait RegistrationService {
   def deleteVatScheme(id: RegistrationId): ServiceResult[Boolean]
 
   def deleteByElement(id: RegistrationId, elementPath: ElementPath): ServiceResult[Boolean]
+
+  def retrieveAcknowledgementReference(id: RegistrationId): ServiceResult[String]
+
+  def saveAcknowledgementReference(id: RegistrationId, ackRef: String):  ServiceResult[String]
 
 }
 
@@ -68,6 +74,29 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
         .map(Right(_)).recover(repositoryErrorHandler)
     }
 
+
+  override def saveAcknowledgementReference(id: RegistrationId, ackRef: String):  ServiceResult[String] = {
+    /*EitherT(registrationRepository.retrieveVatScheme(id).map[Either[LeftState, String]] {
+      case Some(vatScheme) if vatScheme.acknowledgementReference.isEmpty => Right(registrationRepository.updateByElement(id, AcknowledgementReferencePath, ackRef))
+      case None => Left(AcknowledgementReferenceExistsException(s"""Acknowledgement reference for ${id} already exists"""))
+    })*/
+
+    EitherT(registrationRepository.retrieveVatScheme(id).flatMap[Either[LeftState, String]] {
+      case Some(vatScheme) if vatScheme.acknowledgementReference.isEmpty =>
+          for{
+            x <- registrationRepository.updateByElement(id, AcknowledgementReferencePath, ackRef)
+          }yield Right(x)
+      case None => Future.successful(Left(AcknowledgementReferenceExistsException(s"""Acknowledgement reference for ${id} already exists""")))
+    })
+  }
+
+  /*
+  for {
+        newAckref <- generateAcknowledgementReference
+        _ <- registrationRepository.saveAcknowledgementReference(regId, newAckref)
+      } yield newAckref
+   */
+
   override def createNewRegistration()(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme] =
     for {
       profile <- EitherT(brConnector.retrieveCurrentProfile)
@@ -89,4 +118,10 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   override def deleteByElement(id: RegistrationId, elementPath: ElementPath): ServiceResult[Boolean] =
     toEitherT(registrationRepository.deleteByElement(id, elementPath))
 
+  override def retrieveAcknowledgementReference(id: RegistrationId):  ServiceResult[String] = {
+    retrieveVatScheme(id).map(_.acknowledgementReference)
+  }
+
+
 }
+
