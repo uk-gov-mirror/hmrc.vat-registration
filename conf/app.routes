@@ -12,6 +12,9 @@ PATCH        /:regID/service-eligibility            controllers.VatRegistrationC
 PATCH        /:regID/lodging-officer                controllers.VatRegistrationController.updateLodgingOfficer(regID: RegistrationId)
 PATCH        /:regID/ppob                           controllers.VatRegistrationController.updatePpob(regID: RegistrationId)
 
+GET        /:regID/acknowledgement-reference        controllers.VatRegistrationController.getAcknowledgementReference(regID)
+
+
 DELETE       /:regID/delete-scheme                  controllers.VatRegistrationController.deleteVatScheme(regID: RegistrationId)
 
 DELETE       /:regID/delete/:element                controllers.VatRegistrationController.deleteByElement(regID: RegistrationId, element: ElementPath)

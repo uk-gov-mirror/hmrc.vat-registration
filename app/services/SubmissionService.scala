@@ -48,10 +48,6 @@ trait SubmissionSrv {
   val vatRegistrationService: VatRegistrationService
   val auditConnector: AuditConnector
 
-  private val REGIME = "vat"
-  private val SUBSCRIBER = "SCRS"
-  private val rejected = "rejected"
-
   def assertOrGenerateAcknowledgementReference(id: RegistrationId): ServiceResult[String] =
     vatRegistrationService.retrieveAcknowledgementReference(id).recoverWith {
       case _: ResourceNotFound => for {

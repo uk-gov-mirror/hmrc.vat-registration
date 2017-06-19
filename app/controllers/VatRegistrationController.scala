@@ -31,7 +31,9 @@ import services._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class VatRegistrationController @Inject()(val auth: AuthConnector, registrationService: RegistrationService)
+class VatRegistrationController @Inject()(val auth: AuthConnector,
+                                          registrationService: RegistrationService,
+                                          submissionService: SubmissionService)
   extends VatRegistrationBaseController {
 
   val errorHandler: (LeftState) => Result = err => err.toResult
@@ -67,6 +69,12 @@ class VatRegistrationController @Inject()(val auth: AuthConnector, registrationS
 
   def updatePpob(id: RegistrationId): Action[JsValue] = patch[ScrsAddress](registrationService, id)
 
+  def getAcknowledgementReference(id: RegistrationId): Action[AnyContent] = Action.async {
+    implicit request =>
+      authenticated { _ =>
+        submissionService.assertOrGenerateAcknowledgementReference(id).fold(errorHandler, ackRefNumber => Ok(Json.toJson(ackRefNumber)))
+      }
+  }
 
   def deleteVatScheme(id: RegistrationId): Action[AnyContent] = Action.async {
     implicit request =>
