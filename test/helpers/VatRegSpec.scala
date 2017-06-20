@@ -37,5 +37,8 @@ abstract class VatRegSpec extends UnitSpec with WithFakeApplication
     reset(mockRegistrationRepository)
     reset(mockTestOnlyRepo)
     reset(mockHttp)
+    reset(mockSubmissionService)
+    reset(mockVatRegistrationService)
+
   }
 }

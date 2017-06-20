@@ -18,8 +18,11 @@ package repository
 
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
+import repositories.SequenceMongo
 import uk.gov.hmrc.mongo.MongoSpecSupport
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class SequenceMongoRepositoryISpec
   extends UnitSpec with MongoSpecSupport with BeforeAndAfterEach with ScalaFutures with Eventually with WithFakeApplication {

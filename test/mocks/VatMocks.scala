@@ -27,9 +27,9 @@ import org.mockito.Matchers
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
-import repositories.RegistrationRepository
 import repositories.test.TestOnlyRepository
-import services.{RegistrationService, ServiceResult}
+import repositories.{RegistrationRepository, SequenceRepository}
+import services.{RegistrationService, ServiceResult, SubmissionService, VatRegistrationService}
 import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost}
 
 import scala.concurrent.Future
@@ -45,6 +45,9 @@ trait VatMocks extends WSHTTPMock {
   lazy val mockRegistrationRepository = mock[RegistrationRepository]
   lazy val mockTestOnlyRepo = mock[TestOnlyRepository]
   lazy val mockHttp = mock[HttpGet with HttpPost]
+  lazy val mockSubmissionService = mock[SubmissionService]
+  lazy val mockVatRegistrationService = mock[VatRegistrationService]
+  lazy val mockSequenceRepository = mock[SequenceRepository]
 
 
   object AuthorisationMocks {
@@ -66,7 +69,9 @@ trait VatMocks extends WSHTTPMock {
 
   }
 
+
   object ServiceMocks {
+    val ACK_REF_NUMBER = "BRPY000000000001"
 
     def serviceResult[B](b: B): ServiceResult[B] = {
       EitherT[Future, LeftState, B](Future.successful(Right(b)))
@@ -131,6 +136,18 @@ trait VatMocks extends WSHTTPMock {
       val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
       when(mockRegistrationService.updateLogicalGroup(idMatcher, Matchers.any[G]())(Matchers.any(), Matchers.any()))
         .thenReturn(serviceResult(group))
+    }
+
+    def mockGetAcknowledgementReference(): Unit = {
+      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
+      when(mockSubmissionService.assertOrGenerateAcknowledgementReference(idMatcher))
+        .thenReturn(serviceResult(ACK_REF_NUMBER))
+    }
+
+    def mockGetAcknowledgementReferenceServiceUnavailable(exception: Exception): Unit = {
+      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
+      when(mockSubmissionService.assertOrGenerateAcknowledgementReference(idMatcher))
+        .thenReturn(serviceError[String](GenericDatabaseError(exception, Some("regId"))))
     }
 
     def mockServiceUnavailableUpdateLogicalGroup[G](group: G, exception: Exception): Unit = {

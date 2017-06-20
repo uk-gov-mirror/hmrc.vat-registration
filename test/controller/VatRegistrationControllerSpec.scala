@@ -31,7 +31,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
   val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB666666C", "director", name, formerName, currentOrPreviousAddress, contact)
 
   class Setup {
-    val controller = new VatRegistrationController(mockAuthConnector, mockRegistrationService)
+    val controller = new VatRegistrationController(mockAuthConnector, mockRegistrationService, mockSubmissionService)
     AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
   }
 
@@ -180,6 +180,29 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       "call updatePpob return ServiceUnavailable" in new Setup {
         ServiceMocks.mockServiceUnavailableUpdateLogicalGroup(scrsAddress, exception)
         controller.updatePpob(regId)(fakeRequest) returnsStatus SERVICE_UNAVAILABLE
+      }
+    }
+
+    "getAcknowledgementReference" should {
+/*
+  "call to retrieveVatScheme return Ok with VatScheme" in new Setup {
+      ServiceMocks.mockRetrieveVatScheme(regId, vatScheme)
+      controller.retrieveVatScheme(regId)(FakeRequest()) returnsStatus OK
+    }
+
+    "call to retrieveVatScheme return ServiceUnavailable" in new Setup {
+      ServiceMocks.mockRetrieveVatSchemeThrowsException(regId)
+      controller.retrieveVatScheme(regId)(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
+    }
+ */
+      "call getAcknowledgementReference return Ok with Acknowledgement Reference" in new Setup {
+        ServiceMocks.mockGetAcknowledgementReference()
+        controller.getAcknowledgementReference(regId)(FakeRequest()) returnsStatus OK
+      }
+
+      "call getAcknowledgementReference return ServiceUnavailable" in new Setup {
+        ServiceMocks.mockGetAcknowledgementReferenceServiceUnavailable(exception)
+        controller.getAcknowledgementReference(regId)(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
       }
     }
 

@@ -35,10 +35,8 @@ class RejectedIncorporationException(msg: String) extends NoStackTrace {
 }
 
 @Singleton
-class SubmissionService @Inject()(injSequenceMongoRepository: SequenceMongo,
-                                  initVatRegistrationService: VatRegistrationService) extends SubmissionSrv {
-  val sequenceRepository = injSequenceMongoRepository.store
-  val vatRegistrationService = initVatRegistrationService
+class SubmissionService @Inject()(val sequenceRepository: SequenceRepository,
+                                  val vatRegistrationService: VatRegistrationService) extends SubmissionSrv {
   val auditConnector = MicroserviceAuditConnector
 }
 

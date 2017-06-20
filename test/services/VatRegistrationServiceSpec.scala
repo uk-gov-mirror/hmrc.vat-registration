@@ -175,6 +175,31 @@ class VatRegistrationServiceSpec extends VatRegSpec {
     }
   }
 
+
+  "call to saveAcknowledgementReference" should {
+
+    val vatScheme = VatScheme(RegistrationId("1"), None, None, None)
+
+    "return Success response " in new Setup {
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Some(vatScheme))
+      when(mockRegistrationRepository.updateByElement(RegistrationId("1"), AcknowledgementReferencePath, ServiceMocks.ACK_REF_NUMBER)).thenReturn(ServiceMocks.ACK_REF_NUMBER)
+      service.saveAcknowledgementReference(RegistrationId("1"), ServiceMocks.ACK_REF_NUMBER) returnsRight ServiceMocks.ACK_REF_NUMBER
+    }
+
+    val vatSchemeWithAckRefNum = vatScheme.copy(acknowledgementReference = Some(ServiceMocks.ACK_REF_NUMBER))
+    "return Error response " in new Setup {
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Some(vatSchemeWithAckRefNum))
+      service.saveAcknowledgementReference(RegistrationId("1"), ServiceMocks.ACK_REF_NUMBER) returnsLeft AcknowledgementReferenceExists(s"""Registration ID 1 already has an acknowledgement reference of: ${ServiceMocks.ACK_REF_NUMBER}""")
+    }
+
+    "return Error response for MissingVatSchemeDocument" in new Setup {
+      val regId = RegistrationId("regId")
+      when(mockRegistrationRepository.retrieveVatScheme(regId)).thenReturn(Future.successful(None))
+      service.saveAcknowledgementReference(regId, ServiceMocks.ACK_REF_NUMBER) returnsLeft ResourceNotFound(s"VatScheme ID: $regId missing")
+    }
+  }
+
+
   "call to deleteByElement" should {
     "return Success response " in new Setup {
       when(mockRegistrationRepository.deleteByElement(RegistrationId("1"), VatBankAccountPath)).thenReturn(Future.successful(true))
