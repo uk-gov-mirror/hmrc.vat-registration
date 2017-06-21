@@ -21,7 +21,7 @@ import java.time.LocalDate
 import common.exceptions._
 import common.{LogicalGroup, RegistrationId}
 import itutil.FutureAssertions
-import models.VatBankAccountPath
+import models.{AcknowledgementReferencePath, VatBankAccountPath}
 import models.api._
 import org.scalatest.BeforeAndAfterEach
 import play.api.libs.json.Writes
@@ -178,5 +178,19 @@ class RegistrationMongoRepositoryISpec
       repository.insert(vatScheme).flatMap(_ => repository.deleteByElement(RegistrationId("0"), VatBankAccountPath)) failedWith classOf[UpdateFailed]
     }
   }
+
+  val ACK_REF_NUM = "REF0000001"
+  "Calling updateByElement" should {
+
+    "update Element object when one exists" in new Setup {
+      val schemeWithAckRefNumber = vatScheme.copy(acknowledgementReference = Some(ACK_REF_NUM))
+      repository.insert(schemeWithAckRefNumber).flatMap(_ => repository.updateByElement(vatScheme.id, AcknowledgementReferencePath, ACK_REF_NUM)) returns ACK_REF_NUM
+    }
+
+    "return a None when there is no corresponding VatScheme object" in new Setup {
+      repository.insert(vatScheme).flatMap(_ => repository.updateByElement(RegistrationId("0"), AcknowledgementReferencePath, ACK_REF_NUM)) failedWith classOf[UpdateFailed]
+    }
+  }
+
 
 }

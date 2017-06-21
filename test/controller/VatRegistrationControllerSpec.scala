@@ -16,6 +16,7 @@
 
 package controller
 
+import common.exceptions.AcknowledgementReferenceExists
 import controllers.VatRegistrationController
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
@@ -26,12 +27,13 @@ import play.api.mvc.Results.Accepted
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
+
 class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
   val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB666666C", "director", name, formerName, currentOrPreviousAddress, contact)
 
   class Setup {
-    val controller = new VatRegistrationController(mockAuthConnector, mockRegistrationService)
+    val controller = new VatRegistrationController(mockAuthConnector, mockRegistrationService, mockSubmissionService)
     AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
   }
 
@@ -180,6 +182,24 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       "call updatePpob return ServiceUnavailable" in new Setup {
         ServiceMocks.mockServiceUnavailableUpdateLogicalGroup(scrsAddress, exception)
         controller.updatePpob(regId)(fakeRequest) returnsStatus SERVICE_UNAVAILABLE
+      }
+    }
+
+    "getAcknowledgementReference" should {
+
+      "call getAcknowledgementReference return Ok with Acknowledgement Reference" in new Setup {
+        ServiceMocks.mockGetAcknowledgementReference(ackRefNumber)
+        controller.getAcknowledgementReference(regId)(FakeRequest()) returnsStatus OK
+      }
+
+      "call getAcknowledgementReference return ServiceUnavailable" in new Setup {
+        ServiceMocks.mockGetAcknowledgementReferenceServiceUnavailable(exception)
+        controller.getAcknowledgementReference(regId)(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
+      }
+
+      "call getAcknowledgementReference return AcknowledgementReferenceExists Erorr" in new Setup {
+        ServiceMocks.mockGetAcknowledgementReferenceExistsError()
+        controller.getAcknowledgementReference(regId)(FakeRequest()) returnsStatus CONFLICT
       }
     }
 

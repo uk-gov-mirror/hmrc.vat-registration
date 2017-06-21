@@ -19,8 +19,7 @@ package repositories
 import javax.inject.{Inject, Named}
 
 import cats.data.OptionT
-import common.RegistrationId
-import common.LogicalGroup
+import common.{LogicalGroup, RegistrationId}
 import common.exceptions._
 import models._
 import models.api.{VatBankAccountMongoFormat, VatFinancials, VatScheme}
@@ -44,6 +43,8 @@ trait RegistrationRepository {
   def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G]): Future[G]
 
   def deleteVatScheme(id: RegistrationId): Future[Boolean]
+
+  def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String): Future[String]
 
   def deleteByElement(id: RegistrationId, elementPath: ElementPath): Future[Boolean]
 
@@ -90,19 +91,20 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
     }
   }
 
-  override def retrieveVatScheme(id: RegistrationId): Future[Option[VatScheme]] = {
+  override def retrieveVatScheme(id: RegistrationId): Future[Option[VatScheme]] =
     collection.find(ridSelector(id)).one[VatScheme]
-  }
 
-  override def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G]): Future[G] = {
+  override def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G]): Future[G] =
     OptionT(collection.findAndUpdate(ridSelector(id), BSONDocument("$set" -> BSONDocument(logicalGroup.name -> w.writes(group))))
       .map(_.value)).map(_ => group).getOrElse(throw UpdateFailed(id, logicalGroup.name))
-  }
 
   private def unsetElement(id: RegistrationId, element: String): Future[Boolean] =
     OptionT(collection.findAndUpdate(ridSelector(id), BSONDocument("$unset" -> BSONDocument(element -> "")))
       .map(_.value)).map(_ => true).getOrElse(throw UpdateFailed(id, element))
 
+  private def setElement(id: RegistrationId, element: String, value: String): Future[String] =
+    OptionT(collection.findAndUpdate(ridSelector(id), BSONDocument("$set" -> BSONDocument(element -> value)))
+      .map(_.value)).map(_ => value).getOrElse(throw UpdateFailed(id, element))
 
   override def deleteVatScheme(id: RegistrationId): Future[Boolean] = retrieveVatScheme(id) flatMap {
     case Some(ct) => collection.remove(ridSelector(id)) map { _ => true }
@@ -112,5 +114,8 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
 
   override def deleteByElement(id: RegistrationId, elementPath: ElementPath): Future[Boolean] =
     unsetElement(id, elementPath.path)
+
+  override def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String): Future[String] =
+    setElement(id, elementPath.path, value)
 
 }

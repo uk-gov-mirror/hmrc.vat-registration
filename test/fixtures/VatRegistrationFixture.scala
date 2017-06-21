@@ -22,9 +22,9 @@ import common.RegistrationId
 import models.api._
 
 trait VatRegistrationFixture {
-
   val regId = RegistrationId("testId")
   val userId = "userId"
+  val ackRefNumber = "BRPY000000000001"
   val date = LocalDate.of(2017, 1, 1)
   val vatChoice: VatChoice = VatChoice(
     necessity = "obligatory",
