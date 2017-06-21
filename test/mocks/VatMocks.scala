@@ -71,7 +71,6 @@ trait VatMocks extends WSHTTPMock {
 
 
   object ServiceMocks {
-    val ACK_REF_NUMBER = "BRPY000000000001"
 
     def serviceResult[B](b: B): ServiceResult[B] = {
       EitherT[Future, LeftState, B](Future.successful(Right(b)))
@@ -138,10 +137,10 @@ trait VatMocks extends WSHTTPMock {
         .thenReturn(serviceResult(group))
     }
 
-    def mockGetAcknowledgementReference(): Unit = {
+    def mockGetAcknowledgementReference(ackRef:String): Unit = {
       val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
       when(mockSubmissionService.assertOrGenerateAcknowledgementReference(idMatcher))
-        .thenReturn(serviceResult(ACK_REF_NUMBER))
+        .thenReturn(serviceResult(ackRef))
     }
 
     def mockGetAcknowledgementReferenceServiceUnavailable(exception: Exception): Unit = {

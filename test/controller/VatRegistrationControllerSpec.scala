@@ -196,7 +196,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
     }
  */
       "call getAcknowledgementReference return Ok with Acknowledgement Reference" in new Setup {
-        ServiceMocks.mockGetAcknowledgementReference()
+        ServiceMocks.mockGetAcknowledgementReference(ackRefNumber)
         controller.getAcknowledgementReference(regId)(FakeRequest()) returnsStatus OK
       }
 

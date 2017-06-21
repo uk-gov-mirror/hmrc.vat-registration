@@ -30,10 +30,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NoStackTrace
 
-class RejectedIncorporationException(msg: String) extends NoStackTrace {
-  override def getMessage: String = msg
-}
-
 @Singleton
 class SubmissionService @Inject()(val sequenceRepository: SequenceRepository,
                                   val vatRegistrationService: VatRegistrationService) extends SubmissionSrv {

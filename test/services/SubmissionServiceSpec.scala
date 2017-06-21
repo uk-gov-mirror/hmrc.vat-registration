@@ -23,11 +23,12 @@ import common.exceptions._
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models.api._
+import org.mockito.Matchers
+import org.mockito.Matchers.anyString
 import org.mockito.Mockito._
 import uk.gov.hmrc.play.http.HeaderCarrier
 
-import scala.concurrent.Future
-class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture  with ApplicativeSyntax with FutureInstances{
+class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with ApplicativeSyntax with FutureInstances {
 
   trait Setup {
     val service = new SubmissionService(mockSequenceRepository, mockVatRegistrationService)
@@ -41,22 +42,22 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture  with
 
     "return Success response " in new Setup {
 
-      when(mockVatRegistrationService.retrieveAcknowledgementReference(RegistrationId("1"))).
-        thenReturn(ServiceMocks.serviceResult(ServiceMocks.ACK_REF_NUMBER))
-      service.assertOrGenerateAcknowledgementReference(RegistrationId("1")) returnsRight ServiceMocks.ACK_REF_NUMBER
+      when(mockVatRegistrationService.retrieveAcknowledgementReference(regId)).
+        thenReturn(ServiceMocks.serviceResult(ackRefNumber))
+      service.assertOrGenerateAcknowledgementReference(regId) returnsRight ackRefNumber
     }
 
     "return ResourceNotFound response " in new Setup {
-
       val sequenceNo = 1
-      when(mockVatRegistrationService.retrieveAcknowledgementReference(RegistrationId("1")))
-      .thenReturn(ServiceMocks.serviceError[String](ResourceNotFound("Resource Not Found for regId 1")))
-
-      when(mockSequenceRepository.getNext("AcknowledgementID"))
-        .thenReturn(Future.successful(sequenceNo))
-
       val formatedRefNumber = f"BRPY$sequenceNo%011d"
-      service.assertOrGenerateAcknowledgementReference(RegistrationId("1")) returnsRight formatedRefNumber
+      when(mockVatRegistrationService.retrieveAcknowledgementReference(RegistrationId(anyString())))
+        .thenReturn(ServiceMocks.serviceError[String](ResourceNotFound("Resource Not Found for regId 1")))
+      when(mockSequenceRepository.getNext("AcknowledgementID")).thenReturn(sequenceNo.pure)
+      when(mockVatRegistrationService.saveAcknowledgementReference(RegistrationId(anyString()), anyString()))
+        .thenReturn(ServiceMocks.serviceResult(formatedRefNumber))
+
+      service.assertOrGenerateAcknowledgementReference(regId) returnsRight formatedRefNumber
     }
+
   }
 }

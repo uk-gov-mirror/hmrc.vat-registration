@@ -18,7 +18,7 @@ package repository
 
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import repositories.SequenceMongo
+import repositories.{MongoDBProvider, SequenceMongoRepository}
 import uk.gov.hmrc.mongo.MongoSpecSupport
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
@@ -28,13 +28,12 @@ class SequenceMongoRepositoryISpec
   extends UnitSpec with MongoSpecSupport with BeforeAndAfterEach with ScalaFutures with Eventually with WithFakeApplication {
 
   class Setup {
-    val mongo = new SequenceMongo()
-    val repository = mongo.store
+    val repository =  new SequenceMongoRepository(new MongoDBProvider())
     await(repository.drop)
     await(repository.ensureIndexes)
   }
 
-  override def afterAll() = new Setup {
+  override def afterAll(): Unit = new Setup {
     await(repository.drop)
   }
 

@@ -16,10 +16,9 @@
 
 package services
 
-import java.time.LocalDate
-
 import common.RegistrationId
 import common.exceptions._
+import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models._
 import models.api._
@@ -30,16 +29,7 @@ import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-class VatRegistrationServiceSpec extends VatRegSpec {
-
-  val date = LocalDate.of(2017, 1, 1)
-  val vatChoice: VatChoice = VatChoice(
-    necessity = "voluntary",
-    vatStartDate = VatStartDate(
-      selection = "SPECIFIC_DATE",
-      startDate = Some(date)
-    )
-  )
+class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   trait Setup {
     val service = new VatRegistrationService(mockBusRegConnector, mockRegistrationRepository)
@@ -182,20 +172,20 @@ class VatRegistrationServiceSpec extends VatRegSpec {
 
     "return Success response " in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Some(vatScheme))
-      when(mockRegistrationRepository.updateByElement(RegistrationId("1"), AcknowledgementReferencePath, ServiceMocks.ACK_REF_NUMBER)).thenReturn(ServiceMocks.ACK_REF_NUMBER)
-      service.saveAcknowledgementReference(RegistrationId("1"), ServiceMocks.ACK_REF_NUMBER) returnsRight ServiceMocks.ACK_REF_NUMBER
+      when(mockRegistrationRepository.updateByElement(RegistrationId("1"), AcknowledgementReferencePath, ackRefNumber)).thenReturn(ackRefNumber)
+      service.saveAcknowledgementReference(RegistrationId("1"), ackRefNumber) returnsRight ackRefNumber
     }
 
-    val vatSchemeWithAckRefNum = vatScheme.copy(acknowledgementReference = Some(ServiceMocks.ACK_REF_NUMBER))
+    val vatSchemeWithAckRefNum = vatScheme.copy(acknowledgementReference = Some(ackRefNumber))
     "return Error response " in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Some(vatSchemeWithAckRefNum))
-      service.saveAcknowledgementReference(RegistrationId("1"), ServiceMocks.ACK_REF_NUMBER) returnsLeft AcknowledgementReferenceExists(s"""Registration ID 1 already has an acknowledgement reference of: ${ServiceMocks.ACK_REF_NUMBER}""")
+      service.saveAcknowledgementReference(RegistrationId("1"), ackRefNumber) returnsLeft AcknowledgementReferenceExists(s"""Registration ID 1 already has an acknowledgement reference of: $ackRefNumber""")
     }
 
     "return Error response for MissingVatSchemeDocument" in new Setup {
       val regId = RegistrationId("regId")
       when(mockRegistrationRepository.retrieveVatScheme(regId)).thenReturn(Future.successful(None))
-      service.saveAcknowledgementReference(regId, ServiceMocks.ACK_REF_NUMBER) returnsLeft ResourceNotFound(s"VatScheme ID: $regId missing")
+      service.saveAcknowledgementReference(regId, ackRefNumber) returnsLeft ResourceNotFound(s"VatScheme ID: $regId missing")
     }
   }
 
