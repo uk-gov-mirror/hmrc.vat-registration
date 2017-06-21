@@ -179,7 +179,8 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
     val vatSchemeWithAckRefNum = vatScheme.copy(acknowledgementReference = Some(ackRefNumber))
     "return Error response " in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Some(vatSchemeWithAckRefNum))
-      service.saveAcknowledgementReference(RegistrationId("1"), ackRefNumber) returnsLeft AcknowledgementReferenceExists(s"""Registration ID 1 already has an acknowledgement reference of: $ackRefNumber""")
+      service.saveAcknowledgementReference(RegistrationId("1"), ackRefNumber) returnsLeft
+        AcknowledgementReferenceExists(s"""Registration ID 1 already has an acknowledgement reference of: $ackRefNumber""")
     }
 
     "return Error response for MissingVatSchemeDocument" in new Setup {
@@ -200,6 +201,20 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
       val t = new RuntimeException("Exception")
       when(mockRegistrationRepository.deleteByElement(RegistrationId("1"), VatBankAccountPath)).thenReturn(Future.failed(t))
       service.deleteByElement(RegistrationId("1"), VatBankAccountPath) returnsLeft GenericError(t)
+    }
+  }
+
+  "call to retrieveAcknowledgementReference" should {
+
+    "call to retrieveAcknowledgementReference return AcknowledgementReference from DB" in new Setup {
+      val vatSchemeWithAckRefNum = vatScheme.copy(acknowledgementReference = Some(ackRefNumber))
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(Some(vatSchemeWithAckRefNum)))
+      service.retrieveAcknowledgementReference(RegistrationId("1")) returnsRight ackRefNumber
+    }
+
+    "call to retrieveAcknowledgementReference return None from DB" in new Setup {
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(Some(vatScheme)))
+      service.retrieveAcknowledgementReference(RegistrationId("1")) returnsLeft ResourceNotFound("AcknowledgementId")
     }
   }
 

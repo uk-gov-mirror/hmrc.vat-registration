@@ -149,6 +149,12 @@ trait VatMocks extends WSHTTPMock {
         .thenReturn(serviceError[String](GenericDatabaseError(exception, Some("regId"))))
     }
 
+    def mockGetAcknowledgementReferenceExistsError(): Unit = {
+      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
+      when(mockSubmissionService.assertOrGenerateAcknowledgementReference(idMatcher))
+        .thenReturn(serviceError[String](AcknowledgementReferenceExists("regId")))
+    }
+
     def mockServiceUnavailableUpdateLogicalGroup[G](group: G, exception: Exception): Unit = {
       // required to do like this because of how Mockito matchers work with Scala Value Classes
       //http://stackoverflow.com/a/34934179/81520

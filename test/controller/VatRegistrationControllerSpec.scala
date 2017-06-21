@@ -16,6 +16,7 @@
 
 package controller
 
+import common.exceptions.AcknowledgementReferenceExists
 import controllers.VatRegistrationController
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
@@ -25,6 +26,7 @@ import play.api.libs.json.Json
 import play.api.mvc.Results.Accepted
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+
 
 class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
@@ -184,17 +186,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
     }
 
     "getAcknowledgementReference" should {
-/*
-  "call to retrieveVatScheme return Ok with VatScheme" in new Setup {
-      ServiceMocks.mockRetrieveVatScheme(regId, vatScheme)
-      controller.retrieveVatScheme(regId)(FakeRequest()) returnsStatus OK
-    }
 
-    "call to retrieveVatScheme return ServiceUnavailable" in new Setup {
-      ServiceMocks.mockRetrieveVatSchemeThrowsException(regId)
-      controller.retrieveVatScheme(regId)(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
-    }
- */
       "call getAcknowledgementReference return Ok with Acknowledgement Reference" in new Setup {
         ServiceMocks.mockGetAcknowledgementReference(ackRefNumber)
         controller.getAcknowledgementReference(regId)(FakeRequest()) returnsStatus OK
@@ -203,6 +195,11 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       "call getAcknowledgementReference return ServiceUnavailable" in new Setup {
         ServiceMocks.mockGetAcknowledgementReferenceServiceUnavailable(exception)
         controller.getAcknowledgementReference(regId)(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
+      }
+
+      "call getAcknowledgementReference return AcknowledgementReferenceExists Erorr" in new Setup {
+        ServiceMocks.mockGetAcknowledgementReferenceExistsError()
+        controller.getAcknowledgementReference(regId)(FakeRequest()) returnsStatus CONFLICT
       }
     }
 
