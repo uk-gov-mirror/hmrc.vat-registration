@@ -16,10 +16,9 @@
 
 package services
 
-import java.time.LocalDate
-
 import common.RegistrationId
 import common.exceptions._
+import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models._
 import models.api._
@@ -30,16 +29,7 @@ import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-class VatRegistrationServiceSpec extends VatRegSpec {
-
-  val date = LocalDate.of(2017, 1, 1)
-  val vatChoice: VatChoice = VatChoice(
-    necessity = "voluntary",
-    vatStartDate = VatStartDate(
-      selection = "SPECIFIC_DATE",
-      startDate = Some(date)
-    )
-  )
+class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   trait Setup {
     val service = new VatRegistrationService(mockBusRegConnector, mockRegistrationRepository)
@@ -175,6 +165,32 @@ class VatRegistrationServiceSpec extends VatRegSpec {
     }
   }
 
+
+  "call to saveAcknowledgementReference" should {
+
+    val vatScheme = VatScheme(RegistrationId("1"), None, None, None)
+
+    "return Success response " in new Setup {
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Some(vatScheme))
+      when(mockRegistrationRepository.updateByElement(RegistrationId("1"), AcknowledgementReferencePath, ackRefNumber)).thenReturn(ackRefNumber)
+      service.saveAcknowledgementReference(RegistrationId("1"), ackRefNumber) returnsRight ackRefNumber
+    }
+
+    val vatSchemeWithAckRefNum = vatScheme.copy(acknowledgementReference = Some(ackRefNumber))
+    "return Error response " in new Setup {
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Some(vatSchemeWithAckRefNum))
+      service.saveAcknowledgementReference(RegistrationId("1"), ackRefNumber) returnsLeft
+        AcknowledgementReferenceExists(s"""Registration ID 1 already has an acknowledgement reference of: $ackRefNumber""")
+    }
+
+    "return Error response for MissingVatSchemeDocument" in new Setup {
+      val regId = RegistrationId("regId")
+      when(mockRegistrationRepository.retrieveVatScheme(regId)).thenReturn(Future.successful(None))
+      service.saveAcknowledgementReference(regId, ackRefNumber) returnsLeft ResourceNotFound(s"VatScheme ID: $regId missing")
+    }
+  }
+
+
   "call to deleteByElement" should {
     "return Success response " in new Setup {
       when(mockRegistrationRepository.deleteByElement(RegistrationId("1"), VatBankAccountPath)).thenReturn(Future.successful(true))
@@ -185,6 +201,20 @@ class VatRegistrationServiceSpec extends VatRegSpec {
       val t = new RuntimeException("Exception")
       when(mockRegistrationRepository.deleteByElement(RegistrationId("1"), VatBankAccountPath)).thenReturn(Future.failed(t))
       service.deleteByElement(RegistrationId("1"), VatBankAccountPath) returnsLeft GenericError(t)
+    }
+  }
+
+  "call to retrieveAcknowledgementReference" should {
+
+    "call to retrieveAcknowledgementReference return AcknowledgementReference from DB" in new Setup {
+      val vatSchemeWithAckRefNum = vatScheme.copy(acknowledgementReference = Some(ackRefNumber))
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(Some(vatSchemeWithAckRefNum)))
+      service.retrieveAcknowledgementReference(RegistrationId("1")) returnsRight ackRefNumber
+    }
+
+    "call to retrieveAcknowledgementReference return None from DB" in new Setup {
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(Some(vatScheme)))
+      service.retrieveAcknowledgementReference(RegistrationId("1")) returnsLeft ResourceNotFound("AcknowledgementId")
     }
   }
 
