@@ -51,6 +51,6 @@ trait SubmissionSrv {
     }
 
   private[services] def generateAcknowledgementReference: Future[String] =
-    sequenceRepository.getNext("AcknowledgementID").map(ref => f"BRPY$ref%011d")
+    sequenceRepository.getNext("AcknowledgementID").map(ref => f"BRVT$ref%011d")
 
 }
