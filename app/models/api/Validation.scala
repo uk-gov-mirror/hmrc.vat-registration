@@ -67,7 +67,7 @@ trait VatStartDateValidator extends Validation {
 }
 
 trait VatDigitalContactValidator extends Validation {
-  val emailValidator: Format[String] = readToFmt(pattern("^([A-Z|a-z|0-9|._-]+)@([A-Z|a-z|0-9|._-]+)$".r))
+  val emailValidator: Format[String] = readToFmt(pattern("""^([A-Za-z0-9\-_.]+)@([A-Za-z0-9\-_.]+)\.[A-Za-z0-9\-_.]{2,3}$""".r))
   val telValidator: Format[String] = readToFmt(pattern("^(\\d){1,20}$".r))
   val mobileValidator: Format[String] = readToFmt(pattern("^(\\d){1,20}$".r))
 
@@ -80,7 +80,7 @@ trait VatLodgingOfficerValidator extends Validation {
   val titleRegex = """^[A-Za-z]{1,20}$""".r
   val titleValidator: Format[String] = readToFmt(pattern(titleRegex))
   val nameValidator: Format[String] = readToFmt(pattern(nameRegex))
-  val emailValidator: Format[String] = readToFmt(pattern("^([A-Z|a-z|0-9|._-]+)@([A-Z|a-z|0-9|._-]+)$".r))
+  val emailValidator: Format[String] = readToFmt(pattern("""^([A-Za-z0-9\-_.]+)@([A-Za-z0-9\-_.]+)\.[A-Za-z0-9\-_.]{2,3}$""".r))
   val telValidator: Format[String] = readToFmt(pattern("^(\\d){1,20}$".r))
   val mobileValidator: Format[String] = readToFmt(pattern("^(\\d){1,20}$".r))
 }
