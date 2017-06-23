@@ -11,6 +11,7 @@ PATCH        /:regID/vat-contact                    controllers.VatRegistrationC
 PATCH        /:regID/service-eligibility            controllers.VatRegistrationController.updateVatEligibility(regID: RegistrationId)
 PATCH        /:regID/lodging-officer                controllers.VatRegistrationController.updateLodgingOfficer(regID: RegistrationId)
 PATCH        /:regID/ppob                           controllers.VatRegistrationController.updatePpob(regID: RegistrationId)
+PATCH        /:regID/frs-answers                    controllers.VatRegistrationController.updateFrsAnswers(regID: RegistrationId)
 
 GET          /:regID/acknowledgement-reference      controllers.VatRegistrationController.getAcknowledgementReference(regID: RegistrationId)
 
