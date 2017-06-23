@@ -47,6 +47,19 @@ trait VatAccountingPeriodValidator extends Validation {
 
 }
 
+trait VatFlatRateSchemeAnswersValidator extends Validation {
+
+  val limitedCostAnswer: Format[String] =
+    acceptOnly("no", "yes", "yesWithin12months")
+
+  val lessThan1000pounds: Format[String] =
+    acceptOnly("no", "yes", "yesWithin12months")
+
+  val whenDoYouWantToJoinFRS: Format[String] =
+    acceptOnly("registrationDate", "differentDate")
+
+}
+
 trait VatChoiceValidator extends Validation {
 
   val necessityValidator: Format[String] =
