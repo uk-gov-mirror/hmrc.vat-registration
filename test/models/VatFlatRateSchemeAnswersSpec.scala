@@ -16,7 +16,7 @@
 
 package models
 
-import models.api.{LimitedCost, VatBankAccount, VatBankAccountMongoFormat, VatFlatRateSchemeAnswers}
+import models.api.{AnnualCostsLimited, VatBankAccount, VatBankAccountMongoFormat, VatFlatRateSchemeAnswers}
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
 
@@ -27,66 +27,66 @@ class VatFlatRateSchemeAnswersSpec extends JsonFormatValidation {
       val json = Json.parse(
         s"""
            |{
-           |  "interestedInFRS":true,
-           |  "lessThan1000pounds":"yesWithin12months",
-           |  "limitedCost" : {
+           |  "joinFrs":true,
+           |  "annualCostsInclusive":"yesWithin12months",
+           |  "annualCostsLimited" : {
            |      "lessThan" : 1000,
            |      "answer" : "yesWithin12months"
            |      },
            |  "doYouWantToUseThisRate":false,
-           |  "whenDoYouWantToJoinFRS" : "registrationDate"
+           |  "whenDoYouWantToJoinFrs" : "registrationDate"
            |
            |}
         """.stripMargin)
 
       val tstVatFlatRateSchemeAnswers = VatFlatRateSchemeAnswers(
-        interestedInFRS = Some(true),
-        lessThan1000pounds = Some("yesWithin12months"),
-        limitedCost = Some(LimitedCost(Some(1000), Some("yesWithin12months"))),
+        joinFrs = Some(true),
+        annualCostsInclusive = Some("yesWithin12months"),
+        annualCostsLimited = Some(AnnualCostsLimited(Some(1000), Some("yesWithin12months"))),
         doYouWantToUseThisRate = Some(false),
-        whenDoYouWantToJoinFRS=  Some("registrationDate"))
+        whenDoYouWantToJoinFrs=  Some("registrationDate"))
 
       Json.fromJson[VatFlatRateSchemeAnswers](json) shouldBe JsSuccess(tstVatFlatRateSchemeAnswers)
     }
 
-    "fail from Json with invalid lessThan1000pounds" in {
+    "fail from Json with invalid annualCostsInclusive" in {
       val json = Json.parse(
         s"""
            |{
-           |  "interestedInFRS":true,
-           |  "lessThan1000pounds":"yesWithin32months",
-           |  "limitedCost" : {
+           |  "joinFrs":true,
+           |  "annualCostsInclusive":"yesWithin32months",
+           |  "annualCostsLimited" : {
            |      "lessThan" : 1000,
            |      "answer" : "yesWithin12months"
            |      },
            |  "doYouWantToUseThisRate":false,
-           |  "whenDoYouWantToJoinFRS" : "registrationDate"
+           |  "whenDoYouWantToJoinFrs" : "registrationDate"
            |
            |}
         """.stripMargin)
 
       val result = Json.fromJson[VatFlatRateSchemeAnswers](json)
-      result shouldHaveErrors (JsPath() \ "lessThan1000pounds" -> ValidationError("error.pattern"))
+      result shouldHaveErrors (JsPath() \ "annualCostsInclusive" -> ValidationError("error.pattern"))
     }
 
-    "fail from Json with invalid whenDoYouWantToJoinFRS" in {
+    "fail from Json with invalid whenDoYouWantToJoinFrs" in {
       val json = Json.parse(
         s"""
            |{
-           |  "interestedInFRS":true,
-           |  "lessThan1000pounds":"yesWithin12months",
-           |  "limitedCost" : {
+           |  "joinFrs":true,
+           |  "annualCostsInclusive":"yesWithin12months",
+           |  "annualCostsLimited" : {
            |      "lessThan" : 1000,
            |      "answer" : "yesWithin12months"
            |      },
            |  "doYouWantToUseThisRate":false,
-           |  "whenDoYouWantToJoinFRS" : "Date"
+           |  "whenDoYouWantToJoinFrs" : "Date"
            |
            |}
         """.stripMargin)
 
       val result = Json.fromJson[VatFlatRateSchemeAnswers](json)
-      result shouldHaveErrors (JsPath() \ "whenDoYouWantToJoinFRS" -> ValidationError("error.pattern"))
+      result shouldHaveErrors (JsPath() \ "whenDoYouWantToJoinFrs" -> ValidationError("error.pattern"))
     }
 
 
@@ -96,11 +96,11 @@ class VatFlatRateSchemeAnswersSpec extends JsonFormatValidation {
 
       "complete successfully from full Json" in {
         val tstVatFlatRateSchemeAnswers = VatFlatRateSchemeAnswers(
-          interestedInFRS = Some(true),
-          lessThan1000pounds = Some("yesWithin12months"),
-          limitedCost = Some(LimitedCost(Some(1000), Some("yesWithin12months"))),
+          joinFrs = Some(true),
+          annualCostsInclusive = Some("yesWithin12months"),
+          annualCostsLimited = Some(AnnualCostsLimited(Some(1000), Some("yesWithin12months"))),
           doYouWantToUseThisRate = Some(false),
-          whenDoYouWantToJoinFRS=  Some("registrationDate"))
+          whenDoYouWantToJoinFrs=  Some("registrationDate"))
 
         val writeResult = formt.writes(tstVatFlatRateSchemeAnswers)
         val readResult = formt.reads(Json.toJson(writeResult))

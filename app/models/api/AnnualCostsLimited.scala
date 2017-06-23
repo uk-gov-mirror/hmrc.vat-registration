@@ -19,13 +19,13 @@ package models.api
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class LimitedCost(lessThan: Option[Int] = None,
-                       answer: Option[String] = None)
+case class AnnualCostsLimited(lessThan: Option[Int] = None,
+                              answer: Option[String] = None)
 
-object LimitedCost extends VatFlatRateSchemeAnswersValidator {
+object AnnualCostsLimited extends VatFlatRateSchemeAnswersValidator {
 
     implicit val format = (
     (__ \ "lessThan").formatNullable[Int] and
-      (__ \ "answer").formatNullable[String](limitedCostAnswer)
-    ) (LimitedCost.apply, unlift(LimitedCost.unapply))
+      (__ \ "answer").formatNullable[String](annualCostsLimited)
+    ) (AnnualCostsLimited.apply, unlift(AnnualCostsLimited.unapply))
 }

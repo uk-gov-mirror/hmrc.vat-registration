@@ -19,20 +19,20 @@ package models.api
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatFlatRateSchemeAnswers(interestedInFRS: Option[Boolean] = None,
-                                    lessThan1000pounds: Option[String] = None,
-                                    limitedCost: Option[LimitedCost] = None,
+case class VatFlatRateSchemeAnswers(joinFrs: Option[Boolean] = None,
+                                    annualCostsInclusive: Option[String] = None,
+                                    annualCostsLimited: Option[AnnualCostsLimited] = None,
                                     doYouWantToUseThisRate: Option[Boolean] = None,
-                                    whenDoYouWantToJoinFRS: Option[String] = None)
+                                    whenDoYouWantToJoinFrs: Option[String] = None)
 
 object VatFlatRateSchemeAnswers extends VatFlatRateSchemeAnswersValidator {
 
   implicit val format = (
-    (__ \ "interestedInFRS").formatNullable[Boolean] and
-      (__ \ "lessThan1000pounds").formatNullable[String](lessThan1000pounds) and
-      (__ \ "limitedCost").formatNullable[LimitedCost] and
+    (__ \ "joinFrs").formatNullable[Boolean] and
+      (__ \ "annualCostsInclusive").formatNullable[String](annualCostsInclusive) and
+      (__ \ "annualCostsLimited").formatNullable[AnnualCostsLimited] and
       (__ \ "doYouWantToUseThisRate").formatNullable[Boolean] and
-      (__ \ "whenDoYouWantToJoinFRS").formatNullable[String](whenDoYouWantToJoinFRS)
+      (__ \ "whenDoYouWantToJoinFrs").formatNullable[String](whenDoYouWantToJoinFrs)
     ) (VatFlatRateSchemeAnswers.apply, unlift(VatFlatRateSchemeAnswers.unapply))
 
 }

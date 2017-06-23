@@ -49,13 +49,13 @@ trait VatAccountingPeriodValidator extends Validation {
 
 trait VatFlatRateSchemeAnswersValidator extends Validation {
 
-  val limitedCostAnswer: Format[String] =
+  val annualCostsLimited: Format[String] =
     acceptOnly("no", "yes", "yesWithin12months")
 
-  val lessThan1000pounds: Format[String] =
+  val annualCostsInclusive: Format[String] =
     acceptOnly("no", "yes", "yesWithin12months")
 
-  val whenDoYouWantToJoinFRS: Format[String] =
+  val whenDoYouWantToJoinFrs: Format[String] =
     acceptOnly("registrationDate", "differentDate")
 
 }
