@@ -26,5 +26,11 @@ case class VatFlatRateScheme(joinFrs: Boolean = false,
                              whenDoYouWantToJoinFrs: Option[String] = None)
 
 object VatFlatRateScheme extends VatFlatRateSchemeValidator {
-  implicit val format: OFormat[VatFlatRateScheme] = Json.format[VatFlatRateScheme]
+  implicit val format = (
+    (__ \ "joinFrs").format[Boolean] and
+      (__ \ "annualCostsInclusive").formatNullable[String](annualCostsInclusive) and
+      (__ \ "annualCostsLimited").formatNullable[AnnualCostsLimited] and
+      (__ \ "doYouWantToUseThisRate").formatNullable[Boolean] and
+      (__ \ "whenDoYouWantToJoinFrs").formatNullable[String](whenDoYouWantToJoinFrs)
+    ) (VatFlatRateScheme.apply, unlift(VatFlatRateScheme.unapply))
 }
