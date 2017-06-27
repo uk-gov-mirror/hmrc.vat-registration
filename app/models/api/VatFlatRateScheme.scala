@@ -19,13 +19,13 @@ package models.api
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatFlatRateSchemeAnswers(joinFrs: Option[Boolean] = None,
-                                    annualCostsInclusive: Option[String] = None,
-                                    annualCostsLimited: Option[AnnualCostsLimited] = None,
-                                    doYouWantToUseThisRate: Option[Boolean] = None,
-                                    whenDoYouWantToJoinFrs: Option[String] = None)
+case class VatFlatRateScheme(joinFrs: Option[Boolean] = None,
+                             annualCostsInclusive: Option[String] = None,
+                             annualCostsLimited: Option[AnnualCostsLimited] = None,
+                             doYouWantToUseThisRate: Option[Boolean] = None,
+                             whenDoYouWantToJoinFrs: Option[String] = None)
 
-object VatFlatRateSchemeAnswers extends VatFlatRateSchemeAnswersValidator {
+object VatFlatRateScheme extends VatFlatRateSchemeValidator {
 
   implicit val format = (
     (__ \ "joinFrs").formatNullable[Boolean] and
@@ -33,6 +33,6 @@ object VatFlatRateSchemeAnswers extends VatFlatRateSchemeAnswersValidator {
       (__ \ "annualCostsLimited").formatNullable[AnnualCostsLimited] and
       (__ \ "doYouWantToUseThisRate").formatNullable[Boolean] and
       (__ \ "whenDoYouWantToJoinFrs").formatNullable[String](whenDoYouWantToJoinFrs)
-    ) (VatFlatRateSchemeAnswers.apply, unlift(VatFlatRateSchemeAnswers.unapply))
+    ) (VatFlatRateScheme.apply, unlift(VatFlatRateScheme.unapply))
 
 }
