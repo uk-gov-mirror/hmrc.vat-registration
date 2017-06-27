@@ -16,7 +16,7 @@
 
 package models
 
-import models.api.{AnnualCostsLimited, VatBankAccount, VatBankAccountMongoFormat, VatFlatRateScheme}
+import models.api.{AnnualCostsLimited, VatFlatRateScheme}
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
 
@@ -46,10 +46,9 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
         annualCostsInclusive = Some("yesWithin12months"),
         annualCostsLimited = Some(AnnualCostsLimited(Some(1000), Some("yesWithin12months"))),
         doYouWantToUseThisRate = Some(false),
-        whenDoYouWantToJoinFrs=  Some("registrationDate"))
+        whenDoYouWantToJoinFrs = Some("registrationDate"))
 
-      Json.fromJson[VatFlatRateScheme](json) shouldBe JsSuccess(tstVatFlatRateScheme
-      )
+      Json.fromJson[VatFlatRateScheme](json) shouldBe JsSuccess(tstVatFlatRateScheme)
     }
 
     "fail from Json with invalid annualCostsInclusive" in {
@@ -105,7 +104,7 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
           annualCostsInclusive = Some("yesWithin12months"),
           annualCostsLimited = Some(AnnualCostsLimited(Some(1000), Some("yesWithin12months"))),
           doYouWantToUseThisRate = Some(false),
-          whenDoYouWantToJoinFrs=  Some("registrationDate"))
+          whenDoYouWantToJoinFrs = Some("registrationDate"))
 
         val writeResult = formt.writes(tstVatFlatRateScheme
         )
