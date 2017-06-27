@@ -42,7 +42,7 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
 
       val tstVatFlatRateScheme
       = VatFlatRateScheme(
-        joinFrs = Some(true),
+        joinFrs = true,
         annualCostsInclusive = Some("yesWithin12months"),
         annualCostsLimited = Some(AnnualCostsLimited(Some(1000), Some("yesWithin12months"))),
         doYouWantToUseThisRate = Some(false),
@@ -101,7 +101,7 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
       "complete successfully from full Json" in {
         val tstVatFlatRateScheme
         = VatFlatRateScheme(
-          joinFrs = Some(true),
+          joinFrs = true,
           annualCostsInclusive = Some("yesWithin12months"),
           annualCostsLimited = Some(AnnualCostsLimited(Some(1000), Some("yesWithin12months"))),
           doYouWantToUseThisRate = Some(false),
