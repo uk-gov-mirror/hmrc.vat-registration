@@ -22,7 +22,7 @@ import play.api.libs.json._
 case class AnnualCostsLimited(lessThan: Option[Int] = None,
                               answer: Option[String] = None)
 
-object AnnualCostsLimited extends VatFlatRateSchemeAnswersValidator {
+object AnnualCostsLimited extends VatFlatRateSchemeValidator {
 
     implicit val format = (
     (__ \ "lessThan").formatNullable[Int] and

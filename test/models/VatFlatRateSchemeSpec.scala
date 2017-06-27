@@ -16,13 +16,14 @@
 
 package models
 
-import models.api.{AnnualCostsLimited, VatBankAccount, VatBankAccountMongoFormat, VatFlatRateSchemeAnswers}
+import models.api.{AnnualCostsLimited, VatBankAccount, VatBankAccountMongoFormat, VatFlatRateScheme}
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
 
-class VatFlatRateSchemeAnswersSpec extends JsonFormatValidation {
+class VatFlatRateSchemeSpec extends JsonFormatValidation {
 
-  "Creating a VatFlatRateSchemeAnswers model from Json" should {
+  "Creating a VatFlatRateScheme" +
+    " model from Json" should {
     "complete successfully from full Json " in {
       val json = Json.parse(
         s"""
@@ -39,14 +40,16 @@ class VatFlatRateSchemeAnswersSpec extends JsonFormatValidation {
            |}
         """.stripMargin)
 
-      val tstVatFlatRateSchemeAnswers = VatFlatRateSchemeAnswers(
+      val tstVatFlatRateScheme
+      = VatFlatRateScheme(
         joinFrs = Some(true),
         annualCostsInclusive = Some("yesWithin12months"),
         annualCostsLimited = Some(AnnualCostsLimited(Some(1000), Some("yesWithin12months"))),
         doYouWantToUseThisRate = Some(false),
         whenDoYouWantToJoinFrs=  Some("registrationDate"))
 
-      Json.fromJson[VatFlatRateSchemeAnswers](json) shouldBe JsSuccess(tstVatFlatRateSchemeAnswers)
+      Json.fromJson[VatFlatRateScheme](json) shouldBe JsSuccess(tstVatFlatRateScheme
+      )
     }
 
     "fail from Json with invalid annualCostsInclusive" in {
@@ -65,7 +68,7 @@ class VatFlatRateSchemeAnswersSpec extends JsonFormatValidation {
            |}
         """.stripMargin)
 
-      val result = Json.fromJson[VatFlatRateSchemeAnswers](json)
+      val result = Json.fromJson[VatFlatRateScheme](json)
       result shouldHaveErrors (JsPath() \ "annualCostsInclusive" -> ValidationError("error.pattern"))
     }
 
@@ -85,28 +88,32 @@ class VatFlatRateSchemeAnswersSpec extends JsonFormatValidation {
            |}
         """.stripMargin)
 
-      val result = Json.fromJson[VatFlatRateSchemeAnswers](json)
+      val result = Json.fromJson[VatFlatRateScheme](json)
       result shouldHaveErrors (JsPath() \ "whenDoYouWantToJoinFrs" -> ValidationError("error.pattern"))
     }
 
 
-    "Creating a VatFlatRateSchemeAnswers model from Json" should {
+    "Creating a VatFlatRateScheme" +
+      " model from Json" should {
 
-      implicit val formt = VatFlatRateSchemeAnswers.format
+      implicit val formt = VatFlatRateScheme.format
 
       "complete successfully from full Json" in {
-        val tstVatFlatRateSchemeAnswers = VatFlatRateSchemeAnswers(
+        val tstVatFlatRateScheme
+        = VatFlatRateScheme(
           joinFrs = Some(true),
           annualCostsInclusive = Some("yesWithin12months"),
           annualCostsLimited = Some(AnnualCostsLimited(Some(1000), Some("yesWithin12months"))),
           doYouWantToUseThisRate = Some(false),
           whenDoYouWantToJoinFrs=  Some("registrationDate"))
 
-        val writeResult = formt.writes(tstVatFlatRateSchemeAnswers)
+        val writeResult = formt.writes(tstVatFlatRateScheme
+        )
         val readResult = formt.reads(Json.toJson(writeResult))
-        val result: VatFlatRateSchemeAnswers = readResult.get
+        val result: VatFlatRateScheme = readResult.get
 
-        result shouldBe tstVatFlatRateSchemeAnswers
+        result shouldBe tstVatFlatRateScheme
+
 
       }
 
