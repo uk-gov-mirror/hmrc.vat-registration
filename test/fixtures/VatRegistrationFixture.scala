@@ -56,7 +56,7 @@ trait VatRegistrationFixture {
   val exception = new Exception("Exception")
   val currentOrPreviousAddress = CurrentOrPreviousAddress(false, Some(scrsAddress))
   val vatFlatRateScheme = VatFlatRateScheme(
-    joinFrs = Some(true),
+    joinFrs = true,
     annualCostsInclusive = Some("yesWithin12months"),
     annualCostsLimited = Some(AnnualCostsLimited(Some(1000), Some("yesWithin12months"))),
     doYouWantToUseThisRate = Some(false),
