@@ -21,7 +21,7 @@ import play.api.libs.json._
 
 case class VatFlatRateScheme(joinFrs: Boolean = false,
                              annualCostsInclusive: Option[String] = None,
-                             annualCostsLimited: Option[AnnualCostsLimited] = None,
+                             annualCostsLimited: Option[String] = None,
                              doYouWantToUseThisRate: Option[Boolean] = None,
                              whenDoYouWantToJoinFrs: Option[String] = None)
 
@@ -29,7 +29,7 @@ object VatFlatRateScheme extends VatFlatRateSchemeValidator {
   implicit val format = (
     (__ \ "joinFrs").format[Boolean] and
       (__ \ "annualCostsInclusive").formatNullable[String](annualCostsInclusive) and
-      (__ \ "annualCostsLimited").formatNullable[AnnualCostsLimited] and
+      (__ \ "annualCostsLimited").formatNullable[String](annualCostsLimited) and
       (__ \ "doYouWantToUseThisRate").formatNullable[Boolean] and
       (__ \ "whenDoYouWantToJoinFrs").formatNullable[String](whenDoYouWantToJoinFrs)
     ) (VatFlatRateScheme.apply, unlift(VatFlatRateScheme.unapply))

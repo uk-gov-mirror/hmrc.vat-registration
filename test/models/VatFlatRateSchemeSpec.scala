@@ -16,7 +16,7 @@
 
 package models
 
-import models.api.{AnnualCostsLimited, VatFlatRateScheme}
+import models.api.VatFlatRateScheme
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
 
@@ -30,10 +30,7 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
            |{
            |  "joinFrs":true,
            |  "annualCostsInclusive":"yesWithin12months",
-           |  "annualCostsLimited" : {
-           |      "lessThan" : 1000,
-           |      "answer" : "yesWithin12months"
-           |      },
+           |  "annualCostsLimited" :"yesWithin12months",
            |  "doYouWantToUseThisRate":false,
            |  "whenDoYouWantToJoinFrs" : "registrationDate"
            |
@@ -44,7 +41,7 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
       = VatFlatRateScheme(
         joinFrs = true,
         annualCostsInclusive = Some("yesWithin12months"),
-        annualCostsLimited = Some(AnnualCostsLimited(Some(1000), Some("yesWithin12months"))),
+        annualCostsLimited = Some("yesWithin12months"),
         doYouWantToUseThisRate = Some(false),
         whenDoYouWantToJoinFrs = Some("registrationDate"))
 
@@ -57,10 +54,7 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
            |{
            |  "joinFrs":true,
            |  "annualCostsInclusive":"yesWithin32months",
-           |  "annualCostsLimited" : {
-           |      "lessThan" : 1000,
-           |      "answer" : "yesWithin12months"
-           |      },
+           |  "annualCostsLimited" :"yesWithin12months",
            |  "doYouWantToUseThisRate":false,
            |  "whenDoYouWantToJoinFrs" : "registrationDate"
            |
@@ -77,10 +71,7 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
            |{
            |  "joinFrs":true,
            |  "annualCostsInclusive":"yesWithin12months",
-           |  "annualCostsLimited" : {
-           |      "lessThan" : 1000,
-           |      "answer" : "yesWithin12months"
-           |      },
+           |  "annualCostsLimited" :"yesWithin12months",
            |  "doYouWantToUseThisRate":false,
            |  "whenDoYouWantToJoinFrs" : "Date"
            |
@@ -102,7 +93,7 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
         = VatFlatRateScheme(
           joinFrs = true,
           annualCostsInclusive = Some("yesWithin12months"),
-          annualCostsLimited = Some(AnnualCostsLimited(Some(1000), Some("yesWithin12months"))),
+          annualCostsLimited = Some("yesWithin12months"),
           doYouWantToUseThisRate = Some(false),
           whenDoYouWantToJoinFrs = Some("registrationDate"))
 
