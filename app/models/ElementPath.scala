@@ -43,7 +43,8 @@ object ElementPath {
       LabProvidesWorkersPath,
       LabWorkersPath,
       LabTempContractsPath,
-      LabSkilledWorkersPath
+      LabSkilledWorkersPath,
+      VatFlatRateSchemePath
     ).map(ep => (ep.name, ep)).toMap
 
     override def writes(e: ElementPath): JsValue = JsString(e.name)
@@ -52,7 +53,6 @@ object ElementPath {
       pathMap.get(json.as[String]).fold[JsResult[ElementPath]](JsError("unrecognised element name"))(ep => JsSuccess(ep))
 
   }
-
 }
 
 case object VatBankAccountPath extends ElementPath {
@@ -140,6 +140,11 @@ case object FinManageFundsAdditionalPath extends ElementPath {
 case object AcknowledgementReferencePath extends ElementPath {
   override val path = "acknowledgementReference"
   override val name = "acknowledgement-reference"
+}
+
+case object VatFlatRateSchemePath extends ElementPath {
+  override val path = "vatFlatRateScheme"
+  override val name = "vat-flat-rate-scheme"
 }
 
 // $COVERAGE-ON$
