@@ -23,6 +23,7 @@ import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
 
 class VatFlatRateSchemeSpec extends JsonFormatValidation {
+  val startDate = LocalDate.of(2017, 7, 22)
 
   "Creating a VatFlatRateScheme" +
     " model from Json" should {
@@ -38,7 +39,7 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
            |      },
            |  "doYouWantToUseThisRate":false,
            |  "whenDoYouWantToJoinFrs" : "registrationDate",
-           |  "startDate" : "22-07-2017"
+           |  "startDate" : "$startDate"
            |
            |}
         """.stripMargin)
