@@ -58,7 +58,7 @@ trait VatRegistrationFixture {
   val vatFlatRateScheme = VatFlatRateScheme(
     joinFrs = true,
     annualCostsInclusive = Some("yesWithin12months"),
-    annualCostsLimited = Some(AnnualCostsLimited(Some(1000), Some("yesWithin12months"))),
+    annualCostsLimited =  Some("yesWithin12months"),
     doYouWantToUseThisRate = Some(false),
     whenDoYouWantToJoinFrs=  Some("registrationDate"))
 
