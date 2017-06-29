@@ -16,6 +16,8 @@
 
 package models
 
+import java.time.LocalDate
+
 import models.api.{AnnualCostsLimited, VatFlatRateScheme}
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
@@ -35,7 +37,8 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
            |      "answer" : "yesWithin12months"
            |      },
            |  "doYouWantToUseThisRate":false,
-           |  "whenDoYouWantToJoinFrs" : "registrationDate"
+           |  "whenDoYouWantToJoinFrs" : "registrationDate",
+           |  "startDate" : "22-07-2017"
            |
            |}
         """.stripMargin)
@@ -46,7 +49,8 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
         annualCostsInclusive = Some("yesWithin12months"),
         annualCostsLimited = Some(AnnualCostsLimited(Some(1000), Some("yesWithin12months"))),
         doYouWantToUseThisRate = Some(false),
-        whenDoYouWantToJoinFrs = Some("registrationDate"))
+        whenDoYouWantToJoinFrs = Some("registrationDate"),
+        startDate = Some(LocalDate.of(2017,7,22)))
 
       Json.fromJson[VatFlatRateScheme](json) shouldBe JsSuccess(tstVatFlatRateScheme)
     }
