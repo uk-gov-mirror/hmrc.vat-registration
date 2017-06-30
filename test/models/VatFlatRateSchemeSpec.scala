@@ -35,7 +35,7 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
            |  "annualCostsInclusive":"yesWithin12months",
            |  "annualCostsLimited" :"yesWithin12months",
            |  "doYouWantToUseThisRate":false,
-           |  "whenDoYouWantToJoinFrs" : "registrationDate",
+           |  "whenDoYouWantToJoinFrs" : "VAT_REGISTRATION_DATE",
            |  "startDate" : "$startDate"
            |
            |}
@@ -47,7 +47,7 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
         annualCostsInclusive = Some("yesWithin12months"),
         annualCostsLimited = Some("yesWithin12months"),
         doYouWantToUseThisRate = Some(false),
-        whenDoYouWantToJoinFrs = Some("registrationDate"),
+        whenDoYouWantToJoinFrs = Some("VAT_REGISTRATION_DATE"),
         startDate = Some(LocalDate.of(2017,7,22)))
 
       Json.fromJson[VatFlatRateScheme](json) shouldBe JsSuccess(tstVatFlatRateScheme)
@@ -61,7 +61,7 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
            |  "annualCostsInclusive":"yesWithin32months",
            |  "annualCostsLimited" :"yesWithin12months",
            |  "doYouWantToUseThisRate":false,
-           |  "whenDoYouWantToJoinFrs" : "registrationDate"
+           |  "whenDoYouWantToJoinFrs" : "VAT_REGISTRATION_DATE"
            |
            |}
         """.stripMargin)
@@ -100,7 +100,7 @@ class VatFlatRateSchemeSpec extends JsonFormatValidation {
           annualCostsInclusive = Some("yesWithin12months"),
           annualCostsLimited = Some("yesWithin12months"),
           doYouWantToUseThisRate = Some(false),
-          whenDoYouWantToJoinFrs = Some("registrationDate"))
+          whenDoYouWantToJoinFrs = Some("VAT_REGISTRATION_DATE"))
 
         val writeResult = formt.writes(tstVatFlatRateScheme
         )

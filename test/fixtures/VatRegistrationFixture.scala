@@ -60,6 +60,6 @@ trait VatRegistrationFixture {
     annualCostsInclusive = Some("yesWithin12months"),
     annualCostsLimited =  Some("yesWithin12months"),
     doYouWantToUseThisRate = Some(false),
-    whenDoYouWantToJoinFrs=  Some("registrationDate"))
+    whenDoYouWantToJoinFrs=  Some("VAT_REGISTRATION_DATE"))
 
 }
