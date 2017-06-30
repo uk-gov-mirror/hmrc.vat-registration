@@ -56,7 +56,8 @@ trait VatFlatRateSchemeValidator extends Validation {
     acceptOnly("no", "yes", "yesWithin12months")
 
   val whenDoYouWantToJoinFrs: Format[String] =
-    acceptOnly("VAT_REGISTRATION_DATE", "DIFFERENT_DATE")
+    acceptOnly("registrationDate", "differentDate")
+
 }
 
 trait VatChoiceValidator extends Validation {
