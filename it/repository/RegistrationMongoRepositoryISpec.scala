@@ -62,7 +62,8 @@ class RegistrationMongoRepositoryISpec
         workers = Some(10),
         temporaryContracts = Some(true),
         skilledWorkers = Some(true))),
-      financialCompliance = Some(VatComplianceFinancial(adviceOrConsultancyOnly = true, actAsIntermediary = true))
+      financialCompliance = Some(VatComplianceFinancial(adviceOrConsultancyOnly = true, actAsIntermediary = true)),
+      mainBusinessActivity = SicCode("88888888", "description", "displayDetails")
     )
 
   val EstimateValue: Long = 1000L
