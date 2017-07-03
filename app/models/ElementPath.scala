@@ -47,7 +47,9 @@ object ElementPath {
       VatFlatRateSchemePath,
       VatFrsAnnualCostsInclusivePath,
       VatFrsAnnualCostsLimitedPath,
-      VatFrsUseThisRate
+      VatFrsUseThisRate,
+      VatFrsWhenToJoin,
+      VatFrsStartDate
     ).map(ep => (ep.name, ep)).toMap
 
     override def writes(e: ElementPath): JsValue = JsString(e.name)
@@ -164,5 +166,16 @@ case object VatFrsUseThisRate extends ElementPath {
   override val path = "vatFlatRateScheme.doYouWantToUseThisRate"
   override val name = "vat-frs-use-this-rate"
 }
+
+case object VatFrsWhenToJoin extends ElementPath {
+  override val path = "vatFlatRateScheme.whenDoYouWantToJoinFrs"
+  override val name = "vat-frs-when-to-join"
+}
+
+case object VatFrsStartDate extends ElementPath {
+  override val path = "vatFlatRateScheme.startDate"
+  override val name = "vat-frs-start-date"
+}
+
 
 // $COVERAGE-ON$
