@@ -97,3 +97,6 @@ trait VatLodgingOfficerValidator extends Validation {
   val mobileValidator: Format[String] = readToFmt(pattern("^(\\d){1,20}$".r))
 }
 
+trait SicCodeValidator extends Validation {
+  val idValidator: Format[String] = readToFmt(pattern("""^(\d){8}""".r))
+}

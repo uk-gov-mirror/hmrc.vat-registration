@@ -16,7 +16,7 @@
 
 package models
 
-import models.api.{VatComplianceCultural, VatComplianceLabour, VatSicAndCompliance}
+import models.api.{SicCode, VatComplianceCultural, VatComplianceLabour, VatSicAndCompliance}
 import play.api.libs.json.{JsSuccess, Json}
 
 class VatSicAndComplianceSpec extends JsonFormatValidation {
@@ -36,6 +36,11 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
            |    "workers": 10,
            |    "temporaryContracts": true,
            |    "skilledWorkers": true
+           |   },
+           |  "mainBusinessActivity": {
+           |    "id": "88888888",
+           |    "description": "description",
+           |    "displayDetails": "displayDetails"
            |   }
            |   }
         """.stripMargin)
@@ -43,7 +48,8 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
       val expected = VatSicAndCompliance(
         businessDescription = "some text",
         culturalCompliance = Some(VatComplianceCultural(true)),
-        labourCompliance = Some(VatComplianceLabour(true, Some(10), Some(true), Some(true)))
+        labourCompliance = Some(VatComplianceLabour(true, Some(10), Some(true), Some(true))),
+        mainBusinessActivity = SicCode("88888888", "description", "displayDetails")
       )
 
       Json.fromJson[VatSicAndCompliance](json) shouldBe JsSuccess(expected)
@@ -54,14 +60,20 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
     val json = Json.parse(
       s"""
          |{
-         |  "businessDescription":"some text"
+         |  "businessDescription":"some text",
+         |  "mainBusinessActivity": {
+         |    "id": "88888888",
+         |    "description": "description",
+         |    "displayDetails": "displayDetails"
+         |   }
          |}
         """.stripMargin)
 
     val expected = VatSicAndCompliance(
       businessDescription = "some text",
       culturalCompliance = None,
-      labourCompliance = None
+      labourCompliance = None,
+      mainBusinessActivity = SicCode("88888888", "description", "displayDetails")
     )
 
     Json.fromJson[VatSicAndCompliance](json) shouldBe JsSuccess(expected)
@@ -75,7 +87,8 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
       val sac = VatSicAndCompliance(
         businessDescription = "some text",
         culturalCompliance = None,
-        labourCompliance = None
+        labourCompliance = None,
+        mainBusinessActivity = SicCode("88888888", "description", "displayDetails")
       )
 
       val writeResult = format.writes(sac)
@@ -89,7 +102,8 @@ class VatSicAndComplianceSpec extends JsonFormatValidation {
       val sac = VatSicAndCompliance(
         businessDescription = "some text",
         culturalCompliance = Some(VatComplianceCultural(true)),
-        labourCompliance = Some(VatComplianceLabour(true, Some(10), Some(true), Some(true)))
+        labourCompliance = Some(VatComplianceLabour(true, Some(10), Some(true), Some(true))),
+        mainBusinessActivity = SicCode("88888888", "description", "displayDetails")
       )
 
       val writeResult = format.writes(sac)

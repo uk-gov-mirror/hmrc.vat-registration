@@ -38,7 +38,8 @@ trait VatRegistrationFixture {
       tradingName = Some("some-trader-name")),
     euTrading = VatEuTrading(selection = true, eoriApplication = Some(true))
   )
-  val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description", None, None)
+  val sicCode = SicCode("88888888", "description", "displayDetails")
+  val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description", None, None, mainBusinessActivity = sicCode)
   val vatDigitalContact = VatDigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
   val vatContact = VatContact(vatDigitalContact)
   val vatEligibility = VatServiceEligibility(
