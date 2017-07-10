@@ -36,7 +36,7 @@ object VatLodgingOfficer extends VatLodgingOfficerValidator {
       (__ \ "nino").format[String](ninoValidator) and
       (__ \ "role").format[String](roleValidator) and
       (__ \ "name").format[Name] and
-      (__ \ "formerName").format[FormerName] and
+      (__ \ "changeOfName").format[FormerName] and
       (__ \ "currentOrPreviousAddress").format[CurrentOrPreviousAddress] and
       (__ \ "contact").format[OfficerContactDetails]
     ) (VatLodgingOfficer.apply, unlift(VatLodgingOfficer.unapply))
