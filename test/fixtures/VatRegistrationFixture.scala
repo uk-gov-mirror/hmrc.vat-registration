@@ -62,5 +62,6 @@ trait VatRegistrationFixture {
     annualCostsLimited =  Some("yesWithin12months"),
     doYouWantToUseThisRate = Some(false),
     whenDoYouWantToJoinFrs=  Some("VAT_REGISTRATION_DATE"))
+  val changeOfName = ChangeOfName(true, Some(FormerName("", LocalDate.now())))
 
 }

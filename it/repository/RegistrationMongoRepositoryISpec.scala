@@ -40,6 +40,8 @@ class RegistrationMongoRepositoryISpec
   private val vatScheme = VatScheme(regId)
   private val vatChoice = VatChoice(necessity = "voluntary", vatStartDate = VatStartDate(selection = "SPECIFIC_DATE", startDate = Some(date)))
   private val tradingName = TradingName(selection = true, Some("some-trading-name"))
+  val changeOfName = ChangeOfName(true, Some(FormerName("", LocalDate.now())))
+
   private val vatTradingDetails = VatTradingDetails(
     vatChoice = vatChoice,
     tradingName = tradingName,
@@ -84,7 +86,7 @@ class RegistrationMongoRepositoryISpec
   val contact = OfficerContactDetails(Some("test@test.com"), None, None)
   val formerName = FormerName("Bob Smith", date)
   val currentOrPreviousAddress = CurrentOrPreviousAddress(false, Some(scrsAddress))
-  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB686868C", "director", name, formerName, currentOrPreviousAddress, contact)
+  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB686868C", "director", name, changeOfName, currentOrPreviousAddress, contact)
 
   class Setup {
     val repository = new RegistrationMongoRepository(new MongoDBProvider(), "integration-testing")
