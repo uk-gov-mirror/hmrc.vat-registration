@@ -26,7 +26,9 @@ case class VatFlatRateScheme(joinFrs: Boolean = false,
                              annualCostsLimited: Option[String] = None,
                              doYouWantToUseThisRate: Option[Boolean] = None,
                              whenDoYouWantToJoinFrs: Option[String] = None,
-                             startDate: Option[LocalDate] = None)
+                             startDate: Option[LocalDate] = None,
+                             categoryOfBusiness: Option[String] = None,
+                             percentage: Option[BigDecimal] = None)
 
 object VatFlatRateScheme extends VatFlatRateSchemeValidator {
   implicit val format = (
@@ -35,6 +37,8 @@ object VatFlatRateScheme extends VatFlatRateSchemeValidator {
       (__ \ "annualCostsLimited").formatNullable[String](annualCostsLimited) and
       (__ \ "doYouWantToUseThisRate").formatNullable[Boolean] and
       (__ \ "whenDoYouWantToJoinFrs").formatNullable[String](whenDoYouWantToJoinFrs) and
-      (__ \ "startDate").formatNullable[LocalDate]
+      (__ \ "startDate").formatNullable[LocalDate] and
+      (__ \ "categoryOfBusiness").formatNullable[String] and
+      (__ \ "percentage").formatNullable[BigDecimal]
     ) (VatFlatRateScheme.apply, unlift(VatFlatRateScheme.unapply))
 }
