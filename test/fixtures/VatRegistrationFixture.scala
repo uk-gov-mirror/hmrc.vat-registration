@@ -51,7 +51,7 @@ trait VatRegistrationFixture {
   )
   val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
   val name = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
-  val formerName = FormerName(true, Some("Bob Smith"))
+  val formerName = FormerName("Bob Smith", date)
   val contact = OfficerContactDetails(Some("test@test.com"), None, None)
   val vatScheme: VatScheme = VatScheme(regId)
   val exception = new Exception("Exception")
@@ -62,5 +62,6 @@ trait VatRegistrationFixture {
     annualCostsLimited =  Some("yesWithin12months"),
     doYouWantToUseThisRate = Some(false),
     whenDoYouWantToJoinFrs=  Some("VAT_REGISTRATION_DATE"))
+  val changeOfName = ChangeOfName(true, Some(FormerName("", LocalDate.now())))
 
 }
