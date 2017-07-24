@@ -39,7 +39,8 @@ class VatChoiceSpec extends JsonFormatValidation {
            |    },
            |  "necessity":"obligatory",
            |  "vatThresholdPostIncorp" : {
-           |  "overThresholdSelection" : true
+           |  "overThresholdSelection" : true,
+           |  "overThresholdDate": "$startDate"
            |  }
            |}
         """.stripMargin)
@@ -50,7 +51,7 @@ class VatChoiceSpec extends JsonFormatValidation {
           selection = "COMPANY_REGISTRATION_DATE",
           startDate = Some(startDate)
         ),
-        vatThresholdPostIncorp = Some(VatThresholdPostIncorp(overThresholdSelection = true))
+        vatThresholdPostIncorp = Some(VatThresholdPostIncorp(overThresholdSelection = true, overThresholdDate = Some(startDate)))
       )
 
       Json.fromJson[VatChoice](json) shouldBe JsSuccess(expectedVatChoice)
