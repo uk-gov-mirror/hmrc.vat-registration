@@ -18,8 +18,7 @@ package models
 
 import java.time.LocalDate
 
-import helpers.VatThresholdPostIncorp
-import models.api.{VatChoice, VatStartDate}
+import models.api.{VatChoice, VatStartDate, VatThresholdPostIncorp}
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
 
