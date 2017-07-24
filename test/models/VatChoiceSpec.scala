@@ -27,7 +27,7 @@ class VatChoiceSpec extends JsonFormatValidation {
 
   "Creating a VatChoice model from Json" should {
 
-    val startDate = LocalDate.of(2017, 1, 1)
+    val testDate = LocalDate.of(2017, 1, 1)
 
     "complete successfully from full Json with obligatory necessity" in {
       val json = Json.parse(
@@ -35,12 +35,12 @@ class VatChoiceSpec extends JsonFormatValidation {
            |{
            |  "vatStartDate": {
            |    "selection": "COMPANY_REGISTRATION_DATE",
-           |    "startDate": "$startDate"
+           |    "startDate": "$testDate"
            |    },
            |  "necessity":"obligatory",
            |  "vatThresholdPostIncorp" : {
            |  "overThresholdSelection" : true,
-           |  "overThresholdDate": "$startDate"
+           |  "overThresholdDate": "$testDate"
            |  }
            |}
         """.stripMargin)
@@ -49,9 +49,9 @@ class VatChoiceSpec extends JsonFormatValidation {
         necessity = "obligatory",
         vatStartDate = VatStartDate(
           selection = "COMPANY_REGISTRATION_DATE",
-          startDate = Some(startDate)
+          startDate = Some(testDate)
         ),
-        vatThresholdPostIncorp = Some(VatThresholdPostIncorp(overThresholdSelection = true, overThresholdDate = Some(startDate)))
+        vatThresholdPostIncorp = Some(VatThresholdPostIncorp(overThresholdSelection = true, overThresholdDate = Some(testDate)))
       )
 
       Json.fromJson[VatChoice](json) shouldBe JsSuccess(expectedVatChoice)
@@ -63,7 +63,7 @@ class VatChoiceSpec extends JsonFormatValidation {
            |{
            |  "vatStartDate": {
            |    "selection": "SPECIFIC_DATE",
-           |    "startDate": "$startDate"
+           |    "startDate": "$testDate"
            |    },
            |  "necessity":"voluntary"
            |}
@@ -73,7 +73,7 @@ class VatChoiceSpec extends JsonFormatValidation {
         necessity = "voluntary",
         vatStartDate = VatStartDate(
           selection = "SPECIFIC_DATE",
-          startDate = Some(startDate)
+          startDate = Some(testDate)
         )
       )
 
@@ -86,7 +86,7 @@ class VatChoiceSpec extends JsonFormatValidation {
            |{
            |  "vatStartDate": {
            |    "selection": "SPECIFIC_DATE",
-           |    "startDate": "$startDate"
+           |    "startDate": "$testDate"
            |    },
            |  "necessity":"voluntary",
            |  "reason": "COMPANY_ALREADY_SELLS_TAXABLE_GOODS_OR_SERVICES"
@@ -97,7 +97,7 @@ class VatChoiceSpec extends JsonFormatValidation {
         necessity = "voluntary",
         vatStartDate = VatStartDate(
           selection = "SPECIFIC_DATE",
-          startDate = Some(startDate)
+          startDate = Some(testDate)
         ),
         reason = Some("COMPANY_ALREADY_SELLS_TAXABLE_GOODS_OR_SERVICES")
       )
@@ -111,7 +111,7 @@ class VatChoiceSpec extends JsonFormatValidation {
            |{
            |  "vatStartDate": {
            |    "selection": "SPECIFIC_DATE",
-           |    "startDate": "$startDate"
+           |    "startDate": "$testDate"
            |    },
            |  "necessity":"voluntary",
            |  "reason": "COMPANY_LIKES_TO_PAY_TAXES"
@@ -129,7 +129,7 @@ class VatChoiceSpec extends JsonFormatValidation {
            |{
            |  "vatStartDate": {
            |    "selection": "SPECIFIC_DATE",
-           |    "startDate": "$startDate"
+           |    "startDate": "$testDate"
            |    },
            |  "necessity":"*garbage*"
            |}
@@ -145,7 +145,7 @@ class VatChoiceSpec extends JsonFormatValidation {
            |{
            |  "vatStartDate": {
            |   "selection": "SPECIFIC_DATE",
-           |   "startDate": "$startDate"
+           |   "startDate": "$testDate"
            |   }
            |}
         """.stripMargin)
