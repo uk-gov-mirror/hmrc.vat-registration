@@ -18,6 +18,7 @@ package models
 
 import java.time.LocalDate
 
+import helpers.VatThresholdPostIncorp
 import models.api.{VatChoice, VatStartDate}
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
@@ -36,7 +37,10 @@ class VatChoiceSpec extends JsonFormatValidation {
            |    "selection": "COMPANY_REGISTRATION_DATE",
            |    "startDate": "$startDate"
            |    },
-           |  "necessity":"obligatory"
+           |  "necessity":"obligatory",
+           |  "vatThresholdPostIncorp" : {
+           |  "overThresholdSelection" : true
+           |  }
            |}
         """.stripMargin)
 
@@ -45,7 +49,8 @@ class VatChoiceSpec extends JsonFormatValidation {
         vatStartDate = VatStartDate(
           selection = "COMPANY_REGISTRATION_DATE",
           startDate = Some(startDate)
-        )
+        ),
+        vatThresholdPostIncorp = Some(VatThresholdPostIncorp(overThresholdSelection = true))
       )
 
       Json.fromJson[VatChoice](json) shouldBe JsSuccess(expectedVatChoice)
