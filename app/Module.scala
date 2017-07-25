@@ -28,6 +28,7 @@ class Module extends AbstractModule {
     bind(classOf[TestOnlyRepository]).to(classOf[TestOnlyMongoRepository])
     bind(classOf[connectors.AuthConnector]).to(classOf[connectors.VatRegAuthConnector])
     bind(classOf[connectors.BusinessRegistrationConnector]).to(classOf[connectors.VatRegBusinessRegistrationConnector])
+    bind(classOf[connectors.IncorporationInformationConnector]).to(classOf[connectors.VatRegIncorporationInformationConnector ])
     bind(classOf[services.RegistrationService]).to(classOf[services.VatRegistrationService])
     bindConstant().annotatedWith(Names.named("collectionName")).to("registration-information")
   }
