@@ -21,7 +21,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 
-case class IncorpSubscription(transactionId: String, regime: String, subscriber: String, callbackUrl: String)
+final case class IncorpSubscription(transactionId: String, regime: String, subscriber: String, callbackUrl: String)
 
 object IncorpSubscription {
 
@@ -62,18 +62,18 @@ object IncorpStatusEvent {
 
 }
 
-final case class IncorpStatus(subscription: IncorpSubscription, statusEvent: IncorpStatusEvent)
+final case class IncorporationStatus(subscription: IncorpSubscription, statusEvent: IncorpStatusEvent)
 
-object IncorpStatus {
+object IncorporationStatus {
 
-  implicit val format = Json.format[IncorpStatus]
+  implicit val format = Json.format[IncorporationStatus]
 
-  val iiReads: Reads[IncorpStatus] = {
+  val iiReads: Reads[IncorporationStatus] = {
     val root: JsPath = __ \ "SCRSIncorpStatus"
 
     (root.read[IncorpSubscription](IncorpSubscription.iiReads) and
       (root \ "IncorpStatusEvent").read[IncorpStatusEvent](IncorpStatusEvent.iiReads)
-      ) (IncorpStatus.apply _)
+      ) (IncorporationStatus.apply _)
   }
 
 }

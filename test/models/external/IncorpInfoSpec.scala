@@ -22,7 +22,7 @@ import play.api.libs.json.{JsSuccess, Json}
 
 class IncorpInfoSpec extends JsonFormatValidation {
 
-  "IncorpStatus" should {
+  "IncorporationStatus" should {
     "deserialise from full Json" in {
       val json = Json.parse(
         s"""
@@ -47,7 +47,7 @@ class IncorpInfoSpec extends JsonFormatValidation {
            |}
         """.stripMargin)
 
-      val tstStatus = IncorpStatus(
+      val tstStatus = IncorporationStatus(
         IncorpSubscription(
           transactionId = "123456789",
           regime = "vat",
@@ -60,7 +60,7 @@ class IncorpInfoSpec extends JsonFormatValidation {
           description = Some("Some description"),
           timestamp = DateTime.parse("2017-04-25T16:20:10.000+01:00")))
 
-      Json.fromJson[IncorpStatus](json)(IncorpStatus.iiReads) shouldBe JsSuccess(tstStatus)
+      Json.fromJson[IncorporationStatus](json)(IncorporationStatus.iiReads) shouldBe JsSuccess(tstStatus)
     }
 
     "deserialise from minimal Json" in {
@@ -84,7 +84,7 @@ class IncorpInfoSpec extends JsonFormatValidation {
            |}
         """.stripMargin)
 
-      val tstStatus = IncorpStatus(
+      val tstStatus = IncorporationStatus(
         IncorpSubscription(
           transactionId = "123456789",
           regime = "vat",
@@ -97,7 +97,7 @@ class IncorpInfoSpec extends JsonFormatValidation {
           description = None,
           timestamp = DateTime.parse("2017-04-25T16:20:10.000+01:00")))
 
-      Json.fromJson[IncorpStatus](json)(IncorpStatus.iiReads) shouldBe JsSuccess(tstStatus)
+      Json.fromJson[IncorporationStatus](json)(IncorporationStatus.iiReads) shouldBe JsSuccess(tstStatus)
     }
 
   }

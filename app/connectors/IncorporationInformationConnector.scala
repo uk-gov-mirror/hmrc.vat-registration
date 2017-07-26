@@ -20,7 +20,7 @@ import cats.data.EitherT
 import common.exceptions._
 import common.TransactionId
 import config.WSHttp
-import models.external.IncorpStatus
+import models.external.IncorporationStatus
 import play.api.Logger
 import play.api.libs.json.{JsString, Json, Writes}
 import uk.gov.hmrc.play.config.ServicesConfig
@@ -52,12 +52,12 @@ trait IncorporationInformationConnector {
   val http: HttpGet with HttpPost
 
   def retrieveIncorporationStatus(transactionId: TransactionId)
-                                 (implicit hc: HeaderCarrier, rds: HttpReads[IncorpStatus]): EitherT[Future, LeftState, IncorpStatus] =
+                                 (implicit hc: HeaderCarrier, rds: HttpReads[IncorporationStatus]): EitherT[Future, LeftState, IncorporationStatus] =
     EitherT(http.POST[IncorpStatusRequest, HttpResponse](
       s"$iiUrl/incorporation-information/subscribe/$transactionId/regime/vat/subscriber/scrs",
       IncorpStatusRequest("http://localhost:9896/TODO-CHANGE-THIS") //TODO change this to whatever this will be
     ).map {
-      case r if r.status == 200 => Right(r.json.as[IncorpStatus])
+      case r if r.status == 200 => Right(r.json.as[IncorporationStatus])
       case r if r.status == 202 => Left(NothingToReturn("")) //TODO revisit
       case r =>
         Logger.error(s"${r.status} response code returned requesting II for txId: $transactionId")
