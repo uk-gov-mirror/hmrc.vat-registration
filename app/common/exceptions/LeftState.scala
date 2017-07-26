@@ -40,7 +40,6 @@ final case class AcknowledgementReferenceExists(msg: String) extends LeftState
 
 final case class ResourceNotFound(msg: String) extends LeftState
 
-
 final case class ForbiddenAccess(msg: String) extends LeftState
 
 final case class GenericDatabaseError(t: Throwable, regId: Option[String]) extends LeftState
