@@ -20,7 +20,7 @@ import models.JsonFormatValidation
 import org.joda.time.DateTime
 import play.api.libs.json.{JsSuccess, Json}
 
-class IncorpInfoSpec extends JsonFormatValidation {
+class IncorporationInfoSpec extends JsonFormatValidation {
 
   "IncorporationStatus" should {
     "deserialise from full Json" in {
@@ -29,19 +29,19 @@ class IncorpInfoSpec extends JsonFormatValidation {
            |{
            |  "SCRSIncorpStatus":{
            |    "IncorpSubscriptionKey":{
-           |      "subscriber":"SCRS",
+           |      "subscriber":"scrs",
            |      "discriminator":"vat",
-           |      "transactionId":"123456789"
+           |      "transactionId":"000-434-23"
            |    },
            |    "SCRSIncorpSubscription":{
-           |      "callbackUrl":"/callBackUrl"
+           |      "callbackUrl":"http://localhost:9896/TODO-CHANGE-THIS"
            |    },
            |    "IncorpStatusEvent":{
            |      "status":"accepted",
-           |      "crn":"12345678987654321",
-           |      "incorporationDate":"2017-04-26",
-           |      "description":"Some description",
-           |      "timestamp":"2017-04-25T16:20:10.000+01:00"
+           |      "crn":"90000001",
+           |      "description": "Some description",
+           |      "incorporationDate":1470438000000,
+           |      "timestamp":1501061996345
            |    }
            |  }
            |}
@@ -49,16 +49,16 @@ class IncorpInfoSpec extends JsonFormatValidation {
 
       val tstStatus = IncorporationStatus(
         IncorpSubscription(
-          transactionId = "123456789",
+          transactionId = "000-434-23",
           regime = "vat",
-          subscriber = "SCRS",
-          callbackUrl = "/callBackUrl"),
+          subscriber = "scrs",
+          callbackUrl = "http://localhost:9896/TODO-CHANGE-THIS"),
         IncorpStatusEvent(
           status = "accepted",
-          crn = Some("12345678987654321"),
-          incorporationDate = Some(DateTime.parse("2017-04-26")),
+          crn = Some("90000001"),
+          incorporationDate = Some(new DateTime(1470438000000L)),
           description = Some("Some description"),
-          timestamp = DateTime.parse("2017-04-25T16:20:10.000+01:00")))
+          timestamp = new DateTime(1501061996345L)))
 
       Json.fromJson[IncorporationStatus](json)(IncorporationStatus.iiReads) shouldBe JsSuccess(tstStatus)
     }
@@ -69,16 +69,16 @@ class IncorpInfoSpec extends JsonFormatValidation {
            |{
            |  "SCRSIncorpStatus":{
            |    "IncorpSubscriptionKey":{
-           |      "subscriber":"SCRS",
+           |      "subscriber":"scrs",
            |      "discriminator":"vat",
-           |      "transactionId":"123456789"
+           |      "transactionId":"000-434-23"
            |    },
            |    "SCRSIncorpSubscription":{
-           |      "callbackUrl":"/callBackUrl"
+           |      "callbackUrl":"http://localhost:9896/TODO-CHANGE-THIS"
            |    },
            |    "IncorpStatusEvent":{
-           |      "status":"accepted",
-           |      "timestamp":"2017-04-25T16:20:10.000+01:00"
+           |      "status":"rejected",
+           |      "timestamp":1501061996345
            |    }
            |  }
            |}
@@ -86,16 +86,16 @@ class IncorpInfoSpec extends JsonFormatValidation {
 
       val tstStatus = IncorporationStatus(
         IncorpSubscription(
-          transactionId = "123456789",
+          transactionId = "000-434-23",
           regime = "vat",
-          subscriber = "SCRS",
-          callbackUrl = "/callBackUrl"),
+          subscriber = "scrs",
+          callbackUrl = "http://localhost:9896/TODO-CHANGE-THIS"),
         IncorpStatusEvent(
-          status = "accepted",
+          status = "rejected",
           crn = None,
           incorporationDate = None,
           description = None,
-          timestamp = DateTime.parse("2017-04-25T16:20:10.000+01:00")))
+          timestamp = new DateTime(1501061996345L)))
 
       Json.fromJson[IncorporationStatus](json)(IncorporationStatus.iiReads) shouldBe JsSuccess(tstStatus)
     }

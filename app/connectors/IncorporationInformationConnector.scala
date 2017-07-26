@@ -57,8 +57,8 @@ trait IncorporationInformationConnector {
       s"$iiUrl/incorporation-information/subscribe/$transactionId/regime/vat/subscriber/scrs",
       IncorpStatusRequest("http://localhost:9896/TODO-CHANGE-THIS") //TODO change this to whatever this will be
     ).map {
-      case r if r.status == 200 => Right(r.json.as[IncorporationStatus])
-      case r if r.status == 202 => Left(NothingToReturn("")) //TODO revisit
+      case r if r.status == 200 => Right(r.json.as[IncorporationStatus](IncorporationStatus.iiReads))
+      case r if r.status == 202 => Left(NothingToReturn)
       case r =>
         Logger.error(s"${r.status} response code returned requesting II for txId: $transactionId")
         Left(GenericError(new RuntimeException(s"No joy subscribing to II")))

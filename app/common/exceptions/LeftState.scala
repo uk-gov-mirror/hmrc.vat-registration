@@ -27,11 +27,11 @@ sealed trait LeftState extends Product with Serializable {
 
   def toResult: Result = this match {
     case ResourceNotFound(msg) => toResult(play.api.mvc.Results.NotFound, msg)
-    case NothingToReturn(msg) => play.api.mvc.Results.Ok("")
     case AcknowledgementReferenceExists(msg) => toResult(play.api.mvc.Results.Conflict, msg)
     case ForbiddenAccess(msg) => toResult(play.api.mvc.Results.Forbidden, msg)
     case GenericDatabaseError(t, regId) => toResult(ServiceUnavailable, s"Mongo exception: $t ; registration ID: ${regId.getOrElse("n/a")}")
     case GenericError(t) => toResult(ServiceUnavailable, s"Generic exception: $t")
+    case NothingToReturn => play.api.mvc.Results.Ok("{}")
   }
 
 }
@@ -40,10 +40,11 @@ final case class AcknowledgementReferenceExists(msg: String) extends LeftState
 
 final case class ResourceNotFound(msg: String) extends LeftState
 
-final case class NothingToReturn(msg: String) extends LeftState
 
 final case class ForbiddenAccess(msg: String) extends LeftState
 
 final case class GenericDatabaseError(t: Throwable, regId: Option[String]) extends LeftState
 
 final case class GenericError(t: Throwable) extends LeftState
+
+case object NothingToReturn extends LeftState

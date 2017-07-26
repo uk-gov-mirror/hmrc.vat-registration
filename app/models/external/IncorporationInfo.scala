@@ -47,18 +47,13 @@ object IncorpStatusEvent {
 
   implicit val format = Json.format[IncorpStatusEvent]
 
-  val iiReads: Reads[IncorpStatusEvent] = {
-
-    import helpers.TimestampFormats._
-
-    (
-      (__ \ "status").read[String] and
-        (__ \ "crn").readNullable[String] and
-        (__ \ "incorporationDate").readNullable[DateTime](dateFormat) and
-        (__ \ "description").readNullable[String] and
-        (__ \ "timestamp").read[DateTime](timestampFormat)
+  val iiReads: Reads[IncorpStatusEvent] =
+    ((__ \ "status").read[String] and
+      (__ \ "crn").readNullable[String] and
+      (__ \ "incorporationDate").readNullable[DateTime] and
+      (__ \ "description").readNullable[String] and
+      (__ \ "timestamp").read[DateTime]
       ) (IncorpStatusEvent.apply _)
-  }
 
 }
 
