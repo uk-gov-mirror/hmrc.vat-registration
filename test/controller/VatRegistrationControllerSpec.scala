@@ -213,7 +213,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         controller.getAcknowledgementReference(regId)(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
       }
 
-      "call getAcknowledgementReference return AcknowledgementReferenceExists Erorr" in new Setup {
+      "call getAcknowledgementReference return AcknowledgementReferenceExists Error" in new Setup {
         ServiceMocks.mockGetAcknowledgementReferenceExistsError()
         controller.getAcknowledgementReference(regId)(FakeRequest()) returnsStatus CONFLICT
       }

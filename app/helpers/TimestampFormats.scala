@@ -22,6 +22,7 @@ import play.api.libs.json.{Format, JsString, Reads, Writes}
 
 object TimestampFormats {
 
+  // $COVERAGE-OFF$ this object is currently not used but might be required if timestamp/date format changes
   val timestampFormat: Format[DateTime] = {
     val isoFormatter = ISODateTimeFormat.dateTimeParser().withOffsetParsed()
 
@@ -38,5 +39,6 @@ object TimestampFormats {
       Writes[DateTime](d => JsString(isoFormatter.print(d)))
     )
   }
+  // $COVERAGE-ON$
 
 }

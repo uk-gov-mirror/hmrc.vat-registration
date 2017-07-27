@@ -21,10 +21,9 @@ import javax.inject.Inject
 import auth.Authenticated
 import cats.instances.FutureInstances
 import common.TransactionId
-import common.exceptions.LeftState
 import connectors.{AuthConnector, IncorporationInformationConnector}
 import play.api.libs.json._
-import play.api.mvc.{Action, AnyContent, Result}
+import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -32,11 +31,9 @@ class IncorporationInformationController @Inject()(val auth: AuthConnector,
                                                    iiConnector: IncorporationInformationConnector)
   extends BaseController with Authenticated with FutureInstances {
 
-  val errorHandler: (LeftState) => Result = err => err.toResult
-
   def getIncorporationInformation(transactionId: TransactionId): Action[AnyContent] =
     Action.async(implicit request => authenticated { user =>
-      iiConnector.retrieveIncorporationStatus(transactionId).fold(errorHandler, incorpInfo => Ok(Json.toJson(incorpInfo)))
+      iiConnector.retrieveIncorporationStatus(transactionId).fold(_.toResult, incorpInfo => Ok(Json.toJson(incorpInfo)))
     })
 
 }
