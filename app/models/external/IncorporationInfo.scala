@@ -16,7 +16,8 @@
 
 package models.external
 
-import org.joda.time.DateTime
+import java.time.LocalDate
+
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -41,7 +42,7 @@ object IncorpSubscription {
 
 }
 
-final case class IncorpStatusEvent(status: String, crn: Option[String], incorporationDate: Option[DateTime], description: Option[String], timestamp: DateTime)
+final case class IncorpStatusEvent(status: String, crn: Option[String], incorporationDate: Option[LocalDate], description: Option[String])
 
 object IncorpStatusEvent {
 
@@ -50,9 +51,8 @@ object IncorpStatusEvent {
   val iiReads: Reads[IncorpStatusEvent] =
     ((__ \ "status").read[String] and
       (__ \ "crn").readNullable[String] and
-      (__ \ "incorporationDate").readNullable[DateTime] and
-      (__ \ "description").readNullable[String] and
-      (__ \ "timestamp").read[DateTime]
+      (__ \ "incorporationDate").readNullable[LocalDate] and
+      (__ \ "description").readNullable[String]
       ) (IncorpStatusEvent.apply _)
 
 }
