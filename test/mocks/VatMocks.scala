@@ -19,7 +19,7 @@ package mocks
 import auth.AuthorisationResource
 import cats.data.EitherT
 import cats.instances.FutureInstances
-import cats.syntax.ApplicativeSyntax
+import cats.syntax.{ApplicativeSyntax, EitherSyntax}
 import common.exceptions._
 import common.{RegistrationId, TransactionId}
 import connectors.{AuthConnector, Authority, BusinessRegistrationConnector, IncorporationInformationConnector}
@@ -73,19 +73,17 @@ trait VatMocks extends WSHTTPMock {
 
   }
 
-  object IIMocks extends FutureInstances with ApplicativeSyntax {
+  object IIMocks extends FutureInstances with ApplicativeSyntax with EitherSyntax {
 
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    private def left(a: LeftState) = EitherT.left[Future, LeftState, IncorporationStatus]((NothingToReturn: LeftState).pure)
-
-    private def right(b: IncorporationStatus) = EitherT.right[Future, LeftState, IncorporationStatus](b.pure)
-
     def mockIncorporationStatus(incorporationStatus: IncorporationStatus): Unit =
-      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()))(any(), any())).thenReturn(right(incorporationStatus))
+      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()))(any(), any()))
+        .thenReturn(EitherT.fromEither(incorporationStatus.asRight[LeftState]))
 
     def mockIncorporationStatusLeft(leftState: LeftState): Unit =
-      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()))(any(), any())).thenReturn(left(leftState))
+      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()))(any(), any()))
+        .thenReturn(EitherT.fromEither(leftState.asLeft[IncorporationStatus]))
 
   }
 

@@ -16,7 +16,7 @@
 
 package controller
 
-import common.exceptions.NothingToReturn
+import common.exceptions.ResourceNotFound
 import controllers.IncorporationInformationController
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
@@ -42,10 +42,9 @@ class IncorporationInformationControllerSpec extends VatRegSpec with VatRegistra
     }
 
     "return empty object if incorporation info not found" in new Setup {
-      IIMocks.mockIncorporationStatusLeft(NothingToReturn)
+      IIMocks.mockIncorporationStatusLeft(ResourceNotFound("incorporation status not known"))
       val res = controller.getIncorporationInformation(txId)(FakeRequest())
-      res returnsStatus OK
-      res returnsJson Json.obj()
+      res returnsStatus NOT_FOUND
     }
 
     "return incorporation status object if found" in new Setup {
