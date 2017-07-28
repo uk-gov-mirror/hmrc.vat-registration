@@ -16,8 +16,8 @@
 
 package models.external
 
+import java.time.LocalDate
 import models.JsonFormatValidation
-import org.joda.time.DateTime
 import play.api.libs.json.{JsSuccess, Json}
 
 class IncorporationInfoSpec extends JsonFormatValidation {
@@ -56,9 +56,8 @@ class IncorporationInfoSpec extends JsonFormatValidation {
         IncorpStatusEvent(
           status = "accepted",
           crn = Some("90000001"),
-          incorporationDate = Some(new DateTime(1470438000000L)),
-          description = Some("Some description"),
-          timestamp = new DateTime(1501061996345L)))
+          incorporationDate = Some(LocalDate.of(2016, 8, 5)),
+          description = Some("Some description")))
 
       Json.fromJson[IncorporationStatus](json)(IncorporationStatus.iiReads) shouldBe JsSuccess(tstStatus)
     }
@@ -94,8 +93,7 @@ class IncorporationInfoSpec extends JsonFormatValidation {
           status = "rejected",
           crn = None,
           incorporationDate = None,
-          description = None,
-          timestamp = new DateTime(1501061996345L)))
+          description = None))
 
       Json.fromJson[IncorporationStatus](json)(IncorporationStatus.iiReads) shouldBe JsSuccess(tstStatus)
     }

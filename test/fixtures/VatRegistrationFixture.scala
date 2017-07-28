@@ -21,7 +21,7 @@ import java.time.LocalDate
 import common.{RegistrationId, TransactionId}
 import models.api._
 import models.external.{IncorpStatusEvent, IncorpSubscription, IncorporationStatus}
-import org.joda.time.DateTime
+import java.time.LocalDate
 
 trait VatRegistrationFixture {
   val regId = RegistrationId("testId")
@@ -68,7 +68,7 @@ trait VatRegistrationFixture {
     whenDoYouWantToJoinFrs = Some("VAT_REGISTRATION_DATE"))
   val changeOfName = ChangeOfName(true, Some(FormerName("", LocalDate.now())))
 
-  def incorporationStatus(status: String, incorpDate: DateTime = DateTime.now()): IncorporationStatus =
+  def incorporationStatus(status: String, incorpDate: LocalDate = LocalDate.now()): IncorporationStatus =
     IncorporationStatus(
       subscription = IncorpSubscription(
         transactionId = txId.value,
@@ -80,8 +80,7 @@ trait VatRegistrationFixture {
         status = status,
         crn = Some("CRN"),
         incorporationDate = Some(incorpDate),
-        description = Some("description"),
-        timestamp = DateTime.now()
+        description = Some("description")
       )
     )
 
