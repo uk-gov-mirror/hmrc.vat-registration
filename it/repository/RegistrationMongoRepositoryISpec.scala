@@ -78,10 +78,10 @@ class RegistrationMongoRepositoryISpec
     accountingPeriods = VatAccountingPeriod("monthly")
   )
 
-  val vatDigitalContact = VatDigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
-  val vatContact = VatContact(vatDigitalContact)
-
   val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
+  val vatDigitalContact = VatDigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
+  val vatContact = VatContact(digitalContact = vatDigitalContact, website = None, ppob = scrsAddress)
+
   val name = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
   val contact = OfficerContactDetails(Some("test@test.com"), None, None)
   val formerName = FormerName("Bob Smith", date)
