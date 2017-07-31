@@ -67,8 +67,6 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
 
   def updateLodgingOfficer(id: RegistrationId): Action[JsValue] = patch[VatLodgingOfficer](registrationService, id)
 
-  def updatePpob(id: RegistrationId): Action[JsValue] = patch[ScrsAddress](registrationService, id)
-
   def updateFlatRateScheme(id: RegistrationId): Action[JsValue] = patch[VatFlatRateScheme](registrationService, id)
 
 

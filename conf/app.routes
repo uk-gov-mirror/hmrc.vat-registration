@@ -10,7 +10,6 @@ PATCH        /:regID/sic-and-compliance             controllers.VatRegistrationC
 PATCH        /:regID/vat-contact                    controllers.VatRegistrationController.updateVatContact(regID: RegistrationId)
 PATCH        /:regID/service-eligibility            controllers.VatRegistrationController.updateVatEligibility(regID: RegistrationId)
 PATCH        /:regID/lodging-officer                controllers.VatRegistrationController.updateLodgingOfficer(regID: RegistrationId)
-PATCH        /:regID/ppob                           controllers.VatRegistrationController.updatePpob(regID: RegistrationId)
 PATCH        /:regID/flat-rate-scheme               controllers.VatRegistrationController.updateFlatRateScheme(regID: RegistrationId)
 
 GET          /:regID/acknowledgement-reference      controllers.VatRegistrationController.getAcknowledgementReference(regID: RegistrationId)

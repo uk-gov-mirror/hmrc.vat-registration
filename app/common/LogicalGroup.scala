@@ -39,7 +39,6 @@ object LogicalGroup {
   implicit val vatContact = LogicalGroup[VatContact]("vatContact")
   implicit val vatEligibility = LogicalGroup[VatServiceEligibility]("vatEligibility")
   implicit val vatLodgingOfficer = LogicalGroup[VatLodgingOfficer]("lodgingOfficer")
-  implicit val ppob = LogicalGroup[ScrsAddress]("ppob")
   implicit val vatFlatRateScheme = LogicalGroup[VatFlatRateScheme]("vatFlatRateScheme")
 
 
