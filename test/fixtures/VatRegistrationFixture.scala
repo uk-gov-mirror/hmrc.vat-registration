@@ -18,11 +18,15 @@ package fixtures
 
 import java.time.LocalDate
 
-import common.RegistrationId
+import common.{RegistrationId, TransactionId}
 import models.api._
+import models.external.{IncorpStatusEvent, IncorpSubscription, IncorporationStatus}
+import java.time.LocalDate
 
 trait VatRegistrationFixture {
   val regId = RegistrationId("testId")
+  val txId: TransactionId = TransactionId("1")
+
   val userId = "userId"
   val ackRefNumber = "BRPY000000000001"
   val date = LocalDate.of(2017, 1, 1)
@@ -60,9 +64,25 @@ trait VatRegistrationFixture {
   val vatFlatRateScheme = VatFlatRateScheme(
     joinFrs = true,
     annualCostsInclusive = Some("yesWithin12months"),
-    annualCostsLimited =  Some("yesWithin12months"),
+    annualCostsLimited = Some("yesWithin12months"),
     doYouWantToUseThisRate = Some(false),
-    whenDoYouWantToJoinFrs=  Some("VAT_REGISTRATION_DATE"))
+    whenDoYouWantToJoinFrs = Some("VAT_REGISTRATION_DATE"))
   val changeOfName = ChangeOfName(true, Some(FormerName("", LocalDate.now())))
+
+  def incorporationStatus(status: String = "accepted", incorpDate: LocalDate = LocalDate.now()): IncorporationStatus =
+    IncorporationStatus(
+      subscription = IncorpSubscription(
+        transactionId = txId.value,
+        regime = "vat",
+        subscriber = "scrs",
+        callbackUrl = "callbackUrl"
+      ),
+      statusEvent = IncorpStatusEvent(
+        status = status,
+        crn = Some("CRN"),
+        incorporationDate = Some(incorpDate),
+        description = Some("description")
+      )
+    )
 
 }

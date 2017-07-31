@@ -25,8 +25,7 @@ import play.api.libs.json.{JsPath, JsSuccess, Json}
 class VatFlatRateSchemeSpec extends JsonFormatValidation {
   val startDate = LocalDate.of(2017, 7, 22)
 
-  "Creating a VatFlatRateScheme" +
-    " model from Json" should {
+  "Creating a VatFlatRateScheme model from Json" should {
     "complete successfully from full Json " in {
       val json = Json.parse(
         s"""

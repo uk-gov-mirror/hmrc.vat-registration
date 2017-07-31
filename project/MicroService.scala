@@ -62,7 +62,7 @@ trait MicroService {
       evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
       routesImport ++= Seq(
         "config.CustomPathBinder._",
-        "common.RegistrationId",
+        "common.{RegistrationId, TransactionId}",
         "models.ElementPath"
       )
     )

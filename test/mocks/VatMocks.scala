@@ -18,11 +18,14 @@ package mocks
 
 import auth.AuthorisationResource
 import cats.data.EitherT
-import common.RegistrationId
+import cats.instances.FutureInstances
+import cats.syntax.{ApplicativeSyntax, EitherSyntax}
 import common.exceptions._
-import connectors.{AuthConnector, Authority, BusinessRegistrationConnector}
+import common.{RegistrationId, TransactionId}
+import connectors.{AuthConnector, Authority, BusinessRegistrationConnector, IncorporationInformationConnector}
 import models._
 import models.api.VatScheme
+import models.external.IncorporationStatus
 import org.mockito.Matchers
 import org.mockito.Matchers._
 import org.mockito.Mockito._
@@ -39,6 +42,7 @@ trait VatMocks extends WSHTTPMock {
   this: MockitoSugar =>
 
   lazy val mockAuthConnector = mock[AuthConnector]
+  lazy val mockIIConnector = mock[IncorporationInformationConnector]
   lazy val mockRegistrationService = mock[RegistrationService]
   lazy val mockAuthorisationResource = mock[AuthorisationResource[String]]
   lazy val mockBusRegConnector = mock[BusinessRegistrationConnector]
@@ -66,6 +70,20 @@ trait VatMocks extends WSHTTPMock {
       when(mockAuthConnector.getCurrentAuthority()(any[HeaderCarrier]()))
         .thenReturn(Future.successful(Some(authority)))
     }
+
+  }
+
+  object IIMocks extends FutureInstances with ApplicativeSyntax with EitherSyntax {
+
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    def mockIncorporationStatus(incorporationStatus: IncorporationStatus): Unit =
+      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()))(any(), any()))
+        .thenReturn(EitherT.fromEither(incorporationStatus.asRight[LeftState]))
+
+    def mockIncorporationStatusLeft(leftState: LeftState): Unit =
+      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()))(any(), any()))
+        .thenReturn(EitherT.fromEither(leftState.asLeft[IncorporationStatus]))
 
   }
 
@@ -137,7 +155,7 @@ trait VatMocks extends WSHTTPMock {
         .thenReturn(serviceResult(group))
     }
 
-    def mockGetAcknowledgementReference(ackRef:String): Unit = {
+    def mockGetAcknowledgementReference(ackRef: String): Unit = {
       val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
       when(mockSubmissionService.assertOrGenerateAcknowledgementReference(idMatcher))
         .thenReturn(serviceResult(ackRef))

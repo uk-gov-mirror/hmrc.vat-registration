@@ -16,9 +16,11 @@
 
 package helpers
 
+import akka.stream.{ActorMaterializer, Materializer}
 import cats.data.{EitherT, OptionT}
 import org.scalatest.Assertion
 import org.scalatest.concurrent.ScalaFutures
+import play.api.libs.json.JsValue
 import play.api.mvc.Result
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -30,6 +32,8 @@ trait FutureAssertions extends ScalaFutures {
   implicit class PlayFutureResultReturns(f: Future[Result]) {
 
     def returnsStatus(s: Int): Assertion = status(f) shouldBe s
+
+    def returnsJson(j: JsValue)(implicit mat: Materializer): Assertion = whenReady(jsonBodyOf(f))(_ shouldBe j)
 
   }
 

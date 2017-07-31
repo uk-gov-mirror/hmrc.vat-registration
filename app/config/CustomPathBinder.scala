@@ -16,7 +16,7 @@
 
 package config
 
-import common.RegistrationId
+import common.{RegistrationId, TransactionId}
 import models.ElementPath
 import play.api.libs.json.{JsError, JsString, JsSuccess, Reads}
 import play.api.mvc.PathBindable
@@ -24,6 +24,7 @@ import play.api.mvc.PathBindable
 object CustomPathBinder {
 
   implicit val registrationIdBinder: PathBindable[RegistrationId] = customPathBinder(_.value)
+  implicit val transactionIdBinder: PathBindable[TransactionId] = customPathBinder(_.value)
   implicit val elementPathBinder: PathBindable[ElementPath] = customPathBinder(_.name)
 
   def customPathBinder[A : Reads](fromAtoString: A => String)
