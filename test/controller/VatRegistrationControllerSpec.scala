@@ -16,7 +16,6 @@
 
 package controller
 
-import common.exceptions.AcknowledgementReferenceExists
 import controllers.VatRegistrationController
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
