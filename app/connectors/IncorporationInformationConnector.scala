@@ -17,8 +17,8 @@
 package connectors
 
 import cats.data.EitherT
-import common.exceptions._
 import common.TransactionId
+import common.exceptions._
 import config.WSHttp
 import models.external.IncorporationStatus
 import play.api.Logger
@@ -27,7 +27,6 @@ import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http._
 
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class VatRegIncorporationInformationConnector extends IncorporationInformationConnector with ServicesConfig {
   //$COVERAGE-OFF$
@@ -48,6 +47,8 @@ object IncorpStatusRequest {
 
 trait IncorporationInformationConnector {
 
+  import scala.concurrent.ExecutionContext.Implicits.global
+
   val iiUrl: String
   val http: HttpGet with HttpPost
 
@@ -60,8 +61,9 @@ trait IncorporationInformationConnector {
       case r if r.status == 200 => Right(r.json.as[IncorporationStatus](IncorporationStatus.iiReads))
       case r if r.status == 202 => Left(ResourceNotFound("Incorporation Status not known. A subscription has been setup"))
       case r =>
-        Logger.error(s"${r.status} response code returned requesting II for txId: $transactionId")
-        Left(GenericError(new RuntimeException(s"No joy subscribing to II")))
+        val msg = s"${r.status} response code returned requesting II for txId: $transactionId"
+        Logger.error(msg)
+        Left(GenericError(new RuntimeException(msg)))
     })
 
 }

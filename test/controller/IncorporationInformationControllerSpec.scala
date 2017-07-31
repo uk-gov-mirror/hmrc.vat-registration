@@ -48,7 +48,7 @@ class IncorporationInformationControllerSpec extends VatRegSpec with VatRegistra
     }
 
     "return incorporation status object if found" in new Setup {
-      private val status: IncorporationStatus = incorporationStatus("accepted")
+      val status: IncorporationStatus = incorporationStatus()
       IIMocks.mockIncorporationStatus(status)
       val res = controller.getIncorporationInformation(txId)(FakeRequest())
       res returnsStatus OK

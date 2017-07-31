@@ -68,7 +68,7 @@ trait VatRegistrationFixture {
     whenDoYouWantToJoinFrs = Some("VAT_REGISTRATION_DATE"))
   val changeOfName = ChangeOfName(true, Some(FormerName("", LocalDate.now())))
 
-  def incorporationStatus(status: String, incorpDate: LocalDate = LocalDate.now()): IncorporationStatus =
+  def incorporationStatus(status: String = "accepted", incorpDate: LocalDate = LocalDate.now()): IncorporationStatus =
     IncorporationStatus(
       subscription = IncorpSubscription(
         transactionId = txId.value,

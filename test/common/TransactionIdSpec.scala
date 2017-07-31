@@ -16,17 +16,18 @@
 
 package common
 
-import play.api.libs.json._
+import org.scalatest.{FlatSpec, MustMatchers}
+import play.api.libs.json.{JsString, Json}
 
-case class TransactionId(value: String) extends AnyVal {
-  override def toString: String = value
-}
+class TransactionIdSpec extends FlatSpec with MustMatchers {
 
-object TransactionId {
+  "converting TransactionId to Json" should "work" in {
+    val txid = TransactionId("1")
+    Json.toJson(txid) mustBe JsString("1")
+  }
 
-  implicit val rs = Reads.of[String].map(TransactionId.apply)
-
-  implicit val ws = Writes[TransactionId](id => JsString(id.value))
-
+  "converting Json to TransactionId" should "work" in {
+    JsString("1").as[TransactionId] mustBe TransactionId("1")
+  }
 
 }
