@@ -18,7 +18,10 @@ package models.api
 
 import play.api.libs.json._
 
-case class VatContact(digitalContact: VatDigitalContact, website: Option[String] = None)
+case class VatContact(digitalContact: VatDigitalContact,
+                      website: Option[String] = None,
+                      ppob: ScrsAddress)
+
 
 object VatContact {
 
