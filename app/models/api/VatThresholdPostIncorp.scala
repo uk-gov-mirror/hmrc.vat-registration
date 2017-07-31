@@ -16,15 +16,14 @@
 
 package models.api
 
-import play.api.libs.json._
+import java.time.LocalDate
 
-case class VatContact(digitalContact: VatDigitalContact,
-                      website: Option[String] = None,
-                      ppob: ScrsAddress)
+import play.api.libs.json.Json
 
+case class VatThresholdPostIncorp(overThresholdSelection: Boolean, overThresholdDate: Option[LocalDate])
 
-object VatContact {
+object VatThresholdPostIncorp {
 
-  implicit val format: OFormat[VatContact] = Json.format[VatContact]
+  implicit val format = Json.format[VatThresholdPostIncorp]
 
 }

@@ -4,14 +4,13 @@ POST         /new                                   controllers.VatRegistrationC
 
 GET          /:regId/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regId: RegistrationId)
 
-PATCH        /:regId/trading-details                controllers.VatRegistrationController.updateTradingDetails(regId: RegistrationId)
-PATCH        /:regId/vat-financials                 controllers.VatRegistrationController.updateVatFinancials(regId: RegistrationId)
-PATCH        /:regId/sic-and-compliance             controllers.VatRegistrationController.updateSicAndCompliance(regId: RegistrationId)
-PATCH        /:regId/vat-contact                    controllers.VatRegistrationController.updateVatContact(regId: RegistrationId)
-PATCH        /:regId/service-eligibility            controllers.VatRegistrationController.updateVatEligibility(regId: RegistrationId)
-PATCH        /:regId/lodging-officer                controllers.VatRegistrationController.updateLodgingOfficer(regId: RegistrationId)
-PATCH        /:regId/ppob                           controllers.VatRegistrationController.updatePpob(regId: RegistrationId)
-PATCH        /:regId/flat-rate-scheme               controllers.VatRegistrationController.updateFlatRateScheme(regId: RegistrationId)
+PATCH        /:regID/trading-details                controllers.VatRegistrationController.updateTradingDetails(regID: RegistrationId)
+PATCH        /:regID/vat-financials                 controllers.VatRegistrationController.updateVatFinancials(regID: RegistrationId)
+PATCH        /:regID/sic-and-compliance             controllers.VatRegistrationController.updateSicAndCompliance(regID: RegistrationId)
+PATCH        /:regID/vat-contact                    controllers.VatRegistrationController.updateVatContact(regID: RegistrationId)
+PATCH        /:regID/service-eligibility            controllers.VatRegistrationController.updateVatEligibility(regID: RegistrationId)
+PATCH        /:regID/lodging-officer                controllers.VatRegistrationController.updateLodgingOfficer(regID: RegistrationId)
+PATCH        /:regID/flat-rate-scheme               controllers.VatRegistrationController.updateFlatRateScheme(regID: RegistrationId)
 
 GET          /:regId/acknowledgement-reference      controllers.VatRegistrationController.getAcknowledgementReference(regId: RegistrationId)
 
