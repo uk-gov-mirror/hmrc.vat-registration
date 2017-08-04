@@ -1,3 +1,3 @@
-POST        /current-profile-setup        controllers.test.TestSupportController.currentProfileSetup()
-POST        /clear                        controllers.test.TestSupportController.dropCollection()
-
+POST        /current-profile-setup                                 controllers.test.TestSupportController.currentProfileSetup()
+POST        /clear                                                 controllers.test.TestSupportController.dropCollection()
+GET         /incorporation-information/incorp-company/:txId        controllers.test.IncorporationInformationTestController.incorpCompany(txId: TransactionId)
