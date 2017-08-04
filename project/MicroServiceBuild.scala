@@ -15,7 +15,7 @@ private object AppDependencies {
   private val hmrcTestVersion = "2.3.0"
   private val scalaTestVersion_test = "3.0.1"
   private val scalaTestVersion_it = "2.2.6"
-  private val scalaTestPlusVersion = "1.5.1"
+  private val scalaTestPlusVersion = "2.0.0"
   private val pegdownVersion = "1.6.0"
   private val scoverageVersion = "1.3.0"
 
@@ -23,14 +23,14 @@ private object AppDependencies {
   val compile = Seq(
     ws,
     "uk.gov.hmrc" %% "play-reactivemongo" % "5.2.0",
-    "uk.gov.hmrc" %% "microservice-bootstrap" % "5.13.0",
+    "uk.gov.hmrc" %% "microservice-bootstrap" % "5.16.0",
     "uk.gov.hmrc" %% "play-authorisation" % "4.3.0",
     "uk.gov.hmrc" %% "play-health" % "2.1.0",
     "uk.gov.hmrc" %% "play-url-binders" % "2.1.0",
     "uk.gov.hmrc" %% "play-config" % "4.3.0",
-    "uk.gov.hmrc" %% "play-json-logger" % "3.0.0",
+    "uk.gov.hmrc" %% "play-json-logger" % "3.1.0",
     "uk.gov.hmrc" %% "domain" % "4.1.0",
-    "uk.gov.hmrc" %% "crypto" % "4.2.0",
+    "uk.gov.hmrc" %% "crypto" % "4.4.0",
     "org.typelevel" %% "cats" % "0.9.0"
   )
 
@@ -67,7 +67,7 @@ private object AppDependencies {
         "org.scoverage" % "scalac-scoverage-runtime_2.11" % scoverageVersion % scope,
         "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
         "uk.gov.hmrc" %% "reactivemongo-test" % "2.0.0" % scope,
-        "com.github.tomakehurst" % "wiremock" % "2.5.0" % scope
+        "com.github.tomakehurst" % "wiremock" % "2.6.0" % scope
       )
     }.test
   }
