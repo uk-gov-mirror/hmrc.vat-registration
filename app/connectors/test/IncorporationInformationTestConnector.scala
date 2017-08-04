@@ -39,7 +39,7 @@ class VatRegIncorporationInformationTestConnector extends IncorporationInformati
 
   def incorpCompany(transactionId: TransactionId)(implicit hc: HeaderCarrier): Future[Result] =
     http.GET(s"$iiUrl/incorporation-information/test-only/add-incorp-update?txId=" +
-      s"$transactionId&date=2016-08-06&success=true&crn=12345").map(_ => Results.Ok)
+      s"$transactionId&date=2016-08-05&success=true&crn=12345").map(_ => Results.Ok)
 
   //$COVERAGE-ON$
 
