@@ -18,7 +18,8 @@ package config
 
 import com.typesafe.config.Config
 import net.ceedubs.ficus.Ficus._
-import play.api.{Application, Configuration, Play}
+import play.api.{Application, Configuration, Logger, Play}
+import repositories.{RegistrationMongoRepository, RegistrationRepository}
 import uk.gov.hmrc.play.audit.filters.AuditFilter
 import uk.gov.hmrc.play.auth.controllers.AuthParamsControllerConfig
 import uk.gov.hmrc.play.auth.microservice.filters.AuthorisationFilter
@@ -63,4 +64,25 @@ object MicroserviceGlobal extends DefaultMicroserviceGlobal with RunMode with Mi
   override val microserviceAuditFilter = MicroserviceAuditFilter
 
   override val authFilter = Some(MicroserviceAuthFilter)
+
+  override def onStart(app : play.api.Application) : scala.Unit = {
+
+    import scala.concurrent.ExecutionContext.Implicits.global
+    val iRepo = Play.current.injector.instanceOf[RegistrationRepository]
+    val repo = iRepo.asInstanceOf[RegistrationMongoRepository]
+
+    repo.collection.indexesManager.list() map {
+      indexes =>
+        Logger.info("[Startup] Outputting current indexes")
+        indexes foreach[Unit]  { index =>
+          val name = index.name.getOrElse("<no-name>")
+          val keys = (index.key map { case (k,a) => s"${k} -> ${a.value}"}) mkString(",")
+          Logger.info(s"[Index] name: ${name} keys: ${keys} unique: ${index.unique} sparse: ${index.sparse}")
+        }
+        Logger.info("[Startup] Finished outputting current indexes")
+    }
+
+    super.onStart(app)
+  }
+
 }
