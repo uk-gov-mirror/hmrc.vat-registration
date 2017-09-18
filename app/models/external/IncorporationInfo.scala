@@ -49,7 +49,7 @@ object IncorpStatusEvent {
   implicit val format = Json.format[IncorpStatusEvent]
 
   val localDateReads = Reads[LocalDate](js =>
-    js.validate[Long].map[LocalDate](Instant.ofEpochMilli(_).atZone(ZoneId.systemDefault()).toLocalDate())
+    js.validate[Long].map[LocalDate](Instant.ofEpochMilli(_).atZone(ZoneId.of("Europe/London")).toLocalDate())
   )
 
   val iiReads: Reads[IncorpStatusEvent] =
