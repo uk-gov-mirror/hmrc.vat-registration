@@ -40,7 +40,7 @@ class IncorporationInfoSpec extends JsonFormatValidation {
            |      "status":"accepted",
            |      "crn":"90000001",
            |      "description": "Some description",
-           |      "incorporationDate":1470438000000,
+           |      "incorporationDate":1470351600000,
            |      "timestamp":1501061996345
            |    }
            |  }

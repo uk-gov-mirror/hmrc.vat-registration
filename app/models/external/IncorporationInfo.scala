@@ -16,7 +16,7 @@
 
 package models.external
 
-import java.time.LocalDate
+import java.time.{Instant, LocalDate, ZoneId}
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -48,10 +48,14 @@ object IncorpStatusEvent {
 
   implicit val format = Json.format[IncorpStatusEvent]
 
+  val localDateReads = Reads[LocalDate](js =>
+    js.validate[Long].map[LocalDate](Instant.ofEpochMilli(_).atZone(ZoneId.systemDefault()).toLocalDate())
+  )
+
   val iiReads: Reads[IncorpStatusEvent] =
     ((__ \ "status").read[String] and
       (__ \ "crn").readNullable[String] and
-      (__ \ "incorporationDate").readNullable[LocalDate] and
+      (__ \ "incorporationDate").readNullable[LocalDate](localDateReads) and
       (__ \ "description").readNullable[String]
       ) (IncorpStatusEvent.apply _)
 

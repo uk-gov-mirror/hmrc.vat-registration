@@ -54,7 +54,7 @@ class IncorporationInformationConnectorSpec extends VatRegSpec with VatRegistrat
            |      "status":"accepted",
            |      "crn":"CRN",
            |      "description": "description",
-           |      "incorporationDate":1470438000000,
+           |      "incorporationDate":1470351600000,
            |      "timestamp":1501061996345
            |    }
            |  }
