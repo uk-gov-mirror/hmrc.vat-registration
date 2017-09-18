@@ -74,7 +74,7 @@ object MicroserviceGlobal extends DefaultMicroserviceGlobal with RunMode with Mi
     repo.collection.indexesManager.list() map {
       indexes =>
         Logger.info("[Startup] Outputting current indexes")
-        indexes foreach[Unit]  { index =>
+        indexes foreach { index =>
           val name = index.name.getOrElse("<no-name>")
           val keys = (index.key map { case (k,a) => s"${k} -> ${a.value}"}) mkString(",")
           Logger.info(s"[Index] name: ${name} keys: ${keys} unique: ${index.unique} sparse: ${index.sparse}")
