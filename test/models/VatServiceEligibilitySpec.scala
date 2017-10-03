@@ -16,8 +16,10 @@
 
 package models
 
+import java.time.{LocalDate, ZoneId}
+
 import helpers.VatRegSpec
-import models.api.VatServiceEligibility
+import models.api.{VatEligibilityChoice, VatServiceEligibility, VatThresholdPostIncorp}
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
 
@@ -28,15 +30,25 @@ class VatServiceEligibilitySpec extends VatRegSpec with JsonFormatValidation {
 
     implicit val format = VatServiceEligibility.format
 
+    val now = LocalDate.now(ZoneId.systemDefault())
+
     "complete successfully from long Json" in {
       val json = Json.parse(
-        """
+        s"""
           |{
           |  "haveNino": true,
           |  "doingBusinessAbroad": true,
           |  "doAnyApplyToYou": true,
           |  "applyingForAnyOf": true,
-          |  "companyWillDoAnyOf": true
+          |  "companyWillDoAnyOf": true,
+          |  "vatEligibilityChoice" : {
+          |     "necessity" : "obligatory",
+          |     "reason" : "COMPANY_ALREADY_SELLS_TAXABLE_GOODS_OR_SERVICES",
+          |     "vatThresholdPostIncorp" : {
+          |       "overThresholdSelection" : true,
+          |       "overThresholdDate" : "$now"
+          |     }
+          |  }
           |}
         """.stripMargin)
       val testVatServiceEligibility = VatServiceEligibility(
@@ -44,7 +56,15 @@ class VatServiceEligibilitySpec extends VatRegSpec with JsonFormatValidation {
         doingBusinessAbroad = Some(true),
         doAnyApplyToYou = Some(true),
         applyingForAnyOf = Some(true),
-        companyWillDoAnyOf = Some(true)
+        companyWillDoAnyOf = Some(true),
+        vatEligibilityChoice = Some(VatEligibilityChoice(
+          necessity = "obligatory",
+          reason = Some("COMPANY_ALREADY_SELLS_TAXABLE_GOODS_OR_SERVICES"),
+          vatThresholdPostIncorp = Some(VatThresholdPostIncorp(
+            overThresholdSelection = true,
+            overThresholdDate = Some(now)
+          )))
+        )
       )
 
       Json.fromJson[VatServiceEligibility](json) shouldBe JsSuccess(testVatServiceEligibility)

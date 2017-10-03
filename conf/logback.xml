@@ -2,7 +2,7 @@
 <configuration>
 
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>logs/vat-registration.log</file>
+        <file>logs/vat-registration-frontend.log</file>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>%date{ISO8601} level=[%level] logger=[%logger] thread=[%thread] message=[%message] %replace(exception=[%xException]){'^exception=\[\]$',''}%n</pattern>
         </encoder>
@@ -39,18 +39,27 @@
         <appender-ref ref="ACCESS_LOG_FILE" />
     </logger>
 
-    <logger name="com.ning.http.client.providers.netty" additivity="false">
+    <logger name="com.ning.http.client.providers.netty" additivity="false" level="INFO">
         <appender-ref ref="STDOUT_IGNORE_NETTY" />
     </logger>
 
-    <logger name="com.google.inject" level="INFO"/>
+    <logger name="com.google.inject" level="OFF"/>
+
     <logger name="org.asynchttpclient.netty" level="INFO"/>
+    <logger name="io.netty.buffer" level="INFO"/>
+    <logger name="play.core.netty" level="INFO"/>
 
     <logger name="uk.gov" level="INFO"/>
 
     <logger name="application" level="DEBUG"/>
 
-    <logger name="connector" level="TRACE">
+    <logger name="org.eclipse.jetty" level="INFO"/>
+
+    <logger name="org.apache.http" level="INFO"/>
+
+    <logger name="io.netty" level="INFO"/>
+
+    <logger name="connector" level="INFO"> // TRACE
         <appender-ref ref="STDOUT"/>
     </logger>
 
