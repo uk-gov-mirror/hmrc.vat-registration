@@ -16,22 +16,24 @@
 
 package fixtures
 
-import java.time.LocalDate
+import java.time.ZoneId
 
-import common.{RegistrationId, TransactionId}
 import models.api._
 import models.external.{IncorpStatusEvent, IncorpSubscription, IncorporationStatus}
 import java.time.LocalDate
+
+import common.{RegistrationId, TransactionId}
 
 trait VatRegistrationFixture {
   val regId = RegistrationId("testId")
   val txId: TransactionId = TransactionId("1")
 
+  val now = LocalDate.now(ZoneId.systemDefault())
+
   val userId = "userId"
   val ackRefNumber = "BRPY000000000001"
   val date = LocalDate.of(2017, 1, 1)
   val vatChoice: VatChoice = VatChoice(
-    necessity = "obligatory",
     vatStartDate = VatStartDate(
       selection = "SPECIFIC_DATE",
       startDate = Some(date)))
@@ -52,7 +54,15 @@ trait VatRegistrationFixture {
     doingBusinessAbroad = Some(true),
     doAnyApplyToYou = Some(true),
     applyingForAnyOf = Some(true),
-    companyWillDoAnyOf = Some(true)
+    companyWillDoAnyOf = Some(true),
+    vatEligibilityChoice = Some(VatEligibilityChoice(
+      necessity = "obligatory",
+      reason = Some("COMPANY_ALREADY_SELLS_TAXABLE_GOODS_OR_SERVICES"),
+      vatThresholdPostIncorp = Some(VatThresholdPostIncorp(
+        overThresholdSelection = true,
+        overThresholdDate = Some(now)
+      ))
+    ))
   )
 
   val name = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))

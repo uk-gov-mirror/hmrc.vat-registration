@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 import models.api.{VatChoice, VatStartDate, VatThresholdPostIncorp}
 import play.api.data.validation.ValidationError
-import play.api.libs.json.{JsPath, JsSuccess, Json}
+import play.api.libs.json._
 
 class VatChoiceSpec extends JsonFormatValidation {
 
@@ -35,123 +35,18 @@ class VatChoiceSpec extends JsonFormatValidation {
            |  "vatStartDate": {
            |    "selection": "COMPANY_REGISTRATION_DATE",
            |    "startDate": "$testDate"
-           |    },
-           |  "necessity":"obligatory",
-           |  "vatThresholdPostIncorp" : {
-           |  "overThresholdSelection" : true,
-           |  "overThresholdDate": "$testDate"
            |  }
            |}
         """.stripMargin)
 
       val expectedVatChoice = VatChoice(
-        necessity = "obligatory",
         vatStartDate = VatStartDate(
           selection = "COMPANY_REGISTRATION_DATE",
-          startDate = Some(testDate)
-        ),
-        vatThresholdPostIncorp = Some(VatThresholdPostIncorp(overThresholdSelection = true, overThresholdDate = Some(testDate)))
-      )
-
-      Json.fromJson[VatChoice](json) shouldBe JsSuccess(expectedVatChoice)
-    }
-
-    "complete successfully from full Json with voluntary necessity" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "vatStartDate": {
-           |    "selection": "SPECIFIC_DATE",
-           |    "startDate": "$testDate"
-           |    },
-           |  "necessity":"voluntary"
-           |}
-        """.stripMargin)
-
-      val expectedVatChoice = VatChoice(
-        necessity = "voluntary",
-        vatStartDate = VatStartDate(
-          selection = "SPECIFIC_DATE",
           startDate = Some(testDate)
         )
       )
 
-      Json.fromJson[VatChoice](json) shouldBe JsSuccess(expectedVatChoice)
+      Json.fromJson[VatChoice](json) shouldBe JsSuccess(expectedVatChoice, __ \ "vatStartDate")
     }
-
-    "complete successfully from full Json with voluntary necessity and a reason" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "vatStartDate": {
-           |    "selection": "SPECIFIC_DATE",
-           |    "startDate": "$testDate"
-           |    },
-           |  "necessity":"voluntary",
-           |  "reason": "COMPANY_ALREADY_SELLS_TAXABLE_GOODS_OR_SERVICES"
-           |}
-        """.stripMargin)
-
-      val expectedVatChoice = VatChoice(
-        necessity = "voluntary",
-        vatStartDate = VatStartDate(
-          selection = "SPECIFIC_DATE",
-          startDate = Some(testDate)
-        ),
-        reason = Some("COMPANY_ALREADY_SELLS_TAXABLE_GOODS_OR_SERVICES")
-      )
-
-      Json.fromJson[VatChoice](json) shouldBe JsSuccess(expectedVatChoice)
-    }
-
-    "fail from Json with invalid reason" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "vatStartDate": {
-           |    "selection": "SPECIFIC_DATE",
-           |    "startDate": "$testDate"
-           |    },
-           |  "necessity":"voluntary",
-           |  "reason": "COMPANY_LIKES_TO_PAY_TAXES"
-           |}
-        """.stripMargin)
-
-      val result = Json.fromJson[VatChoice](json)
-      result shouldHaveErrors ( JsPath() \ "reason" -> ValidationError("error.pattern"))
-
-    }
-
-    "fail from Json with invalid necessity" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "vatStartDate": {
-           |    "selection": "SPECIFIC_DATE",
-           |    "startDate": "$testDate"
-           |    },
-           |  "necessity":"*garbage*"
-           |}
-        """.stripMargin)
-
-      val result = Json.fromJson[VatChoice](json)
-      result shouldHaveErrors ( JsPath() \ "necessity" -> ValidationError("error.pattern"))
-    }
-
-    "fail from Json with missing necessity" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "vatStartDate": {
-           |   "selection": "SPECIFIC_DATE",
-           |   "startDate": "$testDate"
-           |   }
-           |}
-        """.stripMargin)
-
-      val result = Json.fromJson[VatChoice](json)
-      result shouldHaveErrors ( JsPath() \ "necessity" -> ValidationError("error.path.missing"))
-    }
-
   }
 }

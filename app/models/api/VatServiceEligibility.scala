@@ -18,16 +18,13 @@ package models.api
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class VatServiceEligibility(
-                                        haveNino: Option[Boolean] = None,
-                                        doingBusinessAbroad: Option[Boolean] = None,
-                                        doAnyApplyToYou: Option[Boolean] = None,
-                                        applyingForAnyOf: Option[Boolean] = None,
-                                        companyWillDoAnyOf: Option[Boolean] = None
-                                      )
+final case class VatServiceEligibility(haveNino: Option[Boolean] = None,
+                                       doingBusinessAbroad: Option[Boolean] = None,
+                                       doAnyApplyToYou: Option[Boolean] = None,
+                                       applyingForAnyOf: Option[Boolean] = None,
+                                       companyWillDoAnyOf: Option[Boolean] = None,
+                                       vatEligibilityChoice: Option[VatEligibilityChoice] = None)
 
 object VatServiceEligibility {
-
   implicit val format: OFormat[VatServiceEligibility] = Json.format
-
 }

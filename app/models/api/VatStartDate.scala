@@ -25,10 +25,8 @@ import play.api.libs.json._
 case class VatStartDate(selection: String, startDate: Option[LocalDate])
 
 object VatStartDate extends VatStartDateValidator {
-
   implicit val format: OFormat[VatStartDate] = (
     (__ \ "selection").format[String](vatStartDateValidator) and
-      (__ \ "startDate").formatNullable[LocalDate]
-    ) (VatStartDate.apply, unlift(VatStartDate.unapply))
-
+    (__ \ "startDate").formatNullable[LocalDate]
+  )(VatStartDate.apply, unlift(VatStartDate.unapply))
 }
