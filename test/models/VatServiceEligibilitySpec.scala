@@ -40,6 +40,7 @@ class VatServiceEligibilitySpec extends VatRegSpec with JsonFormatValidation {
           |  "doingBusinessAbroad": true,
           |  "doAnyApplyToYou": true,
           |  "applyingForAnyOf": true,
+          |  "applyingForVatExemption": true,
           |  "companyWillDoAnyOf": true,
           |  "vatEligibilityChoice" : {
           |     "necessity" : "obligatory",
@@ -56,6 +57,7 @@ class VatServiceEligibilitySpec extends VatRegSpec with JsonFormatValidation {
         doingBusinessAbroad = Some(true),
         doAnyApplyToYou = Some(true),
         applyingForAnyOf = Some(true),
+        applyingForVatExemption = Some(true),
         companyWillDoAnyOf = Some(true),
         vatEligibilityChoice = Some(VatEligibilityChoice(
           necessity = "obligatory",

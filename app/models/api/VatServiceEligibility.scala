@@ -22,6 +22,7 @@ final case class VatServiceEligibility(haveNino: Option[Boolean] = None,
                                        doingBusinessAbroad: Option[Boolean] = None,
                                        doAnyApplyToYou: Option[Boolean] = None,
                                        applyingForAnyOf: Option[Boolean] = None,
+                                       applyingForVatExemption: Option[Boolean] = None,
                                        companyWillDoAnyOf: Option[Boolean] = None,
                                        vatEligibilityChoice: Option[VatEligibilityChoice] = None)
 
