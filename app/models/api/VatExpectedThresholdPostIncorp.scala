@@ -20,8 +20,8 @@ import java.time.LocalDate
 
 import play.api.libs.json.Json
 
-case class VatThresholdPostIncorp(overThresholdSelection: Boolean, overThresholdDate: Option[LocalDate])
+case class VatExpectedThresholdPostIncorp(expectedOverThresholdSelection: Boolean, expectedOverThresholdDate: Option[LocalDate])
 
-object VatThresholdPostIncorp {
-  implicit val format = Json.format[VatThresholdPostIncorp]
+object VatExpectedThresholdPostIncorp {
+  implicit val format = Json.format[VatExpectedThresholdPostIncorp]
 }
