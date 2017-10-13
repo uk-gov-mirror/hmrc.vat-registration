@@ -19,7 +19,7 @@ package models
 import java.time.{LocalDate, ZoneId}
 
 import helpers.VatRegSpec
-import models.api.{VatEligibilityChoice, VatServiceEligibility, VatThresholdPostIncorp}
+import models.api.{VatEligibilityChoice, VatExpectedThresholdPostIncorp, VatServiceEligibility, VatThresholdPostIncorp}
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
 
@@ -49,6 +49,10 @@ class VatServiceEligibilitySpec extends VatRegSpec with JsonFormatValidation {
           |     "vatThresholdPostIncorp" : {
           |       "overThresholdSelection" : true,
           |       "overThresholdDate" : "$now"
+          |     },
+          |     "vatExpectedThresholdPostIncorp" : {
+          |       "expectedOverThresholdSelection" : true,
+          |       "expectedOverThresholdDate" : "$now"
           |     }
           |  }
           |}
@@ -67,8 +71,12 @@ class VatServiceEligibilitySpec extends VatRegSpec with JsonFormatValidation {
           vatThresholdPostIncorp = Some(VatThresholdPostIncorp(
             overThresholdSelection = true,
             overThresholdDate = Some(now)
-          )))
-        )
+          )),
+          vatExpectedThresholdPostIncorp = Some(VatExpectedThresholdPostIncorp(
+            expectedOverThresholdSelection = true,
+            expectedOverThresholdDate = Some(now)
+          ))
+        ))
       )
 
       Json.fromJson[VatServiceEligibility](json) shouldBe JsSuccess(testVatServiceEligibility)

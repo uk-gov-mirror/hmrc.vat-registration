@@ -62,6 +62,10 @@ trait VatRegistrationFixture {
       vatThresholdPostIncorp = Some(VatThresholdPostIncorp(
         overThresholdSelection = true,
         overThresholdDate = Some(now)
+      )),
+      vatExpectedThresholdPostIncorp = Some(VatExpectedThresholdPostIncorp(
+        expectedOverThresholdSelection = true,
+        expectedOverThresholdDate = Some(now)
       ))
     ))
   )
