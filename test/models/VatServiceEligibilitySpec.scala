@@ -42,7 +42,6 @@ class VatServiceEligibilitySpec extends VatRegSpec with JsonFormatValidation {
           |  "applyingForAnyOf": true,
           |  "applyingForVatExemption": true,
           |  "companyWillDoAnyOf": true,
-          |  "expectedThresholdPostIncorp" : true,
           |  "vatEligibilityChoice" : {
           |     "necessity" : "obligatory",
           |     "reason" : "COMPANY_ALREADY_SELLS_TAXABLE_GOODS_OR_SERVICES",
