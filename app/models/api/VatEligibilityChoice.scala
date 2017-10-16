@@ -23,7 +23,7 @@ import play.api.libs.json._
 case class VatEligibilityChoice(necessity: String, // "obligatory" or "voluntary"
                                 reason: Option[String] = None,
                                 vatThresholdPostIncorp: Option[VatThresholdPostIncorp] = None,
-                                vatExpectedThresholdPostIncorp: Option[VatExpectedThresholdPostIncorp])
+                                vatExpectedThresholdPostIncorp: Option[VatExpectedThresholdPostIncorp] = None)
 
 object VatEligibilityChoice {
   implicit val format: OFormat[VatEligibilityChoice] = (
