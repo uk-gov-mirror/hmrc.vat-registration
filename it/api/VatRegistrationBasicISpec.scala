@@ -16,11 +16,17 @@
 package api
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import common.RegistrationId
+import enums.VatRegStatus
 import itutil.{IntegrationSpecBase, WiremockHelper}
+import models.api.VatScheme
+import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.libs.ws.WS
 import play.api.test.FakeApplication
 import play.api.test.Helpers._
+import play.modules.reactivemongo.ReactiveMongoComponent
+import repositories.{MongoDBProvider, RegistrationMongoRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -39,14 +45,13 @@ class VatRegistrationBasicISpec extends IntegrationSpecBase {
 
   private def client(path: String) = WS.url(s"http://localhost:$port$path").withFollowRedirects(false).post("test")
 
+  def setupSimpleAuthMocks(): StubMapping = {
+    stubPost("/write/audit", OK, """{"x":2}""")
+    stubGet("/auth/authority", OK, """{"uri":"xxx","credentials":{"gatewayId":"xxx2"},"userDetailsLink":"xxx3","ids":"/auth/ids"}""")
+    stubGet("/auth/ids", OK, """{"internalId":"Int-xxx","externalId":"Ext-xxx"}""")
+  }
 
   "VAT Registration API - for initial / basic calls" should {
-
-    def setupSimpleAuthMocks(): StubMapping = {
-      stubPost("/write/audit", OK, """{"x":2}""")
-      stubGet("/auth/authority", OK, """{"uri":"xxx","credentials":{"gatewayId":"xxx2"},"userDetailsLink":"xxx3","ids":"/auth/ids"}""")
-      stubGet("/auth/ids", OK, """{"internalId":"Int-xxx","externalId":"Ext-xxx"}""")
-    }
 
     "Return a 200 for " in {
       setupSimpleAuthMocks()

@@ -21,6 +21,7 @@ import javax.inject.{Inject, Named}
 import cats.data.OptionT
 import common.{LogicalGroup, RegistrationId}
 import common.exceptions._
+import enums.VatRegStatus
 import models._
 import models.api.{VatBankAccountMongoFormat, VatFinancials, VatScheme}
 import play.api.Logger
@@ -83,7 +84,7 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
   ))
 
   override def createNewVatScheme(id: RegistrationId): Future[VatScheme] = {
-    val newReg = VatScheme(id, None, None, None, None)
+    val newReg = VatScheme(id, None, None, None, None, status = VatRegStatus.draft)
     collection.insert(newReg) map (_ => newReg) recover {
       case e =>
         Logger.error(s"Unable to insert new VAT Scheme for registration ID $id, Error: ${e.getMessage}")

@@ -23,6 +23,7 @@ import cats.syntax.{ApplicativeSyntax, EitherSyntax}
 import common.exceptions._
 import common.{RegistrationId, TransactionId}
 import connectors.{AuthConnector, Authority, BusinessRegistrationConnector, IncorporationInformationConnector}
+import enums.VatRegStatus
 import models._
 import models.api.VatScheme
 import models.external.IncorporationStatus
@@ -30,6 +31,7 @@ import org.mockito.Matchers
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
+import play.api.libs.json.JsValue
 import repositories.test.TestOnlyRepository
 import repositories.{RegistrationRepository, SequenceRepository}
 import services.{RegistrationService, ServiceResult, SubmissionService, VatRegistrationService}
@@ -133,7 +135,7 @@ trait VatMocks extends WSHTTPMock {
 
     def mockSuccessfulCreateNewRegistration(registrationId: RegistrationId): Unit = {
       when(mockRegistrationService.createNewRegistration()(any[HeaderCarrier]()))
-        .thenReturn(serviceResult(VatScheme(registrationId, None, None, None)))
+        .thenReturn(serviceResult(VatScheme(registrationId, None, None, None, status = VatRegStatus.draft)))
     }
 
     def mockFailedCreateNewRegistration(registrationId: RegistrationId): Unit = {
@@ -165,6 +167,30 @@ trait VatMocks extends WSHTTPMock {
       val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
       when(mockSubmissionService.assertOrGenerateAcknowledgementReference(idMatcher))
         .thenReturn(serviceError[String](GenericDatabaseError(exception, Some("regId"))))
+    }
+
+    def mockGetDocumentStatus(json: JsValue): Unit = {
+      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
+      when(mockRegistrationService.getStatus(idMatcher))
+        .thenReturn(serviceResult(json))
+    }
+
+    def mockGetDocumentStatusForbidden(registrationId: RegistrationId): Unit = {
+      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
+      when(mockRegistrationService.getStatus(idMatcher))
+        .thenReturn(serviceError[JsValue](ForbiddenAccess(s"Forbidden error returned for regID: $registrationId")))
+    }
+
+    def mockGetDocumentStatusServiceUnavailable(exception: Exception): Unit = {
+      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
+      when(mockRegistrationService.getStatus(idMatcher))
+        .thenReturn(serviceError[JsValue](GenericDatabaseError(exception, Some("regId"))))
+    }
+
+    def mockGetDocumentStatusNotFound(registrationId: RegistrationId): Unit = {
+      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
+      when(mockRegistrationService.getStatus(idMatcher))
+        .thenReturn(serviceError[JsValue](ResourceNotFound(s"Document not found for regID: $registrationId")))
     }
 
     def mockGetAcknowledgementReferenceExistsError(): Unit = {

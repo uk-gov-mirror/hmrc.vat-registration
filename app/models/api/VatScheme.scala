@@ -17,6 +17,7 @@
 package models.api
 
 import common.RegistrationId
+import enums.VatRegStatus
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -29,7 +30,8 @@ case class VatScheme(
                       vatContact: Option[VatContact] = None,
                       vatEligibility: Option[VatServiceEligibility] = None,
                       acknowledgementReference: Option[String] = None,
-                      vatFlatRateScheme: Option[VatFlatRateScheme] = None
+                      vatFlatRateScheme: Option[VatFlatRateScheme] = None,
+                      status: VatRegStatus.Value
                     )
 
 object VatScheme {
@@ -43,7 +45,8 @@ object VatScheme {
       (__ \ "vatContact").readNullable[VatContact] and
       (__ \ "vatEligibility").readNullable[VatServiceEligibility] and
       (__ \ "acknowledgementReference").readNullable[String] and
-      (__ \ "vatFlatRateScheme").readNullable[VatFlatRateScheme]
+      (__ \ "vatFlatRateScheme").readNullable[VatFlatRateScheme] and
+      (__ \ "status").read[VatRegStatus.Value]
     ) (VatScheme.apply _)
 
 
@@ -56,7 +59,8 @@ object VatScheme {
       (__ \ "vatContact").writeNullable[VatContact] and
       (__ \ "vatEligibility").writeNullable[VatServiceEligibility] and
       (__ \ "acknowledgementReference").writeNullable[String] and
-      (__ \ "vatFlatRateScheme").writeNullable[VatFlatRateScheme]
+      (__ \ "vatFlatRateScheme").writeNullable[VatFlatRateScheme] and
+      (__ \ "status").write[VatRegStatus.Value]
     ) (unlift(VatScheme.unapply))
 
   implicit def format(implicit f: OFormat[VatFinancials]): OFormat[VatScheme] = OFormat(reads(f), writes(f))

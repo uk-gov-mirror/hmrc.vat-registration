@@ -20,6 +20,7 @@ import cats.instances.FutureInstances
 import cats.syntax.ApplicativeSyntax
 import common.RegistrationId
 import common.exceptions._
+import enums.VatRegStatus
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models.api._
@@ -38,7 +39,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
 
   "call to assertOrGenerateAcknowledgementReference" should {
 
-    val vatScheme = VatScheme(RegistrationId("1"), None, None, None)
+    val vatScheme = VatScheme(RegistrationId("1"), None, None, None, status = VatRegStatus.draft)
 
     "return Success response " in new Setup {
 
