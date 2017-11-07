@@ -18,6 +18,7 @@ package services
 
 import common.RegistrationId
 import common.exceptions._
+import enums.VatRegStatus
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models._
@@ -25,6 +26,7 @@ import models.api._
 import models.external.CurrentProfile
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
+import play.api.libs.json.Json
 import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -39,7 +41,7 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
 
   "createNewRegistration" should {
 
-    val vatScheme = VatScheme(RegistrationId("1"), None, None, None)
+    val vatScheme = VatScheme(RegistrationId("1"), None, None, None, status = VatRegStatus.draft)
 
     "return a existing VatScheme response " in new Setup {
       val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
@@ -168,7 +170,7 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
 
   "call to saveAcknowledgementReference" should {
 
-    val vatScheme = VatScheme(RegistrationId("1"), None, None, None)
+    val vatScheme = VatScheme(RegistrationId("1"), None, None, None, status = VatRegStatus.draft)
 
     "return Success response " in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Some(vatScheme))
@@ -218,4 +220,36 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
     }
   }
 
+  "call to getStatus" should {
+    "return a correct JsValue" in new Setup {
+      val expectedJson = Json.parse(
+        """
+          | {
+          |   "status": "draft"
+          | }
+        """.stripMargin)
+
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(Some(vatScheme)))
+      service.getStatus(RegistrationId("1")) returnsRight expectedJson
+    }
+
+    "return a correct JsValue with ackRef" in new Setup {
+      val vatSchemeWithAckRefNum = vatScheme.copy(acknowledgementReference = Some(ackRefNumber))
+      val expectedJson = Json.parse(
+        s"""
+          | {
+          |   "status": "draft",
+          |   "ackRef": "$ackRefNumber"
+          | }
+        """.stripMargin)
+
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(Some(vatSchemeWithAckRefNum)))
+      service.getStatus(RegistrationId("1")) returnsRight expectedJson
+    }
+
+    "return a ResourceNotFound" in new Setup {
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(None))
+      service.getStatus(RegistrationId("1")) returnsLeft ResourceNotFound("No registration found for registration ID: 1")
+    }
+  }
 }

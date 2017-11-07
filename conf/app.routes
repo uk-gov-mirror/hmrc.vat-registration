@@ -20,3 +20,4 @@ DELETE       /:regId/delete-scheme                  controllers.VatRegistrationC
 
 DELETE       /:regId/delete/:element                controllers.VatRegistrationController.deleteByElement(regId: RegistrationId, element: ElementPath)
 
+GET          /:regId/status                         controllers.VatRegistrationController.getDocumentStatus(regId: RegistrationId)

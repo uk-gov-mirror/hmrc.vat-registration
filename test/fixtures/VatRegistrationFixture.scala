@@ -23,6 +23,7 @@ import models.external.{IncorpStatusEvent, IncorpSubscription, IncorporationStat
 import java.time.LocalDate
 
 import common.{RegistrationId, TransactionId}
+import enums.VatRegStatus
 
 trait VatRegistrationFixture {
   val regId = RegistrationId("testId")
@@ -72,7 +73,7 @@ trait VatRegistrationFixture {
   val name = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
   val formerName = FormerName("Bob Smith", date)
   val contact = OfficerContactDetails(Some("test@test.com"), None, None)
-  val vatScheme: VatScheme = VatScheme(regId)
+  val vatScheme: VatScheme = VatScheme(regId, status = VatRegStatus.draft)
   val exception = new Exception("Exception")
   val currentOrPreviousAddress = CurrentOrPreviousAddress(false, Some(scrsAddress))
   val vatFlatRateScheme = VatFlatRateScheme(

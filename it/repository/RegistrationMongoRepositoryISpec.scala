@@ -20,6 +20,7 @@ import java.time.LocalDate
 
 import common.exceptions._
 import common.{LogicalGroup, RegistrationId}
+import enums.VatRegStatus
 import itutil.FutureAssertions
 import models.{AcknowledgementReferencePath, VatBankAccountPath}
 import models.api._
@@ -37,7 +38,7 @@ class RegistrationMongoRepositoryISpec
 
   private val date = LocalDate.of(2017, 1, 1)
   private val regId = RegistrationId("123")
-  private val vatScheme = VatScheme(regId)
+  private val vatScheme = VatScheme(regId, status = VatRegStatus.draft)
   private val vatChoice = VatChoice(vatStartDate = VatStartDate(selection = "COMPANY_REGISTRATION_DATE", startDate = Some(date)))
   private val tradingName = TradingName(selection = true, Some("some-trading-name"))
   val changeOfName = ChangeOfName(true, Some(FormerName("", LocalDate.now())))

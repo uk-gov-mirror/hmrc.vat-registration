@@ -27,7 +27,8 @@ import connectors._
 import models.api.VatScheme
 import models.external.CurrentProfile
 import models.{AcknowledgementReferencePath, ElementPath}
-import play.api.libs.json.Writes
+import play.api.Logger
+import play.api.libs.json.{JsObject, JsValue, Json, Writes}
 import repositories.RegistrationRepository
 import uk.gov.hmrc.play.http.HeaderCarrier
 
@@ -49,6 +50,8 @@ trait RegistrationService {
   def retrieveAcknowledgementReference(id: RegistrationId): ServiceResult[String]
 
   def saveAcknowledgementReference(id: RegistrationId, ackRef: String): ServiceResult[String]
+
+  def getStatus(id: RegistrationId): ServiceResult[JsValue]
 
 }
 
@@ -81,6 +84,17 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
           Left[LeftState, String](AcknowledgementReferenceExists(s"""Registration ID $id already has an acknowledgement reference of: $ar""")).toEitherT
         case None => EitherT.liftT(registrationRepository.updateByElement(id, AcknowledgementReferencePath, ackRef))
       })
+
+  override def getStatus(id: RegistrationId): ServiceResult[JsValue] =
+    toEitherT(registrationRepository.retrieveVatScheme(id) map {
+      case Some(registration) => {
+        val json = Json.obj("status" -> registration.status)
+        val ackRef = registration.acknowledgementReference.fold(Json.obj())(ackRef => Json.obj("ackRef" -> ackRef))
+
+        json ++ ackRef
+      }
+      case None => throw new MissingRegDocument(id)
+    })
 
   override def createNewRegistration()(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme] =
     for {

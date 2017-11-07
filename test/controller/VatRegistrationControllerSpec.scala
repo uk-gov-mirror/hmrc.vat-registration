@@ -29,6 +29,8 @@ import play.api.test.Helpers._
 
 class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
+  import fakeApplication.materializer
+
   val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB666666C", "director", name, changeOfName, currentOrPreviousAddress, contact)
 
   class Setup {
@@ -200,6 +202,38 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       "call getAcknowledgementReference return AcknowledgementReferenceExists Error" in new Setup {
         ServiceMocks.mockGetAcknowledgementReferenceExistsError()
         controller.getAcknowledgementReference(regId)(FakeRequest()) returnsStatus CONFLICT
+      }
+    }
+
+    "Calling getDocumentStatus" should {
+
+      "return a Ok response when the user logged in" in new Setup {
+        val json = Json.parse(
+          """
+            | {
+            |   "status": "draft",
+            |   "ackRef": "testAckRef"
+            | }
+          """.stripMargin)
+
+        ServiceMocks.mockGetDocumentStatus(json)
+        controller.getDocumentStatus(regId)(FakeRequest()) returnsStatus OK
+        controller.getDocumentStatus(regId)(FakeRequest()) returnsJson json
+      }
+
+      "return a Forbidden response if the user is not logged in" in new Setup {
+        ServiceMocks.mockGetDocumentStatusForbidden(regId)
+        controller.getDocumentStatus(regId)(FakeRequest()) returnsStatus FORBIDDEN
+      }
+
+      "return a service unavailable response" in new Setup {
+        ServiceMocks.mockGetDocumentStatusServiceUnavailable(exception)
+        controller.getDocumentStatus(regId)(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
+      }
+
+      "return a Not Found response if there is no VAT Registration for the user's ID" in new Setup {
+        ServiceMocks.mockGetDocumentStatusNotFound(regId)
+        controller.getDocumentStatus(regId)(FakeRequest()) returnsStatus NOT_FOUND
       }
     }
 
