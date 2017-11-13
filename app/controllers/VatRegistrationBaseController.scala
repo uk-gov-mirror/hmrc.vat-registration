@@ -16,7 +16,7 @@
 
 package controllers
 
-import auth.Authenticated
+import auth.{Authenticated, Authorisation}
 import cats.instances.future._
 import common.{LogicalGroup, RegistrationId}
 import models.ElementPath

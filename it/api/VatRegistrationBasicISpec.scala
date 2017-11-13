@@ -17,16 +17,12 @@ package api
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import common.RegistrationId
-import enums.VatRegStatus
 import itutil.{IntegrationSpecBase, WiremockHelper}
-import models.api.VatScheme
-import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.libs.ws.WS
 import play.api.test.FakeApplication
 import play.api.test.Helpers._
-import play.modules.reactivemongo.ReactiveMongoComponent
-import repositories.{MongoDBProvider, RegistrationMongoRepository}
+import repositories.RegistrationMongoRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -43,7 +39,9 @@ class VatRegistrationBasicISpec extends IntegrationSpecBase {
     "microservice.services.auth.port" -> s"$mockPort"
   ))
 
-  private def client(path: String) = WS.url(s"http://localhost:$port$path").withFollowRedirects(false).post("test")
+  lazy val repo = app.injector.instanceOf(classOf[RegistrationMongoRepository])
+
+  private def client(path: String) = WS.url(s"http://localhost:$port$path").withFollowRedirects(false)
 
   def setupSimpleAuthMocks(): StubMapping = {
     stubPost("/write/audit", OK, """{"x":2}""")
@@ -56,7 +54,7 @@ class VatRegistrationBasicISpec extends IntegrationSpecBase {
     "Return a 200 for " in {
       setupSimpleAuthMocks()
 
-      client(controllers.routes.VatRegistrationController.newVatRegistration().url) map { response =>
+      client(controllers.routes.VatRegistrationController.newVatRegistration().url).post("test") map { response =>
         response.status shouldBe OK
         response.json shouldBe Json.parse("""{"uri":"xxx","gatewayId":"xxx2","userDetailsLink":"xxx3","ids":{"internalId":"Int-xxx","externalId":"Ext-xxx"}}""")
       }
@@ -64,13 +62,33 @@ class VatRegistrationBasicISpec extends IntegrationSpecBase {
     }
 
     "Return a 403 for " in {
-      client(controllers.routes.VatRegistrationController.newVatRegistration().url) map { response =>
+      client(controllers.routes.VatRegistrationController.newVatRegistration().url).post("test") map { response =>
         response.status shouldBe FORBIDDEN
       }
     }
 
     "Return a 404 if the registration is missing" in {
-      client(s"/12345") map { response => response.status shouldBe NOT_FOUND }
+      client(s"/12345").post("test") map { response => response.status shouldBe NOT_FOUND }
+    }
+  }
+
+  "/:regId/update-iv-status" should {
+    "return an Ok" in {
+      setupSimpleAuthMocks()
+
+      repo.createNewVatScheme(RegistrationId("testRegId"))
+
+      val result = await(client(controllers.routes.VatRegistrationController.updateIVStatus("testRegId").url).patch(Json.parse("""{"ivPassed" : true}""")))
+      result.status shouldBe OK
+
+      await(repo.remove("registrationId" -> "testRegId"))
+    }
+
+    "return an INS" in {
+      setupSimpleAuthMocks()
+
+      val result = await(client("/vatreg/testRegId2/update-iv-status").patch(Json.parse("""{"ivPassed" : true}""")))
+      result.status shouldBe INTERNAL_SERVER_ERROR
     }
   }
 }

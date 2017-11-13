@@ -23,7 +23,7 @@ import common.{LogicalGroup, RegistrationId}
 import common.exceptions._
 import enums.VatRegStatus
 import models._
-import models.api.{VatBankAccountMongoFormat, VatFinancials, VatScheme}
+import models.api.{VatBankAccountMongoFormat, VatFinancials, VatLodgingOfficer, VatScheme}
 import play.api.Logger
 import play.api.libs.json.{OFormat, Writes}
 import play.modules.reactivemongo.MongoDbConnection
@@ -49,6 +49,7 @@ trait RegistrationRepository {
 
   def deleteByElement(id: RegistrationId, elementPath: ElementPath): Future[Boolean]
 
+  def updateIVStatus(regId: String, ivStatus: Boolean): Future[Boolean]
 }
 
 
@@ -76,6 +77,7 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
   import scala.concurrent.ExecutionContext.Implicits.global
 
   private[repositories] def ridSelector(id: RegistrationId) = BSONDocument("registrationId" -> BSONString(id.value))
+  private def regIdSelector(regId: String) = BSONDocument("registrationId" -> regId)
 
   override def indexes: Seq[Index] = Seq(Index(
     name = Some("RegId"),
@@ -119,4 +121,13 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
   override def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String): Future[String] =
     setElement(id, elementPath.path, value)
 
+  override def updateIVStatus(regId: String, ivStatus: Boolean): Future[Boolean] = {
+    val updateDocument = BSONDocument("$set" -> BSONDocument("lodgingOfficer.ivPassed" -> BSONBoolean(ivStatus)))
+    collection.find(regIdSelector(regId)).one[VatScheme] flatMap {
+      case Some(scheme) => collection.update(regIdSelector(regId), updateDocument) map {
+        wr => if(wr.ok) ivStatus else throw UpdateFailed(RegistrationId(regId), "lodgingOfficer.ivPassed")
+      }
+      case None         => throw MissingRegDocument(RegistrationId(regId))
+    }
+  }
 }

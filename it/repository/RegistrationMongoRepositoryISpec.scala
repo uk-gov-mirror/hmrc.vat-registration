@@ -79,15 +79,23 @@ class RegistrationMongoRepositoryISpec
     accountingPeriods = VatAccountingPeriod("monthly")
   )
 
-  val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
-  val vatDigitalContact = VatDigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
-  val vatContact = VatContact(digitalContact = vatDigitalContact, website = None, ppob = scrsAddress)
+  val scrsAddress               = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
+  val vatDigitalContact         = VatDigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
+  val vatContact                = VatContact(digitalContact = vatDigitalContact, website = None, ppob = scrsAddress)
 
-  val name = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
-  val contact = OfficerContactDetails(Some("test@test.com"), None, None)
-  val formerName = FormerName("Bob Smith", date)
-  val currentOrPreviousAddress = CurrentOrPreviousAddress(false, Some(scrsAddress))
-  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB686868C", "director", name, changeOfName, currentOrPreviousAddress, contact)
+  val name                      = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
+  val contact                   = OfficerContactDetails(Some("test@test.com"), None, None)
+  val formerName                = FormerName("Bob Smith", date)
+  val currentOrPreviousAddress  = CurrentOrPreviousAddress(false, Some(scrsAddress))
+  val vatLodgingOfficer         = VatLodgingOfficer(
+    currentAddress            = Some(scrsAddress),
+    dob                       = Some(DateOfBirth(1, 1, 1980)),
+    nino                      = Some("NB686868C"),
+    role                      = Some("director"),
+    name                      = Some(name),
+    changeOfName              = Some(changeOfName),
+    currentOrPreviousAddress  = Some(currentOrPreviousAddress),
+    contact                   = Some(contact))
 
   class Setup {
     val repository = new RegistrationMongoRepository(new MongoDBProvider(), "integration-testing")
@@ -192,5 +200,15 @@ class RegistrationMongoRepositoryISpec
     }
   }
 
+  "Calling updateIVStatus" should {
+    "update the ivStatus in lodging officer" in new Setup {
+      val result = for {
+        insert                <- repository.insert(vatScheme)
+        update                <- repository.updateIVStatus(vatScheme.id.value, true)
+        Some(updatedScheme)   <- repository.retrieveVatScheme(vatScheme.id)
+      } yield updatedScheme.lodgingOfficer.get.ivPassed
 
+      await(result) shouldBe true
+    }
+  }
 }

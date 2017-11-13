@@ -18,7 +18,7 @@ package auth
 
 import connectors.{AuthConnector, Authority, UserIds}
 import helpers.VatRegSpec
-import org.mockito.Matchers
+import org.mockito.{Matchers => ArgumentMatchers}
 import org.mockito.Mockito._
 import org.scalatest._
 import play.api.mvc.{Result, Results}
@@ -27,33 +27,35 @@ import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-class AuthorisationSpec extends VatRegSpec {
+class AuthorisationSpec extends VatRegSpec with BeforeAndAfter {
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc   = HeaderCarrier()
 
   def tstResultFunc(a: Authority): Future[Result] = {
     Future.successful(Results.Ok("tstOutcome"))
   }
 
-  object Authorisation extends Authorisation[String] {
-    val auth: AuthConnector = mockAuthConnector
-    val resourceConn: AuthorisationResource[String] = mockAuthorisationResource
+  val authorisation = new Authorisation[String] {
+    val auth          = mockAuthConnector
+    val resourceConn  = mockAuthorisationResource
   }
-
-
 
   "The authorisation helper" should {
 
     "indicate there's no logged in user where there isn't a valid bearer token" in {
 
-      when(mockAuthConnector.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(None))
-      when(mockAuthorisationResource.getInternalId(Matchers.any())).thenReturn(Future.successful(None))
+      when(mockAuthConnector.getCurrentAuthority()(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(None))
 
-      status(Authorisation.authorised("xxx") { authResult => {
+      when(mockAuthorisationResource.getInternalId(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(None))
+
+      val result = authorisation.authorised("xxx") { authResult =>
         authResult shouldBe NotLoggedInOrAuthorised
         Future.successful(Results.Forbidden)
       }
-      }) shouldBe FORBIDDEN
+      val response = await(result)
+      response.header.status shouldBe FORBIDDEN
     }
 
     "provided an authorised result when logged in and a consistent resource" in {
@@ -62,14 +64,18 @@ class AuthorisationSpec extends VatRegSpec {
       val userIDs = UserIds("foo", "bar")
       val a = Authority("x", "y", "z", userIDs)
 
-      when(mockAuthConnector.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
-      when(mockAuthorisationResource.getInternalId(Matchers.eq(regId))).thenReturn(Future.successful(Some((regId, userIDs.internalId))))
+      when(mockAuthConnector.getCurrentAuthority()(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(Some(a)))
 
-      status(Authorisation.authorised(regId) { authResult => {
+      when(mockAuthorisationResource.getInternalId(ArgumentMatchers.eq(regId)))
+        .thenReturn(Future.successful(Some((regId, userIDs.internalId))))
+
+      val result = authorisation.authorised(regId){ authResult =>
         authResult shouldBe Authorised(a)
         Future.successful(Results.Ok)
       }
-      }) shouldBe OK
+      val response = await(result)
+      response.header.status shouldBe OK
     }
 
     "provided a not-authorised result when logged in and an inconsistent resource" in {
@@ -78,71 +84,36 @@ class AuthorisationSpec extends VatRegSpec {
       val userIDs = UserIds("foo", "bar")
       val a = Authority("x", "y", "z", userIDs)
 
-      when(mockAuthConnector.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
-      when(mockAuthorisationResource.getInternalId(Matchers.eq(regId))).thenReturn(Future.successful(Some((regId, userIDs.internalId + "xxx"))))
+      when(mockAuthConnector.getCurrentAuthority()(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(Some(a)))
 
-      status(Authorisation.authorised(regId) { authResult => {
+      when(mockAuthorisationResource.getInternalId(ArgumentMatchers.eq(regId)))
+        .thenReturn(Future.successful(Some((regId, userIDs.internalId +"xxx"))))
+
+      val result = authorisation.authorised(regId){ authResult =>
         authResult shouldBe NotAuthorised(a)
         Future.successful(Results.Ok)
       }
-      }) shouldBe OK
+      val response = await(result)
+      response.header.status shouldBe OK
     }
 
     "provide a not-found result when logged in and no resource for the identifier" in {
 
-      val a = Authority("x", "y", "z", UserIds("tiid", "teid"))
+      val a = Authority("x", "y", "z", UserIds("tiid","teid"))
 
-      when(mockAuthConnector.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
-      when(mockAuthorisationResource.getInternalId(Matchers.any())).thenReturn(Future.successful(None))
+      when(mockAuthConnector.getCurrentAuthority()(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(Some(a)))
 
-      status(Authorisation.authorised("xxx") { authResult => {
+      when(mockAuthorisationResource.getInternalId(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(None))
+
+      val result = authorisation.authorised("xxx"){ authResult =>
         authResult shouldBe AuthResourceNotFound(a)
         Future.successful(Results.Ok)
       }
-      }) shouldBe OK
+      val response = await(result)
+      response.header.status shouldBe OK
     }
-
-    "return a Forbidden status when a user is not logged in" in {
-
-      val regId = "xxx"
-      val userIDs = UserIds("foo", "bar")
-
-      when(mockAuthConnector.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(None))
-      when(mockAuthorisationResource.getInternalId(Matchers.any())).thenReturn(Future.successful(Some((regId, userIDs.internalId + "xxx"))))
-
-      status(Authorisation.authorisedFor("xxx")(tstResultFunc)) shouldBe FORBIDDEN
-    }
-
-    "return a Not Found status when a user has no corresponding registration ID" in {
-
-      val a = Authority("x", "y", "z", UserIds("tiid", "teid"))
-
-      when(mockAuthConnector.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
-      when(mockAuthorisationResource.getInternalId(Matchers.any())).thenReturn(Future.successful(None))
-
-      status(Authorisation.authorisedFor("xxx")(tstResultFunc)) shouldBe NOT_FOUND
-    }
-
-    "return a Forbidden status when a user has a different registration ID to their auth context's ID" in {
-
-      val a = Authority("x", "y", "z", UserIds("tiid", "teid"))
-
-      when(mockAuthConnector.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
-      when(mockAuthorisationResource.getInternalId(Matchers.any())).thenReturn(Future.successful(Some(("xxx", "NotTiid"))))
-
-      status(Authorisation.authorisedFor("xxx")(tstResultFunc)) shouldBe FORBIDDEN
-    }
-
-    "allow an authorised user to complete their action" in {
-
-      val a = Authority("x", "y", "z", UserIds("tiid", "teid"))
-
-      when(mockAuthConnector.getCurrentAuthority()(Matchers.any())).thenReturn(Future.successful(Some(a)))
-      when(mockAuthorisationResource.getInternalId(Matchers.any())).thenReturn(Future.successful(Some(("xxx", a.ids.internalId))))
-
-      status(Authorisation.authorisedFor("xxx")(tstResultFunc)) shouldBe OK
-    }
-
-
   }
 }
