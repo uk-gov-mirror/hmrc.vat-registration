@@ -16,6 +16,8 @@
 
 package controller
 
+import common.RegistrationId
+import common.exceptions.UpdateFailed
 import controllers.VatRegistrationController
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
@@ -25,13 +27,27 @@ import play.api.libs.json.Json
 import play.api.mvc.Results.Accepted
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import org.mockito.Mockito.when
+import org.mockito.Matchers
+
+import scala.concurrent.Future
 
 
 class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
   import fakeApplication.materializer
 
-  val vatLodgingOfficer = VatLodgingOfficer(scrsAddress, DateOfBirth(1, 1, 1980), "NB666666C", "director", name, changeOfName, currentOrPreviousAddress, contact)
+  val vatLodgingOfficer       = VatLodgingOfficer(
+    currentAddress            = Some(scrsAddress),
+    dob                       = Some(DateOfBirth(1, 1, 1980)),
+    nino                      = Some("NB666666C"),
+    role                      = Some("director"),
+    name                      = Some(name),
+    changeOfName              = Some(changeOfName),
+    currentOrPreviousAddress  = Some(currentOrPreviousAddress),
+    contact                   = Some(contact)
+  )
+
 
   class Setup {
     val controller = new VatRegistrationController(mockAuthConnector, mockRegistrationService, mockSubmissionService)
@@ -260,7 +276,31 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         controller.deleteByElement(regId, VatBankAccountPath)(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
       }
     }
-
   }
 
+  "updateIVStatus" should {
+    "return an Ok" when {
+      "the users IV status has been successfully updated" in new Setup {
+        val request = FakeRequest().withBody(Json.parse("""{"ivPassed" : true}"""))
+
+        when(mockRegistrationService.updateIVStatus(Matchers.any[String](), Matchers.any[Boolean]()))
+          .thenReturn(Future.successful(true))
+
+        val result = controller.updateIVStatus("testRegId")(request)
+        status(result) shouldBe OK
+      }
+    }
+
+    "return an InternalServerError" when {
+      "there was a problem updating the users IV status" in new Setup {
+        val request = FakeRequest().withBody(Json.parse("""{"ivPassed" : true}"""))
+
+        when(mockRegistrationService.updateIVStatus(Matchers.any[String](), Matchers.any[Boolean]()))
+          .thenReturn(Future.failed(UpdateFailed(RegistrationId("testRegId"), "testModel")))
+
+        val result = controller.updateIVStatus("testRegId")(request)
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
+    }
+  }
 }

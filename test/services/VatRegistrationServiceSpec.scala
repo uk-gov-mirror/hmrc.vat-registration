@@ -24,6 +24,7 @@ import helpers.VatRegSpec
 import models._
 import models.api._
 import models.external.CurrentProfile
+import org.mockito.Matchers
 import org.mockito.Matchers.any
 import org.mockito.Mockito._
 import play.api.libs.json.Json
@@ -220,6 +221,7 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
     }
   }
 
+
   "call to getStatus" should {
     "return a correct JsValue" in new Setup {
       val expectedJson = Json.parse(
@@ -249,7 +251,27 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
 
     "return a ResourceNotFound" in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(None))
-      service.getStatus(RegistrationId("1")) returnsLeft ResourceNotFound("No registration found for registration ID: 1")
+      service.getStatus(RegistrationId("1")) returnsLeft ResourceNotFound(
+        "No registration found for registration ID: 1")
+    }
+  }
+  "updateIVStatus" should {
+    "return a boolean" when {
+      "the user IV status has been updated" in new Setup {
+        when(mockRegistrationRepository.updateIVStatus(Matchers.any(), Matchers.any()))
+          .thenReturn(Future.successful(true))
+
+        val result = await(service.updateIVStatus("testRegId", true))
+        result shouldBe true
+      }
+    }
+
+    "throw an updated failed" in new Setup {
+      when(mockRegistrationRepository.updateIVStatus(Matchers.any(), Matchers.any()))
+        .thenReturn(Future.failed(UpdateFailed(RegistrationId("testRegId"), "testModel")))
+
+      intercept[UpdateFailed](await(service.updateIVStatus("testRegId", true)))
+
     }
   }
 }

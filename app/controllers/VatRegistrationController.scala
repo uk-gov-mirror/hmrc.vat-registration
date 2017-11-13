@@ -36,8 +36,7 @@ import scala.concurrent.Future
 
 class VatRegistrationController @Inject()(val auth: AuthConnector,
                                           registrationService: RegistrationService,
-                                          submissionService: SubmissionService)
-  extends VatRegistrationBaseController {
+                                          submissionService: SubmissionService) extends VatRegistrationBaseController {
 
   val errorHandler: (LeftState) => Result = err => err.toResult
 
@@ -100,5 +99,23 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
       }
   }
 
+
   def deleteByElement(id: RegistrationId, elementPath: ElementPath): Action[AnyContent] = delete(registrationService, id, elementPath)
+
+  def updateIVStatus(regId: String): Action[JsValue] = Action.async(parse.json) {
+    implicit request =>
+      authenticated { _ =>
+        withJsonBody[JsValue] { json =>
+          registrationService.updateIVStatus(regId, json.\("ivPassed").as[Boolean]) map { _ =>
+              Ok(json)
+          } recover {
+            case _ =>
+              Logger.error(s"[VatRegistrationController] - [updateIVStatus] - There was a problem updating the IV status for regId $regId")
+              InternalServerError
+          }
+        }
+      }
+  }
+
+
 }

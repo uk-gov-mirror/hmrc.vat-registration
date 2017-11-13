@@ -25,7 +25,7 @@ import common.{RegistrationId, TransactionId}
 import connectors.{AuthConnector, Authority, BusinessRegistrationConnector, IncorporationInformationConnector}
 import enums.VatRegStatus
 import models._
-import models.api.VatScheme
+import models.api.{VatLodgingOfficer, VatScheme}
 import models.external.IncorporationStatus
 import org.mockito.Matchers
 import org.mockito.Matchers._

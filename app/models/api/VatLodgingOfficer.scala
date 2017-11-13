@@ -19,26 +19,28 @@ package models.api
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatLodgingOfficer(currentAddress: ScrsAddress,
-                             dob: DateOfBirth,
-                             nino: String,
-                             role: String,
-                             name: Name,
-                             changeOfName: ChangeOfName,
-                             currentOrPreviousAddress : CurrentOrPreviousAddress,
-                             contact: OfficerContactDetails)
+case class VatLodgingOfficer(currentAddress: Option[ScrsAddress] = None,
+                             dob: Option[DateOfBirth] = None,
+                             nino: Option[String] = None,
+                             role: Option[String] = None,
+                             name: Option[Name] = None,
+                             changeOfName: Option[ChangeOfName] = None,
+                             currentOrPreviousAddress : Option[CurrentOrPreviousAddress] = None,
+                             contact: Option[OfficerContactDetails] = None,
+                             ivPassed: Boolean = false)
 
 object VatLodgingOfficer extends VatLodgingOfficerValidator {
 
   implicit val format = (
-    (__ \ "currentAddress").format[ScrsAddress] and
-      (__ \ "dob").format[DateOfBirth] and
-      (__ \ "nino").format[String](ninoValidator) and
-      (__ \ "role").format[String](roleValidator) and
-      (__ \ "name").format[Name] and
-      (__ \ "changeOfName").format[ChangeOfName] and
-      (__ \ "currentOrPreviousAddress").format[CurrentOrPreviousAddress] and
-      (__ \ "contact").format[OfficerContactDetails]
-    ) (VatLodgingOfficer.apply, unlift(VatLodgingOfficer.unapply))
+    (__ \ "currentAddress").formatNullable[ScrsAddress] and
+    (__ \ "dob").formatNullable[DateOfBirth] and
+    (__ \ "nino").formatNullable[String](ninoValidator) and
+    (__ \ "role").formatNullable[String](roleValidator) and
+    (__ \ "name").formatNullable[Name] and
+    (__ \ "changeOfName").formatNullable[ChangeOfName] and
+    (__ \ "currentOrPreviousAddress").formatNullable[CurrentOrPreviousAddress] and
+    (__ \ "contact").formatNullable[OfficerContactDetails] and
+    (__ \ "ivPassed").format[Boolean]
+  )(VatLodgingOfficer.apply, unlift(VatLodgingOfficer.unapply))
 
 }

@@ -53,11 +53,12 @@ trait RegistrationService {
 
   def getStatus(id: RegistrationId): ServiceResult[JsValue]
 
+  def updateIVStatus(regId: String, ivStatus: Boolean): Future[Boolean]
+
 }
 
 class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnector,
-                                       registrationRepository: RegistrationRepository
-                                      ) extends RegistrationService with ApplicativeSyntax with FutureInstances {
+                                       registrationRepository: RegistrationRepository) extends RegistrationService with ApplicativeSyntax with FutureInstances {
 
   private def repositoryErrorHandler[T]: PartialFunction[Throwable, Either[LeftState, T]] = {
     case e: MissingRegDocument => Left(ResourceNotFound(s"No registration found for registration ID: ${e.id}"))
@@ -117,6 +118,9 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
   override def retrieveAcknowledgementReference(id: RegistrationId): ServiceResult[String] =
     retrieveVatScheme(id).subflatMap(_.acknowledgementReference.toRight(ResourceNotFound("AcknowledgementId")))
 
-  //TODO ResourceNotFound review if appropriate
+  override def updateIVStatus(regId: String, ivStatus: Boolean): Future[Boolean] = {
+    registrationRepository.updateIVStatus(regId, ivStatus)
+  }
 
+  //TODO ResourceNotFound review if appropriate
 }
