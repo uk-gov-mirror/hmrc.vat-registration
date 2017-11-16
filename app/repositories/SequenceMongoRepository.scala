@@ -20,29 +20,27 @@ import javax.inject.{Inject, Singleton}
 
 import com.google.inject.ImplementedBy
 import models.api.Sequence
-import play.api.Logger
 import play.api.libs.json.JsValue
 import reactivemongo.api.DB
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.mongo.{ReactiveRepository, Repository}
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NoStackTrace
 
 @ImplementedBy(classOf[SequenceMongoRepository])
 trait SequenceRepository extends Repository[Sequence, BSONObjectID] {
-  def getNext(sequenceID: String): Future[Int]
+  def getNext(sequenceID: String)(implicit hc: HeaderCarrier): Future[Int]
 }
-
 
 @Singleton
 class SequenceMongoRepository @Inject()(mongo: () => DB)
-  extends ReactiveRepository[Sequence, BSONObjectID]("sequence", mongo, Sequence.formats, ReactiveMongoFormats.objectIdFormats)
-    with SequenceRepository {
+  extends ReactiveRepository[Sequence, BSONObjectID]("sequence", mongo, Sequence.formats, ReactiveMongoFormats.objectIdFormats) with SequenceRepository {
 
-  def getNext(sequenceID: String): Future[Int] = {
+  def getNext(sequenceID: String)(implicit hc: HeaderCarrier): Future[Int] = {
     val selector = BSONDocument("_id" -> sequenceID)
     val modifier = BSONDocument("$inc" -> BSONDocument("seq" -> 1))
 
@@ -50,7 +48,7 @@ class SequenceMongoRepository @Inject()(mongo: () => DB)
       _.result[JsValue] match {
         // $COVERAGE-OFF$
         case None =>
-          Logger.error("[SequenceRepository] - [getNext] returned a None when Upserting")
+          logger.error("[SequenceRepository] - [getNext] returned a None when Upserting")
           class InvalidSequence extends NoStackTrace
           throw new InvalidSequence
         // $COVERAGE-ON$

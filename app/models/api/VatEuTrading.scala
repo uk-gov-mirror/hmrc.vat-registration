@@ -21,7 +21,5 @@ import play.api.libs.json._
 case class VatEuTrading(selection: Boolean, eoriApplication: Option[Boolean])
 
 object VatEuTrading {
-
   implicit val format: OFormat[VatEuTrading] = Json.format[VatEuTrading]
-
 }

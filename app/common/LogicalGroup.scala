@@ -19,27 +19,21 @@ package common
 import models.api._
 
 trait LogicalGroup[T] {
-
   val name: String
-
 }
 
-
 object LogicalGroup {
-
   def apply[T]()(implicit t: LogicalGroup[T]): LogicalGroup[T] = t
 
   def apply[T](s: String): LogicalGroup[T] = new LogicalGroup[T] {
     val name: String = s
   }
 
-  implicit val vatTradingDetails = LogicalGroup[VatTradingDetails]("tradingDetails")
-  implicit val vatSicAndCompliance = LogicalGroup[VatSicAndCompliance]("vatSicAndCompliance")
-  implicit val vatFinancials = LogicalGroup[VatFinancials]("financials")
-  implicit val vatContact = LogicalGroup[VatContact]("vatContact")
-  implicit val vatEligibility = LogicalGroup[VatServiceEligibility]("vatEligibility")
-  implicit val vatLodgingOfficer = LogicalGroup[VatLodgingOfficer]("lodgingOfficer")
-  implicit val vatFlatRateScheme = LogicalGroup[VatFlatRateScheme]("vatFlatRateScheme")
-
-
+  implicit val vatTradingDetails    = LogicalGroup[VatTradingDetails]("tradingDetails")
+  implicit val vatSicAndCompliance  = LogicalGroup[VatSicAndCompliance]("vatSicAndCompliance")
+  implicit val vatFinancials        = LogicalGroup[VatFinancials]("financials")
+  implicit val vatContact           = LogicalGroup[VatContact]("vatContact")
+  implicit val vatEligibility       = LogicalGroup[VatServiceEligibility]("vatEligibility")
+  implicit val vatLodgingOfficer    = LogicalGroup[VatLodgingOfficer]("lodgingOfficer")
+  implicit val vatFlatRateScheme    = LogicalGroup[VatFlatRateScheme]("vatFlatRateScheme")
 }

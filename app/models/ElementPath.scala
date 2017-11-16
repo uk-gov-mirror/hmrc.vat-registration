@@ -24,9 +24,7 @@ sealed trait ElementPath {
 }
 
 object ElementPath {
-
   implicit object ElementPathFormatter extends Format[ElementPath] {
-
     private val pathMap: Map[String, ElementPath] = Seq[ElementPath](
       VatBankAccountPath,
       ZeroRatedTurnoverEstimatePath,

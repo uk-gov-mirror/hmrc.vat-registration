@@ -23,9 +23,7 @@ case class RegistrationId(value: String) extends AnyVal {
 }
 
 object RegistrationId {
-
   implicit val rs = Reads.of[String].map(RegistrationId.apply)
 
   implicit val ws = Writes[RegistrationId](id => JsString(id.value))
-
 }

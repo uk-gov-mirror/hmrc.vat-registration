@@ -16,14 +16,10 @@
 
 package repository
 
-import java.time.LocalDate
-
 import common.exceptions._
 import common.{LogicalGroup, RegistrationId}
-import enums.VatRegStatus
-import itutil.FutureAssertions
+import itutil.{FutureAssertions, ITFixtures}
 import models.{AcknowledgementReferencePath, VatBankAccountPath}
-import models.api._
 import org.scalatest.BeforeAndAfterEach
 import play.api.libs.json.Writes
 import repositories.{MongoDBProvider, RegistrationMongoRepository}
@@ -34,68 +30,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class RegistrationMongoRepositoryISpec
-  extends UnitSpec with MongoSpecSupport with FutureAssertions with BeforeAndAfterEach with WithFakeApplication {
-
-  private val date = LocalDate.of(2017, 1, 1)
-  private val regId = RegistrationId("123")
-  private val vatScheme = VatScheme(regId, status = VatRegStatus.draft)
-  private val vatChoice = VatChoice(vatStartDate = VatStartDate(selection = "COMPANY_REGISTRATION_DATE", startDate = Some(date)))
-  private val tradingName = TradingName(selection = true, Some("some-trading-name"))
-  val changeOfName = ChangeOfName(true, Some(FormerName("", LocalDate.now())))
-
-  private val vatTradingDetails = VatTradingDetails(
-    vatChoice = vatChoice,
-    tradingName = tradingName,
-    euTrading = VatEuTrading(
-      selection = true,
-      eoriApplication = Some(true)
-    )
-  )
-  private val tradingDetails = VatTradingDetails(
-    vatChoice = vatChoice,
-    tradingName = tradingName,
-    euTrading = VatEuTrading(selection = true, eoriApplication = Some(true))
-  )
-  private val compliance =
-    VatSicAndCompliance(
-      businessDescription = "some-business-description",
-      culturalCompliance = Some(VatComplianceCultural(true)),
-      labourCompliance = Some(VatComplianceLabour(
-        labour = true,
-        workers = Some(10),
-        temporaryContracts = Some(true),
-        skilledWorkers = Some(true))),
-      financialCompliance = Some(VatComplianceFinancial(adviceOrConsultancyOnly = true, actAsIntermediary = true)),
-      mainBusinessActivity = SicCode("88888888", "description", "displayDetails")
-    )
-
-  val EstimateValue: Long = 1000L
-  val zeroRatedTurnoverEstimate: Long = 1000L
-  val vatFinancials = VatFinancials(
-    bankAccount = Some(VatBankAccount("Reddy", "101010", "100000000000")),
-    turnoverEstimate = EstimateValue,
-    zeroRatedTurnoverEstimate = Some(zeroRatedTurnoverEstimate),
-    reclaimVatOnMostReturns = true,
-    accountingPeriods = VatAccountingPeriod("monthly")
-  )
-
-  val scrsAddress               = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
-  val vatDigitalContact         = VatDigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
-  val vatContact                = VatContact(digitalContact = vatDigitalContact, website = None, ppob = scrsAddress)
-
-  val name                      = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
-  val contact                   = OfficerContactDetails(Some("test@test.com"), None, None)
-  val formerName                = FormerName("Bob Smith", date)
-  val currentOrPreviousAddress  = CurrentOrPreviousAddress(false, Some(scrsAddress))
-  val vatLodgingOfficer         = VatLodgingOfficer(
-    currentAddress            = Some(scrsAddress),
-    dob                       = Some(DateOfBirth(1, 1, 1980)),
-    nino                      = Some("NB686868C"),
-    role                      = Some("director"),
-    name                      = Some(name),
-    changeOfName              = Some(changeOfName),
-    currentOrPreviousAddress  = Some(currentOrPreviousAddress),
-    contact                   = Some(contact))
+  extends UnitSpec with MongoSpecSupport with FutureAssertions with BeforeAndAfterEach with WithFakeApplication with ITFixtures {
 
   class Setup {
     val repository = new RegistrationMongoRepository(new MongoDBProvider(), "integration-testing")

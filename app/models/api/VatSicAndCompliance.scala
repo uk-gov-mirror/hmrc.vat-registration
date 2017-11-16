@@ -19,16 +19,12 @@ package models.api
 import play.api.libs.json._
 
 
-case class VatSicAndCompliance(
-                                businessDescription: String,
-                                culturalCompliance: Option[VatComplianceCultural] = None,
-                                labourCompliance: Option[VatComplianceLabour] = None,
-                                financialCompliance: Option[VatComplianceFinancial] = None,
-                                mainBusinessActivity: SicCode
-                              )
+case class VatSicAndCompliance(businessDescription: String,
+                               culturalCompliance: Option[VatComplianceCultural] = None,
+                               labourCompliance: Option[VatComplianceLabour] = None,
+                               financialCompliance: Option[VatComplianceFinancial] = None,
+                               mainBusinessActivity: SicCode)
 
 object VatSicAndCompliance {
-
   implicit val format: OFormat[VatSicAndCompliance] = Json.format[VatSicAndCompliance]
-
 }

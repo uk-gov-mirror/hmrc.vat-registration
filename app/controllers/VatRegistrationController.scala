@@ -18,21 +18,16 @@ package controllers
 
 import javax.inject.Inject
 
-import auth.{AuthResourceNotFound, Authorised, NotAuthorised, NotLoggedInOrAuthorised}
-import cats.instances.future._
 import common.RegistrationId
-import common.exceptions.{LeftState, MissingRegDocument, ResourceNotFound}
+import common.exceptions.{LeftState, ResourceNotFound}
 import connectors.AuthConnector
 import models.ElementPath
 import models.api._
-import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, Result}
 import repositories.RegistrationMongoFormats.encryptedFinancials
 import services._
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 class VatRegistrationController @Inject()(val auth: AuthConnector,
                                           registrationService: RegistrationService,
@@ -88,14 +83,13 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
 
   def getDocumentStatus(id: RegistrationId): Action[AnyContent] = Action.async {
     implicit request =>
-      authenticated { _ => {
-          val customErrorHandler: (LeftState) => Result = {
-            case ResourceNotFound(msg) => NotFound(msg)
-            case err => err.toResult
-          }
-
-          registrationService.getStatus(id).fold(customErrorHandler, status => Ok(Json.toJson(status)))
+      authenticated { _ =>
+        val customErrorHandler: (LeftState) => Result = {
+          case ResourceNotFound(msg) => NotFound(msg)
+          case err => err.toResult
         }
+
+        registrationService.getStatus(id).fold(customErrorHandler, status => Ok(Json.toJson(status)))
       }
   }
 
@@ -107,15 +101,13 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
       authenticated { _ =>
         withJsonBody[JsValue] { json =>
           registrationService.updateIVStatus(regId, json.\("ivPassed").as[Boolean]) map { _ =>
-              Ok(json)
+            Ok(json)
           } recover {
             case _ =>
-              Logger.error(s"[VatRegistrationController] - [updateIVStatus] - There was a problem updating the IV status for regId $regId")
+              logger.error(s"[VatRegistrationController] - [updateIVStatus] - There was a problem updating the IV status for regId $regId")
               InternalServerError
           }
         }
       }
   }
-
-
 }

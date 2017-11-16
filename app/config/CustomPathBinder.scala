@@ -24,18 +24,13 @@ import play.api.mvc.PathBindable
 object CustomPathBinder {
 
   implicit val registrationIdBinder: PathBindable[RegistrationId] = customPathBinder(_.value)
-  implicit val transactionIdBinder: PathBindable[TransactionId] = customPathBinder(_.value)
-  implicit val elementPathBinder: PathBindable[ElementPath] = customPathBinder(_.name)
+  implicit val transactionIdBinder: PathBindable[TransactionId]   = customPathBinder(_.value)
+  implicit val elementPathBinder: PathBindable[ElementPath]       = customPathBinder(_.name)
 
-  def customPathBinder[A : Reads](fromAtoString: A => String)
-                                 (implicit stringBinder: PathBindable[String]): PathBindable[A] = {
-
-
-    def parseString(str: String) = {
-      JsString(str).validate[A] match {
-        case JsSuccess(a, _) => Right(a)
-        case JsError(error) => Left(s"No valid value in path: $str. Error: $error")
-      }
+  def customPathBinder[A : Reads](fromAtoString: A => String)(implicit stringBinder: PathBindable[String]): PathBindable[A] = {
+    def parseString(str: String) = JsString(str).validate[A] match {
+      case JsSuccess(a, _)  => Right(a)
+      case JsError(error)   => Left(s"No valid value in path: $str. Error: $error")
     }
 
     new PathBindable[A] {

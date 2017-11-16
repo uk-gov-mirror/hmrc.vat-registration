@@ -32,6 +32,4 @@ class Module extends AbstractModule {
     bind(classOf[services.RegistrationService]).to(classOf[services.VatRegistrationService])
     bindConstant().annotatedWith(Names.named("collectionName")).to("registration-information")
   }
-
-
 }

@@ -18,14 +18,14 @@ package auth
 
 import connectors.{AuthConnector, Authority, UserIds}
 import helpers.VatRegSpec
-import org.mockito.{Matchers => ArgumentMatchers}
+import org.mockito.{ArgumentMatchers => ArgumentArgumentMatchers}
 import org.mockito.Mockito._
 import org.scalatest._
 import play.api.mvc.{Result, Results}
 import play.api.test.Helpers._
-import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
+import uk.gov.hmrc.http.HeaderCarrier
 
 class AuthorisationSpec extends VatRegSpec with BeforeAndAfter {
 
@@ -44,10 +44,10 @@ class AuthorisationSpec extends VatRegSpec with BeforeAndAfter {
 
     "indicate there's no logged in user where there isn't a valid bearer token" in {
 
-      when(mockAuthConnector.getCurrentAuthority()(ArgumentMatchers.any()))
+      when(mockAuthConnector.getCurrentAuthority()(ArgumentArgumentMatchers.any()))
         .thenReturn(Future.successful(None))
 
-      when(mockAuthorisationResource.getInternalId(ArgumentMatchers.any()))
+      when(mockAuthorisationResource.getInternalId(ArgumentArgumentMatchers.any()))
         .thenReturn(Future.successful(None))
 
       val result = authorisation.authorised("xxx") { authResult =>
@@ -64,10 +64,10 @@ class AuthorisationSpec extends VatRegSpec with BeforeAndAfter {
       val userIDs = UserIds("foo", "bar")
       val a = Authority("x", "y", "z", userIDs)
 
-      when(mockAuthConnector.getCurrentAuthority()(ArgumentMatchers.any()))
+      when(mockAuthConnector.getCurrentAuthority()(ArgumentArgumentMatchers.any()))
         .thenReturn(Future.successful(Some(a)))
 
-      when(mockAuthorisationResource.getInternalId(ArgumentMatchers.eq(regId)))
+      when(mockAuthorisationResource.getInternalId(ArgumentArgumentMatchers.eq(regId)))
         .thenReturn(Future.successful(Some((regId, userIDs.internalId))))
 
       val result = authorisation.authorised(regId){ authResult =>
@@ -84,10 +84,10 @@ class AuthorisationSpec extends VatRegSpec with BeforeAndAfter {
       val userIDs = UserIds("foo", "bar")
       val a = Authority("x", "y", "z", userIDs)
 
-      when(mockAuthConnector.getCurrentAuthority()(ArgumentMatchers.any()))
+      when(mockAuthConnector.getCurrentAuthority()(ArgumentArgumentMatchers.any()))
         .thenReturn(Future.successful(Some(a)))
 
-      when(mockAuthorisationResource.getInternalId(ArgumentMatchers.eq(regId)))
+      when(mockAuthorisationResource.getInternalId(ArgumentArgumentMatchers.eq(regId)))
         .thenReturn(Future.successful(Some((regId, userIDs.internalId +"xxx"))))
 
       val result = authorisation.authorised(regId){ authResult =>
@@ -102,10 +102,10 @@ class AuthorisationSpec extends VatRegSpec with BeforeAndAfter {
 
       val a = Authority("x", "y", "z", UserIds("tiid","teid"))
 
-      when(mockAuthConnector.getCurrentAuthority()(ArgumentMatchers.any()))
+      when(mockAuthConnector.getCurrentAuthority()(ArgumentArgumentMatchers.any()))
         .thenReturn(Future.successful(Some(a)))
 
-      when(mockAuthorisationResource.getInternalId(ArgumentMatchers.any()))
+      when(mockAuthorisationResource.getInternalId(ArgumentArgumentMatchers.any()))
         .thenReturn(Future.successful(None))
 
       val result = authorisation.authorised("xxx"){ authResult =>

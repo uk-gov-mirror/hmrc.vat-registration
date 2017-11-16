@@ -20,12 +20,12 @@ import common.exceptions._
 import fixtures.BusinessRegistrationFixture
 import helpers.VatRegSpec
 import models.external.CurrentProfile
-import org.mockito.Matchers
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import uk.gov.hmrc.play.http.{ForbiddenException, HeaderCarrier, NotFoundException}
 
 import scala.concurrent.Future
+import uk.gov.hmrc.http.{ ForbiddenException, HeaderCarrier, NotFoundException }
 
 class BusinessRegistrationConnectorSpec extends VatRegSpec with BusinessRegistrationFixture {
 
@@ -46,14 +46,14 @@ class BusinessRegistrationConnectorSpec extends VatRegSpec with BusinessRegistra
     }
 
     "return a Not Found response when a CurrentProfile record can not be found" in new Setup {
-      when(mockWSHttp.GET[CurrentProfile](Matchers.any())(Matchers.any(), Matchers.any()))
+      when(mockWSHttp.GET[CurrentProfile](ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
         .thenReturn(Future.failed(new NotFoundException("Bad request")))
 
       await(connector.retrieveCurrentProfile) shouldBe Left(ResourceNotFound("Bad request"))
     }
 
     "return a Forbidden response when a CurrentProfile record can not be accessed by the user" in new Setup {
-      when(mockWSHttp.GET[CurrentProfile](Matchers.any())(Matchers.any(), Matchers.any()))
+      when(mockWSHttp.GET[CurrentProfile](ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
         .thenReturn(Future.failed(new ForbiddenException("Forbidden")))
 
       await(connector.retrieveCurrentProfile) shouldBe Left(ForbiddenAccess("Forbidden"))
@@ -61,7 +61,7 @@ class BusinessRegistrationConnectorSpec extends VatRegSpec with BusinessRegistra
 
     "return an Exception response when an unspecified error has occurred" in new Setup {
       val ex = new Exception("exception")
-      when(mockWSHttp.GET[CurrentProfile](Matchers.any())(Matchers.any(), Matchers.any()))
+      when(mockWSHttp.GET[CurrentProfile](ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
         .thenReturn(Future.failed(ex))
 
       await(connector.retrieveCurrentProfile) shouldBe Left(GenericError(ex))

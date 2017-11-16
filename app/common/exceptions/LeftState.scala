@@ -22,25 +22,22 @@ import play.api.mvc.Results._
 
 sealed trait LeftState extends Product with Serializable {
 
-  private def toResult(status: play.api.mvc.Results.Status, msg: String) =
-    status(Json.obj("errorCode" -> status.header.status, "errorMessage" -> msg))
+  private def toResult(status: Status, msg: String) = status(Json.obj(
+    "errorCode" -> status.header.status,
+    "errorMessage" -> msg
+  ))
 
   def toResult: Result = this match {
-    case ResourceNotFound(msg) => toResult(play.api.mvc.Results.NotFound, msg)
-    case AcknowledgementReferenceExists(msg) => toResult(play.api.mvc.Results.Conflict, msg)
-    case ForbiddenAccess(msg) => toResult(play.api.mvc.Results.Forbidden, msg)
-    case GenericDatabaseError(t, regId) => toResult(ServiceUnavailable, s"Mongo exception: $t ; registration ID: ${regId.getOrElse("n/a")}")
-    case GenericError(t) => toResult(ServiceUnavailable, s"Generic exception: $t")
+    case ResourceNotFound(msg)                => toResult(NotFound, msg)
+    case AcknowledgementReferenceExists(msg)  => toResult(Conflict, msg)
+    case ForbiddenAccess(msg)                 => toResult(Forbidden, msg)
+    case GenericDatabaseError(t, regId)       => toResult(ServiceUnavailable, s"Mongo exception: $t ; registration ID: ${regId.getOrElse("n/a")}")
+    case GenericError(t)                      => toResult(ServiceUnavailable, s"Generic exception: $t")
   }
-
 }
 
-final case class AcknowledgementReferenceExists(msg: String) extends LeftState
-
-final case class ResourceNotFound(msg: String) extends LeftState
-
-final case class ForbiddenAccess(msg: String) extends LeftState
-
-final case class GenericDatabaseError(t: Throwable, regId: Option[String]) extends LeftState
-
-final case class GenericError(t: Throwable) extends LeftState
+case class AcknowledgementReferenceExists(msg: String) extends LeftState
+case class ResourceNotFound(msg: String) extends LeftState
+case class ForbiddenAccess(msg: String) extends LeftState
+case class GenericDatabaseError(t: Throwable, regId: Option[String]) extends LeftState
+case class GenericError(t: Throwable) extends LeftState

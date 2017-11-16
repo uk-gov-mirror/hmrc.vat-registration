@@ -19,22 +19,18 @@ package models.api
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatFinancials(
-                          bankAccount: Option[VatBankAccount] = None,
-                          turnoverEstimate: Long,
-                          zeroRatedTurnoverEstimate: Option[Long] = None,
-                          reclaimVatOnMostReturns: Boolean,
-                          accountingPeriods: VatAccountingPeriod
-                        )
+case class VatFinancials(bankAccount: Option[VatBankAccount] = None,
+                         turnoverEstimate: Long,
+                         zeroRatedTurnoverEstimate: Option[Long] = None,
+                         reclaimVatOnMostReturns: Boolean,
+                         accountingPeriods: VatAccountingPeriod)
 
 object VatFinancials {
-
-  implicit def format(implicit f: OFormat[VatBankAccount]): OFormat[VatFinancials] =
-    ((__ \ "bankAccount").formatNullable[VatBankAccount](f) and
-      (__ \ "turnoverEstimate").format[Long] and
-      (__ \ "zeroRatedTurnoverEstimate").formatNullable[Long] and
-      (__ \ "reclaimVatOnMostReturns").format[Boolean] and
-      (__ \ "accountingPeriods").format[VatAccountingPeriod]
-      ) (VatFinancials.apply, unlift(VatFinancials.unapply))
-
+  implicit def format(implicit f: OFormat[VatBankAccount]): OFormat[VatFinancials] = (
+    (__ \ "bankAccount").formatNullable[VatBankAccount](f) and
+    (__ \ "turnoverEstimate").format[Long] and
+    (__ \ "zeroRatedTurnoverEstimate").formatNullable[Long] and
+    (__ \ "reclaimVatOnMostReturns").format[Boolean] and
+    (__ \ "accountingPeriods").format[VatAccountingPeriod]
+  )(VatFinancials.apply, unlift(VatFinancials.unapply))
 }

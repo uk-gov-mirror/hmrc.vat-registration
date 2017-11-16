@@ -24,13 +24,13 @@ import helpers.VatRegSpec
 import models._
 import models.api._
 import models.external.CurrentProfile
-import org.mockito.Matchers
-import org.mockito.Matchers.any
+import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import play.api.libs.json.Json
-import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
+import uk.gov.hmrc.http.HeaderCarrier
 
 class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
@@ -258,7 +258,7 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
   "updateIVStatus" should {
     "return a boolean" when {
       "the user IV status has been updated" in new Setup {
-        when(mockRegistrationRepository.updateIVStatus(Matchers.any(), Matchers.any()))
+        when(mockRegistrationRepository.updateIVStatus(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
           .thenReturn(Future.successful(true))
 
         val result = await(service.updateIVStatus("testRegId", true))
@@ -267,7 +267,7 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
     }
 
     "throw an updated failed" in new Setup {
-      when(mockRegistrationRepository.updateIVStatus(Matchers.any(), Matchers.any()))
+      when(mockRegistrationRepository.updateIVStatus(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
         .thenReturn(Future.failed(UpdateFailed(RegistrationId("testRegId"), "testModel")))
 
       intercept[UpdateFailed](await(service.updateIVStatus("testRegId", true)))

@@ -33,12 +33,12 @@ case class VatFlatRateScheme(joinFrs: Boolean = false,
 object VatFlatRateScheme extends VatFlatRateSchemeValidator {
   implicit val format = (
     (__ \ "joinFrs").format[Boolean] and
-      (__ \ "annualCostsInclusive").formatNullable[String](annualCostsInclusive) and
-      (__ \ "annualCostsLimited").formatNullable[String](annualCostsLimited) and
-      (__ \ "doYouWantToUseThisRate").formatNullable[Boolean] and
-      (__ \ "whenDoYouWantToJoinFrs").formatNullable[String](whenDoYouWantToJoinFrs) and
-      (__ \ "startDate").formatNullable[LocalDate] and
-      (__ \ "categoryOfBusiness").formatNullable[String] and
-      (__ \ "percentage").formatNullable[BigDecimal]
-    ) (VatFlatRateScheme.apply, unlift(VatFlatRateScheme.unapply))
+    (__ \ "annualCostsInclusive").formatNullable[String](annualCostsInclusive) and
+    (__ \ "annualCostsLimited").formatNullable[String](annualCostsLimited) and
+    (__ \ "doYouWantToUseThisRate").formatNullable[Boolean] and
+    (__ \ "whenDoYouWantToJoinFrs").formatNullable[String](whenDoYouWantToJoinFrs) and
+    (__ \ "startDate").formatNullable[LocalDate] and
+    (__ \ "categoryOfBusiness").formatNullable[String] and
+    (__ \ "percentage").formatNullable[BigDecimal]
+  )(VatFlatRateScheme.apply, unlift(VatFlatRateScheme.unapply))
 }

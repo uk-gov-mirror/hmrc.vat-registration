@@ -16,23 +16,25 @@
 
 package controllers
 
-import auth.{Authenticated, Authorisation}
-import cats.instances.future._
+import auth.Authenticated
+import cats.instances.FutureInstances
 import common.{LogicalGroup, RegistrationId}
 import models.ElementPath
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{Format, JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
 import services.RegistrationService
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
-import scala.concurrent.ExecutionContext.Implicits.global
+abstract class VatRegistrationBaseController extends BaseController with Authenticated with FutureInstances {
 
-abstract class VatRegistrationBaseController extends BaseController with Authenticated {
+  val logger: Logger = LoggerFactory.getLogger(getClass)
 
   protected def patch[G: LogicalGroup : Format : Manifest](service: RegistrationService, id: RegistrationId): Action[JsValue] =
     Action.async(parse.json) {
       implicit request =>
-        authenticated { user =>
+        authenticated { _ =>
           withJsonBody((g: G) => {
             service.updateLogicalGroup(id, g).fold(
               a => a.toResult,

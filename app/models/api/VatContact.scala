@@ -24,7 +24,5 @@ case class VatContact(digitalContact: VatDigitalContact,
 
 
 object VatContact {
-
   implicit val format: OFormat[VatContact] = Json.format[VatContact]
-
 }

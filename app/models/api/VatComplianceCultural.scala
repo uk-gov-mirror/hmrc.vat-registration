@@ -21,7 +21,5 @@ import play.api.libs.json._
 case class VatComplianceCultural(notForProfit: Boolean)
 
 object VatComplianceCultural {
-
   implicit val format: OFormat[VatComplianceCultural] = Json.format[VatComplianceCultural]
-
 }

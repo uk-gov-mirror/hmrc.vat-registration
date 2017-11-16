@@ -19,40 +19,37 @@ package connectors
 import common.exceptions._
 import config.WSHttp
 import models.external.CurrentProfile
-import play.api.Logger
+import org.slf4j.{Logger, LoggerFactory}
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http._
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import scala.concurrent.Future
-
 
 class VatRegBusinessRegistrationConnector extends BusinessRegistrationConnector with ServicesConfig {
   //$COVERAGE-OFF$
   val businessRegUrl = baseUrl("business-registration")
-  val http = WSHttp
+  val http: CoreGet  = WSHttp
   //$COVERAGE-ON$
 }
 
-
 trait BusinessRegistrationConnector {
-
   val businessRegUrl: String
-  val http: HttpGet with HttpPost
+  val http: CoreGet
+
+  private val logger: Logger = LoggerFactory.getLogger(getClass)
 
   def retrieveCurrentProfile(implicit hc: HeaderCarrier, rds: HttpReads[CurrentProfile]): Future[Either[LeftState, CurrentProfile]] = {
-
-    http.GET[CurrentProfile](s"$businessRegUrl/business-registration/business-tax-registration").map(Right(_))
-      .recover {
-        case e: NotFoundException =>
-          Logger.error("Received a NotFound status code when expecting current profile from Business-Registration")
-          Left(ResourceNotFound(e.message))
-        case e: ForbiddenException =>
-          Logger.error("Received a Forbidden status code when expecting current profile from Business-Registration")
-          Left(ForbiddenAccess(e.message))
-        case e: Exception =>
-          Logger.error(s"Received error when expecting current profile from Business-Registration - Error ${e.getMessage}")
-          Left(GenericError(e))
-      }
+    http.GET[CurrentProfile](s"$businessRegUrl/business-registration/business-tax-registration").map(Right(_)).recover {
+      case e: NotFoundException =>
+        logger.error("Received a NotFound status code when expecting current profile from Business-Registration")
+        Left(ResourceNotFound(e.message))
+      case e: ForbiddenException =>
+        logger.error("Received a Forbidden status code when expecting current profile from Business-Registration")
+        Left(ForbiddenAccess(e.message))
+      case e: Exception =>
+        logger.error(s"Received error when expecting current profile from Business-Registration - Error ${e.getMessage}")
+        Left(GenericError(e))
+    }
   }
 }

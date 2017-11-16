@@ -24,10 +24,10 @@ import enums.VatRegStatus
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models.api._
-import org.mockito.Matchers
-import org.mockito.Matchers.anyString
+import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito._
-import uk.gov.hmrc.play.http.HeaderCarrier
+import uk.gov.hmrc.http.HeaderCarrier
 
 class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with ApplicativeSyntax with FutureInstances {
 
@@ -51,14 +51,13 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
     "return ResourceNotFound response " in new Setup {
       val sequenceNo = 1
       val formatedRefNumber = f"BRPY$sequenceNo%011d"
-      when(mockVatRegistrationService.retrieveAcknowledgementReference(RegistrationId(anyString())))
+      when(mockVatRegistrationService.retrieveAcknowledgementReference(RegistrationId(anyString()))(ArgumentMatchers.any()))
         .thenReturn(ServiceMocks.serviceError[String](ResourceNotFound("Resource Not Found for regId 1")))
-      when(mockSequenceRepository.getNext("AcknowledgementID")).thenReturn(sequenceNo.pure)
-      when(mockVatRegistrationService.saveAcknowledgementReference(RegistrationId(anyString()), anyString()))
+      when(mockSequenceRepository.getNext(ArgumentMatchers.eq("AcknowledgementID"))(ArgumentMatchers.any())).thenReturn(sequenceNo.pure)
+      when(mockVatRegistrationService.saveAcknowledgementReference(RegistrationId(anyString()), anyString())(ArgumentMatchers.any()))
         .thenReturn(ServiceMocks.serviceResult(formatedRefNumber))
 
       service.assertOrGenerateAcknowledgementReference(regId) returnsRight formatedRefNumber
     }
-
   }
 }

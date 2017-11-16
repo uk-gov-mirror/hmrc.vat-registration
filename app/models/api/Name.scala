@@ -26,28 +26,25 @@ case class Name(forename: Option[String] = None,
 
 object Name extends VatLodgingOfficerValidator {
 
-  implicit val format: Format[Name] =
-    ((__ \ "forename").formatNullable[String](nameValidator) and
-      (__ \ "other_forenames").formatNullable[String](nameValidator) and
-      (__ \ "surname").formatNullable[String](nameValidator) and
-      (__ \ "title").formatNullable[String](titleValidator)
-      ) (Name.apply, unlift(Name.unapply))
+  implicit val format: Format[Name] = (
+    (__ \ "forename").formatNullable[String](nameValidator) and
+    (__ \ "other_forenames").formatNullable[String](nameValidator) and
+    (__ \ "surname").formatNullable[String](nameValidator) and
+    (__ \ "title").formatNullable[String](titleValidator)
+  )(Name.apply, unlift(Name.unapply))
 
   // $COVERAGE-OFF$
-
   val writesDES: Writes[Name] = new Writes[Name] {
     override def writes(name: Name): JsValue = {
       val successWrites = (
         (__ \ "firstName").writeNullable[String] and
-          (__ \ "middleName").writeNullable[String] and
-          (__ \ "lastName").writeNullable[String] and
-          (__ \ "title").writeNullable[String]
-        ) (unlift(Name.unapply))
+        (__ \ "middleName").writeNullable[String] and
+        (__ \ "lastName").writeNullable[String] and
+        (__ \ "title").writeNullable[String]
+      )(unlift(Name.unapply))
 
       Json.toJson(name)(successWrites).as[JsObject]
     }
   }
-
   // $COVERAGE-ON$
-
 }

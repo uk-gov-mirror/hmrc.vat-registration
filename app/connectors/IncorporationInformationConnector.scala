@@ -21,36 +21,40 @@ import common.TransactionId
 import common.exceptions._
 import config.WSHttp
 import models.external.IncorporationStatus
-import play.api.Logger
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsString, Json, Writes}
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http._
 
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import scala.concurrent.Future
+
 
 class VatRegIncorporationInformationConnector extends IncorporationInformationConnector with ServicesConfig {
   //$COVERAGE-OFF$
-  val iiUrl = baseUrl("incorporation-information")
-  val http = WSHttp
+  val iiUrl          = baseUrl("incorporation-information")
+  val http: CorePost = WSHttp
   //$COVERAGE-ON$
 }
 
-final case class IncorpStatusRequest(callbackUrl: String)
+case class IncorpStatusRequest(callbackUrl: String)
 
 object IncorpStatusRequest {
-
-  implicit val writes: Writes[IncorpStatusRequest] =
-    Writes(isr => Json.obj("SCRSIncorpSubscription" -> Json.obj("callbackUrl" -> JsString(isr.callbackUrl))))
-
+  implicit val writes: Writes[IncorpStatusRequest] = Writes(
+    isr => Json.obj(
+      "SCRSIncorpSubscription" -> Json.obj(
+        "callbackUrl" -> JsString(isr.callbackUrl)
+      )
+    )
+  )
 }
 
 
 trait IncorporationInformationConnector {
-
-  import scala.concurrent.ExecutionContext.Implicits.global
-
   val iiUrl: String
-  val http: HttpGet with HttpPost
+  val http: CorePost
+
+  private val logger: Logger = LoggerFactory.getLogger(getClass)
 
   def retrieveIncorporationStatus(transactionId: TransactionId)
                                  (implicit hc: HeaderCarrier, rds: HttpReads[IncorporationStatus]): EitherT[Future, LeftState, IncorporationStatus] =
@@ -62,7 +66,7 @@ trait IncorporationInformationConnector {
       case r if r.status == 202 => Left(ResourceNotFound("Incorporation Status not known. A subscription has been setup"))
       case r =>
         val msg = s"${r.status} response code returned requesting II for txId: $transactionId"
-        Logger.error(msg)
+        logger.error(msg)
         Left(GenericError(new RuntimeException(msg)))
     })
 

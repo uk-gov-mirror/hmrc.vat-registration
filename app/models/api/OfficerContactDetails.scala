@@ -20,16 +20,13 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 
-
 case class OfficerContactDetails(email: Option[String], tel: Option[String], mobile: Option[String])
-
 
 object OfficerContactDetails extends VatLodgingOfficerValidator {
 
   implicit val format: OFormat[OfficerContactDetails] = (
     (__ \ "email").formatNullable[String](emailValidator) and
-      (__ \ "tel").formatNullable[String](telValidator) and
-      (__ \ "mobile").formatNullable[String](mobileValidator)
-    ) (OfficerContactDetails.apply, unlift(OfficerContactDetails.unapply))
-
+    (__ \ "tel").formatNullable[String](telValidator) and
+    (__ \ "mobile").formatNullable[String](mobileValidator)
+  )(OfficerContactDetails.apply, unlift(OfficerContactDetails.unapply))
 }

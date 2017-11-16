@@ -19,16 +19,13 @@ package models.api
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatAccountingPeriod(
-                                frequency: String, // "monthly" or "quarterly"
-                                periodStart: Option[String] = None // "jan_apr_jul_oct", "feb_may_aug_nov" or "mar_jun_sep_dec"
-                              )
+case class VatAccountingPeriod(frequency: String,
+                               periodStart: Option[String] = None)
 
 object VatAccountingPeriod extends VatAccountingPeriodValidator {
 
   implicit val format = (
     (__ \ "frequency").format[String](frequencyValidator) and
-      (__ \ "periodStart").formatNullable[String](periodStartValidator)
-    ) (VatAccountingPeriod.apply, unlift(VatAccountingPeriod.unapply))
-
+    (__ \ "periodStart").formatNullable[String](periodStartValidator)
+  )(VatAccountingPeriod.apply, unlift(VatAccountingPeriod.unapply))
 }

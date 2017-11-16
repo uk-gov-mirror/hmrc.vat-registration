@@ -16,6 +16,7 @@
 
 package repository
 
+import itutil.ITFixtures
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import repositories.{MongoDBProvider, SequenceMongoRepository}
@@ -25,7 +26,7 @@ import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SequenceMongoRepositoryISpec
-  extends UnitSpec with MongoSpecSupport with BeforeAndAfterEach with ScalaFutures with Eventually with WithFakeApplication {
+  extends UnitSpec with MongoSpecSupport with BeforeAndAfterEach with ScalaFutures with Eventually with WithFakeApplication with ITFixtures {
 
   class Setup {
     val repository =  new SequenceMongoRepository(new MongoDBProvider())

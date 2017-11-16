@@ -17,30 +17,27 @@
 package auth
 
 import connectors.{AuthConnector, Authority}
-import play.api.Logger
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.mvc.Result
 import play.api.mvc.Results._
-import uk.gov.hmrc.play.http.HeaderCarrier
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 trait Authenticated {
 
   val auth: AuthConnector
 
-  type UnauthenticatedUserHandler = () => Result
+  private val logger: Logger = LoggerFactory.getLogger(getClass)
 
-  implicit val uuh: UnauthenticatedUserHandler = () => Forbidden
-
-  def authenticated(f: Authority => Future[Result])(implicit hc: HeaderCarrier, uuh: UnauthenticatedUserHandler): Future[Result] = {
-    Logger.debug(s"Current user id is ${hc.userId}")
+  def authenticated(f: Authority => Future[Result])(implicit hc: HeaderCarrier): Future[Result] = {
+    logger.debug(s"Current user id is ${hc.userId}")
     auth.getCurrentAuthority() flatMap {
-      case None => Future.successful(uuh())
       case Some(authority) =>
-        Logger.debug(s"Got authority = $authority")
+        logger.debug(s"Got authority = $authority")
         f(authority)
+      case None => Future.successful(Forbidden)
     }
   }
 

@@ -23,7 +23,7 @@ import common.exceptions.{GenericError, ResourceNotFound}
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import play.api.libs.json.Json
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
 
 class IncorporationInformationConnectorSpec extends VatRegSpec with VatRegistrationFixture {
 

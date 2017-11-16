@@ -25,22 +25,17 @@ import connectors.AuthConnector
 import connectors.test.IncorporationInformationTestConnector
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.play.microservice.controller.BaseController
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 class IncorporationInformationTestController @Inject()(val auth: AuthConnector,
-                                                       iiTestConnector: IncorporationInformationTestConnector)
-  extends BaseController with Authenticated with FutureInstances {
-
+                                                       iiTestConnector: IncorporationInformationTestConnector) extends BaseController with Authenticated with FutureInstances {
   // $COVERAGE-OFF$
 
   def incorpCompany(transactionId: TransactionId): Action[AnyContent] = Action.async { implicit request =>
-    authenticated { user =>
+    authenticated { _ =>
       iiTestConnector.incorpCompany(transactionId).map(_ => Ok)
     }
   }
-
   // $COVERAGE-ON$
-
-
 }

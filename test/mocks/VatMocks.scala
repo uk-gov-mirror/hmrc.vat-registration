@@ -25,17 +25,17 @@ import common.{RegistrationId, TransactionId}
 import connectors.{AuthConnector, Authority, BusinessRegistrationConnector, IncorporationInformationConnector}
 import enums.VatRegStatus
 import models._
-import models.api.{VatLodgingOfficer, VatScheme}
+import models.api.VatScheme
 import models.external.IncorporationStatus
-import org.mockito.Matchers
-import org.mockito.Matchers._
+import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import repositories.test.TestOnlyRepository
 import repositories.{RegistrationRepository, SequenceRepository}
 import services.{RegistrationService, ServiceResult, SubmissionService, VatRegistrationService}
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpGet, HttpPost}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost}
 
 import scala.concurrent.Future
 
@@ -102,34 +102,40 @@ trait VatMocks extends WSHTTPMock {
 
     def mockRetrieveVatSchemeThrowsException(id: RegistrationId): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.retrieveVatScheme(id))
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+      when(mockRegistrationService.retrieveVatScheme(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
     }
 
     def mockRetrieveVatScheme(id: RegistrationId, vatScheme: VatScheme): Unit = {
-      when(mockRegistrationService.retrieveVatScheme(id))
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+      when(mockRegistrationService.retrieveVatScheme(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceResult(vatScheme))
     }
 
     def mockDeleteVatScheme(id: RegistrationId): Unit = {
-      when(mockRegistrationService.deleteVatScheme(id))
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+      when(mockRegistrationService.deleteVatScheme(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceResult(true))
     }
 
     def mockDeleteVatSchemeThrowsException(id: RegistrationId): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.deleteVatScheme(id))
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+      when(mockRegistrationService.deleteVatScheme(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
     }
 
     def mockDeleteByElement(id: RegistrationId, elementPath: ElementPath): Unit = {
-      when(mockRegistrationService.deleteByElement(id, elementPath))
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+      when(mockRegistrationService.deleteByElement(idMatcher, ArgumentMatchers.any())(ArgumentMatchers.any()))
         .thenReturn(serviceResult(true))
     }
 
     def mockDeleteByElementThrowsException(id: RegistrationId, elementPath: ElementPath): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.deleteByElement(id, elementPath))
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+      when(mockRegistrationService.deleteByElement(idMatcher, ArgumentMatchers.any())(ArgumentMatchers.any()))
         .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
     }
 
@@ -152,58 +158,58 @@ trait VatMocks extends WSHTTPMock {
     def mockSuccessfulUpdateLogicalGroup[G](group: G): Unit = {
       // required to do like this because of how Mockito matchers work with Scala Value Classes
       //http://stackoverflow.com/a/34934179/81520
-      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
-      when(mockRegistrationService.updateLogicalGroup(idMatcher, Matchers.any[G]())(Matchers.any(), Matchers.any()))
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+      when(mockRegistrationService.updateLogicalGroup(idMatcher, ArgumentMatchers.any[G]())(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
         .thenReturn(serviceResult(group))
     }
 
     def mockGetAcknowledgementReference(ackRef: String): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
-      when(mockSubmissionService.assertOrGenerateAcknowledgementReference(idMatcher))
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+      when(mockSubmissionService.assertOrGenerateAcknowledgementReference(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceResult(ackRef))
     }
 
     def mockGetAcknowledgementReferenceServiceUnavailable(exception: Exception): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
-      when(mockSubmissionService.assertOrGenerateAcknowledgementReference(idMatcher))
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+      when(mockSubmissionService.assertOrGenerateAcknowledgementReference(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceError[String](GenericDatabaseError(exception, Some("regId"))))
     }
 
     def mockGetDocumentStatus(json: JsValue): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
-      when(mockRegistrationService.getStatus(idMatcher))
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+      when(mockRegistrationService.getStatus(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceResult(json))
     }
 
     def mockGetDocumentStatusForbidden(registrationId: RegistrationId): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
-      when(mockRegistrationService.getStatus(idMatcher))
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+      when(mockRegistrationService.getStatus(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceError[JsValue](ForbiddenAccess(s"Forbidden error returned for regID: $registrationId")))
     }
 
     def mockGetDocumentStatusServiceUnavailable(exception: Exception): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
-      when(mockRegistrationService.getStatus(idMatcher))
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+      when(mockRegistrationService.getStatus(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceError[JsValue](GenericDatabaseError(exception, Some("regId"))))
     }
 
     def mockGetDocumentStatusNotFound(registrationId: RegistrationId): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
-      when(mockRegistrationService.getStatus(idMatcher))
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+      when(mockRegistrationService.getStatus(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceError[JsValue](ResourceNotFound(s"Document not found for regID: $registrationId")))
     }
 
     def mockGetAcknowledgementReferenceExistsError(): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
-      when(mockSubmissionService.assertOrGenerateAcknowledgementReference(idMatcher))
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+      when(mockSubmissionService.assertOrGenerateAcknowledgementReference(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceError[String](AcknowledgementReferenceExists("regId")))
     }
 
     def mockServiceUnavailableUpdateLogicalGroup[G](group: G, exception: Exception): Unit = {
       // required to do like this because of how Mockito matchers work with Scala Value Classes
       //http://stackoverflow.com/a/34934179/81520
-      val idMatcher: RegistrationId = RegistrationId(Matchers.anyString())
-      when(mockRegistrationService.updateLogicalGroup(idMatcher, Matchers.any[G]())(Matchers.any(), Matchers.any()))
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+      when(mockRegistrationService.updateLogicalGroup(idMatcher, ArgumentMatchers.any[G]())(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
         .thenReturn(serviceError[G](GenericError(exception)))
     }
 
