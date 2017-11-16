@@ -24,6 +24,7 @@ final case class VatServiceEligibility(haveNino: Option[Boolean] = None,
                                        applyingForAnyOf: Option[Boolean] = None,
                                        applyingForVatExemption: Option[Boolean] = None,
                                        companyWillDoAnyOf: Option[Boolean] = None,
+                                       sellVATTaxableGoodsServices: Option[Boolean] = None,
                                        vatEligibilityChoice: Option[VatEligibilityChoice] = None)
 
 object VatServiceEligibility {

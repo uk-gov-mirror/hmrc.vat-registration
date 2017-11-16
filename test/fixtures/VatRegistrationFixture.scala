@@ -58,7 +58,6 @@ trait VatRegistrationFixture {
     companyWillDoAnyOf = Some(true),
     vatEligibilityChoice = Some(VatEligibilityChoice(
       necessity = "obligatory",
-      reason = Some("COMPANY_ALREADY_SELLS_TAXABLE_GOODS_OR_SERVICES"),
       vatThresholdPostIncorp = Some(VatThresholdPostIncorp(
         overThresholdSelection = true,
         overThresholdDate = Some(now)

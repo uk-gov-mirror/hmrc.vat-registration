@@ -46,7 +46,6 @@ trait VatFlatRateSchemeValidator extends Validation {
 
 trait VatChoiceValidator extends Validation {
   val necessityValidator: Format[String] = acceptOnly("voluntary", "obligatory")
-  val reasonValidator: Format[String]    = acceptOnly("COMPANY_ALREADY_SELLS_TAXABLE_GOODS_OR_SERVICES", "COMPANY_INTENDS_TO_SELLS_TAXABLE_GOODS_OR_SERVICES_IN_THE_FUTURE")
 }
 
 trait VatStartDateValidator extends Validation {
