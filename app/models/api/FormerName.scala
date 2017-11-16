@@ -23,7 +23,5 @@ import play.api.libs.json.Json
 case class FormerName(formerName: String, dateOfNameChange: LocalDate)
 
 object FormerName {
-
   implicit val format = Json.format[FormerName]
-
 }

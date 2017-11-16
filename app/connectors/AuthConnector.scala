@@ -17,15 +17,14 @@
 package connectors
 
 import config.WSHttp
-import play.api.Logger
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http.{HeaderCarrier, _}
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import scala.concurrent.Future
-
+import uk.gov.hmrc.http._
 
 case class UserIds(internalId: String, externalId: String)
 
@@ -39,47 +38,38 @@ object Authority {
   implicit val format = Json.format[Authority]
 }
 
+class VatRegAuthConnector extends AuthConnector {
+  lazy val serviceUrl = baseUrl("auth")
+  val authorityUri    = "auth/authority"
+  val http: CoreGet   = WSHttp
+}
+
 trait AuthConnector extends ServicesConfig with RawResponseReads {
 
-  def serviceUrl: String
+  val serviceUrl: String
+  val authorityUri: String
+  val http: CoreGet
 
-  def authorityUri: String
-
-  def http: HttpGet with HttpPost
+  private val logger: Logger = LoggerFactory.getLogger(getClass)
 
   def getCurrentAuthority()(implicit headerCarrier: HeaderCarrier): Future[Option[Authority]] = {
     val getUrl = s"""$serviceUrl/$authorityUri"""
-    Logger.debug(s"[AuthConnector][getCurrentAuthority] - GET $getUrl")
-    http.GET[HttpResponse](getUrl) flatMap {
-      response =>
-        Logger.debug(s"[AuthConnector][getCurrentAuthority] - RESPONSE status: ${response.status}, body: ${response.body}")
-        response.status match {
-          case OK => {
-            val uri = (response.json \ "uri").as[String]
-            val gatewayId = (response.json \ "credentials" \ "gatewayId").as[String]
-            val userDetails = (response.json \ "userDetailsLink").as[String]
-            val idsLink = (response.json \ "ids").as[String]
+    logger.debug(s"[getCurrentAuthority] - GET $getUrl")
+    http.GET[HttpResponse](getUrl) flatMap { response =>
+      logger.debug(s"[getCurrentAuthority] - RESPONSE status: ${response.status}, body: ${response.body}")
+      response.status match {
+        case OK =>
+          val uri         = (response.json \ "uri").as[String]
+          val gatewayId   = (response.json \ "credentials" \ "gatewayId").as[String]
+          val userDetails = (response.json \ "userDetailsLink").as[String]
+          val idsLink     = (response.json \ "ids").as[String]
 
-            http.GET[HttpResponse](s"$serviceUrl$idsLink") map {
-              response =>
-                Logger.info(s"[AuthConnector] - [getCurrentAuthority] API call : $serviceUrl/$idsLink")
-                Logger.info(s"[AuthConnector] - [getCurrentAuthority] response from ids call : ${response.json}")
-                val ids = response.json.as[UserIds]
-                Some(Authority(uri, gatewayId, userDetails, ids))
-            }
+          http.GET[HttpResponse](s"$serviceUrl$idsLink") map { response =>
+            val ids = response.json.as[UserIds]
+            Some(Authority(uri, gatewayId, userDetails, ids))
           }
-          case status => Future.successful(None)
-        }
+        case _ => Future.successful(None)
+      }
     }
   }
-
-}
-
-
-class VatRegAuthConnector extends AuthConnector {
-  // $COVERAGE-OFF$
-  lazy val serviceUrl = baseUrl("auth")
-  // $COVERAGE-OFF$
-  val authorityUri = "auth/authority"
-  val http: HttpGet with HttpPost = WSHttp
 }

@@ -21,7 +21,5 @@ import play.api.libs.json.Json
 case class ChangeOfName(nameHasChanged: Boolean, formerName: Option[FormerName] = None)
 
 object ChangeOfName {
-
   implicit val format = Json.format[ChangeOfName]
-
 }

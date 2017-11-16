@@ -25,10 +25,8 @@ case class VatComplianceFinancial(adviceOrConsultancyOnly: Boolean,
                                   discretionaryInvestmentManagementServices: Option[Boolean] = None,
                                   vehicleOrEquipmentLeasing: Option[Boolean] = None,
                                   investmentFundManagementServices: Option[Boolean] = None,
-                                  manageFundsAdditional: Option[Boolean] = None
-                                 )
+                                  manageFundsAdditional: Option[Boolean] = None)
 
 object VatComplianceFinancial {
-
   implicit val format: OFormat[VatComplianceFinancial] = Json.format[VatComplianceFinancial]
 }

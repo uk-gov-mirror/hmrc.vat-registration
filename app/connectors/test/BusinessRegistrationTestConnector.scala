@@ -21,10 +21,10 @@ import config.WSHttp
 import models.external.BusinessRegistrationRequest
 import play.api.libs.json.Json
 import play.api.mvc.{Result, Results}
+import uk.gov.hmrc.http.{CorePost, HeaderCarrier}
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http._
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[VatRegBusinessRegistrationTestConnector])
@@ -32,18 +32,13 @@ trait BusinessRegistrationTestConnector {
   def createCurrentProfileEntry()(implicit hc: HeaderCarrier): Future[Result]
 }
 
-
 class VatRegBusinessRegistrationTestConnector extends BusinessRegistrationTestConnector with ServicesConfig {
-
   //$COVERAGE-OFF$
   val businessRegUrl = baseUrl("business-registration")
-  val http = WSHttp
+  val http: CorePost = WSHttp
 
-  def createCurrentProfileEntry()(implicit hc: HeaderCarrier): Future[Result] =
-    http.POST(s"$businessRegUrl/business-registration/business-tax-registration",
-      Json.toJson(BusinessRegistrationRequest("ENG"))).map(_ => Results.Ok)
-
+  def createCurrentProfileEntry()(implicit hc: HeaderCarrier): Future[Result] = {
+    http.POST(s"$businessRegUrl/business-registration/business-tax-registration", Json.toJson(BusinessRegistrationRequest("ENG"))).map(_ => Results.Ok)
+  }
   //$COVERAGE-ON$
-
 }
-

@@ -16,18 +16,21 @@
 
 package common
 
-import org.scalatest.{FlatSpec, MustMatchers}
+import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsString, Json}
 
-class TransactionIdSpec extends FlatSpec with MustMatchers {
+class TransactionIdSpec extends PlaySpec {
 
-  "converting TransactionId to Json" should "work" in {
-    val txid = TransactionId("1")
-    Json.toJson(txid) mustBe JsString("1")
+  "converting TransactionId to Json" should {
+    "work" in {
+      val txid = TransactionId("1")
+      Json.toJson(txid) mustBe JsString("1")
+    }
   }
 
-  "converting Json to TransactionId" should "work" in {
-    JsString("1").as[TransactionId] mustBe TransactionId("1")
+  "converting Json to TransactionId" should {
+    "work" in {
+      JsString("1").as[TransactionId] mustBe TransactionId("1")
+    }
   }
-
 }

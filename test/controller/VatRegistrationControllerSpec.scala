@@ -28,7 +28,7 @@ import play.api.mvc.Results.Accepted
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import org.mockito.Mockito.when
-import org.mockito.Matchers
+import org.mockito.ArgumentMatchers
 
 import scala.concurrent.Future
 
@@ -283,7 +283,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       "the users IV status has been successfully updated" in new Setup {
         val request = FakeRequest().withBody(Json.parse("""{"ivPassed" : true}"""))
 
-        when(mockRegistrationService.updateIVStatus(Matchers.any[String](), Matchers.any[Boolean]()))
+        when(mockRegistrationService.updateIVStatus(ArgumentMatchers.any[String](), ArgumentMatchers.any[Boolean]())(ArgumentMatchers.any()))
           .thenReturn(Future.successful(true))
 
         val result = controller.updateIVStatus("testRegId")(request)
@@ -295,7 +295,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       "there was a problem updating the users IV status" in new Setup {
         val request = FakeRequest().withBody(Json.parse("""{"ivPassed" : true}"""))
 
-        when(mockRegistrationService.updateIVStatus(Matchers.any[String](), Matchers.any[Boolean]()))
+        when(mockRegistrationService.updateIVStatus(ArgumentMatchers.any[String](), ArgumentMatchers.any[Boolean]())(ArgumentMatchers.any()))
           .thenReturn(Future.failed(UpdateFailed(RegistrationId("testRegId"), "testModel")))
 
         val result = controller.updateIVStatus("testRegId")(request)

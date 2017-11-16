@@ -25,15 +25,15 @@ import connectors.{AuthConnector, IncorporationInformationConnector}
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.play.microservice.controller.BaseController
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 class IncorporationInformationController @Inject()(val auth: AuthConnector,
-                                                   iiConnector: IncorporationInformationConnector)
-  extends BaseController with Authenticated with FutureInstances {
+                                                   iiConnector: IncorporationInformationConnector) extends BaseController with Authenticated with FutureInstances {
 
-  def getIncorporationInformation(transactionId: TransactionId): Action[AnyContent] =
-    Action.async(implicit request => authenticated { user =>
-      iiConnector.retrieveIncorporationStatus(transactionId).fold(_.toResult, incorpInfo => Ok(Json.toJson(incorpInfo)))
-    })
-
+  def getIncorporationInformation(transactionId: TransactionId): Action[AnyContent] = Action.async {
+    implicit request =>
+      authenticated { user =>
+        iiConnector.retrieveIncorporationStatus(transactionId).fold(_.toResult, incorpInfo => Ok(Json.toJson(incorpInfo)))
+      }
+  }
 }

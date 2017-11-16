@@ -17,53 +17,47 @@
 package auth
 
 import connectors.{AuthConnector, Authority}
-import play.api.Logger
+import org.slf4j.{Logger, LoggerFactory}
 import play.api.mvc.Result
-import uk.gov.hmrc.play.http.HeaderCarrier
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-sealed trait AuthorisationResult {}
-
+sealed trait AuthorisationResult
 case object NotLoggedInOrAuthorised extends AuthorisationResult
-
-final case class NotAuthorised(authContext: Authority) extends AuthorisationResult
-
-final case class Authorised(authContext: Authority) extends AuthorisationResult
-
-final case class AuthResourceNotFound(authContext: Authority) extends AuthorisationResult
+case class NotAuthorised(authContext: Authority) extends AuthorisationResult
+case class Authorised(authContext: Authority) extends AuthorisationResult
+case class AuthResourceNotFound(authContext: Authority) extends AuthorisationResult
 
 trait Authorisation[I] {
 
   val auth: AuthConnector
   val resourceConn : AuthorisationResource[I]
 
-  def authorised(id:I)(f: => AuthorisationResult => Future[Result])(implicit hc: HeaderCarrier): Future[Result] = {
+  private val logger: Logger = LoggerFactory.getLogger(getClass)
+
+  def authorised(id: I)(f: => AuthorisationResult => Future[Result])(implicit hc: HeaderCarrier): Future[Result] = {
     for {
       authority <- auth.getCurrentAuthority()
-      resource <- resourceConn.getInternalId(id)
-      result <- f(mapToAuthResult(authority, resource))
-    } yield {
-      result
-    }
+      resource  <- resourceConn.getInternalId(id)
+      result    <- f(mapToAuthResult(authority, resource))
+    } yield result
   }
 
   private def mapToAuthResult(authContext: Option[Authority], resource: Option[(I,String)] ) : AuthorisationResult = {
     authContext match {
       case None =>
-        Logger.warn("[Authorisation] - [mapToAuthResult]: No authority was found")
+        logger.warn("[mapToAuthResult]: No authority was found")
         NotLoggedInOrAuthorised
-      case Some(context) => {
-        resource match {
-          case None =>
-            Logger.info("[Authorisation] - [mapToAuthResult]: No auth resource was found for the current user")
-            AuthResourceNotFound(context)
-          case Some((_, context.ids.internalId)) => Authorised(context)
-          case Some((_, _)) =>
-            Logger.warn("[Authorisation] - [mapToAuthResult]: The current user is not authorised to access this resource")
-            NotAuthorised (context)
-        }
+      case Some(context) => resource match {
+        case None =>
+          logger.info("[mapToAuthResult]: No auth resource was found for the current user")
+          AuthResourceNotFound(context)
+        case Some((_, context.ids.internalId)) => Authorised(context)
+        case Some((_, _)) =>
+          logger.warn("[mapToAuthResult]: The current user is not authorised to access this resource")
+          NotAuthorised (context)
       }
     }
   }

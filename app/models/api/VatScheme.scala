@@ -31,35 +31,34 @@ case class VatScheme(id: RegistrationId,
                       acknowledgementReference: Option[String] = None,
                       vatFlatRateScheme: Option[VatFlatRateScheme] = None,
                       status: VatRegStatus.Value)
+
 object VatScheme {
 
   def reads(implicit r: Reads[VatFinancials]): Reads[VatScheme] = (
-      (__ \ "registrationId").read[RegistrationId] and
-      (__ \ "tradingDetails").readNullable[VatTradingDetails] and
-      (__ \ "lodgingOfficer").readNullable[VatLodgingOfficer] and
-      (__ \ "financials").readNullable[VatFinancials](r) and
-      (__ \ "vatSicAndCompliance").readNullable[VatSicAndCompliance] and
-      (__ \ "vatContact").readNullable[VatContact] and
-      (__ \ "vatEligibility").readNullable[VatServiceEligibility] and
-      (__ \ "acknowledgementReference").readNullable[String] and
-      (__ \ "vatFlatRateScheme").readNullable[VatFlatRateScheme] and
-      (__ \ "status").read[VatRegStatus.Value]
-    ) (VatScheme.apply _)
+    (__ \ "registrationId").read[RegistrationId] and
+    (__ \ "tradingDetails").readNullable[VatTradingDetails] and
+    (__ \ "lodgingOfficer").readNullable[VatLodgingOfficer] and
+    (__ \ "financials").readNullable[VatFinancials](r) and
+    (__ \ "vatSicAndCompliance").readNullable[VatSicAndCompliance] and
+    (__ \ "vatContact").readNullable[VatContact] and
+    (__ \ "vatEligibility").readNullable[VatServiceEligibility] and
+    (__ \ "acknowledgementReference").readNullable[String] and
+    (__ \ "vatFlatRateScheme").readNullable[VatFlatRateScheme] and
+    (__ \ "status").read[VatRegStatus.Value]
+  )(VatScheme.apply _)
 
   def writes(implicit w: Writes[VatFinancials]): OWrites[VatScheme] = (
-      (__ \ "registrationId").write[RegistrationId] and
-      (__ \ "tradingDetails").writeNullable[VatTradingDetails] and
-      (__ \ "lodgingOfficer").writeNullable[VatLodgingOfficer] and
-      (__ \ "financials").writeNullable[VatFinancials](w) and
-      (__ \ "vatSicAndCompliance").writeNullable[VatSicAndCompliance] and
-      (__ \ "vatContact").writeNullable[VatContact] and
-      (__ \ "vatEligibility").writeNullable[VatServiceEligibility] and
-      (__ \ "acknowledgementReference").writeNullable[String] and
-      (__ \ "vatFlatRateScheme").writeNullable[VatFlatRateScheme] and
-      (__ \ "status").write[VatRegStatus.Value]
-    ) (unlift(VatScheme.unapply))
-
+    (__ \ "registrationId").write[RegistrationId] and
+    (__ \ "tradingDetails").writeNullable[VatTradingDetails] and
+    (__ \ "lodgingOfficer").writeNullable[VatLodgingOfficer] and
+    (__ \ "financials").writeNullable[VatFinancials](w) and
+    (__ \ "vatSicAndCompliance").writeNullable[VatSicAndCompliance] and
+    (__ \ "vatContact").writeNullable[VatContact] and
+    (__ \ "vatEligibility").writeNullable[VatServiceEligibility] and
+    (__ \ "acknowledgementReference").writeNullable[String] and
+    (__ \ "vatFlatRateScheme").writeNullable[VatFlatRateScheme] and
+    (__ \ "status").write[VatRegStatus.Value]
+  )(unlift(VatScheme.unapply))
 
   implicit def format(implicit f: OFormat[VatFinancials]): OFormat[VatScheme] = OFormat(reads(f), writes(f))
-
 }

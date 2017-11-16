@@ -20,9 +20,9 @@ import connectors.{AuthConnector, Authority, UserIds}
 import org.mockito.Mockito._
 import play.api.mvc._
 import play.api.test.FakeRequest
-import uk.gov.hmrc.play.http.HeaderCarrier
 
 import scala.concurrent.Future
+import uk.gov.hmrc.http.HeaderCarrier
 
 object AuthBuilder extends AuthBuilder {}
 

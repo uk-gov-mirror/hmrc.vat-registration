@@ -20,14 +20,13 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 
-
 case class VatDigitalContact(email: String, tel: Option[String], mobile: Option[String])
 
 object VatDigitalContact extends VatDigitalContactValidator {
 
   implicit val format: OFormat[VatDigitalContact] = (
     (__ \ "email").format[String](maxLength[String](70) keepAnd emailValidator) and
-      (__ \ "tel").formatNullable[String](telValidator) and
-      (__ \ "mobile").formatNullable[String](mobileValidator)
-    ) (VatDigitalContact.apply, unlift(VatDigitalContact.unapply))
+    (__ \ "tel").formatNullable[String](telValidator) and
+    (__ \ "mobile").formatNullable[String](mobileValidator)
+  )(VatDigitalContact.apply, unlift(VatDigitalContact.unapply))
 }

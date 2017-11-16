@@ -25,32 +25,31 @@ import play.api.mvc.{Action, AnyContent}
 import repositories.test.TestOnlyRepository
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import scala.concurrent.Future
 import scala.util.{Left, Right}
 
-class TestSupportController @Inject()(
-                                       val auth: AuthConnector,
-                                       brConnector: BusinessRegistrationConnector,
-                                       brTestConnector: BusinessRegistrationTestConnector,
-                                       testOnlyRepository: TestOnlyRepository
-                                     ) extends BaseController with Authenticated {
+class TestSupportController @Inject()(val auth: AuthConnector,
+                                      brConnector: BusinessRegistrationConnector,
+                                      brTestConnector: BusinessRegistrationTestConnector,
+                                      testOnlyRepository: TestOnlyRepository) extends BaseController with Authenticated {
   // $COVERAGE-OFF$
 
   def currentProfileSetup(): Action[AnyContent] = Action.async { implicit request =>
-    authenticated { user =>
+    authenticated { _ =>
       brConnector.retrieveCurrentProfile flatMap {
-        case Left(common.exceptions.ResourceNotFound(msg)) => brTestConnector.createCurrentProfileEntry()
-        case Right(b) => Future.successful(Ok)
-        case Left(_) => Future.successful(ServiceUnavailable)
+        case Left(common.exceptions.ResourceNotFound(_))  => brTestConnector.createCurrentProfileEntry()
+        case Right(_)                                     => Future.successful(Ok)
+        case Left(_)                                      => Future.successful(ServiceUnavailable)
       }
     }
   }
 
   def dropCollection(): Action[AnyContent] = Action.async { implicit request =>
-    authenticated { user =>
-      testOnlyRepository.dropCollection
-      Future.successful(Ok("Collection Dropped"))
+    authenticated { _ =>
+      testOnlyRepository.dropCollection map {
+        _ => Ok("Collection Dropped")
+      }
     }
   }
 

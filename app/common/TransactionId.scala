@@ -23,10 +23,7 @@ case class TransactionId(value: String) extends AnyVal {
 }
 
 object TransactionId {
-
   implicit val rs = Reads.of[String].map(TransactionId.apply)
 
   implicit val ws = Writes[TransactionId](id => JsString(id.value))
-
-
 }

@@ -22,35 +22,34 @@ import models.api.VatScheme
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.Future
-
-trait TestOnlyRepository {
-  def dropCollection(): Future[Unit]
-}
-
 
 class TestOnlyMongoRepository @Inject()(mongoProvider: Function0[DB], @Named("collectionName") collectionName: String)
   extends ReactiveRepository[VatScheme, BSONObjectID](
     collectionName = collectionName,
     mongo = mongoProvider,
-    domainFormat = VatScheme.format
-  ) with TestOnlyRepository {
+    domainFormat = VatScheme.format) with TestOnlyRepository {
 
   // $COVERAGE-OFF$
 
-  import scala.concurrent.ExecutionContext.Implicits.global
+  override def indexes: Seq[Index] = Seq(
+    Index(
+      name     = Some("RegId"),
+      key     = Seq("registrationId" -> IndexType.Ascending),
+      unique  = true
+    )
+  )
 
-  override def indexes: Seq[Index] = Seq(Index(
-    name = Some("RegId"),
-    key = Seq("registrationId" -> IndexType.Ascending),
-    unique = true
-  ))
-
-  override def dropCollection(): Future[Unit] = collection.drop()
+  override def dropCollection(implicit hc: HeaderCarrier): Future[Unit] = collection.drop()
 
   // $COVERAGE-ON$
+}
 
+trait TestOnlyRepository {
+  def dropCollection(implicit hc: HeaderCarrier): Future[Unit]
 }
 

@@ -20,10 +20,10 @@ import com.google.inject.ImplementedBy
 import common.TransactionId
 import config.WSHttp
 import play.api.mvc.{Result, Results}
+import uk.gov.hmrc.http.{CoreGet, HeaderCarrier}
 import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http._
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[VatRegIncorporationInformationTestConnector])
@@ -35,13 +35,11 @@ class VatRegIncorporationInformationTestConnector extends IncorporationInformati
 
   //$COVERAGE-OFF$
   val iiUrl = baseUrl("incorporation-information")
-  val http = WSHttp
+  val http: CoreGet = WSHttp
 
-  def incorpCompany(transactionId: TransactionId)(implicit hc: HeaderCarrier): Future[Result] =
+  def incorpCompany(transactionId: TransactionId)(implicit hc: HeaderCarrier): Future[Result] = {
     http.GET(s"$iiUrl/incorporation-information/test-only/add-incorp-update?txId=" +
       s"$transactionId&date=2016-08-05&success=true&crn=12345").map(_ => Results.Ok)
-
+  }
   //$COVERAGE-ON$
-
 }
-

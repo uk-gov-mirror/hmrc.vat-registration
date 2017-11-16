@@ -21,7 +21,5 @@ import play.api.libs.json.Json
 case class TradingName(selection: Boolean, tradingName: Option[String])
 
 object TradingName {
-
   implicit val format = Json.format[TradingName]
-
 }

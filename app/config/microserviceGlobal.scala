@@ -18,16 +18,17 @@ package config
 
 import com.typesafe.config.Config
 import net.ceedubs.ficus.Ficus._
-import play.api.{Application, Configuration, Logger, Play}
+import org.slf4j.{Logger, LoggerFactory}
+import play.api.{Application, Configuration, Play}
+import play.api.libs.concurrent.Execution.defaultContext
 import repositories.{RegistrationMongoRepository, RegistrationRepository}
-import uk.gov.hmrc.play.audit.filters.AuditFilter
 import uk.gov.hmrc.play.auth.controllers.AuthParamsControllerConfig
 import uk.gov.hmrc.play.auth.microservice.filters.AuthorisationFilter
 import uk.gov.hmrc.play.config.{AppName, ControllerConfig, RunMode}
-import uk.gov.hmrc.play.filters.MicroserviceFilterSupport
-import uk.gov.hmrc.play.http.logging.filters.LoggingFilter
 import uk.gov.hmrc.play.microservice.bootstrap.DefaultMicroserviceGlobal
+import uk.gov.hmrc.play.microservice.filters.{AuditFilter, LoggingFilter, MicroserviceFilterSupport}
 
+import scala.concurrent.ExecutionContext
 
 object ControllerConfiguration extends ControllerConfig {
   lazy val controllerConfigs = Play.current.configuration.underlying.as[Config]("controllers")
@@ -65,24 +66,23 @@ object MicroserviceGlobal extends DefaultMicroserviceGlobal with RunMode with Mi
 
   override val authFilter = Some(MicroserviceAuthFilter)
 
+  implicit val ec: ExecutionContext = defaultContext
+
+  private val logger: Logger = LoggerFactory.getLogger(getClass)
+
   override def onStart(app : play.api.Application) : scala.Unit = {
+    val iRepo = app.injector.instanceOf[RegistrationRepository]
+    val repo  = iRepo.asInstanceOf[RegistrationMongoRepository]
 
-    import scala.concurrent.ExecutionContext.Implicits.global
-    val iRepo = Play.current.injector.instanceOf[RegistrationRepository]
-    val repo = iRepo.asInstanceOf[RegistrationMongoRepository]
-
-    repo.collection.indexesManager.list() map {
-      indexes =>
-        Logger.info("[Startup] Outputting current indexes")
-        indexes foreach { index =>
-          val name = index.name.getOrElse("<no-name>")
-          val keys = (index.key map { case (k,a) => s"${k} -> ${a.value}"}) mkString(",")
-          Logger.info(s"[Index] name: ${name} keys: ${keys} unique: ${index.unique} sparse: ${index.sparse}")
-        }
-        Logger.info("[Startup] Finished outputting current indexes")
+    repo.collection.indexesManager.list() map { indexes =>
+      logger.info("[Startup] Outputting current indexes")
+      indexes foreach { index =>
+        val name = index.name.getOrElse("<no-name>")
+        val keys = (index.key map { case (k,a) => s"$k -> ${a.value}"}) mkString(",")
+        logger.info(s"[Index] name: $name keys: $keys unique: ${index.unique} sparse: ${index.sparse}")
+      }
+      logger.info("[Startup] Finished outputting current indexes")
     }
-
     super.onStart(app)
   }
-
 }

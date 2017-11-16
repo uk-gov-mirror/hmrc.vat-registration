@@ -22,57 +22,48 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 
-final case class IncorpSubscription(transactionId: String, regime: String, subscriber: String, callbackUrl: String)
+case class IncorpSubscription(transactionId: String, regime: String, subscriber: String, callbackUrl: String)
 
 object IncorpSubscription {
-
   implicit val format = Json.format[IncorpSubscription]
 
   val iiReads: Reads[IncorpSubscription] = {
-
     val keyPath: JsPath = __ \ "IncorpSubscriptionKey"
 
-    ((keyPath \ "transactionId").read[String] and
+    (
+      (keyPath \ "transactionId").read[String] and
       (keyPath \ "discriminator").read[String] and
       (keyPath \ "subscriber").read[String] and
       (__ \ "SCRSIncorpSubscription" \ "callbackUrl").read[String]
-      ) (IncorpSubscription.apply _)
-
+    )(IncorpSubscription.apply _)
   }
-
 }
 
-final case class IncorpStatusEvent(status: String, crn: Option[String], incorporationDate: Option[LocalDate], description: Option[String])
+case class IncorpStatusEvent(status: String, crn: Option[String], incorporationDate: Option[LocalDate], description: Option[String])
 
 object IncorpStatusEvent {
-
   implicit val format = Json.format[IncorpStatusEvent]
 
-  val localDateReads = Reads[LocalDate](js =>
-    js.validate[Long].map[LocalDate](Instant.ofEpochMilli(_).atZone(ZoneId.of("Europe/London")).toLocalDate())
-  )
+  val localDateReads = Reads[LocalDate](_.validate[Long].map[LocalDate](Instant.ofEpochMilli(_).atZone(ZoneId.of("Europe/London")).toLocalDate()))
 
-  val iiReads: Reads[IncorpStatusEvent] =
-    ((__ \ "status").read[String] and
-      (__ \ "crn").readNullable[String] and
-      (__ \ "incorporationDate").readNullable[LocalDate](localDateReads) and
-      (__ \ "description").readNullable[String]
-      ) (IncorpStatusEvent.apply _)
-
+  val iiReads: Reads[IncorpStatusEvent] = (
+    (__ \ "status").read[String] and
+    (__ \ "crn").readNullable[String] and
+    (__ \ "incorporationDate").readNullable[LocalDate](localDateReads) and
+    (__ \ "description").readNullable[String]
+  )(IncorpStatusEvent.apply _)
 }
 
-final case class IncorporationStatus(subscription: IncorpSubscription, statusEvent: IncorpStatusEvent)
+case class IncorporationStatus(subscription: IncorpSubscription, statusEvent: IncorpStatusEvent)
 
 object IncorporationStatus {
-
   implicit val format = Json.format[IncorporationStatus]
 
   val iiReads: Reads[IncorporationStatus] = {
     val root: JsPath = __ \ "SCRSIncorpStatus"
 
     (root.read[IncorpSubscription](IncorpSubscription.iiReads) and
-      (root \ "IncorpStatusEvent").read[IncorpStatusEvent](IncorpStatusEvent.iiReads)
-      ) (IncorporationStatus.apply _)
+    (root \ "IncorpStatusEvent").read[IncorpStatusEvent](IncorpStatusEvent.iiReads)
+    )(IncorporationStatus.apply _)
   }
-
 }

@@ -19,14 +19,15 @@ package connectors
 import java.util.UUID
 
 import helpers.VatRegSpec
-import org.mockito.Matchers
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.play.http.logging.SessionId
-import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse, _}
+import uk.gov.hmrc.play.http._
 
 import scala.concurrent.Future
+import uk.gov.hmrc.http.{ HeaderCarrier, HttpGet, HttpPost, HttpResponse }
+import uk.gov.hmrc.http.logging.SessionId
 
 /**
   * Created by crispy on 03/08/16.
@@ -70,10 +71,10 @@ class AuthConnectorSpec extends VatRegSpec {
       val userIDs = UserIds("foo", "bar")
       val expected = Authority(uri, ggid, userDetailsLink, userIDs)
 
-      when(mockHttp.GET[HttpResponse](Matchers.eq("localhost/auth/authority"))(Matchers.any(), Matchers.any())).
+      when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq("localhost/auth/authority"))(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any())).
         thenReturn(Future.successful(HttpResponse(OK, Some(authResponseJson(uri, userDetailsLink, ggid, idsLink)))))
 
-      when(mockHttp.GET[HttpResponse](Matchers.eq(s"localhost$idsLink"))(Matchers.any(), Matchers.any())).
+      when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq(s"localhost$idsLink"))(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any())).
         thenReturn(Future.successful(HttpResponse(OK, Some(idsResponseJson(userIDs.internalId, userIDs.externalId)))))
 
 
@@ -86,7 +87,7 @@ class AuthConnectorSpec extends VatRegSpec {
 
     "return None when an authority isn't found" in {
 
-      when(mockHttp.GET[HttpResponse](Matchers.eq("localhost/auth/authority"))(Matchers.any(), Matchers.any())).
+      when(mockHttp.GET[HttpResponse](ArgumentMatchers.eq("localhost/auth/authority"))(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any())).
         thenReturn(Future.successful(HttpResponse(NOT_FOUND, None)))
 
       implicit val hc = new HeaderCarrier(sessionId = Some(SessionId(s"session-${UUID.randomUUID}")))

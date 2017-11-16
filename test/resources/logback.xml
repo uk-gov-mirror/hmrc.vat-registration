@@ -59,6 +59,10 @@
     <logger name="play.api" level="OFF" />
     <logger name="org.jboss" level="OFF"/>
 
+    <logger name="repositories" level="ERROR" />
+    <logger name="services" level="ERROR" />
+    <logger name="controllers" level="ERROR" />
+
     <logger name="connector" level="OFF">
         <appender-ref ref="STDOUT"/>
     </logger>
