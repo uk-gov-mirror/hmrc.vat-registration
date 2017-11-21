@@ -16,19 +16,17 @@
 
 package models.api
 
-import models.api.VatChoice.{necessityValidator, reasonValidator}
+import models.api.VatChoice.necessityValidator
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class VatEligibilityChoice(necessity: String, // "obligatory" or "voluntary"
-                                reason: Option[String] = None,
                                 vatThresholdPostIncorp: Option[VatThresholdPostIncorp] = None,
                                 vatExpectedThresholdPostIncorp: Option[VatExpectedThresholdPostIncorp] = None)
 
 object VatEligibilityChoice {
   implicit val format: OFormat[VatEligibilityChoice] = (
     (__ \ "necessity").format[String](necessityValidator) and
-    (__ \ "reason").formatNullable[String](reasonValidator) and
     (__ \ "vatThresholdPostIncorp").formatNullable[VatThresholdPostIncorp] and
     (__ \ "vatExpectedThresholdPostIncorp").formatNullable[VatExpectedThresholdPostIncorp]
   )(VatEligibilityChoice.apply, unlift(VatEligibilityChoice.unapply))
