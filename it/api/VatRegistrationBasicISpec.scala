@@ -15,9 +15,12 @@
  */
 package api
 
+import java.time.LocalDate
+
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, post, stubFor, urlMatching}
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import common.RegistrationId
-import itutil.{IntegrationStubbing, WiremockHelper}
+import itutil.{ITFixtures, IntegrationStubbing, WiremockHelper}
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.FakeApplication
@@ -27,9 +30,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class VatRegistrationBasicISpec extends IntegrationStubbing {
+class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+  //implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val mockHost = WiremockHelper.wiremockHost
   val mockPort = WiremockHelper.wiremockPort
@@ -39,13 +42,54 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
     "auditing.consumer.baseUri.host" -> s"$mockHost",
     "auditing.consumer.baseUri.port" -> s"$mockPort",
     "microservice.services.auth.host" -> s"$mockHost",
-    "microservice.services.auth.port" -> s"$mockPort"
+    "microservice.services.auth.port" -> s"$mockPort",
+    "microservice.services.des-stub.host" -> s"$mockHost",
+    "microservice.services.des-stub.port" -> s"$mockPort",
+    "microservice.services.company-registration.host" -> s"$mockHost",
+    "microservice.services.company-registration.port" -> s"$mockPort",
+    "microservice.services.incorporation-information.host" -> s"$mockHost",
+    "microservice.services.incorporation-information.port" -> s"$mockPort",
+    "microservice.services.incorporation-information.uri" -> "/incorporation-information"
   ))
 
   lazy val repo = app.injector.instanceOf(classOf[RegistrationMongoRepository])
   lazy val ws   = app.injector.instanceOf(classOf[WSClient])
 
   private def client(path: String) = ws.url(s"http://localhost:$port$path").withFollowRedirects(false)
+
+  val transID = "transID"
+  val crn = "crn"
+  val accepted = "accepted"
+
+  def incorpUpdate(status: String) = {
+    s"""
+       |{
+       |  "SCRSIncorpStatus": {
+       |    "IncorpSubscriptionKey" : {
+       |      "subscriber" : "SCRS",
+       |      "discriminator" : "PAYE",
+       |      "transactionId" : "$transID"
+       |    },
+       |    "SCRSIncorpSubscription" : {
+       |      "callbackUrl" : "scrs-incorporation-update-listener.service/incorp-updates/incorp-status-update"
+       |    },
+       |    "IncorpStatusEvent": {
+       |      "status": "$status",
+       |      "crn":"$crn",
+       |      "incorporationDate":1470351600000,
+       |      "timestamp" : ${Json.toJson(LocalDate.of(2017, 12, 21))}
+       |    }
+       |  }
+       |}
+        """.stripMargin
+  }
+
+  val returnedFromII =
+    s"""
+       |{
+       |  "company_name":"test"
+       |}
+        """.stripMargin
 
   "VAT Registration API - for initial / basic calls" should {
 
@@ -91,6 +135,101 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
 
       val result = await(client("/vatreg/testRegId2/update-iv-status").patch(Json.parse("""{"ivPassed" : true}""")))
       result.status shouldBe INTERNAL_SERVER_ERROR
+    }
+  }
+
+  "/:regId/submit-registration" should {
+    val registrationID = "testRegId"
+    val regime = "vat"
+    val subscriber = "scrs"
+
+    def mockGetTransID() : StubMapping =
+      stubFor(get(urlMatching(s"/company-registration/corporation-tax-registration/$registrationID/corporation-tax-registration"))
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withBody(
+              s"""{
+                 | "confirmationReferences" : {
+                 |   "transaction-id" : "$transID"
+                 | }
+                 |}
+                 |""".stripMargin
+            )
+        )
+      )
+
+    def mockIncorpUpdate(): StubMapping =
+      stubFor(post(urlMatching(s"/incorporation-information/subscribe/$transID/regime/$regime/subscriber/$subscriber"))
+      .willReturn(
+        aResponse()
+          .withStatus(200)
+          .withBody(incorpUpdate(accepted))
+      )
+    )
+
+    "return an Ok if the submission is successful for the regID" in {
+      given
+        .user.isAuthorised
+
+      mockGetTransID()
+      mockIncorpUpdate()
+
+      stubFor(get(urlMatching(s"/incorporation-information/$transID/company-profile"))
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withBody(returnedFromII)
+        )
+      )
+
+      stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
+        .willReturn(
+          aResponse()
+            .withStatus(202)
+        )
+      )
+
+      repo.createNewVatScheme(RegistrationId(registrationID)).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), tradingDetails))
+
+      val result = await(client(
+        controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
+      )
+      result.status shouldBe OK
+
+      await(repo.remove("registrationId" -> registrationID))
+    }
+
+    "return a 400 status when DES returns a 4xx" in {
+      given
+        .user.isAuthorised
+
+      mockGetTransID()
+      mockIncorpUpdate()
+
+      stubFor(get(urlMatching(s"/incorporation-information/$transID/company-profile"))
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withBody(returnedFromII)
+        )
+      )
+
+      stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
+        .willReturn(
+          aResponse()
+            .withStatus(433)
+        )
+      )
+
+      repo.createNewVatScheme(RegistrationId(registrationID)).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), tradingDetails))
+
+      val result = await(client(
+        controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
+      )
+      result.status shouldBe 400
+
+      await(repo.remove("registrationId" -> registrationID))
     }
   }
 }

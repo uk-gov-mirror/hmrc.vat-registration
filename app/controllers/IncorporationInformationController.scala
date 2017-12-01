@@ -30,10 +30,15 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 class IncorporationInformationController @Inject()(val auth: AuthConnector,
                                                    iiConnector: IncorporationInformationConnector) extends BaseController with Authenticated with FutureInstances {
 
+  private val REGIME = "vat"
+  private val SUBSCRIBER = "scrs"
+
   def getIncorporationInformation(transactionId: TransactionId): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { user =>
-        iiConnector.retrieveIncorporationStatus(transactionId).fold(_.toResult, incorpInfo => Ok(Json.toJson(incorpInfo)))
+        iiConnector.retrieveIncorporationStatus(transactionId, REGIME, SUBSCRIBER).map {status =>
+          status.fold(Ok(""))(incorpstatus => Ok(Json.toJson(incorpstatus)))
+        }
       }
   }
 }

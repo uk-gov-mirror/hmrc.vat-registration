@@ -22,7 +22,7 @@ import cats.instances.FutureInstances
 import cats.syntax.{ApplicativeSyntax, EitherSyntax}
 import common.exceptions._
 import common.{RegistrationId, TransactionId}
-import connectors.{AuthConnector, Authority, BusinessRegistrationConnector, IncorporationInformationConnector}
+import connectors._
 import enums.VatRegStatus
 import models._
 import models.api.VatScheme
@@ -54,6 +54,8 @@ trait VatMocks extends WSHTTPMock {
   lazy val mockSubmissionService = mock[SubmissionService]
   lazy val mockVatRegistrationService = mock[VatRegistrationService]
   lazy val mockSequenceRepository = mock[SequenceRepository]
+  lazy val mockCompanyRegConnector = mock[CompanyRegistrationConnector]
+  lazy val mockDesConnector = mock[DESConnector]
 
 
   object AuthorisationMocks {
@@ -77,15 +79,17 @@ trait VatMocks extends WSHTTPMock {
 
   object IIMocks extends FutureInstances with ApplicativeSyntax with EitherSyntax {
 
-    import scala.concurrent.ExecutionContext.Implicits.global
-
     def mockIncorporationStatus(incorporationStatus: IncorporationStatus): Unit =
-      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()))(any(), any()))
-        .thenReturn(EitherT.fromEither(incorporationStatus.asRight[LeftState]))
+      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()), ArgumentMatchers.any(), ArgumentMatchers.any())(any(), any()))
+        .thenReturn(Future.successful(Some(incorporationStatus)))
 
-    def mockIncorporationStatusLeft(leftState: LeftState): Unit =
-      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()))(any(), any()))
-        .thenReturn(EitherT.fromEither(leftState.asLeft[IncorporationStatus]))
+    def mockIncorporationStatusNone(): Unit =
+      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()), ArgumentMatchers.any(), ArgumentMatchers.any())(any(), any()))
+        .thenReturn(Future.successful(None))
+
+    def mockIncorporationStatusLeft(message : String): Unit =
+      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()), ArgumentMatchers.any(), ArgumentMatchers.any())(any(), any()))
+        .thenReturn(Future.failed(new IncorporationInformationResponseException(message)))
 
   }
 

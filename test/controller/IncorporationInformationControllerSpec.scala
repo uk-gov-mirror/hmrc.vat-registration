@@ -17,6 +17,8 @@
 package controller
 
 import common.exceptions.ResourceNotFound
+import connectors.IncorporationInformationResponseException
+import play.api.mvc.Results.Ok
 import controllers.IncorporationInformationController
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
@@ -41,10 +43,16 @@ class IncorporationInformationControllerSpec extends VatRegSpec with VatRegistra
       controller.getIncorporationInformation(txId)(FakeRequest()) returnsStatus FORBIDDEN
     }
 
-    "return empty object if incorporation info not found" in new Setup {
-      IIMocks.mockIncorporationStatusLeft(ResourceNotFound("incorporation status not known"))
+    "return an except if the II connection update failed" in new Setup {
+      IIMocks.mockIncorporationStatusLeft("incorporation status not known")
+
+      intercept[IncorporationInformationResponseException](await(controller.getIncorporationInformation(txId)(FakeRequest())))
+    }
+
+    "return no object if not found in II" in new Setup {
+      IIMocks.mockIncorporationStatusNone()
       val res = controller.getIncorporationInformation(txId)(FakeRequest())
-      res returnsStatus NOT_FOUND
+      res returnsStatus OK
     }
 
     "return incorporation status object if found" in new Setup {

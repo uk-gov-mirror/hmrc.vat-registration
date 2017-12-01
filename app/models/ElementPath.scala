@@ -50,7 +50,8 @@ object ElementPath {
       VatFrsWhenToJoin,
       VatFrsStartDate,
       VatFrsBusCategory,
-      VatFrsPercentage
+      VatFrsPercentage,
+      VatStatusPath
     ).map(ep => (ep.name, ep)).toMap
 
     override def writes(e: ElementPath): JsValue = JsString(e.name)
@@ -151,6 +152,11 @@ case object FinManageFundsAdditionalPath extends ElementPath {
 case object AcknowledgementReferencePath extends ElementPath {
   override val path = "acknowledgementReference"
   override val name = "acknowledgement-reference"
+}
+
+case object VatStatusPath extends ElementPath {
+  override val path = "status"
+  override val name = "status"
 }
 
 case object VatFlatRateSchemePath extends ElementPath {

@@ -29,6 +29,8 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
+import play.api.http.Status
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
@@ -275,6 +277,42 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         ServiceMocks.mockDeleteByElementThrowsException(regId, VatBankAccountPath)
         controller.deleteByElement(regId, VatBankAccountPath)(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
       }
+    }
+  }
+
+  "Calling submitPAYERegistration" should {
+    "return a Forbidden response if the user is not logged in" in new Setup {
+      AuthorisationMocks.mockNotLoggedInOrAuthorised()
+
+      val response = controller.submitVATRegistration(regId)(FakeRequest())
+
+      status(response) shouldBe Status.FORBIDDEN
+    }
+
+    "return a BadRequest response when the Submission Service can't make a DES submission" in new Setup {
+      ServiceMocks.mockRetrieveVatScheme(regId, vatScheme)
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+
+      when(mockSubmissionService.submitVatRegistration(idMatcher)(ArgumentMatchers.any[HeaderCarrier]()))
+        .thenReturn(Future.failed(new Exception("missing data")))
+
+      val response = await(controller.submitVATRegistration(regId)(FakeRequest()))
+
+      status(response) shouldBe Status.BAD_REQUEST
+      bodyOf(response) shouldBe "Registration was submitted without full data: missing data"
+    }
+
+    "return an Ok response with acknowledgement reference for a valid submit" in new Setup {
+      ServiceMocks.mockRetrieveVatScheme(regId, vatScheme)
+      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
+
+      when(mockSubmissionService.submitVatRegistration(idMatcher)(ArgumentMatchers.any[HeaderCarrier]()))
+        .thenReturn(Future.successful("BRVT00000000001"))
+
+      val response = controller.submitVATRegistration(regId)(FakeRequest())
+
+      status(response) shouldBe Status.OK
+      jsonBodyOf(await(response)) shouldBe Json.toJson("BRVT00000000001")
     }
   }
 

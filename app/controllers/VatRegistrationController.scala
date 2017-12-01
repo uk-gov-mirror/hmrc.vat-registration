@@ -66,6 +66,16 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
 
   def updateFlatRateScheme(id: RegistrationId): Action[JsValue] = patch[VatFlatRateScheme](registrationService, id)
 
+  def submitVATRegistration(id: RegistrationId) : Action[AnyContent] = Action.async {
+    implicit request =>
+      authenticated { _ =>
+        submissionService.submitVatRegistration(id).map { ackRefs =>
+          Ok(Json.toJson(ackRefs))
+        } recover {
+          case ex => BadRequest(s"Registration was submitted without full data: ${ex.getMessage}")
+        }
+      }
+  }
 
   def getAcknowledgementReference(id: RegistrationId): Action[AnyContent] = Action.async {
     implicit request =>

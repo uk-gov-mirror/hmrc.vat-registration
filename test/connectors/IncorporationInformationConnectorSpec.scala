@@ -18,19 +18,22 @@ package connectors
 
 import java.time.LocalDate
 
-import common.TransactionId
+import common.{RegistrationId, TransactionId}
 import common.exceptions.{GenericError, ResourceNotFound}
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import play.api.libs.json.Json
-import uk.gov.hmrc.http.{ HeaderCarrier, HttpResponse }
+import play.api.libs.json.{JsValue, Json}
+import play.api.test.Helpers.OK
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException, Upstream4xxResponse}
 
 class IncorporationInformationConnectorSpec extends VatRegSpec with VatRegistrationFixture {
 
   trait Setup {
     val connector = new IncorporationInformationConnector {
       override val iiUrl = "anyUrl"
+      override val iiUri = "tst-url"
       override val http = mockWSHttp
+      override val vatRegUri: String = "test"
     }
   }
 
@@ -62,28 +65,53 @@ class IncorporationInformationConnectorSpec extends VatRegSpec with VatRegistrat
         """.stripMargin)
       val expectedIIStatus = incorporationStatus(incorpDate = LocalDate.of(2016, 8, 5))
       mockHttpPOST("anyUrl", HttpResponse(200, responseJson = Some(returnedFromII)))
-      connector.retrieveIncorporationStatus(TransactionId("any")) returnsRight expectedIIStatus
+      await(connector.retrieveIncorporationStatus(TransactionId("any"), regime, subscriber)) shouldBe Some(expectedIIStatus)
     }
 
-    "returns ResourceNotFound if incorporation status not found in II and a new subscription has been setup" in new Setup {
-      val resNotFound = ResourceNotFound("Incorporation Status not known. A subscription has been setup")
+    "returns None if incorporation status not found in II and a new subscription has been setup" in new Setup {
       mockHttpPOST("anyUrl", HttpResponse(202))
-      connector.retrieveIncorporationStatus(TransactionId("any")) returnsLeft resNotFound
+      await(connector.retrieveIncorporationStatus(TransactionId("any"), regime, subscriber)) shouldBe None
     }
 
-    "returns GenericError when failed to get incorporation status or setup a subscription" in new Setup {
+    "returns an exception when failed to get incorporation status or setup a subscription" in new Setup {
       val exMessage = "400 response code returned requesting II for txId: any"
       mockHttpPOST("anyUrl", HttpResponse(400))
-      inside(await(connector.retrieveIncorporationStatus(TransactionId("any")).value)) {
-        case Left(GenericError(ex)) => ex.getMessage shouldBe exMessage
-      }
+
+      intercept[IncorporationInformationResponseException](await(
+        connector.retrieveIncorporationStatus(TransactionId("any"), regime, subscriber)
+      ))
+    }
+  }
+
+  "getCompanyName" should {
+    "return the company name if one is found in II" in new Setup {
+      val returnedFromII = Json.parse(
+        s"""
+           |{
+           |  "company-name":"test"
+           |}
+        """.stripMargin)
+
+      mockHttpGet("anyUrl", HttpResponse(200, responseJson = Some(returnedFromII)))
+      val res = await(connector.getCompanyName(regId, TransactionId("any")))
+      res.json shouldBe returnedFromII
+      res.status shouldBe OK
+    }
+
+    "throw an exception if the company could not be found" in new Setup {
+      val upstream4xx = new NotFoundException("Bad request")
+      mockHttpFailedGET("anyUrl", upstream4xx)
+
+      intercept[NotFoundException](await(
+        await(connector.getCompanyName(regId, TransactionId("any")))
+      ))
     }
   }
 
   "IncorpStatusRequest" should {
 
     "be serialised to JSON" in {
-      val expectedJson = """{"SCRSIncorpSubscription":{"callbackUrl":"someUrl"}}"""
+      val expectedJson = """{"SCRSIncorpSubscription":{"callbackUrl":"someUrl/vat-registration/incorporation-data"}}"""
       Json.toJson(IncorpStatusRequest("someUrl"))(IncorpStatusRequest.writes).toString() shouldBe expectedJson
     }
     
