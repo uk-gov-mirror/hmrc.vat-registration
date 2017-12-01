@@ -28,6 +28,8 @@ import enums.VatRegStatus
 trait VatRegistrationFixture {
   val regId = RegistrationId("testId")
   val txId: TransactionId = TransactionId("1")
+  val regime = "vat"
+  val subscriber = "scrs"
 
   val now = LocalDate.now(ZoneId.systemDefault())
 

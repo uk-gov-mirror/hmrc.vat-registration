@@ -175,7 +175,8 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
 
     "return Success response " in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Some(vatScheme))
-      when(mockRegistrationRepository.updateByElement(RegistrationId("1"), AcknowledgementReferencePath, ackRefNumber)).thenReturn(ackRefNumber)
+      when(mockRegistrationRepository.updateByElement(RegistrationId("1"), AcknowledgementReferencePath, ackRefNumber))
+        .thenReturn(ackRefNumber)
       service.saveAcknowledgementReference(RegistrationId("1"), ackRefNumber) returnsRight ackRefNumber
     }
 

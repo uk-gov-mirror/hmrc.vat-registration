@@ -20,6 +20,11 @@ import play.api.libs.json._
 
 object VatRegStatus extends Enumeration {
   val draft = Value
+  val held = Value
+  val submitted = Value
+  val acknowledged = Value
+  val rejected = Value
+  val cancelled = Value
 
   implicit val format = Format(Reads.enumNameReads(VatRegStatus), Writes.enumNameWrites)
 }

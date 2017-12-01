@@ -24,11 +24,12 @@ import common.{LogicalGroup, RegistrationId}
 import enums.VatRegStatus
 import models._
 import models.api.{VatBankAccountMongoFormat, VatFinancials, VatScheme}
-import play.api.libs.json.{OFormat, Writes}
+import play.api.libs.json.{Json, OFormat, Writes}
 import play.modules.reactivemongo.MongoDbConnection
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
+import reactivemongo.json.BSONFormats
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
@@ -42,6 +43,7 @@ trait RegistrationRepository {
   def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G], hc: HeaderCarrier): Future[G]
   def deleteVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[Boolean]
   def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String]
+  def prepareRegistrationSubmission(id: RegistrationId, ackRef : String)(implicit hc: HeaderCarrier): Future[Boolean]
   def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit hc: HeaderCarrier): Future[Boolean]
   def updateIVStatus(regId: String, ivStatus: Boolean)(implicit hc: HeaderCarrier): Future[Boolean]
 }
@@ -123,6 +125,14 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
 
   override def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String] =
     setElement(id, elementPath.path, value)
+
+  override def prepareRegistrationSubmission(id : RegistrationId, ackRef : String)(implicit hc: HeaderCarrier) : Future[Boolean] = {
+    val modifier = BSONFormats.toBSON(Json.obj(
+      AcknowledgementReferencePath.path -> ackRef
+    )).get
+
+    collection.update(ridSelector(id), BSONDocument("$set" -> modifier)).map(_.ok)
+  }
 
   override def updateIVStatus(regId: String, ivStatus: Boolean)(implicit hc: HeaderCarrier): Future[Boolean] = {
     val updateDocument = BSONDocument("$set" -> BSONDocument("lodgingOfficer.ivPassed" -> BSONBoolean(ivStatus)))

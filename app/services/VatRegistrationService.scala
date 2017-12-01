@@ -24,14 +24,15 @@ import cats.syntax.ApplicativeSyntax
 import common.exceptions._
 import common.{LogicalGroup, RegistrationId}
 import connectors._
+import enums.VatRegStatus
 import models.api.VatScheme
 import models.external.CurrentProfile
-import models.{AcknowledgementReferencePath, ElementPath}
+import models.{AcknowledgementReferencePath, ElementPath, VatStatusPath}
 import play.api.libs.json.{JsValue, Json, Writes}
 import repositories.RegistrationRepository
 import uk.gov.hmrc.http.HeaderCarrier
-
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+
 import scala.concurrent.Future
 
 trait RegistrationService {
@@ -72,7 +73,8 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
       .flatMap(vs => vs.acknowledgementReference match {
         case Some(ar) =>
           Left[LeftState, String](AcknowledgementReferenceExists(s"""Registration ID $id already has an acknowledgement reference of: $ar""")).toEitherT
-        case None => EitherT.liftT(registrationRepository.updateByElement(id, AcknowledgementReferencePath, ackRef))
+        case None =>
+          EitherT.liftT(registrationRepository.updateByElement(id, AcknowledgementReferencePath, ackRef))
       })
 
   override def getStatus(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[JsValue] =
