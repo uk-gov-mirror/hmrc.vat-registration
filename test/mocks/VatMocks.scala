@@ -36,6 +36,7 @@ import repositories.test.TestOnlyRepository
 import repositories.{RegistrationRepository, SequenceRepository}
 import services.{RegistrationService, ServiceResult, SubmissionService, VatRegistrationService}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost}
+import utils.VATFeatureSwitches
 
 import scala.concurrent.Future
 
@@ -56,6 +57,7 @@ trait VatMocks extends WSHTTPMock {
   lazy val mockSequenceRepository = mock[SequenceRepository]
   lazy val mockCompanyRegConnector = mock[CompanyRegistrationConnector]
   lazy val mockDesConnector = mock[DESConnector]
+  lazy val mockVatFeatureSwitches = mock[VATFeatureSwitches]
 
 
   object AuthorisationMocks {
@@ -169,13 +171,13 @@ trait VatMocks extends WSHTTPMock {
 
     def mockGetAcknowledgementReference(ackRef: String): Unit = {
       val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
-      when(mockSubmissionService.assertOrGenerateAcknowledgementReference(idMatcher)(ArgumentMatchers.any()))
+      when(mockSubmissionService.getAcknowledgementReference(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceResult(ackRef))
     }
 
     def mockGetAcknowledgementReferenceServiceUnavailable(exception: Exception): Unit = {
       val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
-      when(mockSubmissionService.assertOrGenerateAcknowledgementReference(idMatcher)(ArgumentMatchers.any()))
+      when(mockSubmissionService.getAcknowledgementReference(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceError[String](GenericDatabaseError(exception, Some("regId"))))
     }
 
@@ -205,7 +207,7 @@ trait VatMocks extends WSHTTPMock {
 
     def mockGetAcknowledgementReferenceExistsError(): Unit = {
       val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
-      when(mockSubmissionService.assertOrGenerateAcknowledgementReference(idMatcher)(ArgumentMatchers.any()))
+      when(mockSubmissionService.getAcknowledgementReference(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceError[String](AcknowledgementReferenceExists("regId")))
     }
 

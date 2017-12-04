@@ -44,6 +44,7 @@ trait RegistrationRepository {
   def deleteVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[Boolean]
   def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String]
   def prepareRegistrationSubmission(id: RegistrationId, ackRef : String)(implicit hc: HeaderCarrier): Future[Boolean]
+  def finishRegistrationSubmission(id : RegistrationId)(implicit hc : HeaderCarrier) : Future[Boolean]
   def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit hc: HeaderCarrier): Future[Boolean]
   def updateIVStatus(regId: String, ivStatus: Boolean)(implicit hc: HeaderCarrier): Future[Boolean]
 }
@@ -129,6 +130,14 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
   override def prepareRegistrationSubmission(id : RegistrationId, ackRef : String)(implicit hc: HeaderCarrier) : Future[Boolean] = {
     val modifier = BSONFormats.toBSON(Json.obj(
       AcknowledgementReferencePath.path -> ackRef
+    )).get
+
+    collection.update(ridSelector(id), BSONDocument("$set" -> modifier)).map(_.ok)
+  }
+
+  override def finishRegistrationSubmission(id : RegistrationId)(implicit hc: HeaderCarrier) : Future[Boolean] = {
+    val modifier = BSONFormats.toBSON(Json.obj(
+      VatStatusPath.path -> VatRegStatus.submitted
     )).get
 
     collection.update(ridSelector(id), BSONDocument("$set" -> modifier)).map(_.ok)

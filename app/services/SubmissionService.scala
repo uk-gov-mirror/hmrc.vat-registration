@@ -27,9 +27,9 @@ import config.MicroserviceAuditConnector
 import connectors.{CompanyRegistrationConnector, DESConnector, IncorporationInformationConnector}
 import enums.VatRegStatus
 import models.api.VatScheme
+import models.external.IncorporationStatus
 import models.submission.DESSubmission
 import play.api.Logger
-import models.external.IncorporationStatus
 import repositories._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -41,10 +41,10 @@ import scala.util.{Failure, Success, Try}
 @Singleton
 class SubmissionService @Inject()(val sequenceRepository: SequenceRepository,
                                   val vatRegistrationService: VatRegistrationService,
-                                  val registrationRepo: RegistrationRepository,
-                                  val companyRegConnector: CompanyRegistrationConnector,
+                                  val registrationRepository: RegistrationRepository,
+                                  val companyRegistrationConnector: CompanyRegistrationConnector,
                                   val desConnector: DESConnector,
-                                  val iiConnector : IncorporationInformationConnector) extends SubmissionSrv {
+                                  val incorporationInformationConnector : IncorporationInformationConnector) extends SubmissionSrv {
   val auditConnector = MicroserviceAuditConnector
 }
 
@@ -52,10 +52,10 @@ trait SubmissionSrv extends FutureInstances {
 
   val sequenceRepository: SequenceRepository
   val vatRegistrationService: VatRegistrationService
-  val registrationRepo : RegistrationRepository
-  val companyRegConnector : CompanyRegistrationConnector
+  val registrationRepository : RegistrationRepository
+  val companyRegistrationConnector : CompanyRegistrationConnector
   val desConnector: DESConnector
-  val iiConnector: IncorporationInformationConnector
+  val incorporationInformationConnector: IncorporationInformationConnector
   val auditConnector: AuditConnector
 
   private val REGIME = "vat"
@@ -63,65 +63,58 @@ trait SubmissionSrv extends FutureInstances {
 
   def submitVatRegistration(regId : RegistrationId)(implicit hc : HeaderCarrier) : Future[String] = {
     for {
-      _ <- getValidDocumentStatus(regId)
-      ackRefs <- ensureAcknowledgementReference(regId)
-      transID <- fetchCompanyRegistrationTransactionID(regId)
-      incorpStatus <- registerForInterest(transID)
-      incorpDate = getIncorpDate(incorpStatus)
-      companyName <- getCompanyName(regId, TransactionId(transID))
-      submission <- buildDesSubmission(regId.toString, ackRefs, companyName, incorpDate)
-      _ <- desConnector.submitToDES(submission, regId.toString)
+      _             <- getValidDocumentStatus(regId)
+      ackRefs       <- ensureAcknowledgementReference(regId)
+      transID       <- fetchCompanyRegistrationTransactionID(regId)
+      incorpStatus  <- registerForInterest(transID)
+      incorpDate    = getIncorpDate(incorpStatus)
+      companyName   <- getCompanyName(regId, TransactionId(transID))
+      submission    <- buildDesSubmission(regId, ackRefs, companyName, incorpDate)
+      _             <- desConnector.submitToDES(submission, regId.toString)
+      _             <- registrationRepository.finishRegistrationSubmission(regId)
     } yield {
       ackRefs
     }
   }
 
-  def assertOrGenerateAcknowledgementReference(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[String] =
-    vatRegistrationService.retrieveAcknowledgementReference(id).recoverWith {
-      case _: ResourceNotFound => for {
-        generated <- liftT(generateAcknowledgementReference)
-        saved <- vatRegistrationService.saveAcknowledgementReference(id, generated)
-      } yield {
-        Logger.info(s"[assertOrGenerateAcknowledgementReference] - There was existing AckRef for regId ${id.value}; generating new AckRef")
-        saved
-      }
-    }
+  def getAcknowledgementReference(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[String] =
+    vatRegistrationService.retrieveAcknowledgementReference(id)
 
   private[services] def generateAcknowledgementReference(implicit hc: HeaderCarrier): Future[String] =
     sequenceRepository.getNext("AcknowledgementID").map(ref => f"BRVT$ref%011d")
 
   private[services] def ensureAcknowledgementReference(regId: RegistrationId)(implicit hc : HeaderCarrier, ec: ExecutionContext): Future[String] = {
-    registrationRepo.retrieveVatScheme(regId) flatMap {
+    registrationRepository.retrieveVatScheme(regId) flatMap {
       case Some(vs) => vs.acknowledgementReference.fold(
         for {
           newAckref <- generateAcknowledgementReference
-          _ <- registrationRepo.prepareRegistrationSubmission(regId, newAckref)
+          _ <- registrationRepository.prepareRegistrationSubmission(regId, newAckref)
         } yield newAckref
       )(ar => Future.successful(ar))
       case _ => throw MissingRegDocument(regId)
     }
   }
 
-  def retrieveVatStartDate(vatScheme: VatScheme, regId: String) : LocalDate = {
+  def retrieveVatStartDate(vatScheme: VatScheme, regId: RegistrationId) : LocalDate = {
     vatScheme.tradingDetails match {
       case Some(td) => td.vatChoice.vatStartDate.startDate match {
-        case Some(startDate) => startDate
-        case None => throw NoVatStartDate(s"Vat start date was not found for regID: $regId")
+        case Some(startDate)  => startDate
+        case None             => throw NoVatStartDate(s"Vat start date was not found for regID: $regId")
       }
       case None => throw NoTradingDetails(s"Vat trading details was not found for regID: $regId")
     }
   }
 
-  private[services] def buildDesSubmission(regId: String, ackRef: String, companyName: String, incorpDate: LocalDate)
+  private[services] def buildDesSubmission(regId: RegistrationId, ackRef: String, companyName: String, incorpDate: LocalDate)
                                           (implicit hc: HeaderCarrier): Future[DESSubmission] = {
-    registrationRepo.retrieveVatScheme(RegistrationId(regId)) map {
+    registrationRepository.retrieveVatScheme(regId) map {
       case Some(vs)     => DESSubmission(ackRef, companyName, retrieveVatStartDate(vs, regId), incorpDate)
-      case None         => throw MissingRegDocument(RegistrationId(regId))
+      case None         => throw MissingRegDocument(regId)
     }
   }
 
   private[services] def getValidDocumentStatus(regID : RegistrationId)(implicit hc : HeaderCarrier) : Future[String] = {
-    registrationRepo.retrieveVatScheme(regID) map {
+    registrationRepository.retrieveVatScheme(regID) map {
       case Some(registration) => registration.status match {
         case VatRegStatus.draft => registration.status.toString
         case _                  => throw InvalidSubmissionStatus(s"VAT submission status was in a ${registration.status} state")
@@ -131,20 +124,18 @@ trait SubmissionSrv extends FutureInstances {
   }
 
   private[services] def fetchCompanyRegistrationTransactionID(regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String] = {
-    companyRegConnector.fetchCompanyRegistrationDocument(regId) map { response =>
+    companyRegistrationConnector.fetchCompanyRegistrationDocument(regId) map { response =>
       Try((response.json \ "confirmationReferences" \ "transaction-id").as[String]) match {
         case Success(transactionID) => transactionID
         case Failure(_)             => throw NoTransactionId(s"Fetching of transaction id failed for regId: $regId")
       }
     }
-    //TODO: Current implementation of vat doesn't support using the transactionID from CT
-    //Future.successful(s"000-434-$regId")
   }
 
   private[services] def registerForInterest(transID: String)(implicit hc: HeaderCarrier): Future[IncorporationStatus] = {
-    iiConnector.retrieveIncorporationStatus(TransactionId(transID), REGIME, SUBSCRIBER) map {
-      case Some(incStatus) => incStatus
-      case None => throw NoIncorpUpdate(s"Retrieve of vat incorporation update did not bring back an incorp update with " +
+    incorporationInformationConnector.retrieveIncorporationStatus(TransactionId(transID), REGIME, SUBSCRIBER) map {
+      case Some(incStatus)  => incStatus
+      case None             => throw NoIncorpUpdate(s"Retrieve of vat incorporation update did not bring back an incorp update with " +
         s"transId: $transID, regime: $REGIME, subsciber: $SUBSCRIBER")
     }
   }
@@ -157,7 +148,7 @@ trait SubmissionSrv extends FutureInstances {
   }
 
   private[services] def getCompanyName(regId: RegistrationId, txId: TransactionId)(implicit hc: HeaderCarrier): Future[String] = {
-    iiConnector.getCompanyName(regId, txId) map {resp =>
+    incorporationInformationConnector.getCompanyName(regId, txId) map { resp =>
       Try((resp.json \ "company_name").as[String]) match {
         case Success(companyName)   => companyName
         case Failure(_)             => throw NoCompanyName(s"Could not retrieve company name from II with regId: $regId and transId: $txId")

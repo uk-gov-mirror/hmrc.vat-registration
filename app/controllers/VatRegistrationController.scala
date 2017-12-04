@@ -28,12 +28,17 @@ import play.api.mvc.{Action, AnyContent, Result}
 import repositories.RegistrationMongoFormats.encryptedFinancials
 import services._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import utils.VATFeatureSwitches
+
+import scala.concurrent.Future
 
 class VatRegistrationController @Inject()(val auth: AuthConnector,
                                           registrationService: RegistrationService,
                                           submissionService: SubmissionService) extends VatRegistrationBaseController {
 
   val errorHandler: (LeftState) => Result = err => err.toResult
+
+  private[controllers] def useMockSubmission: Boolean = VATFeatureSwitches.mockSubmission.enabled
 
   def newVatRegistration: Action[AnyContent] = Action.async {
     implicit request =>
@@ -69,10 +74,14 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
   def submitVATRegistration(id: RegistrationId) : Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
-        submissionService.submitVatRegistration(id).map { ackRefs =>
-          Ok(Json.toJson(ackRefs))
-        } recover {
-          case ex => BadRequest(s"Registration was submitted without full data: ${ex.getMessage}")
+        if (!useMockSubmission) {
+          submissionService.submitVatRegistration(id).map { ackRefs =>
+            Ok(Json.toJson(ackRefs))
+          } recover {
+            case ex => BadRequest(s"Registration was submitted without full data: ${ex.getMessage}")
+          }
+        } else {
+          Future.successful(Ok(Json.toJson("BRVT000000" + id)))
         }
       }
   }
@@ -80,7 +89,11 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
   def getAcknowledgementReference(id: RegistrationId): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
-        submissionService.assertOrGenerateAcknowledgementReference(id).fold(errorHandler, ackRefNumber => Ok(Json.toJson(ackRefNumber)))
+        if (!useMockSubmission) {
+          submissionService.getAcknowledgementReference(id).fold(errorHandler, ackRefNumber => Ok(Json.toJson(ackRefNumber)))
+        } else {
+          Future.successful(Ok(Json.toJson("BRVT000000" + id)))
+        }
       }
   }
 

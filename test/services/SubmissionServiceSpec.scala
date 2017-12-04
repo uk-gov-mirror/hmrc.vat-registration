@@ -52,27 +52,23 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
 
   implicit val hc = HeaderCarrier()
 
-  "call to assertOrGenerateAcknowledgementReference" should {
+  "call to getAcknowledgementReference" should {
 
     val vatScheme = VatScheme(RegistrationId("1"), None, None, None, status = VatRegStatus.draft)
 
     "return Success response " in new Setup {
-
       when(mockVatRegistrationService.retrieveAcknowledgementReference(regId)).
         thenReturn(ServiceMocks.serviceResult(ackRefNumber))
-      service.assertOrGenerateAcknowledgementReference(regId) returnsRight ackRefNumber
+
+      service.getAcknowledgementReference(regId) returnsRight ackRefNumber
     }
 
     "return ResourceNotFound response " in new Setup {
-      val sequenceNo = 1
-      val formatedRefNumber = f"BRPY$sequenceNo%011d"
+      val resourceNotFound = ResourceNotFound("Resource Not Found for regId 1")
       when(mockVatRegistrationService.retrieveAcknowledgementReference(RegistrationId(anyString()))(ArgumentMatchers.any()))
-        .thenReturn(ServiceMocks.serviceError[String](ResourceNotFound("Resource Not Found for regId 1")))
-      when(mockSequenceRepository.getNext(ArgumentMatchers.eq("AcknowledgementID"))(ArgumentMatchers.any())).thenReturn(sequenceNo.pure)
-      when(mockVatRegistrationService.saveAcknowledgementReference(RegistrationId(anyString()), anyString())(ArgumentMatchers.any()))
-        .thenReturn(ServiceMocks.serviceResult(formatedRefNumber))
+        .thenReturn(ServiceMocks.serviceError[String](resourceNotFound))
 
-      service.assertOrGenerateAcknowledgementReference(regId) returnsRight formatedRefNumber
+      service.getAcknowledgementReference(regId) returnsLeft resourceNotFound
     }
   }
 
@@ -273,28 +269,28 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
         .thenReturn(Future.successful(Some(vatScheme)))
 
-      await(service.buildDesSubmission("regId", "ackRef", "companyName", date)) shouldBe desSubmission
+      await(service.buildDesSubmission(regId, "ackRef", "companyName", date)) shouldBe desSubmission
     }
 
     "throw a MissingRegDocument exception when there is no registration in mongo" in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
         .thenReturn(Future.successful(None))
 
-      intercept[MissingRegDocument](await(service.buildDesSubmission("regId", "ackRef", "companyName", LocalDate.now())))
+      intercept[MissingRegDocument](await(service.buildDesSubmission(regId, "ackRef", "companyName", LocalDate.now())))
     }
 
     "throw a NoTradingDetails exception when the vat scheme doesn't contain trading details" in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
         .thenReturn(Future.successful(Some(vatSchemeNoTradingDetails)))
 
-      intercept[NoTradingDetails](await(service.buildDesSubmission("regId", "ackRef", "companyName", LocalDate.now())))
+      intercept[NoTradingDetails](await(service.buildDesSubmission(regId, "ackRef", "companyName", LocalDate.now())))
     }
 
     "throw a NoVatStartDate exception when the vat schemes trading details doesn't contain a vat start date" in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
         .thenReturn(Future.successful(Some(vatSchemeNoStartDate)))
 
-      intercept[NoVatStartDate](await(service.buildDesSubmission("regId", "ackRef", "companyName", LocalDate.now())))
+      intercept[NoVatStartDate](await(service.buildDesSubmission(regId, "ackRef", "companyName", LocalDate.now())))
     }
   }
 }
