@@ -17,16 +17,16 @@ package api
 
 import java.time.LocalDate
 
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, post, stubFor, urlMatching}
+import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import common.RegistrationId
+import enums.VatRegStatus
 import itutil.{ITFixtures, IntegrationStubbing, WiremockHelper}
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.FakeApplication
 import play.api.test.Helpers._
 import repositories.RegistrationMongoRepository
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -168,13 +168,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
       )
     )
 
-    "return an Ok if the submission is successful for the regID" in {
-      given
-        .user.isAuthorised
-
-      mockGetTransID()
-      mockIncorpUpdate()
-
+    def mockGetCompanyProfile(): StubMapping =
       stubFor(get(urlMatching(s"/incorporation-information/$transID/company-profile"))
         .willReturn(
           aResponse()
@@ -182,6 +176,16 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
             .withBody(returnedFromII)
         )
       )
+
+    "return an Ok if the submission is successful for the regID" in {
+      given
+        .user.isAuthorised
+
+      System.setProperty("feature.mockSubmission", "false")
+
+      mockGetTransID()
+      mockIncorpUpdate()
+      mockGetCompanyProfile()
 
       stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
         .willReturn(
@@ -197,6 +201,9 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
       )
       result.status shouldBe OK
 
+      val reg = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
+      reg.get.status shouldBe VatRegStatus.submitted
+
       await(repo.remove("registrationId" -> registrationID))
     }
 
@@ -204,16 +211,11 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
       given
         .user.isAuthorised
 
+      System.setProperty("feature.mockSubmission", "false")
+
       mockGetTransID()
       mockIncorpUpdate()
-
-      stubFor(get(urlMatching(s"/incorporation-information/$transID/company-profile"))
-        .willReturn(
-          aResponse()
-            .withStatus(200)
-            .withBody(returnedFromII)
-        )
-      )
+      mockGetCompanyProfile()
 
       stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
         .willReturn(
@@ -229,7 +231,22 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
       )
       result.status shouldBe 400
 
+      val reg = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
+      reg.get.status shouldBe VatRegStatus.draft
+
       await(repo.remove("registrationId" -> registrationID))
+    }
+
+    "mock the return if the mock submission flag is on" in {
+      given
+        .user.isAuthorised
+
+      System.setProperty("feature.mockSubmission", "true")
+
+      val result = await(client(
+        controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
+      )
+      result.status shouldBe OK
     }
   }
 }
