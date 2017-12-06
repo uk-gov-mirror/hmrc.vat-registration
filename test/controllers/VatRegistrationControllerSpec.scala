@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package controller
+package controllers
 
 import common.RegistrationId
 import common.exceptions.UpdateFailed
@@ -221,6 +221,14 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         ServiceMocks.mockGetAcknowledgementReferenceExistsError()
         controller.getAcknowledgementReference(regId)(FakeRequest()) returnsStatus CONFLICT
       }
+
+      "return the fake acknowledgement reference for a regID if mock submission is enabled" in new Setup {
+        System.setProperty("feature.mockSubmission", "true")
+
+        val result = controller.getAcknowledgementReference(regId)(FakeRequest())
+        result returnsStatus OK
+        result returnsJson Json.toJson("BRVT000000" + regId)
+      }
     }
 
     "Calling getDocumentStatus" should {
@@ -293,6 +301,8 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       ServiceMocks.mockRetrieveVatScheme(regId, vatScheme)
       val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
 
+      System.setProperty("feature.mockSubmission", "false")
+
       when(mockSubmissionService.submitVatRegistration(idMatcher)(ArgumentMatchers.any[HeaderCarrier]()))
         .thenReturn(Future.failed(new Exception("missing data")))
 
@@ -306,6 +316,8 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       ServiceMocks.mockRetrieveVatScheme(regId, vatScheme)
       val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
 
+      System.setProperty("feature.mockSubmission", "false")
+
       when(mockSubmissionService.submitVatRegistration(idMatcher)(ArgumentMatchers.any[HeaderCarrier]()))
         .thenReturn(Future.successful("BRVT00000000001"))
 
@@ -313,6 +325,15 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
       status(response) shouldBe Status.OK
       jsonBodyOf(await(response)) shouldBe Json.toJson("BRVT00000000001")
+    }
+
+    "return an Ok response with fake ack ref for a mock submission" in new Setup {
+      System.setProperty("feature.mockSubmission", "true")
+
+      val response = controller.submitVATRegistration(regId)(FakeRequest())
+
+      status(response) shouldBe Status.OK
+      jsonBodyOf(await(response)) shouldBe Json.toJson(s"BRVT000000$regId")
     }
   }
 

@@ -17,7 +17,8 @@
 package repository
 
 import common.exceptions._
-import common.{LogicalGroup, RegistrationId}
+import common.{LogicalGroup, RegistrationId, TransactionId}
+import enums.VatRegStatus
 import itutil.{FutureAssertions, ITFixtures}
 import models.{AcknowledgementReferencePath, VatBankAccountPath}
 import org.scalatest.BeforeAndAfterEach
@@ -144,6 +145,69 @@ class RegistrationMongoRepositoryISpec
       } yield updatedScheme.lodgingOfficer.get.ivPassed
 
       await(result) shouldBe true
+    }
+  }
+
+  "Calling prepareRegistrationSubmission" should {
+    val testAckRef = "testAckRef"
+    "update the vat scheme with the provided ackref" in new Setup {
+      val result = for {
+        insert                <- repository.insert(vatScheme)
+        update                <- repository.prepareRegistrationSubmission(vatScheme.id, testAckRef)
+        Some(updatedScheme)   <- repository.retrieveVatScheme(vatScheme.id)
+      } yield updatedScheme.acknowledgementReference
+
+      await(result).get shouldBe testAckRef
+    }
+  }
+
+  "Calling finishRegistrationSubmission" should {
+    "update the vat scheme to submitted with the provided ackref" in new Setup {
+      val result = for {
+        insert                <- repository.insert(vatScheme)
+        update                <- repository.finishRegistrationSubmission(vatScheme.id, VatRegStatus.submitted)
+        Some(updatedScheme)   <- repository.retrieveVatScheme(vatScheme.id)
+      } yield updatedScheme.status
+
+      await(result) shouldBe VatRegStatus.submitted
+    }
+
+    "update the vat scheme to held with the provided ackref" in new Setup {
+      val result = for {
+        insert                <- repository.insert(vatScheme)
+        update                <- repository.finishRegistrationSubmission(vatScheme.id, VatRegStatus.held)
+        Some(updatedScheme)   <- repository.retrieveVatScheme(vatScheme.id)
+      } yield updatedScheme.status
+
+      await(result) shouldBe VatRegStatus.held
+    }
+  }
+
+  "Calling saveTransId" should {
+    "store the transaction id provided into the specified vat scheme document" in new Setup {
+      val testTransId = "testTransId"
+
+      val result = for {
+        insert                <- repository.insert(vatScheme)
+        update                <- repository.saveTransId(testTransId, vatScheme.id)
+        Some(updatedScheme)   <- repository.retrieveVatScheme(vatScheme.id)
+      } yield updatedScheme.transactionId
+
+      await(result).get shouldBe TransactionId(testTransId)
+    }
+  }
+
+  "Calling fetchRegIdByTxId" should {
+    "retrieve the vat scheme by transactionid" in new Setup {
+      val testTransId = "testTransId"
+
+      val result = for {
+        insert                <- repository.insert(vatScheme)
+        update                <- repository.saveTransId(testTransId, vatScheme.id)
+        Some(updatedScheme)   <- repository.fetchRegByTxId(testTransId)
+      } yield updatedScheme
+
+      await(result) shouldBe vatScheme.copy(transactionId = Some(TransactionId(testTransId)))
     }
   }
 }

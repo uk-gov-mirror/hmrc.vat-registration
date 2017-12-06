@@ -111,7 +111,7 @@ class IncorporationInformationConnectorSpec extends VatRegSpec with VatRegistrat
   "IncorpStatusRequest" should {
 
     "be serialised to JSON" in {
-      val expectedJson = """{"SCRSIncorpSubscription":{"callbackUrl":"someUrl/vat-registration/incorporation-data"}}"""
+      val expectedJson = """{"SCRSIncorpSubscription":{"callbackUrl":"someUrl/vatreg/incorporation-data"}}"""
       Json.toJson(IncorpStatusRequest("someUrl"))(IncorpStatusRequest.writes).toString() shouldBe expectedJson
     }
     

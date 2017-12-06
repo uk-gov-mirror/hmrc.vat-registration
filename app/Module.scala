@@ -30,6 +30,7 @@ class Module extends AbstractModule {
     bind(classOf[connectors.BusinessRegistrationConnector]).to(classOf[connectors.VatRegBusinessRegistrationConnector])
     bind(classOf[connectors.IncorporationInformationConnector]).to(classOf[connectors.VatRegIncorporationInformationConnector ])
     bind(classOf[services.RegistrationService]).to(classOf[services.VatRegistrationService])
+    bind(classOf[controllers.ProcessIncorporationsController]).to(classOf[controllers.ProcessIncorporationsControllerImp])
     bindConstant().annotatedWith(Names.named("collectionName")).to("registration-information")
   }
 }

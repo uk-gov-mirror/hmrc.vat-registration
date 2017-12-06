@@ -159,6 +159,16 @@ case object VatStatusPath extends ElementPath {
   override val name = "status"
 }
 
+case object VatTransIdPath extends ElementPath {
+  override val path = "transactionId"
+  override val name = "transactionId"
+}
+
+case object VatRegIdPath extends ElementPath {
+  override val path = "registrationId"
+  override val name = "registrationId"
+}
+
 case object VatFlatRateSchemePath extends ElementPath {
   override val path = "vatFlatRateScheme"
   override val name = "vat-flat-rate-scheme"

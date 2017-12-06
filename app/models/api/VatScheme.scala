@@ -16,26 +16,28 @@
 
 package models.api
 
-import common.RegistrationId
+import common.{RegistrationId, TransactionId}
 import enums.VatRegStatus
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class VatScheme(id: RegistrationId,
-                      tradingDetails: Option[VatTradingDetails] = None,
-                      lodgingOfficer: Option[VatLodgingOfficer] = None,
-                      financials: Option[VatFinancials] = None,
-                      vatSicAndCompliance: Option[VatSicAndCompliance] = None,
-                      vatContact: Option[VatContact] = None,
-                      vatEligibility: Option[VatServiceEligibility] = None,
-                      acknowledgementReference: Option[String] = None,
-                      vatFlatRateScheme: Option[VatFlatRateScheme] = None,
-                      status: VatRegStatus.Value)
+                     transactionId: Option[TransactionId] = None,
+                     tradingDetails: Option[VatTradingDetails] = None,
+                     lodgingOfficer: Option[VatLodgingOfficer] = None,
+                     financials: Option[VatFinancials] = None,
+                     vatSicAndCompliance: Option[VatSicAndCompliance] = None,
+                     vatContact: Option[VatContact] = None,
+                     vatEligibility: Option[VatServiceEligibility] = None,
+                     acknowledgementReference: Option[String] = None,
+                     vatFlatRateScheme: Option[VatFlatRateScheme] = None,
+                     status: VatRegStatus.Value)
 
 object VatScheme {
 
   def reads(implicit r: Reads[VatFinancials]): Reads[VatScheme] = (
     (__ \ "registrationId").read[RegistrationId] and
+    (__ \ "transactionId").readNullable[TransactionId] and
     (__ \ "tradingDetails").readNullable[VatTradingDetails] and
     (__ \ "lodgingOfficer").readNullable[VatLodgingOfficer] and
     (__ \ "financials").readNullable[VatFinancials](r) and
@@ -49,6 +51,7 @@ object VatScheme {
 
   def writes(implicit w: Writes[VatFinancials]): OWrites[VatScheme] = (
     (__ \ "registrationId").write[RegistrationId] and
+    (__ \ "transactionId").writeNullable[TransactionId] and
     (__ \ "tradingDetails").writeNullable[VatTradingDetails] and
     (__ \ "lodgingOfficer").writeNullable[VatLodgingOfficer] and
     (__ \ "financials").writeNullable[VatFinancials](w) and

@@ -19,7 +19,7 @@ package connectors
 import javax.inject.Singleton
 
 import config.{MicroserviceAuditConnector, WSHttp}
-import models.submission.DESSubmission
+import models.submission.{DESSubmission, TopUpSubmission}
 import play.api.libs.json.Writes
 import uk.gov.hmrc.play.config.ServicesConfig
 
@@ -32,6 +32,8 @@ import uk.gov.hmrc.http.logging.Authorization
 class DESConnector extends DESConnect with ServicesConfig {
   lazy val desStubUrl: String = baseUrl("des-stub")
   lazy val desStubURI: String = getConfString("des-stub.uri", "")
+  lazy val desStubTopUpUrl: String = baseUrl("des-stub")
+  lazy val desStubTopUpURI: String = getConfString("des-stub.uri", "")
 
   lazy val urlHeaderEnvironment: String = getConfString("des-service.environment", throw new Exception("could not find config value for des-service.environment"))
   lazy val urlHeaderAuthorization: String = s"Bearer ${getConfString("des-service.authorization-token",
@@ -45,6 +47,8 @@ trait DESConnect extends HttpErrorFunctions {
 
   val desStubUrl: String
   val desStubURI: String
+  val desStubTopUpUrl: String
+  val desStubTopUpURI: String
 
   val urlHeaderEnvironment: String
   val urlHeaderAuthorization: String
@@ -58,8 +62,16 @@ trait DESConnect extends HttpErrorFunctions {
     }
   }
 
+  def submitTopUpToDES(submission: TopUpSubmission, regId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    val url = s"$desStubTopUpUrl/$desStubTopUpURI"
+    vatPOST[TopUpSubmission, HttpResponse](url, submission) map { resp =>
+      resp
+    }
+  }
+
   @inline
-  private def vatPOST[I, O](url: String, body: I, headers: Seq[(String, String)] = Seq.empty)(implicit wts: Writes[I], rds: HttpReads[O], hc: HeaderCarrier, ec: ExecutionContext) =
+  private def vatPOST[I, O](url: String, body: I, headers: Seq[(String, String)] = Seq.empty)
+                           (implicit wts: Writes[I], rds: HttpReads[O], hc: HeaderCarrier, ec: ExecutionContext) =
     http.POST[I, O](url, body, headers)(wts = wts, rds = rds, hc = createHeaderCarrier(hc), ec = ec)
 
   private def createHeaderCarrier(headerCarrier: HeaderCarrier): HeaderCarrier = {

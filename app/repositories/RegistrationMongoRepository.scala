@@ -44,9 +44,11 @@ trait RegistrationRepository {
   def deleteVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[Boolean]
   def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String]
   def prepareRegistrationSubmission(id: RegistrationId, ackRef : String)(implicit hc: HeaderCarrier): Future[Boolean]
-  def finishRegistrationSubmission(id : RegistrationId)(implicit hc : HeaderCarrier) : Future[Boolean]
+  def finishRegistrationSubmission(id : RegistrationId, status : VatRegStatus.Value)(implicit hc : HeaderCarrier) : Future[VatRegStatus.Value]
   def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit hc: HeaderCarrier): Future[Boolean]
   def updateIVStatus(regId: String, ivStatus: Boolean)(implicit hc: HeaderCarrier): Future[Boolean]
+  def saveTransId(transId: String, regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String]
+  def fetchRegByTxId(transId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]]
 }
 
 
@@ -70,6 +72,7 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
   import cats.instances.future._
 
   private[repositories] def ridSelector(id: RegistrationId) = BSONDocument("registrationId" -> BSONString(id.value))
+  private[repositories] def tidSelector(id: String) = BSONDocument("transactionId" -> id)
   private def regIdSelector(regId: String)                  = BSONDocument("registrationId" -> regId)
 
   override def indexes: Seq[Index] = Seq(
@@ -135,12 +138,24 @@ class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("col
     collection.update(ridSelector(id), BSONDocument("$set" -> modifier)).map(_.ok)
   }
 
-  override def finishRegistrationSubmission(id : RegistrationId)(implicit hc: HeaderCarrier) : Future[Boolean] = {
+  override def finishRegistrationSubmission(id : RegistrationId, status: VatRegStatus.Value)(implicit hc: HeaderCarrier) : Future[VatRegStatus.Value] = {
     val modifier = BSONFormats.toBSON(Json.obj(
-      VatStatusPath.path -> VatRegStatus.submitted
+      VatStatusPath.path -> status
     )).get
 
-    collection.update(ridSelector(id), BSONDocument("$set" -> modifier)).map(_.ok)
+    collection.update(ridSelector(id), BSONDocument("$set" -> modifier)).map(_ => status)
+  }
+
+  override def saveTransId(transId: String, regId: RegistrationId)(implicit hc: HeaderCarrier) : Future[String] = {
+    val modifier = BSONFormats.toBSON(Json.obj(
+      VatTransIdPath.path -> transId
+    )).get
+
+    collection.update(ridSelector(regId), BSONDocument("$set" -> modifier)).map(_ => transId)
+  }
+
+  override def fetchRegByTxId(transId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
+    collection.find(tidSelector(transId)).one[VatScheme]
   }
 
   override def updateIVStatus(regId: String, ivStatus: Boolean)(implicit hc: HeaderCarrier): Future[Boolean] = {

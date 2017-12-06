@@ -18,7 +18,7 @@ package connectors
 
 import javax.inject.{Inject, Singleton}
 
-import common.RegistrationId
+import common.{RegistrationId, TransactionId}
 import config.WSHttp
 import play.api.Logger
 import uk.gov.hmrc.play.config.ServicesConfig
