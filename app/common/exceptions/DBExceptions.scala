@@ -16,7 +16,7 @@
 
 package common.exceptions
 
-import common.RegistrationId
+import common.{RegistrationId, TransactionId}
 
 import scala.util.control.NoStackTrace
 
@@ -24,34 +24,14 @@ sealed trait DBExceptions {
   val id: RegistrationId
 }
 
-case class NoTradingDetails(msg: String) extends NoStackTrace {
-  override def getMessage: String = msg
-}
-
-case class NoVatStartDate(msg: String) extends NoStackTrace {
-  override def getMessage: String = msg
-}
-
-case class InvalidSubmissionStatus(msg: String) extends NoStackTrace {
-  override def getMessage: String = msg
-}
-
-case class NoTransactionId(msg: String) extends NoStackTrace {
-  override def getMessage: String = msg
-}
-
-case class NoIncorpUpdate(msg: String) extends NoStackTrace {
-  override def getMessage: String = msg
-}
-
-case class NoCompanyName(msg: String) extends NoStackTrace {
-  override def getMessage: String = msg
-}
-
-case class NoIncorpDate(msg: String) extends NoStackTrace {
-  override def getMessage: String = msg
-}
-
+case class NoTradingDetails(msg: String) extends NoStackTrace
+case class InvalidSubmissionStatus(msg: String) extends NoStackTrace
+case class UnknownIncorpStatus(msg: String) extends NoStackTrace
+case class NoTransactionId(msg: String) extends NoStackTrace
+case class NoRegIdException(msg: String) extends NoStackTrace
+case class NoCompanyName(msg: String) extends NoStackTrace
+case class NoIncorpDate(msg: String) extends NoStackTrace
+case class NoVatSchemeWithTransId(id: TransactionId) extends NoStackTrace
 case class MissingRegDocument(id: RegistrationId) extends NoStackTrace with DBExceptions
 case class UpdateFailed(id: RegistrationId, attemptedModel: String) extends NoStackTrace with DBExceptions
 case class InsertFailed(id: RegistrationId, attemptedModel: String) extends NoStackTrace with DBExceptions

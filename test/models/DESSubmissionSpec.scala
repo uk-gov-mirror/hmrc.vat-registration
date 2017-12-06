@@ -36,17 +36,34 @@ class DESSubmissionSpec extends JsonFormatValidation {
         """.stripMargin
   )
 
+  val partialJson = Json.parse(
+    s"""
+       |{
+       |  "acknowledgementReference" : "ackRef",
+       |  "companyName" : "compName"
+       |}
+        """.stripMargin
+  )
+
   val testDesSubmission = DESSubmission(
     acknowledgementReference = "ackRef",
     companyName = "compName",
-    vatStartDate = date,
-    incorpDate = date
+    vatStartDate = Some(date),
+    incorpDate = Some(date)
   )
 
+  val testDesPartialSubmission = DESSubmission(
+    acknowledgementReference = "ackRef",
+    companyName = "compName"
+  )
 
   "Converting a DESSubmission model into JSON" should {
     "complete successfully from a model" in {
       Json.toJson[DESSubmission](testDesSubmission) shouldBe fullJson
+    }
+
+    "complete successfully from a partial model" in {
+      Json.toJson[DESSubmission](testDesPartialSubmission) shouldBe partialJson
     }
   }
 

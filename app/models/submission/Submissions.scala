@@ -18,21 +18,37 @@ package models.submission
 
 import java.time.LocalDate
 
+import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.functional.syntax.unlift
 import play.api.libs.json.{Writes, __}
 
 case class DESSubmission(acknowledgementReference: String,
                          companyName: String,
-                         vatStartDate: LocalDate,
-                         incorpDate: LocalDate)
+                         vatStartDate: Option[LocalDate] = None,
+                         incorpDate: Option[LocalDate] = None)
 
 object DESSubmission {
   implicit val writes: Writes[DESSubmission] =
     (
       (__ \ "acknowledgementReference").write[String] and
         (__ \ "companyName").write[String] and
-        (__ \ "vatStartDate").write[LocalDate] and
-        (__ \ "incorpDate").write[LocalDate]
+        (__ \ "vatStartDate").writeNullable[LocalDate] and
+        (__ \ "incorpDate").writeNullable[LocalDate]
       )(unlift(DESSubmission.unapply))
+}
+
+case class TopUpSubmission(acknowledgementReference: String,
+                         status: String,
+                         vatStartDate: Option[LocalDate] = None,
+                         incorpDate: Option[DateTime] = None)
+
+object TopUpSubmission {
+  implicit val writes: Writes[TopUpSubmission] =
+    (
+      (__ \ "acknowledgementReference").write[String] and
+        (__ \ "status").write[String] and
+        (__ \ "vatStartDate").writeNullable[LocalDate] and
+        (__ \ "incorpDate").writeNullable[DateTime]
+      )(unlift(TopUpSubmission.unapply))
 }

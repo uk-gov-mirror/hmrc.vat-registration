@@ -28,7 +28,7 @@ trait ITFixtures {
 
   val date = LocalDate.of(2017, 1, 1)
   val regId = RegistrationId("123")
-  val vatScheme = VatScheme(regId, status = VatRegStatus.draft)
+  val vatScheme = VatScheme(regId, None, status = VatRegStatus.draft)
   val vatChoice = VatChoice(vatStartDate = VatStartDate(selection = "COMPANY_REGISTRATION_DATE", startDate = Some(date)))
   val tradingName = TradingName(selection = true, Some("some-trading-name"))
   val changeOfName = ChangeOfName(true, Some(FormerName("", LocalDate.now())))

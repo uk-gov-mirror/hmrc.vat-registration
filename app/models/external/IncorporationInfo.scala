@@ -18,6 +18,7 @@ package models.external
 
 import java.time.{Instant, LocalDate, ZoneId}
 
+import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -67,3 +68,25 @@ object IncorporationStatus {
     )(IncorporationStatus.apply _)
   }
 }
+
+case class IncorpStatus(transactionId: String,
+                        status: String,
+                        crn: Option[String],
+                        description: Option[String],
+                        incorporationDate: Option[DateTime]){
+
+//  def toIncorpUpdate: IncorpUpdate = {
+//    IncorpUpdate(transactionId, status, crn, incorporationDate, "N/A", description)
+//  }
+}
+
+object IncorpStatus {
+  implicit val reads = (
+    ( __ \ "SCRSIncorpStatus" \ "IncorpSubscriptionKey" \ "transactionId").read[String] and
+      ( __ \ "SCRSIncorpStatus" \ "IncorpStatusEvent" \ "status").read[String] and
+      ( __ \ "SCRSIncorpStatus" \ "IncorpStatusEvent" \ "crn").readNullable[String] and
+      ( __ \ "SCRSIncorpStatus" \ "IncorpStatusEvent" \ "description").readNullable[String] and
+      ( __ \ "SCRSIncorpStatus" \ "IncorpStatusEvent" \ "incorporationDate").readNullable[DateTime]
+    )(IncorpStatus.apply _)
+}
+

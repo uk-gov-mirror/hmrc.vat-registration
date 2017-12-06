@@ -19,7 +19,8 @@ package connectors
 import java.time.LocalDate
 
 import helpers.VatRegSpec
-import models.submission.DESSubmission
+import models.submission.{DESSubmission, TopUpSubmission}
+import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
@@ -40,12 +41,16 @@ class DesConnectorSpec extends VatRegSpec with BeforeAndAfter {
       override val http = realmockHttp
       override val desStubURI      = "testStubURI"
       override val desStubUrl      = "desStubURL"
+      override val desStubTopUpUrl = "desStubTopUpURL"
+      override val desStubTopUpURI = "testStubTopUpURI"
       override val urlHeaderEnvironment   = "env"
       override val urlHeaderAuthorization = "auth"
     }
   }
 
-  val validDesSubmission = DESSubmission("AckRef", "CompanyName", LocalDate.of(2017, 1, 1), LocalDate.of(2017, 1, 1))
+  val validDesSubmission = DESSubmission("AckRef", "CompanyName", Some(LocalDate.of(2017, 1, 1)), Some(LocalDate.of(2017, 1, 1)))
+  val validTopUpAcceptedSubmission = TopUpSubmission("AckRef", "accepted", Some(LocalDate.of(2017, 1, 1)), Some(DateTime.now()))
+  val validTopUpRejectedSubmission = TopUpSubmission("AckRef", "rejected")
   val upstream4xx = Upstream4xxResponse("400", 400, 400)
 
   def mockHttpPOST[I, O](url: String, thenReturn: O): OngoingStubbing[Future[O]] = {
@@ -75,5 +80,20 @@ class DesConnectorSpec extends VatRegSpec with BeforeAndAfter {
     }
   }
 
+  "submitTopUpDES" should {
+    "successfully POST with an accepted DES TopUpSubmission Model" in new SetupWithProxy {
+      mockHttpPOST[TopUpSubmission, HttpResponse](s"${connector.desStubTopUpUrl}/${connector.desStubTopUpURI}", HttpResponse(202))
+      await(connector.submitTopUpToDES(validTopUpAcceptedSubmission, "regId"))
+    }
 
+    "successfully POST with a rejected DES TopUpSubmission Model" in new SetupWithProxy {
+      mockHttpPOST[TopUpSubmission, HttpResponse](s"${connector.desStubTopUpUrl}/${connector.desStubTopUpURI}", HttpResponse(202))
+      await(connector.submitTopUpToDES(validTopUpRejectedSubmission, "regId"))
+    }
+
+    "handle a failed POST" in new SetupWithProxy {
+      mockHttpFailedPOST[TopUpSubmission, HttpResponse](s"${connector.desStubTopUpUrl}/${connector.desStubTopUpURI}", upstream4xx)
+      intercept[Upstream4xxResponse](await(connector.submitTopUpToDES(validTopUpAcceptedSubmission, "regId")))
+    }
+  }
 }

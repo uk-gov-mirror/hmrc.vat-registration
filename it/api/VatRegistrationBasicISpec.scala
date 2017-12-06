@@ -168,6 +168,14 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
       )
     )
 
+    def mockNoIncorpUpdate(): StubMapping =
+      stubFor(post(urlMatching(s"/incorporation-information/subscribe/$transID/regime/$regime/subscriber/$subscriber"))
+        .willReturn(
+          aResponse()
+            .withStatus(202)
+        )
+      )
+
     def mockGetCompanyProfile(): StubMapping =
       stubFor(get(urlMatching(s"/incorporation-information/$transID/company-profile"))
         .willReturn(
@@ -203,6 +211,36 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
 
       val reg = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
       reg.get.status shouldBe VatRegStatus.submitted
+
+      await(repo.remove("registrationId" -> registrationID))
+    }
+
+    "return an Ok if the submission is successful for a partial unincorped company regID" in {
+      given
+        .user.isAuthorised
+
+      System.setProperty("feature.mockSubmission", "false")
+
+      mockGetTransID()
+      mockNoIncorpUpdate()
+      mockGetCompanyProfile()
+
+      stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
+        .willReturn(
+          aResponse()
+            .withStatus(202)
+        )
+      )
+
+      repo.createNewVatScheme(RegistrationId(registrationID)).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), tradingDetails))
+
+      val result = await(client(
+        controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
+      )
+      result.status shouldBe OK
+
+      val reg = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
+      reg.get.status shouldBe VatRegStatus.held
 
       await(repo.remove("registrationId" -> registrationID))
     }
