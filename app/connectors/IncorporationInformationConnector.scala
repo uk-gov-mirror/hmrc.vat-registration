@@ -48,7 +48,7 @@ object IncorpStatusRequest {
   implicit val writes: Writes[IncorpStatusRequest] = Writes(
     isr => Json.obj(
       "SCRSIncorpSubscription" -> Json.obj(
-        "callbackUrl" -> s"${isr.callbackUrl}/vat-registration/incorporation-data"
+        "callbackUrl" -> s"${isr.callbackUrl}/vatreg/incorporation-data"
       )
     )
   )
