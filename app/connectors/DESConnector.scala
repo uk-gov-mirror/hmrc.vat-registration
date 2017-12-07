@@ -16,7 +16,7 @@
 
 package connectors
 
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
 
 import config.{MicroserviceAuditConnector, WSHttp}
 import models.submission.{DESSubmission, TopUpSubmission}
@@ -29,7 +29,7 @@ import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging.Authorization
 
 @Singleton
-class DESConnector extends DESConnect with ServicesConfig {
+class DESConnector @Inject()() extends DESConnect with ServicesConfig {
   lazy val desStubUrl: String = baseUrl("des-stub")
   lazy val desStubURI: String = getConfString("des-stub.uri", "")
   lazy val desStubTopUpUrl: String = baseUrl("des-stub")

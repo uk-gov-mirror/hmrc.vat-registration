@@ -18,9 +18,9 @@ package repositories
 
 import javax.inject.{Inject, Singleton}
 
-import com.google.inject.ImplementedBy
 import models.api.Sequence
 import play.api.libs.json.JsValue
+import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.DB
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -31,14 +31,18 @@ import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import scala.concurrent.Future
 import scala.util.control.NoStackTrace
 
-@ImplementedBy(classOf[SequenceMongoRepository])
-trait SequenceRepository extends Repository[Sequence, BSONObjectID] {
-  def getNext(sequenceID: String)(implicit hc: HeaderCarrier): Future[Int]
+@Singleton
+class SequenceMongo @Inject()(mongo: ReactiveMongoComponent) extends ReactiveMongoFormats {
+  val store = new SequenceMongoRepository(mongo.mongoConnector.db)
 }
 
-@Singleton
+trait SequenceRepository extends Repository[Sequence, BSONObjectID]{
+  def getNext(sequenceID: String)(implicit hc : HeaderCarrier): Future[Int]
+}
+
 class SequenceMongoRepository @Inject()(mongo: () => DB)
-  extends ReactiveRepository[Sequence, BSONObjectID]("sequence", mongo, Sequence.formats, ReactiveMongoFormats.objectIdFormats) with SequenceRepository {
+  extends ReactiveRepository[Sequence, BSONObjectID]("sequence", mongo, Sequence.formats, ReactiveMongoFormats.objectIdFormats)
+    with SequenceRepository {
 
   def getNext(sequenceID: String)(implicit hc: HeaderCarrier): Future[Int] = {
     val selector = BSONDocument("_id" -> sequenceID)

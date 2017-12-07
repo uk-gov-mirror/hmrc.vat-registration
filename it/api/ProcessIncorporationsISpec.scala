@@ -25,7 +25,8 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.FakeApplication
 import play.api.test.Helpers._
-import repositories.RegistrationMongoRepository
+import play.modules.reactivemongo.ReactiveMongoComponent
+import repositories.{RegistrationMongo, RegistrationMongoRepository, SequenceMongo, SequenceMongoRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -50,10 +51,22 @@ class ProcessIncorporationsISpec extends IntegrationStubbing with ITFixtures {
     "microservice.services.incorporation-information.uri" -> "/incorporation-information"
   ))
 
-  lazy val repo = app.injector.instanceOf(classOf[RegistrationMongoRepository])
+  lazy val reactiveMongoComponent = app.injector.instanceOf[ReactiveMongoComponent]
   lazy val ws   = app.injector.instanceOf(classOf[WSClient])
 
   private def client(path: String) = ws.url(s"http://localhost:$port$path").withFollowRedirects(false)
+
+  class Setup {
+    val mongo = new RegistrationMongo(reactiveMongoComponent)
+    val sequenceMongo = new SequenceMongo(reactiveMongoComponent)
+    val repo: RegistrationMongoRepository = mongo.store
+    val sequenceRepository: SequenceMongoRepository = sequenceMongo.store
+
+    await(repo.drop)
+    await(repo.ensureIndexes)
+    await(sequenceRepository.drop)
+    await(sequenceRepository.ensureIndexes)
+  }
 
   "/incorporation-data" should {
     val transactionId: String = "transId"
@@ -61,7 +74,7 @@ class ProcessIncorporationsISpec extends IntegrationStubbing with ITFixtures {
     val registrationID = "regId"
     val regIDCase = RegistrationId(registrationID)
 
-    def prepareHeldSubmission(): Future[Unit] = {
+    def prepareHeldSubmission(repo : RegistrationMongoRepository): Future[Unit] = {
       for {
         _    <- repo.createNewVatScheme(regIDCase)
         _    <- repo.updateLogicalGroup(regIDCase, tradingDetails)
@@ -72,7 +85,7 @@ class ProcessIncorporationsISpec extends IntegrationStubbing with ITFixtures {
       }
     }
 
-    "return an Ok if the accepted top up succeeds" in {
+    "return an Ok if the accepted top up succeeds" in new Setup() {
       stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
         .willReturn(
           aResponse()
@@ -80,7 +93,7 @@ class ProcessIncorporationsISpec extends IntegrationStubbing with ITFixtures {
         )
       )
 
-      await(prepareHeldSubmission())
+      await(prepareHeldSubmission(repo))
 
       val json = Json.parse(
         s"""
@@ -114,7 +127,7 @@ class ProcessIncorporationsISpec extends IntegrationStubbing with ITFixtures {
 
     }
 
-    "return an Ok if the rejected top up succeeds" in {
+    "return an Ok if the rejected top up succeeds" in new Setup() {
       stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
         .willReturn(
           aResponse()
@@ -122,7 +135,7 @@ class ProcessIncorporationsISpec extends IntegrationStubbing with ITFixtures {
         )
       )
 
-      await(prepareHeldSubmission())
+      await(prepareHeldSubmission(repo))
 
       val json = Json.parse(
         s"""
@@ -155,7 +168,7 @@ class ProcessIncorporationsISpec extends IntegrationStubbing with ITFixtures {
       await(repo.remove("registrationId" -> registrationID))
     }
 
-    "return a 400 status when DES returns a 4xx" in {
+    "return a 400 status when DES returns a 4xx" in new Setup() {
       stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
         .willReturn(
           aResponse()
@@ -163,7 +176,7 @@ class ProcessIncorporationsISpec extends IntegrationStubbing with ITFixtures {
         )
       )
 
-      await(prepareHeldSubmission())
+      await(prepareHeldSubmission(repo))
 
       val json = Json.parse(
         s"""

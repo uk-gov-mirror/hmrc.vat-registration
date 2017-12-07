@@ -18,6 +18,7 @@ package services
 
 import common.RegistrationId
 import common.exceptions._
+import connectors.BusinessRegistrationConnector
 import enums.VatRegStatus
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
@@ -28,14 +29,18 @@ import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import play.api.libs.json.Json
+import repositories.RegistrationRepository
 
 import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
 
 class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
-  trait Setup {
-    val service = new VatRegistrationService(mockBusRegConnector, mockRegistrationRepository)
+  class Setup {
+    val service = new VatRegistrationService {
+      override val registrationRepository: RegistrationRepository = mockRegistrationRepository
+      override val brConnector: BusinessRegistrationConnector = mockBusRegConnector
+    }
   }
 
   implicit val hc = HeaderCarrier()

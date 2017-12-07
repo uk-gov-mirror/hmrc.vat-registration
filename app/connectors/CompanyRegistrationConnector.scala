@@ -29,7 +29,7 @@ import uk.gov.hmrc.http._
 
 @Singleton
 class CompanyRegistrationConnector @Inject()() extends CompanyRegistrationConnect with ServicesConfig{
-  val compRegUrl = baseUrl("company-registration")
+  lazy val compRegUrl = baseUrl("company-registration")
   val http: CoreGet = WSHttp
 }
 

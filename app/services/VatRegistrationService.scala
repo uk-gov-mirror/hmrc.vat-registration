@@ -16,7 +16,7 @@
 
 package services
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 
 import cats.data.{EitherT, OptionT}
 import cats.instances.FutureInstances
@@ -24,31 +24,27 @@ import cats.syntax.ApplicativeSyntax
 import common.exceptions._
 import common.{LogicalGroup, RegistrationId}
 import connectors._
-import enums.VatRegStatus
 import models.api.VatScheme
 import models.external.CurrentProfile
-import models.{AcknowledgementReferencePath, ElementPath, VatStatusPath}
+import models.{AcknowledgementReferencePath, ElementPath}
 import play.api.libs.json.{JsValue, Json, Writes}
-import repositories.RegistrationRepository
+import repositories.{RegistrationMongo, RegistrationRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.Future
 
-trait RegistrationService {
-  def createNewRegistration()(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme]
-  def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[VatScheme]
-  def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G)(implicit hc: HeaderCarrier): ServiceResult[G]
-  def deleteVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[Boolean]
-  def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit hc: HeaderCarrier): ServiceResult[Boolean]
-  def retrieveAcknowledgementReference(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[String]
-  def saveAcknowledgementReference(id: RegistrationId, ackRef: String)(implicit hc: HeaderCarrier): ServiceResult[String]
-  def getStatus(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[JsValue]
-  def updateIVStatus(regId: String, ivStatus: Boolean)(implicit hc: HeaderCarrier): Future[Boolean]
+@Singleton
+class RegistrationService @Inject()(brConn: BusinessRegistrationConnector,
+                                   regMongo: RegistrationMongo) extends VatRegistrationService {
+  override val registrationRepository: RegistrationRepository = regMongo.store
+  override val brConnector: BusinessRegistrationConnector = brConn
 }
 
-class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnector,
-                                       registrationRepository: RegistrationRepository) extends RegistrationService with ApplicativeSyntax with FutureInstances {
+trait VatRegistrationService extends ApplicativeSyntax with FutureInstances {
+
+  val registrationRepository : RegistrationRepository
+  val brConnector : BusinessRegistrationConnector
 
   private def repositoryErrorHandler[T]: PartialFunction[Throwable, Either[LeftState, T]] = {
     case e: MissingRegDocument  => Left(ResourceNotFound(s"No registration found for registration ID: ${e.id}"))
@@ -68,7 +64,7 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
 
   import cats.syntax.either._
 
-  override def saveAcknowledgementReference(id: RegistrationId, ackRef: String)(implicit hc: HeaderCarrier): ServiceResult[String] =
+  def saveAcknowledgementReference(id: RegistrationId, ackRef: String)(implicit hc: HeaderCarrier): ServiceResult[String] =
     OptionT(registrationRepository.retrieveVatScheme(id)).toRight(ResourceNotFound(s"VatScheme ID: $id missing"))
       .flatMap(vs => vs.acknowledgementReference match {
         case Some(ar) =>
@@ -77,7 +73,7 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
           EitherT.liftT(registrationRepository.updateByElement(id, AcknowledgementReferencePath, ackRef))
       })
 
-  override def getStatus(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[JsValue] =
+  def getStatus(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[JsValue] =
     toEitherT(registrationRepository.retrieveVatScheme(id) map {
       case Some(registration) => {
         val json = Json.obj("status" -> registration.status)
@@ -88,28 +84,28 @@ class VatRegistrationService @Inject()(brConnector: BusinessRegistrationConnecto
       case None => throw MissingRegDocument(id)
     })
 
-  override def createNewRegistration()(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme] =
+  def createNewRegistration()(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme] =
     for {
       profile <- EitherT(brConnector.retrieveCurrentProfile)
       vatScheme <- EitherT(getOrCreateVatScheme(profile))
     } yield vatScheme
 
-  override def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[VatScheme] =
+  def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[VatScheme] =
     OptionT(registrationRepository.retrieveVatScheme(id)).toRight(ResourceNotFound(id.value))
 
-  override def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G)(implicit hc: HeaderCarrier): ServiceResult[G] =
+  def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G)(implicit hc: HeaderCarrier): ServiceResult[G] =
     toEitherT(registrationRepository.updateLogicalGroup(id, group))
 
-  override def deleteVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[Boolean] =
+  def deleteVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[Boolean] =
     toEitherT(registrationRepository.deleteVatScheme(id))
 
-  override def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit hc: HeaderCarrier): ServiceResult[Boolean] =
+  def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit hc: HeaderCarrier): ServiceResult[Boolean] =
     toEitherT(registrationRepository.deleteByElement(id, elementPath))
 
-  override def retrieveAcknowledgementReference(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[String] =
+  def retrieveAcknowledgementReference(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[String] =
     retrieveVatScheme(id).subflatMap(_.acknowledgementReference.toRight(ResourceNotFound("AcknowledgementId")))
 
-  override def updateIVStatus(regId: String, ivStatus: Boolean)(implicit hc: HeaderCarrier): Future[Boolean] = {
+  def updateIVStatus(regId: String, ivStatus: Boolean)(implicit hc: HeaderCarrier): Future[Boolean] = {
     registrationRepository.updateIVStatus(regId, ivStatus)
   }
 

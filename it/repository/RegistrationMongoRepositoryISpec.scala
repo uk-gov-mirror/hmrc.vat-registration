@@ -19,11 +19,11 @@ package repository
 import common.exceptions._
 import common.{LogicalGroup, RegistrationId, TransactionId}
 import enums.VatRegStatus
-import itutil.{FutureAssertions, ITFixtures}
+import itutil.{FutureAssertions, ITFixtures, MongoBaseSpec}
 import models.{AcknowledgementReferencePath, VatBankAccountPath}
 import org.scalatest.BeforeAndAfterEach
 import play.api.libs.json.Writes
-import repositories.{MongoDBProvider, RegistrationMongoRepository}
+import repositories.RegistrationMongo
 import uk.gov.hmrc.mongo.MongoSpecSupport
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
@@ -31,10 +31,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class RegistrationMongoRepositoryISpec
-  extends UnitSpec with MongoSpecSupport with FutureAssertions with BeforeAndAfterEach with WithFakeApplication with ITFixtures {
+  extends UnitSpec with MongoBaseSpec with MongoSpecSupport with FutureAssertions with BeforeAndAfterEach with WithFakeApplication with ITFixtures {
 
   class Setup {
-    val repository = new RegistrationMongoRepository(new MongoDBProvider(), "integration-testing")
+    val mongo = new RegistrationMongo(reactiveMongoComponent)
+    val repository = mongo.store
 
     protected def updateLogicalGroup[G: LogicalGroup : Writes](g: G, rid: RegistrationId = regId): Future[G] =
       repository.updateLogicalGroup(rid, g)

@@ -21,7 +21,7 @@ import net.ceedubs.ficus.Ficus._
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.{Application, Configuration, Play}
 import play.api.libs.concurrent.Execution.defaultContext
-import repositories.{RegistrationMongoRepository, RegistrationRepository}
+import repositories.{RegistrationMongo, RegistrationMongoRepository, RegistrationRepository}
 import uk.gov.hmrc.play.auth.controllers.AuthParamsControllerConfig
 import uk.gov.hmrc.play.auth.microservice.filters.AuthorisationFilter
 import uk.gov.hmrc.play.config.{AppName, ControllerConfig, RunMode}
@@ -71,9 +71,8 @@ object MicroserviceGlobal extends DefaultMicroserviceGlobal with RunMode with Mi
   private val logger: Logger = LoggerFactory.getLogger(getClass)
 
   override def onStart(app : play.api.Application) : scala.Unit = {
-    val iRepo = app.injector.instanceOf[RegistrationRepository]
-    val repo  = iRepo.asInstanceOf[RegistrationMongoRepository]
-
+    lazy val iRepo = app.injector.instanceOf[RegistrationMongo]
+    lazy val repo = iRepo.store
     repo.collection.indexesManager.list() map { indexes =>
       logger.info("[Startup] Outputting current indexes")
       indexes foreach { index =>

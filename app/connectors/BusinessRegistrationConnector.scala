@@ -28,7 +28,7 @@ import scala.concurrent.Future
 
 class VatRegBusinessRegistrationConnector extends BusinessRegistrationConnector with ServicesConfig {
   //$COVERAGE-OFF$
-  val businessRegUrl = baseUrl("business-registration")
+  lazy val businessRegUrl = baseUrl("business-registration")
   val http: CoreGet  = WSHttp
   //$COVERAGE-ON$
 }

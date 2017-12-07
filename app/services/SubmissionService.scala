@@ -38,13 +38,15 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 @Singleton
-class SubmissionService @Inject()(val sequenceRepository: SequenceRepository,
+class SubmissionService @Inject()(val sequenceMongo: SequenceMongo,
                                   val vatRegistrationService: VatRegistrationService,
-                                  val registrationRepository: RegistrationRepository,
+                                  val registrationMongo: RegistrationMongo,
                                   val companyRegistrationConnector: CompanyRegistrationConnector,
                                   val desConnector: DESConnector,
                                   val incorporationInformationConnector : IncorporationInformationConnector) extends SubmissionSrv {
   val auditConnector = MicroserviceAuditConnector
+  val registrationRepository = registrationMongo.store
+  val sequenceRepository = sequenceMongo.store
 }
 
 trait SubmissionSrv extends FutureInstances {

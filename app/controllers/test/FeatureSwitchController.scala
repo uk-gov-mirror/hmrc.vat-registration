@@ -16,7 +16,7 @@
 
 package controllers.test
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.play.microservice.controller.BaseController
@@ -24,10 +24,7 @@ import utils.{BooleanFeatureSwitch, FeatureSwitch, VATFeatureSwitches}
 
 import scala.concurrent.Future
 
-@Singleton
-class FeatureSwitchController extends FeatureSwitchCtrl
-
-trait FeatureSwitchCtrl extends BaseController {
+class FeatureSwitchController @Inject()() extends BaseController {
 
   val fs =  FeatureSwitch
 
