@@ -16,7 +16,7 @@
 
 package services
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 
 import cats.data.{EitherT, OptionT}
 import cats.instances.FutureInstances
@@ -24,27 +24,36 @@ import cats.syntax.ApplicativeSyntax
 import common.exceptions._
 import common.{LogicalGroup, RegistrationId}
 import connectors._
+import enums.VatRegStatus
 import models.api.VatScheme
 import models.external.CurrentProfile
 import models.{AcknowledgementReferencePath, ElementPath}
+import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsValue, Json, Writes}
 import repositories.{RegistrationMongo, RegistrationRepository}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.Future
 
-@Singleton
-class RegistrationService @Inject()(brConn: BusinessRegistrationConnector,
-                                   regMongo: RegistrationMongo) extends VatRegistrationService {
+class VatRegistrationService @Inject()(val brConnector: BusinessRegistrationConnector,
+                                       regMongo: RegistrationMongo) extends RegistrationService with ServicesConfig {
   override val registrationRepository: RegistrationRepository = regMongo.store
-  override val brConnector: BusinessRegistrationConnector = brConn
+  override lazy val vatRestartUrl = getString("api.vatRestartURL")
+  override lazy val vatCancelUrl  = getString("api.vatCancelURL")
 }
 
-trait VatRegistrationService extends ApplicativeSyntax with FutureInstances {
+trait RegistrationService extends ApplicativeSyntax with FutureInstances {
+  val registrationRepository: RegistrationRepository
+  val brConnector: BusinessRegistrationConnector
 
-  val registrationRepository : RegistrationRepository
-  val brConnector : BusinessRegistrationConnector
+  val vatRestartUrl: String
+  val vatCancelUrl: String
+
+  private val cancelStatuses: Seq[VatRegStatus.Value] = Seq(VatRegStatus.draft, VatRegStatus.invalid)
+
+  private val logger = LoggerFactory.getLogger(getClass)
 
   private def repositoryErrorHandler[T]: PartialFunction[Throwable, Either[LeftState, T]] = {
     case e: MissingRegDocument  => Left(ResourceNotFound(s"No registration found for registration ID: ${e.id}"))
@@ -73,16 +82,36 @@ trait VatRegistrationService extends ApplicativeSyntax with FutureInstances {
           EitherT.liftT(registrationRepository.updateByElement(id, AcknowledgementReferencePath, ackRef))
       })
 
-  def getStatus(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[JsValue] =
-    toEitherT(registrationRepository.retrieveVatScheme(id) map {
-      case Some(registration) => {
-        val json = Json.obj("status" -> registration.status)
-        val ackRef = registration.acknowledgementReference.fold(Json.obj())(ackRef => Json.obj("ackRef" -> ackRef))
+  def getStatus(regId: RegistrationId)(implicit hc: HeaderCarrier): Future[JsValue] = {
+    registrationRepository.retrieveVatScheme(regId) map {
+      case Some(registration) =>
+        //TODO: Refactor with API changes
+        val lastUpdate = registration.status match {
+          case VatRegStatus.held                                 => "TIMESTAMP" //Partial timestamp
+          case VatRegStatus.submitted                            => "TIMESTAMP" //Full timestamp
+          case VatRegStatus.cancelled                            => "TIMESTAMP" //Last modified
+          case VatRegStatus.acknowledged | VatRegStatus.rejected => "TIMESTAMP" //Acknowledged timestamp
+          case _                                                 => "TIMESTAMP" //Form creation timestamp
+        }
 
-        json ++ ackRef
-      }
-      case None => throw MissingRegDocument(id)
-    })
+        val base = Json.obj(
+          "status"     -> registration.status
+          //"lastUpdate" -> lastUpdate
+        )
+
+        val ackRef = registration.acknowledgementReference.fold(Json.obj())(ref => Json.obj("ackRef" -> ref))
+
+        val vrn = Json.obj() //Placeholder for VRN
+
+        val restartUrl = if(registration.status.equals(VatRegStatus.rejected)) Json.obj("restartURL" -> vatRestartUrl) else Json.obj()
+        val cancelUrl  = if(cancelStatuses.contains(registration.status)) Json.obj("cancelURL" -> vatCancelUrl.replace(":regID", regId.value)) else Json.obj()
+
+        base ++ ackRef ++ restartUrl ++ cancelUrl
+      case None =>
+        logger.warn(s"[getStatus] - No VAT registration document found for ${regId.value}")
+        throw new MissingRegDocument(regId)
+    }
+  }
 
   def createNewRegistration()(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme] =
     for {
@@ -96,8 +125,17 @@ trait VatRegistrationService extends ApplicativeSyntax with FutureInstances {
   def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G)(implicit hc: HeaderCarrier): ServiceResult[G] =
     toEitherT(registrationRepository.updateLogicalGroup(id, group))
 
-  def deleteVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteVatScheme(id))
+  def deleteVatScheme(regId: String, validStatuses: VatRegStatus.Value*)(implicit hc: HeaderCarrier): Future[Boolean] = {
+    for {
+      someDocument <- registrationRepository.retrieveVatScheme(RegistrationId(regId))
+      document     <- someDocument.fold(throw new MissingRegDocument(RegistrationId(regId)))(doc => Future.successful(doc))
+      deleted      <- if(validStatuses.contains(document.status)) {
+        registrationRepository.deleteVatScheme(regId)
+      } else {
+        throw new InvalidSubmissionStatus(s"[deleteVatScheme] - VAT reg doc for regId $regId was not deleted as the status was ${document.status}; not ${validStatuses.toString}")
+      }
+    } yield deleted
+  }
 
   def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit hc: HeaderCarrier): ServiceResult[Boolean] =
     toEitherT(registrationRepository.deleteByElement(id, elementPath))
@@ -108,6 +146,4 @@ trait VatRegistrationService extends ApplicativeSyntax with FutureInstances {
   def updateIVStatus(regId: String, ivStatus: Boolean)(implicit hc: HeaderCarrier): Future[Boolean] = {
     registrationRepository.updateIVStatus(regId, ivStatus)
   }
-
-  //TODO ResourceNotFound review if appropriate
 }

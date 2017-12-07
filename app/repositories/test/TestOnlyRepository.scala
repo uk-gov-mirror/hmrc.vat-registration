@@ -57,5 +57,3 @@ class TestOnlyMongoRepository (mongo: () => DB)
 
   // $COVERAGE-ON$
 }
-
-

@@ -19,8 +19,9 @@ package controllers
 import javax.inject.Inject
 
 import common.RegistrationId
-import common.exceptions.{LeftState, ResourceNotFound}
+import common.exceptions.{InvalidSubmissionStatus, LeftState, MissingRegDocument, ResourceNotFound}
 import connectors.AuthConnector
+import enums.VatRegStatus
 import models.ElementPath
 import models.api._
 import play.api.libs.json._
@@ -97,22 +98,28 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
       }
   }
 
-  def deleteVatScheme(id: RegistrationId): Action[AnyContent] = Action.async {
+  def deleteVatScheme(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
-        registrationService.deleteVatScheme(id).fold(errorHandler, removed => Ok(Json.toJson(removed)))
+        registrationService.deleteVatScheme(regId, VatRegStatus.draft, VatRegStatus.rejected) map { deleted =>
+          if(deleted) Ok else InternalServerError
+        } recover {
+          case _: InvalidSubmissionStatus => PreconditionFailed
+        }
       }
   }
 
   def getDocumentStatus(id: RegistrationId): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
-        val customErrorHandler: (LeftState) => Result = {
-          case ResourceNotFound(msg) => NotFound(msg)
-          case err => err.toResult
+        registrationService.getStatus(id) map { statusJson =>
+          Ok(statusJson)
+        } recover {
+          case _: MissingRegDocument => NotFound
+          case e                     =>
+            logger.error(s"[getDocumentStatus] - There was a problem getting the document status for regId: ${id.value}", e)
+            InternalServerError
         }
-
-        registrationService.getStatus(id).fold(customErrorHandler, status => Ok(Json.toJson(status)))
       }
   }
 
