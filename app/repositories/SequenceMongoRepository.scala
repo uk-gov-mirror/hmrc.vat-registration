@@ -40,7 +40,7 @@ trait SequenceRepository extends Repository[Sequence, BSONObjectID]{
   def getNext(sequenceID: String)(implicit hc : HeaderCarrier): Future[Int]
 }
 
-class SequenceMongoRepository @Inject()(mongo: () => DB)
+class SequenceMongoRepository (mongo: () => DB)
   extends ReactiveRepository[Sequence, BSONObjectID]("sequence", mongo, Sequence.formats, ReactiveMongoFormats.objectIdFormats)
     with SequenceRepository {
 

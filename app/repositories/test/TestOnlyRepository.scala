@@ -16,22 +16,31 @@
 
 package repositories.test
 
-import javax.inject.{Inject, Named}
+import javax.inject.Inject
 
 import models.api.VatScheme
+import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.Future
 
-class TestOnlyMongoRepository @Inject()(mongoProvider: Function0[DB], @Named("collectionName") collectionName: String)
+class TestOnlyMongo @Inject()(mongo: ReactiveMongoComponent) extends ReactiveMongoFormats {
+  val store = new TestOnlyMongoRepository(mongo.mongoConnector.db)
+}
+
+trait TestOnlyRepository {
+  def dropCollection(implicit hc: HeaderCarrier): Future[Unit]
+}
+class TestOnlyMongoRepository (mongo: () => DB)
   extends ReactiveRepository[VatScheme, BSONObjectID](
-    collectionName = collectionName,
-    mongo = mongoProvider,
+    collectionName = "test",
+    mongo = mongo,
     domainFormat = VatScheme.format) with TestOnlyRepository {
 
   // $COVERAGE-OFF$
@@ -49,7 +58,4 @@ class TestOnlyMongoRepository @Inject()(mongoProvider: Function0[DB], @Named("co
   // $COVERAGE-ON$
 }
 
-trait TestOnlyRepository {
-  def dropCollection(implicit hc: HeaderCarrier): Future[Unit]
-}
 
