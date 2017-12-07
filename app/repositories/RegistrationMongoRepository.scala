@@ -25,7 +25,7 @@ import enums.VatRegStatus
 import models._
 import models.api.{VatBankAccountMongoFormat, VatFinancials, VatScheme}
 import play.api.libs.json.{Json, OFormat, Writes}
-import play.modules.reactivemongo.MongoDbConnection
+import play.modules.reactivemongo.{MongoDbConnection, ReactiveMongoComponent}
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
@@ -36,6 +36,10 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.Future
+
+class RegistrationMongo @Inject()(mongo: ReactiveMongoComponent) extends ReactiveMongoFormats {
+  lazy val store = new RegistrationMongoRepository(mongo.mongoConnector.db)
+}
 
 trait RegistrationRepository {
   def createNewVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[VatScheme]
@@ -57,15 +61,10 @@ object RegistrationMongoFormats extends ReactiveMongoFormats {
   val vatSchemeFormat: OFormat[VatScheme] = OFormat(VatScheme.reads(encryptedFinancials), VatScheme.writes(encryptedFinancials))
 }
 
-// this is here for Guice dependency injection of `() => DB`
-class MongoDBProvider extends (() => DB) with MongoDbConnection {
-  def apply: DB = db()
-}
-
-class RegistrationMongoRepository @Inject()(mongoProvider: () => DB, @Named("collectionName") collectionName: String)
+class RegistrationMongoRepository (mongo: () => DB)
   extends ReactiveRepository[VatScheme, BSONObjectID](
-    collectionName = collectionName,
-    mongo = mongoProvider,
+    collectionName = "registration-information",
+    mongo = mongo,
     domainFormat = RegistrationMongoFormats.vatSchemeFormat
   ) with RegistrationRepository {
 

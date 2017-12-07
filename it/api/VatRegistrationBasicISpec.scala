@@ -26,7 +26,8 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.FakeApplication
 import play.api.test.Helpers._
-import repositories.RegistrationMongoRepository
+import play.modules.reactivemongo.ReactiveMongoComponent
+import repositories.{RegistrationMongo, RegistrationMongoRepository, SequenceMongo, SequenceMongoRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -52,7 +53,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
     "microservice.services.incorporation-information.uri" -> "/incorporation-information"
   ))
 
-  lazy val repo = app.injector.instanceOf(classOf[RegistrationMongoRepository])
+  lazy val reactiveMongoComponent = app.injector.instanceOf[ReactiveMongoComponent]
   lazy val ws   = app.injector.instanceOf(classOf[WSClient])
 
   private def client(path: String) = ws.url(s"http://localhost:$port$path").withFollowRedirects(false)
@@ -60,6 +61,18 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
   val transID = "transID"
   val crn = "crn"
   val accepted = "accepted"
+
+  class Setup {
+    val mongo = new RegistrationMongo(reactiveMongoComponent)
+    val sequenceMongo = new SequenceMongo(reactiveMongoComponent)
+    val repo: RegistrationMongoRepository = mongo.store
+    val sequenceRepository: SequenceMongoRepository = sequenceMongo.store
+
+    await(repo.drop)
+    await(repo.ensureIndexes)
+    await(sequenceRepository.drop)
+    await(sequenceRepository.ensureIndexes)
+  }
 
   def incorpUpdate(status: String) = {
     s"""
@@ -117,7 +130,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
   }
 
   "/:regId/update-iv-status" should {
-    "return an Ok" in {
+    "return an Ok" in new Setup() {
       given
         .user.isAuthorised
 
@@ -185,7 +198,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
         )
       )
 
-    "return an Ok if the submission is successful for the regID" in {
+    "return an Ok if the submission is successful for the regID" in new Setup() {
       given
         .user.isAuthorised
 
@@ -215,7 +228,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
       await(repo.remove("registrationId" -> registrationID))
     }
 
-    "return an Ok if the submission is successful for a partial unincorped company regID" in {
+    "return an Ok if the submission is successful for a partial unincorped company regID" in new Setup() {
       given
         .user.isAuthorised
 
@@ -245,7 +258,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
       await(repo.remove("registrationId" -> registrationID))
     }
 
-    "return a 400 status when DES returns a 4xx" in {
+    "return a 400 status when DES returns a 4xx" in new Setup() {
       given
         .user.isAuthorised
 

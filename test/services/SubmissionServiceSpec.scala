@@ -22,6 +22,7 @@ import cats.instances.FutureInstances
 import cats.syntax.ApplicativeSyntax
 import common.{RegistrationId, TransactionId}
 import common.exceptions._
+import connectors.{CompanyRegistrationConnector, DESConnector, IncorporationInformationConnector}
 import enums.VatRegStatus
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
@@ -34,22 +35,25 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito._
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.OK
+import repositories.{RegistrationRepository, SequenceRepository}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with ApplicativeSyntax with FutureInstances {
+  class Setup {
+    val service = new SubmissionSrv {
+      override val vatRegistrationService: VatRegistrationService = mockVatRegistrationService
+      override val companyRegistrationConnector: CompanyRegistrationConnector = mockCompanyRegConnector
+      override val desConnector: DESConnector = mockDesConnector
+      override val incorporationInformationConnector: IncorporationInformationConnector = mockIIConnector
+      override val auditConnector: AuditConnector = mock[AuditConnector]
 
-  trait Setup {
-    val service = new SubmissionService(
-      mockSequenceRepository,
-      mockVatRegistrationService,
-      mockRegistrationRepository,
-      mockCompanyRegConnector,
-      mockDesConnector,
-      mockIIConnector
-    )
+      override val sequenceRepository: SequenceRepository = mockSequenceRepository
+      override val registrationRepository: RegistrationRepository = mockRegistrationRepository
+    }
   }
 
   implicit val hc = HeaderCarrier()

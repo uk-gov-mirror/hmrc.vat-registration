@@ -16,18 +16,17 @@
 
 package controllers
 
-import javax.inject.Inject
-
-import services.SubmissionService
+import javax.inject.{Inject, Singleton}
 
 import models.external.IncorpStatus
 import play.api.libs.json.JsValue
 import play.api.mvc.Action
-
-import uk.gov.hmrc.play.microservice.controller.BaseController
+import services.SubmissionService
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import uk.gov.hmrc.play.microservice.controller.BaseController
 
-class ProcessIncorporationsControllerImp @Inject()(val submissionService: SubmissionService) extends ProcessIncorporationsController
+@Singleton
+class ProcessIncorporationsControllerImpl @Inject()(val submissionService: SubmissionService) extends ProcessIncorporationsController
 
 trait ProcessIncorporationsController extends BaseController {
 
