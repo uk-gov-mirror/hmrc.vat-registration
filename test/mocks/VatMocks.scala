@@ -33,7 +33,7 @@ import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import repositories.test.TestOnlyRepository
-import repositories.{RegistrationMongo, RegistrationRepository, SequenceMongo, SequenceRepository}
+import repositories._
 import services.{RegistrationService, ServiceResult, SubmissionService, VatRegistrationService}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost}
 import utils.VATFeatureSwitches
@@ -50,6 +50,7 @@ trait VatMocks extends WSHTTPMock {
   lazy val mockAuthorisationResource = mock[AuthorisationResource[String]]
   lazy val mockBusRegConnector = mock[BusinessRegistrationConnector]
   lazy val mockRegistrationRepository = mock[RegistrationRepository]
+  lazy val mockRegistrationMongoRepository = mock[RegistrationMongoRepository]
   lazy val mockRegistrationMongo = mock[RegistrationMongo]
   lazy val mockTestOnlyRepo = mock[TestOnlyRepository]
   lazy val mockHttp = mock[HttpGet with HttpPost]

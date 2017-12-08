@@ -5,7 +5,7 @@ POST         /incorporation-data                    controllers.ProcessIncorpora
 
 GET          /:regId/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regId: RegistrationId)
 
-PATCH        /:regID/trading-details                controllers.VatRegistrationController.updateTradingDetails(regID: RegistrationId)
+PATCH        /:regID/trading-details                controllers.VatRegistrationController.updateVatTradingDetails(regID: RegistrationId)
 PATCH        /:regID/vat-financials                 controllers.VatRegistrationController.updateVatFinancials(regID: RegistrationId)
 PATCH        /:regID/sic-and-compliance             controllers.VatRegistrationController.updateSicAndCompliance(regID: RegistrationId)
 PATCH        /:regID/vat-contact                    controllers.VatRegistrationController.updateVatContact(regID: RegistrationId)

@@ -17,19 +17,21 @@
 package controllers
 
 import common.RegistrationId
-import common.exceptions.{MissingRegDocument, UpdateFailed}
-import controllers.VatRegistrationController
+import common.exceptions.MissingRegDocument
+import common.exceptions.UpdateFailed
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models._
 import models.api._
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Results.Accepted
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.any
 import play.api.http.Status
+import play.api.mvc.Result
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -52,7 +54,13 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
 
   class Setup {
-    val controller = new VatRegistrationController(mockAuthConnector, mockRegistrationService, mockSubmissionService)
+    val controller = new VatRegistrationController(
+      mockAuthConnector,
+      mockRegistrationService,
+      mockSubmissionService,
+      mockRegistrationMongo
+    )
+
     AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
   }
 
@@ -111,20 +119,39 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
     }
 
-    "updateTradingDetails" should {
+    "updateVatTradingDetails" should {
 
       val fakeRequest = FakeRequest().withBody(Json.toJson(tradingDetails))
 
       "call updateTradingDetails return ACCEPTED" in new Setup {
         ServiceMocks.mockSuccessfulUpdateLogicalGroup(tradingDetails)
-        controller.updateTradingDetails(regId)(fakeRequest) returns Accepted(Json.toJson(tradingDetails))
+        controller.updateVatTradingDetails(regId)(fakeRequest) returns Accepted(Json.toJson(tradingDetails))
       }
 
       "call updateTradingDetails return ServiceUnavailable" in new Setup {
         ServiceMocks.mockServiceUnavailableUpdateLogicalGroup(tradingDetails, exception)
-        controller.updateTradingDetails(regId)(fakeRequest) returnsStatus SERVICE_UNAVAILABLE
+        controller.updateVatTradingDetails(regId)(fakeRequest) returnsStatus SERVICE_UNAVAILABLE
       }
+    }
 
+    "updateTradingDetails" should {
+
+      val registrationId = "reg-12345"
+      val tradingName = "testTradingName"
+      val tradingDetails = TradingDetails(Some("testTradingName"), Some(true))
+
+      when(mockRegistrationMongo.store).thenReturn(mockRegistrationMongoRepository)
+
+      "return a 200 if the update to mongo is successful" in new Setup {
+        when(mockRegistrationMongoRepository.updateTradingDetails(any(), any())(any()))
+          .thenReturn(Future.successful(tradingDetails))
+
+        val request: FakeRequest[JsObject] = FakeRequest().withBody(Json.obj("tradingName" -> tradingName, "eoriRequested" -> true))
+
+        val result: Result = controller.updateTradingDetails(registrationId)(request)
+
+        status(result) shouldBe OK
+      }
     }
 
     "updateSicAndCompliance" should {

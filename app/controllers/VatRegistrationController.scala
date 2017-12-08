@@ -26,6 +26,7 @@ import models.ElementPath
 import models.api._
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, Result}
+import repositories.{RegistrationMongo, RegistrationMongoRepository}
 import repositories.RegistrationMongoFormats.encryptedFinancials
 import services._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
@@ -35,7 +36,10 @@ import scala.concurrent.Future
 
 class VatRegistrationController @Inject()(val auth: AuthConnector,
                                           registrationService: RegistrationService,
-                                          submissionService: SubmissionService) extends VatRegistrationBaseController {
+                                          submissionService: SubmissionService,
+                                          registrationMongo: RegistrationMongo) extends VatRegistrationBaseController {
+
+  val registrationRepository: RegistrationMongoRepository = registrationMongo.store
 
   val errorHandler: (LeftState) => Result = err => err.toResult
 
@@ -60,7 +64,17 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
     patch[VatFinancials](registrationService, id)
   }
 
-  def updateTradingDetails(id: RegistrationId): Action[JsValue] = patch[VatTradingDetails](registrationService, id)
+  @deprecated
+  def updateVatTradingDetails(id: RegistrationId): Action[JsValue] = patch[VatTradingDetails](registrationService, id)
+
+  def updateTradingDetails(regId: String): Action[JsValue] = Action.async(parse.json) {
+    implicit request =>
+      authenticated { _ =>
+        withJsonBody[TradingDetails]{ tradingDetails =>
+          registrationRepository.updateTradingDetails(regId, tradingDetails) map ( _ => Ok)
+        }
+      }
+  }
 
   def updateSicAndCompliance(id: RegistrationId): Action[JsValue] = patch[VatSicAndCompliance](registrationService, id)
 
