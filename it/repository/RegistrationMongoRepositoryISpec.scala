@@ -20,22 +20,28 @@ import common.exceptions._
 import common.{LogicalGroup, RegistrationId, TransactionId}
 import enums.VatRegStatus
 import itutil.{FutureAssertions, ITFixtures, MongoBaseSpec}
+import models.api.TradingDetails
 import models.{AcknowledgementReferencePath, VatBankAccountPath}
 import org.scalatest.BeforeAndAfterEach
-import play.api.libs.json.Writes
-import repositories.RegistrationMongo
+import play.api.libs.json._
+import reactivemongo.api.commands.WriteResult
+import repositories.{RegistrationMongo, RegistrationMongoRepository}
 import uk.gov.hmrc.mongo.MongoSpecSupport
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class RegistrationMongoRepositoryISpec
-  extends UnitSpec with MongoBaseSpec with MongoSpecSupport with FutureAssertions with BeforeAndAfterEach with WithFakeApplication with ITFixtures {
+class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with MongoSpecSupport
+  with FutureAssertions with BeforeAndAfterEach with WithFakeApplication with ITFixtures {
 
   class Setup {
-    val mongo = new RegistrationMongo(reactiveMongoComponent)
-    val repository = mongo.store
+    val mongo: RegistrationMongo = fakeApplication.injector.instanceOf[RegistrationMongo]
+    val repository: RegistrationMongoRepository = mongo.store
+
+    def insert(json: JsObject): WriteResult = await(repository.collection.insert(json))
+    def count: Int = await(repository.count)
+    def fetchAll: Option[JsObject] = await(repository.collection.find(Json.obj()).one[JsObject])
 
     protected def updateLogicalGroup[G: LogicalGroup : Writes](g: G, rid: RegistrationId = regId): Future[G] =
       repository.updateLogicalGroup(rid, g)
@@ -205,6 +211,70 @@ class RegistrationMongoRepositoryISpec
       } yield updatedScheme
 
       await(result) shouldBe vatScheme.copy(transactionId = Some(TransactionId(testTransId)))
+    }
+  }
+
+  "updateTradingDetails" should {
+
+    val registrationId: String = "reg-12345"
+    val tradingName = "testTradingName"
+
+    def vatSchemeJson(regId: String = registrationId): JsObject = Json.parse(
+      s"""
+        |{
+        | "registrationId":"$regId",
+        | "status":"draft"
+        |}
+      """.stripMargin).as[JsObject]
+
+    val vatSchemeWithTradingDetailsJson: JsObject = Json.parse(
+      s"""
+        |{
+        | "registrationId":"$registrationId",
+        | "status":"draft",
+        | "tradingDetails":{
+        |   "tradingName":"$tradingName"
+        | }
+        |}
+      """.stripMargin).as[JsObject]
+
+    val otherRegId = "other-reg-12345"
+    val otherUsersVatScheme = vatSchemeJson(otherRegId)
+
+    val tradingDetails: TradingDetails = TradingDetails(Some(tradingName), None)
+
+    "update the registration doc with the provided trading details" in new Setup {
+      insert(vatSchemeJson())
+
+      await(repository.updateTradingDetails(registrationId, tradingDetails))
+
+      fetchAll without _id shouldBe Some(vatSchemeWithTradingDetailsJson)
+    }
+
+    "not update or insert new data into the registration doc if the supplied details already exist on the doc" in new Setup {
+      insert(vatSchemeWithTradingDetailsJson)
+
+      await(repository.updateTradingDetails(registrationId, tradingDetails))
+
+      fetchAll without _id shouldBe Some(vatSchemeWithTradingDetailsJson)
+    }
+
+    "not update or insert trading details if a registration doc doesn't already exist" in new Setup {
+      count shouldBe 0
+
+      await(repository.updateTradingDetails(registrationId, tradingDetails))
+
+      fetchAll without _id shouldBe None
+    }
+
+    "not update or insert trading details if a registration doc associated with the given reg id doesn't already exist" in new Setup {
+      insert(otherUsersVatScheme)
+
+      fetchAll without _id shouldBe Some(otherUsersVatScheme)
+
+      await(repository.updateTradingDetails(registrationId, tradingDetails))
+
+      fetchAll without _id shouldBe Some(otherUsersVatScheme)
     }
   }
 }

@@ -18,10 +18,19 @@ package models.api
 
 import play.api.libs.json._
 
+@deprecated("Use TradingDetails instead", "07/12/2017")
 case class VatTradingDetails(vatChoice: VatChoice,
                              tradingName: TradingName,
                              euTrading: VatEuTrading)
 
+@deprecated("Use TradingDetails instead", "07/12/2017")
 object VatTradingDetails {
   implicit val format: OFormat[VatTradingDetails] = Json.format[VatTradingDetails]
+}
+
+case class TradingDetails(tradingName: Option[String],
+                          eoriRequested: Option[Boolean])
+
+object TradingDetails {
+  implicit val format: OFormat[TradingDetails] = Json.format[TradingDetails]
 }

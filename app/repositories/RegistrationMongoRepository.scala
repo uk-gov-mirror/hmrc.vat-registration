@@ -23,10 +23,12 @@ import common.exceptions._
 import common.{LogicalGroup, RegistrationId}
 import enums.VatRegStatus
 import models._
-import models.api.{VatBankAccountMongoFormat, VatFinancials, VatScheme}
+import models.api.{TradingDetails, VatBankAccountMongoFormat, VatFinancials, VatScheme}
+import play.api.Logger
 import play.api.libs.json.{Json, OFormat, Writes}
 import play.modules.reactivemongo.{MongoDbConnection, ReactiveMongoComponent}
 import reactivemongo.api.DB
+import reactivemongo.api.commands.UpdateWriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
 import reactivemongo.json.BSONFormats
@@ -35,7 +37,7 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class RegistrationMongo @Inject()(mongo: ReactiveMongoComponent) extends ReactiveMongoFormats {
   lazy val store = new RegistrationMongoRepository(mongo.mongoConnector.db)
@@ -171,6 +173,15 @@ class RegistrationMongoRepository (mongo: () => DB)
       case None =>
         logger.error(s"[updateIVStatus] - No VAT registration could be found for regId ${regId}")
         throw new MissingRegDocument(RegistrationId(regId))
+    }
+  }
+
+  def updateTradingDetails(regId: String, tradingDetails: TradingDetails)(implicit ex: ExecutionContext): Future[TradingDetails] = {
+    val selector = regIdSelector(regId)
+    val update = BSONDocument("$set" -> BSONDocument("tradingDetails" -> Json.toJson(tradingDetails)))
+    collection.update(selector, update) map { updateResult =>
+      Logger.info(s"[TradingDetails] updating trading details for regId : $regId - documents modified : ${updateResult.nModified}")
+      tradingDetails
     }
   }
 }
