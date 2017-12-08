@@ -121,17 +121,19 @@ trait VatMocks extends WSHTTPMock {
         .thenReturn(serviceResult(vatScheme))
     }
 
-    def mockDeleteVatScheme(id: RegistrationId): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
-      when(mockRegistrationService.deleteVatScheme(idMatcher)(ArgumentMatchers.any()))
-        .thenReturn(serviceResult(true))
+    def mockDeleteVatScheme(id: String): Unit = {
+      when(mockRegistrationService.deleteVatScheme(ArgumentMatchers.eq(id), ArgumentMatchers.any())(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(true))
     }
 
-    def mockDeleteVatSchemeThrowsException(id: RegistrationId): Unit = {
-      val exception = new Exception("Exception")
-      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
-      when(mockRegistrationService.deleteVatScheme(idMatcher)(ArgumentMatchers.any()))
-        .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
+    def mockDeleteVatSchemeFail(id: String): Unit = {
+      when(mockRegistrationService.deleteVatScheme(ArgumentMatchers.eq(id), ArgumentMatchers.any())(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(false))
+    }
+
+    def mockDeleteVatSchemeInvalidStatus(id: String): Unit = {
+      when(mockRegistrationService.deleteVatScheme(ArgumentMatchers.eq(id), ArgumentMatchers.any())(ArgumentMatchers.any()))
+        .thenReturn(Future.failed(new InvalidSubmissionStatus("")))
     }
 
     def mockDeleteByElement(id: RegistrationId, elementPath: ElementPath): Unit = {
@@ -186,25 +188,7 @@ trait VatMocks extends WSHTTPMock {
     def mockGetDocumentStatus(json: JsValue): Unit = {
       val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
       when(mockRegistrationService.getStatus(idMatcher)(ArgumentMatchers.any()))
-        .thenReturn(serviceResult(json))
-    }
-
-    def mockGetDocumentStatusForbidden(registrationId: RegistrationId): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
-      when(mockRegistrationService.getStatus(idMatcher)(ArgumentMatchers.any()))
-        .thenReturn(serviceError[JsValue](ForbiddenAccess(s"Forbidden error returned for regID: $registrationId")))
-    }
-
-    def mockGetDocumentStatusServiceUnavailable(exception: Exception): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
-      when(mockRegistrationService.getStatus(idMatcher)(ArgumentMatchers.any()))
-        .thenReturn(serviceError[JsValue](GenericDatabaseError(exception, Some("regId"))))
-    }
-
-    def mockGetDocumentStatusNotFound(registrationId: RegistrationId): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
-      when(mockRegistrationService.getStatus(idMatcher)(ArgumentMatchers.any()))
-        .thenReturn(serviceError[JsValue](ResourceNotFound(s"Document not found for regID: $registrationId")))
+        .thenReturn(Future.successful(json))
     }
 
     def mockGetAcknowledgementReferenceExistsError(): Unit = {
@@ -220,7 +204,5 @@ trait VatMocks extends WSHTTPMock {
       when(mockRegistrationService.updateLogicalGroup(idMatcher, ArgumentMatchers.any[G]())(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
         .thenReturn(serviceError[G](GenericError(exception)))
     }
-
   }
-
 }

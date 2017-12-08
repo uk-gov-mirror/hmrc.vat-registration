@@ -17,7 +17,7 @@
 package controllers
 
 import common.RegistrationId
-import common.exceptions.UpdateFailed
+import common.exceptions.{MissingRegDocument, UpdateFailed}
 import controllers.VatRegistrationController
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
@@ -247,31 +247,28 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         controller.getDocumentStatus(regId)(FakeRequest()) returnsJson json
       }
 
-      "return a Forbidden response if the user is not logged in" in new Setup {
-        ServiceMocks.mockGetDocumentStatusForbidden(regId)
-        controller.getDocumentStatus(regId)(FakeRequest()) returnsStatus FORBIDDEN
-      }
-
-      "return a service unavailable response" in new Setup {
-        ServiceMocks.mockGetDocumentStatusServiceUnavailable(exception)
-        controller.getDocumentStatus(regId)(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
-      }
-
       "return a Not Found response if there is no VAT Registration for the user's ID" in new Setup {
-        ServiceMocks.mockGetDocumentStatusNotFound(regId)
-        controller.getDocumentStatus(regId)(FakeRequest()) returnsStatus NOT_FOUND
+        when(mockRegistrationService.getStatus(RegistrationId(ArgumentMatchers.any()))(ArgumentMatchers.any()))
+          .thenReturn(Future.failed(new MissingRegDocument(RegistrationId(""))))
+
+        status(controller.getDocumentStatus(regId)(FakeRequest())) shouldBe NOT_FOUND
       }
     }
 
     "deleteVatScheme" should {
       "call to deleteVatScheme return Ok with VatScheme" in new Setup {
-        ServiceMocks.mockDeleteVatScheme(regId)
-        controller.deleteVatScheme(regId)(FakeRequest()) returnsStatus OK
+        ServiceMocks.mockDeleteVatScheme("testId")
+        status(controller.deleteVatScheme("testId")(FakeRequest())) shouldBe OK
       }
 
-      "call to deleteVatScheme return ServiceUnavailable" in new Setup {
-        ServiceMocks.mockDeleteVatSchemeThrowsException(regId)
-        controller.deleteVatScheme(regId)(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
+      "call to deleteVatScheme return Internal server error" in new Setup {
+        ServiceMocks.mockDeleteVatSchemeFail("testId")
+        status(controller.deleteVatScheme("testId")(FakeRequest())) shouldBe INTERNAL_SERVER_ERROR
+      }
+
+      "call to deleteVatScheme return Precondition failed" in new Setup {
+        ServiceMocks.mockDeleteVatSchemeInvalidStatus("testId")
+        status(controller.deleteVatScheme("testId")(FakeRequest())) shouldBe PRECONDITION_FAILED
       }
     }
 

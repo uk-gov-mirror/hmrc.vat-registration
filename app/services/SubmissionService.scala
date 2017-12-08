@@ -109,7 +109,7 @@ trait SubmissionSrv extends FutureInstances {
           _           <- registrationRepository.prepareRegistrationSubmission(regId, newAckref)
         } yield newAckref
       )(ar => Future.successful(ar))
-      case _ => throw MissingRegDocument(regId)
+      case _ => throw new MissingRegDocument(regId)
     }
   }
 
@@ -153,9 +153,9 @@ trait SubmissionSrv extends FutureInstances {
     registrationRepository.retrieveVatScheme(regID) map {
       case Some(registration) => registration.status match {
         case VatRegStatus.draft => registration.status.toString
-        case _                  => throw InvalidSubmissionStatus(s"VAT submission status was in a ${registration.status} state")
+        case _                  => throw new InvalidSubmissionStatus(s"VAT submission status was in a ${registration.status} state")
       }
-      case None => throw MissingRegDocument(regID)
+      case None => throw new MissingRegDocument(regID)
     }
   }
 

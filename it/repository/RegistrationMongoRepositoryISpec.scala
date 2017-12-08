@@ -100,11 +100,7 @@ class RegistrationMongoRepositoryISpec
   "Calling deleteVatScheme" should {
 
     "delete a VatScheme object" in new Setup {
-      repository.insert(vatScheme).flatMap(_ => repository.deleteVatScheme(vatScheme.id)) returns true
-    }
-
-    "return a None when there is no corresponding VatScheme object" in new Setup {
-      repository.insert(vatScheme).flatMap(_ => repository.deleteVatScheme(RegistrationId("0"))) failedWith classOf[MissingRegDocument]
+      repository.insert(vatScheme).flatMap(_ => repository.deleteVatScheme(vatScheme.id.value)) returns true
     }
   }
 

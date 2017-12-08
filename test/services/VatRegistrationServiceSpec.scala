@@ -37,9 +37,11 @@ import uk.gov.hmrc.http.HeaderCarrier
 class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   class Setup {
-    val service = new VatRegistrationService {
-      override val registrationRepository: RegistrationRepository = mockRegistrationRepository
-      override val brConnector: BusinessRegistrationConnector = mockBusRegConnector
+    val service = new RegistrationService {
+      override val vatCancelUrl = "/test/uri"
+      override val brConnector = mockBusRegConnector
+      override val vatRestartUrl = "/test-uri"
+      override val registrationRepository = mockRegistrationRepository
     }
   }
 
@@ -144,7 +146,7 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
 
     "return Error response for MissingRegDocument" in new Setup {
       val regId = RegistrationId("regId")
-      val t = MissingRegDocument(regId)
+      val t = new MissingRegDocument(regId)
       when(mockRegistrationRepository.updateLogicalGroup(regId, tradingDetails)).thenReturn(Future.failed(t))
 
       service.updateLogicalGroup(regId, tradingDetails) returnsLeft ResourceNotFound(s"No registration found for registration ID: $regId")
@@ -152,24 +154,37 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
   }
 
   "call to deleteVatScheme" should {
+    "return true" when {
+      "the document has been deleted" in new Setup {
+        val idMatcher = RegistrationId(ArgumentMatchers.any())
+        when(mockRegistrationRepository.retrieveVatScheme(idMatcher)(ArgumentMatchers.any()))
+          .thenReturn(Future.successful(Some(vatScheme)))
 
-    "return Success response " in new Setup {
-      when(mockRegistrationRepository.deleteVatScheme(RegistrationId("1"))).thenReturn(Future.successful(true))
-      service.deleteVatScheme(RegistrationId("1")) returnsRight true
+        when(mockRegistrationRepository.deleteVatScheme(ArgumentMatchers.any())(ArgumentMatchers.any()))
+          .thenReturn(Future.successful(true))
+
+        await(service.deleteVatScheme("1", VatRegStatus.draft, VatRegStatus.rejected)) shouldBe true
+      }
     }
 
+    "throw a MissingRegDoc exception" when {
+      "no reg doc is found" in new Setup {
+        val idMatcher = RegistrationId(ArgumentMatchers.any())
+        when(mockRegistrationRepository.retrieveVatScheme(idMatcher)(ArgumentMatchers.any()))
+          .thenReturn(Future.successful(None))
 
-    "return Error response " in new Setup {
-      val t = new RuntimeException("Exception")
-      when(mockRegistrationRepository.deleteVatScheme(RegistrationId("1"))).thenReturn(Future.failed(t))
-      service.deleteVatScheme(RegistrationId("1")) returnsLeft GenericError(t)
+        intercept[MissingRegDocument](await(service.deleteVatScheme("1", VatRegStatus.draft, VatRegStatus.rejected)))
+      }
     }
 
-    "return Error response for MissingRegDocument" in new Setup {
-      val regId = RegistrationId("regId")
-      val t = MissingRegDocument(regId)
-      when(mockRegistrationRepository.deleteVatScheme(RegistrationId("1"))).thenReturn(Future.failed(t))
-      service.deleteVatScheme(RegistrationId("1")) returnsLeft ResourceNotFound(s"No registration found for registration ID: $regId")
+    "throw an InvalidSubmissionStatus exception" when {
+      "the reg doc status is not valid for cancellation" in new Setup {
+        val idMatcher = RegistrationId(ArgumentMatchers.any())
+        when(mockRegistrationRepository.retrieveVatScheme(idMatcher)(ArgumentMatchers.any()))
+          .thenReturn(Future.successful(Some(vatScheme.copy(status = VatRegStatus.submitted))))
+
+        intercept[InvalidSubmissionStatus](await(service.deleteVatScheme("1", VatRegStatus.draft, VatRegStatus.rejected)))
+      }
     }
   }
 
@@ -232,33 +247,30 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
     "return a correct JsValue" in new Setup {
       val expectedJson = Json.parse(
         """
-          | {
-          |   "status": "draft"
-          | }
+          |{
+          | "status":"draft",
+          | "cancelURL":"/test/uri"
+          |}
         """.stripMargin)
 
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(Some(vatScheme)))
-      service.getStatus(RegistrationId("1")) returnsRight expectedJson
+
+      await(service.getStatus(RegistrationId("1"))) shouldBe expectedJson
     }
 
     "return a correct JsValue with ackRef" in new Setup {
       val vatSchemeWithAckRefNum = vatScheme.copy(acknowledgementReference = Some(ackRefNumber))
       val expectedJson = Json.parse(
         s"""
-          | {
-          |   "status": "draft",
-          |   "ackRef": "$ackRefNumber"
-          | }
-        """.stripMargin)
+           |{
+           |  "status":"draft",
+           |  "ackRef":"BRPY000000000001",
+           |  "cancelURL":"/test/uri"
+           |}
+          """.stripMargin)
 
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(Some(vatSchemeWithAckRefNum)))
-      service.getStatus(RegistrationId("1")) returnsRight expectedJson
-    }
-
-    "return a ResourceNotFound" in new Setup {
-      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(None))
-      service.getStatus(RegistrationId("1")) returnsLeft ResourceNotFound(
-        "No registration found for registration ID: 1")
+      await(service.getStatus(RegistrationId("1"))) shouldBe expectedJson
     }
   }
   "updateIVStatus" should {

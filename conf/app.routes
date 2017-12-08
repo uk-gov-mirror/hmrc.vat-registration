@@ -17,7 +17,7 @@ GET          /:regId/acknowledgement-reference      controllers.VatRegistrationC
 
 GET          /incorporation-information/:txId       controllers.IncorporationInformationController.getIncorporationInformation(txId: TransactionId)
 
-DELETE       /:regId/delete-scheme                  controllers.VatRegistrationController.deleteVatScheme(regId: RegistrationId)
+DELETE       /:regId/delete-scheme                  controllers.VatRegistrationController.deleteVatScheme(regId: String)
 
 DELETE       /:regId/delete/:element                controllers.VatRegistrationController.deleteByElement(regId: RegistrationId, element: ElementPath)
 

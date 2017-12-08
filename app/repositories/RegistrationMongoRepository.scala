@@ -45,7 +45,7 @@ trait RegistrationRepository {
   def createNewVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[VatScheme]
   def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[Option[VatScheme]]
   def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G], hc: HeaderCarrier): Future[G]
-  def deleteVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[Boolean]
+  def deleteVatScheme(regId: String)(implicit hc: HeaderCarrier): Future[Boolean]
   def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String]
   def prepareRegistrationSubmission(id: RegistrationId, ackRef : String)(implicit hc: HeaderCarrier): Future[Boolean]
   def finishRegistrationSubmission(id : RegistrationId, status : VatRegStatus.Value)(implicit hc : HeaderCarrier) : Future[VatRegStatus.Value]
@@ -116,11 +116,11 @@ class RegistrationMongoRepository (mongo: () => DB)
       throw UpdateFailed(id, element)
     }
 
-  override def deleteVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[Boolean] = retrieveVatScheme(id) flatMap {
-    case Some(_) => collection.remove(ridSelector(id)) map(_ => true)
-    case None    =>
-      logger.error(s"[deleteVatScheme] - No VAT registration could be found for regId ${id.value}")
-      Future.failed(MissingRegDocument(id))
+  override def deleteVatScheme(regId: String)(implicit hc: HeaderCarrier): Future[Boolean] = {
+    collection.remove(regIdSelector(regId)) map { wr =>
+      if(!wr.ok) logger.error(s"[deleteVatScheme] - Error deleting vat reg doc for regId $regId - Error: ${wr.message}")
+      wr.ok
+    }
   }
 
   override def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit hc: HeaderCarrier): Future[Boolean] =
@@ -170,7 +170,7 @@ class RegistrationMongoRepository (mongo: () => DB)
       }
       case None =>
         logger.error(s"[updateIVStatus] - No VAT registration could be found for regId ${regId}")
-        throw MissingRegDocument(RegistrationId(regId))
+        throw new MissingRegDocument(RegistrationId(regId))
     }
   }
 }
