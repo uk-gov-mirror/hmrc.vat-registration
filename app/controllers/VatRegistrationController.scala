@@ -59,9 +59,37 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
       }
   }
 
+  @deprecated
   def updateVatFinancials(id: RegistrationId): Action[JsValue] = {
     implicit val format: Format[VatFinancials] = Format(VatFinancials.format, encryptedFinancials)
     patch[VatFinancials](registrationService, id)
+  }
+
+  def updateReturns(regId: String): Action[JsValue] = Action.async(parse.json) {
+    implicit request =>
+      authenticated { _ =>
+        withJsonBody[Returns]{ returns =>
+          registrationRepository.updateReturns(regId, returns) map ( _ => Ok)
+        }
+      }
+  }
+
+  def updateBankAccountDetails(regId: String): Action[JsValue] = Action.async(parse.json) {
+    implicit request =>
+      authenticated { _ =>
+        withJsonBody[BankAccount]{ bankAccount =>
+          registrationRepository.updateBankAccount(regId, bankAccount) map ( _ => Ok)
+        }
+      }
+  }
+
+  def updateTurnoverEstimates(regId: String): Action[JsValue] = Action.async(parse.json) {
+    implicit request =>
+      authenticated { _ =>
+        withJsonBody[TurnoverEstimates]{ turnoverEstimates =>
+          registrationRepository.updateTurnoverEstimates(regId, turnoverEstimates) map ( _ => Ok)
+        }
+      }
   }
 
   @deprecated

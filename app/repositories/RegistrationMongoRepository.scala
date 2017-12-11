@@ -23,7 +23,7 @@ import common.exceptions._
 import common.{LogicalGroup, RegistrationId}
 import enums.VatRegStatus
 import models._
-import models.api.{TradingDetails, VatBankAccountMongoFormat, VatFinancials, VatScheme}
+import models.api._
 import play.api.Logger
 import play.api.libs.json.{Json, OFormat, Writes}
 import play.modules.reactivemongo.{MongoDbConnection, ReactiveMongoComponent}
@@ -55,6 +55,11 @@ trait RegistrationRepository {
   def updateIVStatus(regId: String, ivStatus: Boolean)(implicit hc: HeaderCarrier): Future[Boolean]
   def saveTransId(transId: String, regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String]
   def fetchRegByTxId(transId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]]
+
+  def updateTradingDetails(regId: String, tradingDetails: TradingDetails)(implicit ex: ExecutionContext): Future[TradingDetails]
+  def updateReturns(regId: String, returns: Returns)(implicit ex: ExecutionContext): Future[Returns]
+  def updateBankAccount(regId: String, bankAcount: BankAccount)(implicit ex: ExecutionContext): Future[BankAccount]
+  def updateTurnoverEstimates(regId: String, turnoverEstimate: TurnoverEstimates)(implicit ex: ExecutionContext): Future[TurnoverEstimates]
 }
 
 
@@ -176,12 +181,39 @@ class RegistrationMongoRepository (mongo: () => DB)
     }
   }
 
-  def updateTradingDetails(regId: String, tradingDetails: TradingDetails)(implicit ex: ExecutionContext): Future[TradingDetails] = {
+  override def updateTradingDetails(regId: String, tradingDetails: TradingDetails)(implicit ex: ExecutionContext): Future[TradingDetails] = {
     val selector = regIdSelector(regId)
     val update = BSONDocument("$set" -> BSONDocument("tradingDetails" -> Json.toJson(tradingDetails)))
     collection.update(selector, update) map { updateResult =>
       Logger.info(s"[TradingDetails] updating trading details for regId : $regId - documents modified : ${updateResult.nModified}")
       tradingDetails
+    }
+  }
+
+  override def updateReturns(regId: String, returns: Returns)(implicit ex: ExecutionContext): Future[Returns] = {
+    val selector = regIdSelector(regId)
+    val update = BSONDocument("$set" -> BSONDocument("returns" -> Json.toJson(returns)))
+    collection.update(selector, update) map { updateResult =>
+      Logger.info(s"[Returns] updating returns for regId : $regId - documents modified : ${updateResult.nModified}")
+      returns
+    }
+  }
+
+  override def updateBankAccount(regId: String, bankAccount: BankAccount)(implicit ex: ExecutionContext): Future[BankAccount] = {
+    val selector = regIdSelector(regId)
+    val update = BSONDocument("$set" -> BSONDocument("bankAccount" -> Json.toJson(bankAccount)(BankAccountMongoFormat.encryptedFormat)))
+    collection.update(selector, update) map { updateResult =>
+      Logger.info(s"[Returns] updating bank account for regId : $regId - documents modified : ${updateResult.nModified}")
+      bankAccount
+    }
+  }
+
+  override def updateTurnoverEstimates(regId: String, turnoverEstimate: TurnoverEstimates)(implicit ex: ExecutionContext): Future[TurnoverEstimates] = {
+    val selector = regIdSelector(regId)
+    val update = BSONDocument("$set" -> BSONDocument("turnoverEstimates" -> Json.toJson(turnoverEstimate)))
+    collection.update(selector, update) map { updateResult =>
+      Logger.info(s"[TurnoverEstimate] updating turnover estimate for regId : $regId - documents modified : ${updateResult.nModified}")
+      turnoverEstimate
     }
   }
 }

@@ -16,11 +16,13 @@
 
 package repository
 
+import java.time.LocalDate
+
 import common.exceptions._
 import common.{LogicalGroup, RegistrationId, TransactionId}
 import enums.VatRegStatus
 import itutil.{FutureAssertions, ITFixtures, MongoBaseSpec}
-import models.api.TradingDetails
+import models.api.{BankAccount, Returns, TradingDetails, TurnoverEstimates}
 import models.{AcknowledgementReferencePath, VatBankAccountPath}
 import org.scalatest.BeforeAndAfterEach
 import play.api.libs.json._
@@ -49,6 +51,19 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     await(repository.drop)
     await(repository.ensureIndexes)
   }
+
+  val registrationId: String = "reg-12345"
+  val otherRegId = "other-reg-12345"
+
+  def vatSchemeJson(regId: String = registrationId): JsObject = Json.parse(
+    s"""
+       |{
+       | "registrationId":"$regId",
+       | "status":"draft"
+       |}
+      """.stripMargin).as[JsObject]
+
+  val otherUsersVatScheme: JsObject = vatSchemeJson(otherRegId)
 
   "Calling createNewVatScheme" should {
 
@@ -216,7 +231,6 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
 
   "updateTradingDetails" should {
 
-    val registrationId: String = "reg-12345"
     val tradingName = "testTradingName"
 
     def vatSchemeJson(regId: String = registrationId): JsObject = Json.parse(
@@ -273,6 +287,176 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
       fetchAll without _id shouldBe Some(otherUsersVatScheme)
 
       await(repository.updateTradingDetails(registrationId, tradingDetails))
+
+      fetchAll without _id shouldBe Some(otherUsersVatScheme)
+    }
+  }
+
+  "updateBankAccount" should {
+
+    val accountNumber = "12345678"
+    val encryptedAccountNumber = "V0g2RXVUcUZpSUk4STgvbGNFdlAydz09"
+    val sortCode = "12-34-56"
+    val bankAccount = BankAccount("testAccountName", sortCode, accountNumber)
+
+    val vatSchemeWithBankAccount = Json.parse(
+      s"""
+        |{
+        | "registrationId":"$registrationId",
+        | "status":"draft",
+        | "bankAccount":{
+        |   "accountName":"testAccountName",
+        |   "accountSortCode":"$sortCode",
+        |   "accountNumber":"$encryptedAccountNumber"
+        | }
+        |}
+      """.stripMargin).as[JsObject]
+
+    "update the registration doc with the provided bank account details and encrypt the account number" in new Setup {
+      insert(vatSchemeJson())
+
+      await(repository.updateBankAccount(registrationId, bankAccount))
+
+      fetchAll without _id shouldBe Some(vatSchemeWithBankAccount)
+    }
+
+    "not update or insert new data into the registration doc if the supplied bank account details already exist on the doc" in new Setup {
+      insert(vatSchemeWithBankAccount)
+
+      await(repository.updateBankAccount(registrationId, bankAccount))
+
+      fetchAll without _id shouldBe Some(vatSchemeWithBankAccount)
+    }
+
+    "not update or insert returns if a registration doc doesn't already exist" in new Setup {
+      count shouldBe 0
+
+      await(repository.updateBankAccount(registrationId, bankAccount))
+
+      fetchAll without _id shouldBe None
+    }
+
+    "not update or insert returns if a registration doc associated with the given reg id doesn't already exist" in new Setup {
+      insert(otherUsersVatScheme)
+
+      fetchAll without _id shouldBe Some(otherUsersVatScheme)
+
+      await(repository.updateBankAccount(registrationId, bankAccount))
+
+      fetchAll without _id shouldBe Some(otherUsersVatScheme)
+    }
+  }
+
+  "updateTurnoverEstimates" should {
+
+    val vatTaxable = 1000L
+    val turnoverEstimate = TurnoverEstimates(vatTaxable)
+
+    val vatSchemeWithTurnoverEstimate = Json.parse(
+      s"""
+        |{
+        | "registrationId":"$registrationId",
+        | "status":"draft",
+        | "turnoverEstimates":{
+        |   "vatTaxable":$vatTaxable
+        | }
+        |}
+        |
+      """.stripMargin).as[JsObject]
+
+    "update the registration doc with the provided returns" in new Setup {
+      insert(vatSchemeJson())
+
+      await(repository.updateTurnoverEstimates(registrationId, turnoverEstimate))
+
+      fetchAll without _id shouldBe Some(vatSchemeWithTurnoverEstimate)
+    }
+
+    "not update or insert new data into the registration doc if the supplied returns already exist on the doc" in new Setup {
+      insert(vatSchemeWithTurnoverEstimate)
+
+      await(repository.updateTurnoverEstimates(registrationId, turnoverEstimate))
+
+      fetchAll without _id shouldBe Some(vatSchemeWithTurnoverEstimate)
+    }
+
+    "not update or insert returns if a registration doc doesn't already exist" in new Setup {
+      count shouldBe 0
+
+      await(repository.updateTurnoverEstimates(registrationId, turnoverEstimate))
+
+      fetchAll without _id shouldBe None
+    }
+
+    "not update or insert returns if a registration doc associated with the given reg id doesn't already exist" in new Setup {
+      insert(otherUsersVatScheme)
+
+      fetchAll without _id shouldBe Some(otherUsersVatScheme)
+
+      await(repository.updateTurnoverEstimates(registrationId, turnoverEstimate))
+
+      fetchAll without _id shouldBe Some(otherUsersVatScheme)
+    }
+  }
+
+  "updateReturns" should {
+
+    val registrationId: String = "reg-12345"
+
+    val otherRegId = "other-reg-12345"
+    val otherUsersVatScheme = vatSchemeJson(otherRegId)
+
+    val MONTHLY = "monthly"
+    val JAN_FEB_MAR = "jan,feb,mar"
+
+    val startDate = LocalDate of (1990, 10, 10)
+
+    val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN_FEB_MAR), startDate)
+
+    val vatSchemeWithReturns = Json.parse(
+      s"""
+        |{
+        | "registrationId":"$registrationId",
+        | "status":"draft",
+        | "returns":{
+        |   "reclaimVatOnMostReturns":true,
+        |   "frequency":"$MONTHLY",
+        |   "staggerStart":"$JAN_FEB_MAR",
+        |   "vatStartDate":"$startDate"
+        | }
+        |}
+      """.stripMargin).as[JsObject]
+
+    "update the registration doc with the provided returns" in new Setup {
+      insert(vatSchemeJson())
+
+      await(repository.updateReturns(registrationId, returns))
+
+      fetchAll without _id shouldBe Some(vatSchemeWithReturns)
+    }
+
+    "not update or insert new data into the registration doc if the supplied returns already exist on the doc" in new Setup {
+      insert(vatSchemeWithReturns)
+
+      await(repository.updateReturns(registrationId, returns))
+
+      fetchAll without _id shouldBe Some(vatSchemeWithReturns)
+    }
+
+    "not update or insert returns if a registration doc doesn't already exist" in new Setup {
+      count shouldBe 0
+
+      await(repository.updateReturns(registrationId, returns))
+
+      fetchAll without _id shouldBe None
+    }
+
+    "not update or insert returns if a registration doc associated with the given reg id doesn't already exist" in new Setup {
+      insert(otherUsersVatScheme)
+
+      fetchAll without _id shouldBe Some(otherUsersVatScheme)
+
+      await(repository.updateReturns(registrationId, returns))
 
       fetchAll without _id shouldBe Some(otherUsersVatScheme)
     }

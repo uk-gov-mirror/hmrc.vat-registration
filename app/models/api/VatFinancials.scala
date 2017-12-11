@@ -16,6 +16,8 @@
 
 package models.api
 
+import java.time.LocalDate
+
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -33,4 +35,24 @@ object VatFinancials {
     (__ \ "reclaimVatOnMostReturns").format[Boolean] and
     (__ \ "accountingPeriods").format[VatAccountingPeriod]
   )(VatFinancials.apply, unlift(VatFinancials.unapply))
+}
+
+case class Returns(reclaimVatOnMostReturns: Boolean,
+                   frequency: String,
+                   staggerStart: Option[String],
+                   vatStartDate: LocalDate)
+
+object Returns extends VatAccountingPeriodValidator {
+  implicit val format: OFormat[Returns] = (
+    (__ \ "reclaimVatOnMostReturns").format[Boolean] and
+    (__ \ "frequency").format[String](frequencyValidator) and
+    (__ \ "staggerStart").formatNullable[String](staggerStartValidator) and
+    (__ \ "vatStartDate").format[LocalDate]
+  )(Returns.apply, unlift(Returns.unapply))
+}
+
+case class TurnoverEstimates(vatTaxable: Long)
+
+object TurnoverEstimates {
+  implicit val format: OFormat[TurnoverEstimates] = Json.format[TurnoverEstimates]
 }

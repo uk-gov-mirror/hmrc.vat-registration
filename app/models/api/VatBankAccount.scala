@@ -20,10 +20,12 @@ import auth.Crypto
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
+@deprecated("Use BankAccount instead", "11/12/2017")
 case class VatBankAccount(accountName: String,
                           accountSortCode: String,
                           accountNumber: String)
 
+@deprecated("Use BankAccount instead", "11/12/2017")
 object VatBankAccount extends VatBankAccountValidator {
   implicit val format: OFormat[VatBankAccount] = (
     (__ \ "accountName").format[String] and
@@ -31,11 +33,31 @@ object VatBankAccount extends VatBankAccountValidator {
     (__ \ "accountNumber").format[String](accountNumberValidator)
   )(VatBankAccount.apply, unlift(VatBankAccount.unapply))
 }
-
+@deprecated("Use BankAccountMongoFormat instead", "11/12/2017")
 object VatBankAccountMongoFormat {
   implicit val encryptedFormat: OFormat[VatBankAccount] = (
     (__ \ "accountName").format[String] and
     (__ \ "accountSortCode").format[String] and
     (__ \ "accountNumber").format[String](Crypto.rds)(Crypto.wts)
   )(VatBankAccount.apply, unlift(VatBankAccount.unapply))
+}
+
+case class BankAccount(accountName: String,
+                          accountSortCode: String,
+                          accountNumber: String)
+
+object BankAccount extends VatBankAccountValidator {
+  implicit val format: OFormat[BankAccount] = (
+    (__ \ "accountName").format[String] and
+      (__ \ "accountSortCode").format[String](accountSortCodeValidator) and
+      (__ \ "accountNumber").format[String](accountNumberValidator)
+    )(BankAccount.apply, unlift(BankAccount.unapply))
+}
+
+object BankAccountMongoFormat {
+  implicit val encryptedFormat: OFormat[BankAccount] = (
+    (__ \ "accountName").format[String] and
+      (__ \ "accountSortCode").format[String] and
+      (__ \ "accountNumber").format[String](Crypto.rds)(Crypto.wts)
+    )(BankAccount.apply, unlift(BankAccount.unapply))
 }
