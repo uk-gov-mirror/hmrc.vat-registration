@@ -34,8 +34,20 @@ trait VatBankAccountValidator extends Validation {
 }
 
 trait VatAccountingPeriodValidator extends Validation {
-  val periodStartValidator: Format[String]  = acceptOnly("jan_apr_jul_oct", "feb_may_aug_nov", "mar_jun_sep_dec")
-  val frequencyValidator: Format[String]    = acceptOnly("monthly", "quarterly")
+  val JAN_FEB_MAR = "jan,feb,mar"
+  val APR_MAY_JUN = "apr,may,jun"
+  val JUL_AUG_SEP = "jul,aug,sep"
+  val OCT_NOV_DEC = "oct,nov,dec"
+
+  val MONTHLY = "monthly"
+  val QUARTERLY = "quarterly"
+
+
+  @deprecated("use staggerStartValidator instead")
+  val periodStartValidator: Format[String] = acceptOnly("feb_may_aug_nov", "mar_jun_sep_dec", "jan_apr_jul_oct")
+
+  val staggerStartValidator: Format[String] = acceptOnly(JAN_FEB_MAR, APR_MAY_JUN, JUL_AUG_SEP, OCT_NOV_DEC)
+  val frequencyValidator: Format[String]    = acceptOnly(MONTHLY, QUARTERLY)
 }
 
 trait VatFlatRateSchemeValidator extends Validation {

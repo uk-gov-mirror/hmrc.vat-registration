@@ -16,6 +16,8 @@
 
 package controllers
 
+import java.time.LocalDate
+
 import common.RegistrationId
 import common.exceptions.MissingRegDocument
 import common.exceptions.UpdateFailed
@@ -149,6 +151,87 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         val request: FakeRequest[JsObject] = FakeRequest().withBody(Json.obj("tradingName" -> tradingName, "eoriRequested" -> true))
 
         val result: Result = controller.updateTradingDetails(registrationId)(request)
+
+        status(result) shouldBe OK
+      }
+    }
+
+    "updateBankAccountDetails" should {
+
+      val registrationId = "reg-12345"
+
+      val accountNumber = "12345678"
+      val sortCode = "12-34-56"
+      val bankAccount = BankAccount("testAccountName", sortCode, accountNumber)
+
+      when(mockRegistrationMongo.store).thenReturn(mockRegistrationMongoRepository)
+
+      "return a 200 if the update to mongo was successful" in new Setup {
+        when(mockRegistrationMongoRepository.updateBankAccount(any(), any())(any()))
+          .thenReturn(Future.successful(bankAccount))
+
+        val request: FakeRequest[JsObject] = FakeRequest().withBody(
+          Json.obj(
+            "accountName" -> "testAccountName",
+            "accountSortCode" -> sortCode,
+            "accountNumber" -> accountNumber
+          )
+        )
+
+        val result: Result = controller.updateBankAccountDetails(registrationId)(request)
+
+        status(result) shouldBe OK
+      }
+    }
+
+    "updateTurnoverEstimates" should {
+
+      val registrationId = "reg-12345"
+
+      val vatTaxable = 1000L
+      val turnoverEstimates = TurnoverEstimates(vatTaxable)
+
+      when(mockRegistrationMongo.store).thenReturn(mockRegistrationMongoRepository)
+
+      "return a 200 if the update to mongo was successful" in new Setup {
+        when(mockRegistrationMongoRepository.updateTurnoverEstimates(any(), any())(any()))
+          .thenReturn(Future.successful(turnoverEstimates))
+
+        val request: FakeRequest[JsObject] = FakeRequest().withBody(
+          Json.obj(
+            "vatTaxable" -> vatTaxable
+          )
+        )
+
+        val result: Result = controller.updateTurnoverEstimates(registrationId)(request)
+
+        status(result) shouldBe OK
+      }
+    }
+
+    "updateReturns" should {
+
+      val registrationId = "reg-12345"
+      val MONTHLY = "monthly"
+      val JAN_FEB_MAR = "jan,feb,mar"
+      val startDate = LocalDate of (1990, 10, 10)
+
+      val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN_FEB_MAR), startDate)
+
+      when(mockRegistrationMongo.store).thenReturn(mockRegistrationMongoRepository)
+
+      "return a 200 if the update to mongo is successful" in new Setup {
+        when(mockRegistrationMongoRepository.updateReturns(any(), any())(any()))
+          .thenReturn(Future.successful(returns))
+
+        val request: FakeRequest[JsObject] = FakeRequest().withBody(Json.obj(
+          "reclaimVatOnMostReturns" -> true,
+          "frequency" -> MONTHLY,
+          "staggerStart" -> JAN_FEB_MAR,
+          "vatStartDate" -> startDate)
+        )
+
+        val result: Result = controller.updateReturns(registrationId)(request)
 
         status(result) shouldBe OK
       }

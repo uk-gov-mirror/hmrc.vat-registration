@@ -22,6 +22,8 @@ import play.api.libs.json.{JsPath, JsSuccess, Json}
 
 class VatAccountingPeriodSpec extends JsonFormatValidation {
 
+  import models.api.Returns._
+
   "Creating a VatAccountingPeriod model from Json" should {
 
     "complete successfully from full Json with quarterly frequency" in {
