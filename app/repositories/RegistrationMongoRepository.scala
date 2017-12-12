@@ -58,6 +58,7 @@ trait RegistrationRepository {
 
   def updateTradingDetails(regId: String, tradingDetails: TradingDetails)(implicit ex: ExecutionContext): Future[TradingDetails]
   def updateReturns(regId: String, returns: Returns)(implicit ex: ExecutionContext): Future[Returns]
+  def fetchBankAccount(regId: String)(implicit ex: ExecutionContext): Future[Option[BankAccount]]
   def updateBankAccount(regId: String, bankAcount: BankAccount)(implicit ex: ExecutionContext): Future[BankAccount]
   def updateTurnoverEstimates(regId: String, turnoverEstimate: TurnoverEstimates)(implicit ex: ExecutionContext): Future[TurnoverEstimates]
 }
@@ -199,9 +200,15 @@ class RegistrationMongoRepository (mongo: () => DB)
     }
   }
 
+  override def fetchBankAccount(regId: String)(implicit ex: ExecutionContext): Future[Option[BankAccount]] = {
+    val selector = regIdSelector(regId)
+    val projection = Json.obj("bankAccount" -> 1)
+    collection.find(selector, projection).one[BankAccount](BankAccountMongoFormat.encryptedFormat, ex)
+  }
+
   override def updateBankAccount(regId: String, bankAccount: BankAccount)(implicit ex: ExecutionContext): Future[BankAccount] = {
     val selector = regIdSelector(regId)
-    val update = BSONDocument("$set" -> BSONDocument("bankAccount" -> Json.toJson(bankAccount.details.get)(BankAccountDetailsMongoFormat.encryptedFormat)))
+    val update = BSONDocument("$set" -> BSONDocument("bankAccount" -> Json.toJson(bankAccount)(BankAccountMongoFormat.encryptedFormat)))
     collection.update(selector, update) map { updateResult =>
       Logger.info(s"[Returns] updating bank account for regId : $regId - documents modified : ${updateResult.nModified}")
       bankAccount

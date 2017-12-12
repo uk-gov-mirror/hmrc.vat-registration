@@ -44,31 +44,29 @@ object VatBankAccountMongoFormat {
 
 case class BankAccount(hasBankAccount: Boolean,
                        details: Option[BankAccountDetails])
-object BankAccount {
+
+case class BankAccountDetails(accountName: String,
+                              accountSortCode: String,
+                              accountNumber: String)
+
+object BankAccount extends VatBankAccountValidator {
   implicit val format: OFormat[BankAccount] = (
     (__ \ "hasBankAccount").format[Boolean] and
-      (__ \ "details").formatNullable[BankAccountDetails]
+    (__ \ "details").formatNullable((
+      (__ \ "accountName").format[String] and
+      (__ \ "accountSortCode").format[String](accountSortCodeValidator) and
+      (__ \ "accountNumber").format[String](accountNumberValidator)
+      )(BankAccountDetails.apply, unlift(BankAccountDetails.unapply)))
     )(BankAccount.apply, unlift(BankAccount.unapply))
 }
 
-
-
-case class BankAccountDetails(name: String,
-                              sortCode: String,
-                              number: String)
-
-object BankAccountDetails extends VatBankAccountValidator {
-  implicit val format: OFormat[BankAccountDetails] = (
-    (__ \ "name").format[String] and
-      (__ \ "sortCode").format[String](accountSortCodeValidator) and
-      (__ \ "number").format[String](accountNumberValidator)
-    )(BankAccountDetails.apply, unlift(BankAccountDetails.unapply))
-}
-
-object BankAccountDetailsMongoFormat {
-  implicit val encryptedFormat: OFormat[BankAccountDetails] = (
-    (__ \ "name").format[String] and
-      (__ \ "sortCode").format[String] and
-      (__ \ "number").format[String](Crypto.rds)(Crypto.wts)
-    )(BankAccountDetails.apply, unlift(BankAccountDetails.unapply))
+object BankAccountMongoFormat extends VatBankAccountValidator {
+  implicit val encryptedFormat: OFormat[BankAccount] = (
+    (__ \ "hasBankAccount").format[Boolean] and
+    (__ \ "details").formatNullable((
+      (__ \ "accountName").format[String] and
+      (__ \ "accountSortCode").format[String](accountSortCodeValidator) and
+      (__ \ "accountNumber").format[String](Crypto.rds)(Crypto.wts)
+      )(BankAccountDetails.apply, unlift(BankAccountDetails.unapply)))
+    )(BankAccount.apply, unlift(BankAccount.unapply))
 }

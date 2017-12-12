@@ -29,8 +29,8 @@ trait Validation {
 }
 
 trait VatBankAccountValidator extends Validation {
-  val accountNumberValidator: Format[String]    = readToFmt(pattern("^(\\d){8}$".r))
-  val accountSortCodeValidator: Format[String]  = readToFmt(pattern("^(\\d){2}-(\\d){2}-(\\d){2}$".r))
+  protected val accountNumberValidator: Format[String]    = readToFmt(pattern("^(\\d){8}$".r))
+  protected val accountSortCodeValidator: Format[String]  = readToFmt(pattern("^(\\d){2}-(\\d){2}-(\\d){2}$".r))
 }
 
 trait VatAccountingPeriodValidator extends Validation {
