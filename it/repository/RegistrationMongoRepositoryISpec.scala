@@ -22,7 +22,7 @@ import common.exceptions._
 import common.{LogicalGroup, RegistrationId, TransactionId}
 import enums.VatRegStatus
 import itutil.{FutureAssertions, ITFixtures, MongoBaseSpec}
-import models.api.{BankAccount, Returns, TradingDetails, TurnoverEstimates}
+import models.api._
 import models.{AcknowledgementReferencePath, VatBankAccountPath}
 import org.scalatest.BeforeAndAfterEach
 import play.api.libs.json._
@@ -297,15 +297,15 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     val accountNumber = "12345678"
     val encryptedAccountNumber = "V0g2RXVUcUZpSUk4STgvbGNFdlAydz09"
     val sortCode = "12-34-56"
-    val bankAccount = BankAccount("testAccountName", sortCode, accountNumber)
-
+    val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
+    val bankAccount = BankAccount(true,Some(bankAccountDetails))
     val vatSchemeWithBankAccount = Json.parse(
       s"""
         |{
         | "registrationId":"$registrationId",
         | "status":"draft",
         | "bankAccount":{
-        |   "accountName":"testAccountName",
+        |   "n ame":"testAccountName",
         |   "accountSortCode":"$sortCode",
         |   "accountNumber":"$encryptedAccountNumber"
         | }

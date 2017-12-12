@@ -201,7 +201,7 @@ class RegistrationMongoRepository (mongo: () => DB)
 
   override def updateBankAccount(regId: String, bankAccount: BankAccount)(implicit ex: ExecutionContext): Future[BankAccount] = {
     val selector = regIdSelector(regId)
-    val update = BSONDocument("$set" -> BSONDocument("bankAccount" -> Json.toJson(bankAccount)(BankAccountMongoFormat.encryptedFormat)))
+    val update = BSONDocument("$set" -> BSONDocument("bankAccount" -> Json.toJson(bankAccount.details.get)(BankAccountDetailsMongoFormat.encryptedFormat)))
     collection.update(selector, update) map { updateResult =>
       Logger.info(s"[Returns] updating bank account for regId : $regId - documents modified : ${updateResult.nModified}")
       bankAccount

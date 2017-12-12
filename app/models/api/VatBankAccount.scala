@@ -42,22 +42,33 @@ object VatBankAccountMongoFormat {
   )(VatBankAccount.apply, unlift(VatBankAccount.unapply))
 }
 
-case class BankAccount(accountName: String,
-                          accountSortCode: String,
-                          accountNumber: String)
-
-object BankAccount extends VatBankAccountValidator {
+case class BankAccount(hasBankAccount: Boolean,
+                       details: Option[BankAccountDetails])
+object BankAccount {
   implicit val format: OFormat[BankAccount] = (
-    (__ \ "accountName").format[String] and
-      (__ \ "accountSortCode").format[String](accountSortCodeValidator) and
-      (__ \ "accountNumber").format[String](accountNumberValidator)
+    (__ \ "hasBankAccount").format[Boolean] and
+      (__ \ "details").formatNullable[BankAccountDetails]
     )(BankAccount.apply, unlift(BankAccount.unapply))
 }
 
-object BankAccountMongoFormat {
-  implicit val encryptedFormat: OFormat[BankAccount] = (
-    (__ \ "accountName").format[String] and
-      (__ \ "accountSortCode").format[String] and
-      (__ \ "accountNumber").format[String](Crypto.rds)(Crypto.wts)
-    )(BankAccount.apply, unlift(BankAccount.unapply))
+
+
+case class BankAccountDetails(name: String,
+                              sortCode: String,
+                              number: String)
+
+object BankAccountDetails extends VatBankAccountValidator {
+  implicit val format: OFormat[BankAccountDetails] = (
+    (__ \ "name").format[String] and
+      (__ \ "sortCode").format[String](accountSortCodeValidator) and
+      (__ \ "number").format[String](accountNumberValidator)
+    )(BankAccountDetails.apply, unlift(BankAccountDetails.unapply))
+}
+
+object BankAccountDetailsMongoFormat {
+  implicit val encryptedFormat: OFormat[BankAccountDetails] = (
+    (__ \ "name").format[String] and
+      (__ \ "sortCode").format[String] and
+      (__ \ "number").format[String](Crypto.rds)(Crypto.wts)
+    )(BankAccountDetails.apply, unlift(BankAccountDetails.unapply))
 }

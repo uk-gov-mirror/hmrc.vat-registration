@@ -162,7 +162,8 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
       val accountNumber = "12345678"
       val sortCode = "12-34-56"
-      val bankAccount = BankAccount("testAccountName", sortCode, accountNumber)
+      val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
+      val bankAccount = BankAccount(true,Some(bankAccountDetails))
 
       when(mockRegistrationMongo.store).thenReturn(mockRegistrationMongoRepository)
 
@@ -172,9 +173,11 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
         val request: FakeRequest[JsObject] = FakeRequest().withBody(
           Json.obj(
+            "hasBankAccount" -> true,
+            "bankAccountDetails" -> Json.obj(
             "accountName" -> "testAccountName",
             "accountSortCode" -> sortCode,
-            "accountNumber" -> accountNumber
+            "accountNumber" -> accountNumber)
           )
         )
 
