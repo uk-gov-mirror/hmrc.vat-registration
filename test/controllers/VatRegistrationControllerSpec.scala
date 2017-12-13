@@ -187,6 +187,56 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       }
     }
 
+    "fetchBankAccountDetails with a bank account" should {
+
+      val registrationId = "reg-12345"
+
+      val accountNumber = "12345678"
+      val sortCode = "12-34-56"
+      val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
+      val bankAccount = BankAccount(true,Some(bankAccountDetails))
+
+      "return a 200 if the fetch from mongo was successful" in new Setup {
+        when(mockRegistrationMongoRepository.fetchBankAccount(any())(any()))
+          .thenReturn(Future.successful(Some(bankAccount)))
+
+        val expected = Json.obj(
+          "isProvided" -> true,
+          "details" -> Json.obj(
+            "name" -> "testAccountName",
+            "sortCode" -> sortCode,
+            "number" -> accountNumber)
+        )
+
+
+        val result = controller.fetchBankAccountDetails(registrationId)(FakeRequest())
+
+        status(result) shouldBe OK
+        await(jsonBodyOf(result)) shouldBe expected
+      }
+    }
+
+    "fetchBankAccountDetails with no bank account" should {
+
+      val registrationId = "reg-12345"
+
+      val accountNumber = "12345678"
+      val sortCode = "12-34-56"
+      val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
+      val bankAccount = BankAccount(true,Some(bankAccountDetails))
+
+      "return a 404 if the fetch from mongo returned nothing" in new Setup {
+        when(mockRegistrationMongoRepository.fetchBankAccount(any())(any()))
+          .thenReturn(Future.successful(None))
+
+       val result = controller.fetchBankAccountDetails(registrationId)(FakeRequest())
+
+        status(result) shouldBe NOT_FOUND
+
+      }
+    }
+
+
     "updateTurnoverEstimates" should {
 
       val registrationId = "reg-12345"
