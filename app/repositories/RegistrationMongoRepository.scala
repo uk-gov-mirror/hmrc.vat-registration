@@ -25,7 +25,7 @@ import enums.VatRegStatus
 import models._
 import models.api._
 import play.api.Logger
-import play.api.libs.json.{Json, OFormat, Writes}
+import play.api.libs.json.{JsObject, Json, OFormat, Writes}
 import play.modules.reactivemongo.{MongoDbConnection, ReactiveMongoComponent}
 import reactivemongo.api.DB
 import reactivemongo.api.commands.UpdateWriteResult
@@ -208,7 +208,7 @@ class RegistrationMongoRepository (mongo: () => DB)
 
   override def updateBankAccount(regId: String, bankAccount: BankAccount)(implicit ex: ExecutionContext): Future[BankAccount] = {
     val selector = regIdSelector(regId)
-    val update = BSONDocument("$set" -> BSONDocument("bankAccount" -> Json.toJson(bankAccount)(BankAccountMongoFormat.encryptedFormat)))
+    val update = BSONDocument("$set" -> Json.toJson(bankAccount)(BankAccountMongoFormat.encryptedFormat))
     collection.update(selector, update) map { updateResult =>
       Logger.info(s"[Returns] updating bank account for regId : $regId - documents modified : ${updateResult.nModified}")
       bankAccount

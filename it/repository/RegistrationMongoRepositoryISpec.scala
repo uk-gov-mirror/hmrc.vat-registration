@@ -65,6 +65,27 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
 
   val otherUsersVatScheme: JsObject = vatSchemeJson(otherRegId)
 
+  val accountNumber = "12345678"
+  val encryptedAccountNumber = "V0g2RXVUcUZpSUk4STgvbGNFdlAydz09"
+  val sortCode = "12-34-56"
+  val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
+  val bankAccount = BankAccount(isProvided = true, Some(bankAccountDetails))
+  val vatSchemeWithBankAccount: JsObject = Json.parse(
+    s"""
+       |{
+       | "registrationId":"$registrationId",
+       | "status":"draft",
+       | "bankAccount":{
+       |   "isProvided":true,
+       |   "details":{
+       |     "name":"testAccountName",
+       |     "sortCode":"$sortCode",
+       |     "number":"$encryptedAccountNumber"
+       |    }
+       |  }
+       |}
+      """.stripMargin).as[JsObject]
+
   "Calling createNewVatScheme" should {
 
     "create a new, blank VatScheme with the correct ID" in new Setup {
@@ -292,28 +313,27 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     }
   }
 
-  "updateBankAccount" should {
+  "fetchBankAccount" should {
 
-    val accountNumber = "12345678"
-    val encryptedAccountNumber = "V0g2RXVUcUZpSUk4STgvbGNFdlAydz09"
-    val sortCode = "12-34-56"
-    val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
-    val bankAccount = BankAccount(true,Some(bankAccountDetails))
-    val vatSchemeWithBankAccount = Json.parse(
-      s"""
-        |{
-        | "registrationId":"$registrationId",
-        | "status":"draft",
-        | "bankAccount":{
-        |   "isProvided":true,
-        |   "details":{
-        |     "name":"testAccountName",
-        |     "sortCode":"$sortCode",
-        |     "number":"$encryptedAccountNumber"
-        |    }
-        |  }
-        |}
-      """.stripMargin).as[JsObject]
+    "return a BankAccount case class if one is found in mongo with the supplied regId" in new Setup {
+      insert(vatSchemeWithBankAccount)
+      //fetchAll shouldBe ""
+
+      val fetchedBankAccount: Option[BankAccount] = repository.fetchBankAccount(registrationId)
+
+      fetchedBankAccount shouldBe Some(bankAccount)
+    }
+
+    "return None if no BankAccount is found in mongo for the supplied regId" in new Setup {
+      count shouldBe 0
+
+      val fetchedBankAccount: Option[BankAccount] = repository.fetchBankAccount(registrationId)
+
+      fetchedBankAccount shouldBe None
+    }
+  }
+
+  "updateBankAccount" should {
 
     "update the registration doc with the provided bank account details and encrypt the account number" in new Setup {
       insert(vatSchemeJson())

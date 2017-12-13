@@ -62,8 +62,8 @@ object BankAccount extends VatBankAccountValidator {
 
 object BankAccountMongoFormat extends VatBankAccountValidator {
   implicit val encryptedFormat: OFormat[BankAccount] = (
-    (__ \ "isProvided").format[Boolean] and
-    (__ \ "details").formatNullable((
+    (__ \ "bankAccount" \ "isProvided").format[Boolean] and
+    (__ \ "bankAccount" \ "details").formatNullable((
       (__ \ "name").format[String] and
       (__ \ "sortCode").format[String](accountSortCodeValidator) and
       (__ \ "number").format[String](Crypto.rds)(Crypto.wts)
