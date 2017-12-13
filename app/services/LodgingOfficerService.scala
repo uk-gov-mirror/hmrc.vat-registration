@@ -18,22 +18,25 @@ package services
 
 import javax.inject.Inject
 
-import models.api.Threshold
-import repositories.{RegistrationMongo, RegistrationMongoRepository, RegistrationRepository}
-import uk.gov.hmrc.http.HeaderCarrier
+import models.api.LodgingOfficer
+import repositories.{RegistrationMongo, RegistrationMongoRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ThresholdService @Inject()(val registrationMongo: RegistrationMongo) extends ThresholdSrv {
+class LodgingOfficerService @Inject()(registrationMongo: RegistrationMongo) extends LodgingOfficerSrv {
   val registrationRepository: RegistrationMongoRepository = registrationMongo.store
 }
 
-trait ThresholdSrv {
+trait LodgingOfficerSrv {
   val registrationRepository: RegistrationMongoRepository
 
-  def upsertThreshold(regId: String, threshold: Threshold)(implicit ex: ExecutionContext): Future[Threshold] =
-    registrationRepository.updateThreshold(regId, threshold)
+  def getLodgingOfficer(regId: String)(implicit ec: ExecutionContext): Future[Option[LodgingOfficer]] =
+    registrationRepository.getLodgingOfficer(regId)
 
-  def getThreshold(regId: String)(implicit ex: ExecutionContext): Future[Option[Threshold]] =
-    registrationRepository.getThreshold(regId)
+  def updateLodgingOfficer(regId: String, officer: LodgingOfficer)(implicit ec: ExecutionContext): Future[LodgingOfficer] =
+    registrationRepository.updateLodgingOfficer(regId,officer)
+
+  def updateIVStatus(regId: String, ivStatus: Boolean)(implicit ec: ExecutionContext): Future[Boolean] = {
+    registrationRepository.updateIVStatus(regId, ivStatus)
+  }
 }

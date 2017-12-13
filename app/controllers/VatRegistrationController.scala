@@ -129,7 +129,7 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
   @deprecated("Use updateEligibility or updateThreshold instead", "12/12/2017")
   def updateVatEligibility(id: RegistrationId): Action[JsValue] = patch[VatServiceEligibility](registrationService, id)
 
-  def updateLodgingOfficer(id: RegistrationId): Action[JsValue] = patch[VatLodgingOfficer](registrationService, id)
+  def updateLodgingOfficer(id: RegistrationId): Action[JsValue] = patch[LodgingOfficer](registrationService, id)
 
   def updateFlatRateScheme(id: RegistrationId): Action[JsValue] = patch[VatFlatRateScheme](registrationService, id)
 
@@ -187,6 +187,7 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
 
   def deleteByElement(id: RegistrationId, elementPath: ElementPath): Action[AnyContent] = delete(registrationService, id, elementPath)
 
+  @deprecated("Use LodgingOfficerController.updateIVStatus instead", "SCRS-9379")
   def updateIVStatus(regId: String): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
       authenticated { _ =>

@@ -147,6 +147,7 @@ trait RegistrationService extends ApplicativeSyntax with FutureInstances {
   def retrieveAcknowledgementReference(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[String] =
     retrieveVatScheme(id).subflatMap(_.acknowledgementReference.toRight(ResourceNotFound("AcknowledgementId")))
 
+  @deprecated("Use LodgingOfficerController.updateIVStatus instead", "SCRS-9379")
   def updateIVStatus(regId: String, ivStatus: Boolean)(implicit hc: HeaderCarrier): Future[Boolean] = {
     registrationRepository.updateIVStatus(regId, ivStatus)
   }

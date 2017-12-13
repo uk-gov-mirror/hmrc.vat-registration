@@ -135,6 +135,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
         .user.isAuthorised
 
       repo.createNewVatScheme(RegistrationId("testRegId"))
+      repo.updateLodgingOfficer("testRegId", vatLodgingOfficer)
 
       val result = await(client(controllers.routes.VatRegistrationController.updateIVStatus("testRegId").url).patch(Json.parse("""{"ivPassed" : true}""")))
       result.status shouldBe OK
