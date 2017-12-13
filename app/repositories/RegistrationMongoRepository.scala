@@ -57,7 +57,7 @@ trait RegistrationRepository {
   def updateIVStatus(regId: String, ivStatus: Boolean)(implicit hc: HeaderCarrier): Future[Boolean]
   def saveTransId(transId: String, regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String]
   def fetchRegByTxId(transId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]]
-
+  def retrieveTradingDetails(regId: String)(implicit hc: HeaderCarrier): Future[Option[TradingDetails]]
   def updateTradingDetails(regId: String, tradingDetails: TradingDetails)(implicit ex: ExecutionContext): Future[TradingDetails]
   def updateReturns(regId: String, returns: Returns)(implicit ex: ExecutionContext): Future[Returns]
   def fetchBankAccount(regId: String)(implicit ex: ExecutionContext): Future[Option[BankAccount]]
@@ -103,6 +103,11 @@ class RegistrationMongoRepository (mongo: () => DB)
 
   override def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
     collection.find(ridSelector(id)).one[VatScheme]
+  }
+
+  override def retrieveTradingDetails(regId: String)(implicit hc: HeaderCarrier): Future[Option[TradingDetails]] = {
+    val tradingDetailsProj = BSONDocument("tradingDetails" -> 1, "_id" -> 0)
+    collection.find(regIdSelector(regId), tradingDetailsProj).one[TradingDetails]
   }
 
   override def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G], hc: HeaderCarrier): Future[G] =
@@ -186,7 +191,7 @@ class RegistrationMongoRepository (mongo: () => DB)
 
   override def updateTradingDetails(regId: String, tradingDetails: TradingDetails)(implicit ex: ExecutionContext): Future[TradingDetails] = {
     val selector = regIdSelector(regId)
-    val update = BSONDocument("$set" -> BSONDocument("tradingDetails" -> Json.toJson(tradingDetails)))
+    val update = BSONDocument("$set" -> Json.toJson(tradingDetails))
     collection.update(selector, update) map { updateResult =>
       Logger.info(s"[TradingDetails] updating trading details for regId : $regId - documents modified : ${updateResult.nModified}")
       tradingDetails

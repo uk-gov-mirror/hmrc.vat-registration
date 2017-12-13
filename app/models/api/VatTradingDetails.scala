@@ -17,6 +17,7 @@
 package models.api
 
 import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 @deprecated("Use TradingDetails instead", "07/12/2017")
 case class VatTradingDetails(vatChoice: VatChoice,
@@ -32,5 +33,8 @@ case class TradingDetails(tradingName: Option[String],
                           eoriRequested: Option[Boolean])
 
 object TradingDetails {
-  implicit val format: OFormat[TradingDetails] = Json.format[TradingDetails]
+  implicit val format: OFormat[TradingDetails] = (
+    (__ \ "tradingDetails" \ "tradingName").formatNullable[String] and
+    (__ \ "tradingDetails" \ "eoriRequested").formatNullable[Boolean]
+  )(TradingDetails.apply, unlift(TradingDetails.unapply))
 }

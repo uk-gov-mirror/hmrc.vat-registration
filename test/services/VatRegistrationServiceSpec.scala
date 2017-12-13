@@ -153,6 +153,24 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
     }
   }
 
+  "call to retrieveTradingDetails" should {
+    val fullTradingDetails = TradingDetails(Some("tradingName"),Some(true))
+
+    "return a trading details if one exists in the database for the registration id" in new Setup {
+      when(mockRegistrationRepository.retrieveTradingDetails(ArgumentMatchers.any())(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(Some(fullTradingDetails)))
+
+      await(service.retrieveTradingDetails("1")) shouldBe Some(fullTradingDetails)
+    }
+
+    "return a None if no trading details exist for the registration id" in new Setup {
+      when(mockRegistrationRepository.retrieveTradingDetails(ArgumentMatchers.any())(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(None))
+
+      await(service.retrieveTradingDetails("1")) shouldBe None
+    }
+  }
+
   "call to deleteVatScheme" should {
     "return true" when {
       "the document has been deleted" in new Setup {

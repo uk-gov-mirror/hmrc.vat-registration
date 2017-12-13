@@ -111,6 +111,8 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
   }
 
 
+
+
   "Calling updateLogicalGroup" should {
 
     "should update to VatTradingDetails success" in new Setup {
@@ -262,15 +264,15 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
         |}
       """.stripMargin).as[JsObject]
 
-    val vatSchemeWithTradingDetailsJson: JsObject = Json.parse(
+    def vatSchemeWithTradingDetailsJson: JsObject = Json.parse(
       s"""
-        |{
-        | "registrationId":"$registrationId",
-        | "status":"draft",
-        | "tradingDetails":{
-        |   "tradingName":"$tradingName"
-        | }
-        |}
+         |{
+         | "registrationId":"$registrationId",
+         | "status":"draft",
+         | "tradingDetails":{
+         |   "tradingName":"$tradingName"
+         | }
+         |}
       """.stripMargin).as[JsObject]
 
     val otherRegId = "other-reg-12345"
@@ -313,7 +315,56 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     }
   }
 
+  "Calling retrieveTradingDetails" should {
+
+    val tradingName = "testTradingName"
+
+    val tradingDetails: TradingDetails = TradingDetails(Some(tradingName), Some(true))
+
+    def vatSchemeWithTradingDetailsJson(regId: String): JsObject = Json.parse(
+      s"""
+         |{
+         | "registrationId":"$regId",
+         | "status":"draft",
+         | "tradingDetails":{
+         |   "tradingName":"$tradingName",
+         |   "eoriRequested":true
+         | }
+         |}
+      """.stripMargin).as[JsObject]
+
+    "retrieve a TradingDetails object if it exists for the registration id" in new Setup {
+      insert(vatSchemeWithTradingDetailsJson(registrationId))
+      await(repository.retrieveTradingDetails(registrationId)).get shouldBe tradingDetails
+    }
+
+    "return None if a TradingDetails does not exist for the registration id" in new Setup {
+      await(repository.retrieveTradingDetails(registrationId)) shouldBe None
+    }
+
+  }
+
   "fetchBankAccount" should {
+
+    "return a BankAccount case class if one is found in mongo with the supplied regId" in new Setup {
+      insert(vatSchemeWithBankAccount)
+      //fetchAll shouldBe ""
+
+      val fetchedBankAccount: Option[BankAccount] = repository.fetchBankAccount(registrationId)
+
+      fetchedBankAccount shouldBe Some(bankAccount)
+    }
+
+    "return None if no BankAccount is found in mongo for the supplied regId" in new Setup {
+      count shouldBe 0
+
+      val fetchedBankAccount: Option[BankAccount] = repository.fetchBankAccount(registrationId)
+
+      fetchedBankAccount shouldBe None
+    }
+  }
+
+  "updateBankAccount" should {
 
     "return a BankAccount case class if one is found in mongo with the supplied regId" in new Setup {
       insert(vatSchemeWithBankAccount)

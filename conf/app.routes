@@ -8,6 +8,9 @@ GET          /:regId/get-scheme                     controllers.VatRegistrationC
 PATCH        /:regID/trading-details                controllers.VatRegistrationController.updateVatTradingDetails(regID: RegistrationId)
 # uncomment when legacy trading details API gets removed or renamed
 #PATCH        /:regId/trading-details                controllers.VatRegistrationController.updateTradingDetails(regId)
+
+GET          /:regId/trading-details                controllers.VatRegistrationController.fetchTradingDetails(regId)
+
 PATCH        /:regID/vat-financials                 controllers.VatRegistrationController.updateVatFinancials(regID: RegistrationId)
 PATCH        /:regID/sic-and-compliance             controllers.VatRegistrationController.updateSicAndCompliance(regID: RegistrationId)
 PATCH        /:regID/vat-contact                    controllers.VatRegistrationController.updateVatContact(regID: RegistrationId)
