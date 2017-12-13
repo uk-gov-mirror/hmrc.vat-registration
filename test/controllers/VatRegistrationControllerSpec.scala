@@ -162,7 +162,8 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
       val accountNumber = "12345678"
       val sortCode = "12-34-56"
-      val bankAccount = BankAccount("testAccountName", sortCode, accountNumber)
+      val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
+      val bankAccount = BankAccount(true,Some(bankAccountDetails))
 
       when(mockRegistrationMongo.store).thenReturn(mockRegistrationMongoRepository)
 
@@ -172,9 +173,11 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
         val request: FakeRequest[JsObject] = FakeRequest().withBody(
           Json.obj(
-            "accountName" -> "testAccountName",
-            "accountSortCode" -> sortCode,
-            "accountNumber" -> accountNumber
+            "isProvided" -> true,
+            "details" -> Json.obj(
+              "name" -> "testAccountName",
+              "sortCode" -> sortCode,
+              "number" -> accountNumber)
           )
         )
 
@@ -183,6 +186,56 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         status(result) shouldBe OK
       }
     }
+
+    "fetchBankAccountDetails with a bank account" should {
+
+      val registrationId = "reg-12345"
+
+      val accountNumber = "12345678"
+      val sortCode = "12-34-56"
+      val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
+      val bankAccount = BankAccount(true,Some(bankAccountDetails))
+
+      "return a 200 if the fetch from mongo was successful" in new Setup {
+        when(mockRegistrationMongoRepository.fetchBankAccount(any())(any()))
+          .thenReturn(Future.successful(Some(bankAccount)))
+
+        val expected = Json.obj(
+          "isProvided" -> true,
+          "details" -> Json.obj(
+            "name" -> "testAccountName",
+            "sortCode" -> sortCode,
+            "number" -> accountNumber)
+        )
+
+
+        val result = controller.fetchBankAccountDetails(registrationId)(FakeRequest())
+
+        status(result) shouldBe OK
+        await(jsonBodyOf(result)) shouldBe expected
+      }
+    }
+
+    "fetchBankAccountDetails with no bank account" should {
+
+      val registrationId = "reg-12345"
+
+      val accountNumber = "12345678"
+      val sortCode = "12-34-56"
+      val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
+      val bankAccount = BankAccount(true,Some(bankAccountDetails))
+
+      "return a 404 if the fetch from mongo returned nothing" in new Setup {
+        when(mockRegistrationMongoRepository.fetchBankAccount(any())(any()))
+          .thenReturn(Future.successful(None))
+
+       val result = controller.fetchBankAccountDetails(registrationId)(FakeRequest())
+
+        status(result) shouldBe NOT_FOUND
+
+      }
+    }
+
 
     "updateTurnoverEstimates" should {
 
@@ -211,9 +264,9 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
     "updateReturns" should {
 
+      import Returns._
+
       val registrationId = "reg-12345"
-      val MONTHLY = "monthly"
-      val JAN_FEB_MAR = "jan,feb,mar"
       val startDate = LocalDate of (1990, 10, 10)
 
       val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN_FEB_MAR), startDate)

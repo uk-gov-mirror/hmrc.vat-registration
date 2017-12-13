@@ -19,13 +19,13 @@ package controllers
 import javax.inject.Inject
 
 import common.RegistrationId
-import common.exceptions.{InvalidSubmissionStatus, LeftState, MissingRegDocument, ResourceNotFound}
+import common.exceptions.{InvalidSubmissionStatus, LeftState, MissingRegDocument}
 import connectors.AuthConnector
 import enums.VatRegStatus
 import models.ElementPath
 import models.api._
 import play.api.libs.json._
-import play.api.mvc.{Action, AnyContent, Result}
+import play.api.mvc._
 import repositories.{RegistrationMongo, RegistrationMongoRepository}
 import repositories.RegistrationMongoFormats.encryptedFinancials
 import services._
@@ -71,6 +71,14 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
         withJsonBody[Returns]{ returns =>
           registrationRepository.updateReturns(regId, returns) map ( _ => Ok)
         }
+      }
+  }
+
+  def fetchBankAccountDetails(regId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      registrationRepository.fetchBankAccount(regId) map {
+        case Some(bankAccount) => Ok(Json.toJson(bankAccount))
+        case None              => NotFound
       }
   }
 
