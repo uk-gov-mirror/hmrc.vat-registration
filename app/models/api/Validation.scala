@@ -34,10 +34,10 @@ trait VatBankAccountValidator extends Validation {
 }
 
 trait VatAccountingPeriodValidator extends Validation {
-  val JAN_FEB_MAR = "jan,feb,mar"
-  val APR_MAY_JUN = "apr,may,jun"
-  val JUL_AUG_SEP = "jul,aug,sep"
-  val OCT_NOV_DEC = "oct,nov,dec"
+  val JAN_FEB_MAR = "jan_feb_mar"
+  val APR_MAY_JUN = "apr_may_jun"
+  val JUL_AUG_SEP = "jul_aug_sep"
+  val OCT_NOV_DEC = "oct_nov_dec"
 
   val MONTHLY = "monthly"
   val QUARTERLY = "quarterly"

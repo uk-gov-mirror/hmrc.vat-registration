@@ -264,9 +264,9 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
     "updateReturns" should {
 
+      import Returns._
+
       val registrationId = "reg-12345"
-      val MONTHLY = "monthly"
-      val JAN_FEB_MAR = "jan,feb,mar"
       val startDate = LocalDate of (1990, 10, 10)
 
       val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN_FEB_MAR), startDate)
