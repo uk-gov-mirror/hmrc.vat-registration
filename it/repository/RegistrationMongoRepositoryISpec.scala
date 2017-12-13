@@ -22,7 +22,7 @@ import common.exceptions._
 import common.{LogicalGroup, RegistrationId, TransactionId}
 import enums.VatRegStatus
 import itutil.{FutureAssertions, ITFixtures, MongoBaseSpec}
-import models.api.{BankAccount, Returns, TradingDetails, TurnoverEstimates, Eligibility, Threshold}
+import models.api._
 import models.{AcknowledgementReferencePath, VatBankAccountPath}
 import org.scalatest.BeforeAndAfterEach
 import play.api.libs.json._
@@ -64,6 +64,27 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
       """.stripMargin).as[JsObject]
 
   val otherUsersVatScheme: JsObject = vatSchemeJson(otherRegId)
+
+  val accountNumber = "12345678"
+  val encryptedAccountNumber = "V0g2RXVUcUZpSUk4STgvbGNFdlAydz09"
+  val sortCode = "12-34-56"
+  val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
+  val bankAccount = BankAccount(isProvided = true, Some(bankAccountDetails))
+  val vatSchemeWithBankAccount: JsObject = Json.parse(
+    s"""
+       |{
+       | "registrationId":"$registrationId",
+       | "status":"draft",
+       | "bankAccount":{
+       |   "isProvided":true,
+       |   "details":{
+       |     "name":"testAccountName",
+       |     "sortCode":"$sortCode",
+       |     "number":"$encryptedAccountNumber"
+       |    }
+       |  }
+       |}
+      """.stripMargin).as[JsObject]
 
   "Calling createNewVatScheme" should {
 
@@ -292,25 +313,27 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     }
   }
 
+  "fetchBankAccount" should {
+
+    "return a BankAccount case class if one is found in mongo with the supplied regId" in new Setup {
+      insert(vatSchemeWithBankAccount)
+      //fetchAll shouldBe ""
+
+      val fetchedBankAccount: Option[BankAccount] = repository.fetchBankAccount(registrationId)
+
+      fetchedBankAccount shouldBe Some(bankAccount)
+    }
+
+    "return None if no BankAccount is found in mongo for the supplied regId" in new Setup {
+      count shouldBe 0
+
+      val fetchedBankAccount: Option[BankAccount] = repository.fetchBankAccount(registrationId)
+
+      fetchedBankAccount shouldBe None
+    }
+  }
+
   "updateBankAccount" should {
-
-    val accountNumber = "12345678"
-    val encryptedAccountNumber = "V0g2RXVUcUZpSUk4STgvbGNFdlAydz09"
-    val sortCode = "12-34-56"
-    val bankAccount = BankAccount("testAccountName", sortCode, accountNumber)
-
-    val vatSchemeWithBankAccount = Json.parse(
-      s"""
-        |{
-        | "registrationId":"$registrationId",
-        | "status":"draft",
-        | "bankAccount":{
-        |   "accountName":"testAccountName",
-        |   "accountSortCode":"$sortCode",
-        |   "accountNumber":"$encryptedAccountNumber"
-        | }
-        |}
-      """.stripMargin).as[JsObject]
 
     "update the registration doc with the provided bank account details and encrypt the account number" in new Setup {
       insert(vatSchemeJson())
