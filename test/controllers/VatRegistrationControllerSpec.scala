@@ -173,11 +173,11 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
         val request: FakeRequest[JsObject] = FakeRequest().withBody(
           Json.obj(
-            "hasBankAccount" -> true,
-            "bankAccountDetails" -> Json.obj(
-            "accountName" -> "testAccountName",
-            "accountSortCode" -> sortCode,
-            "accountNumber" -> accountNumber)
+            "isProvided" -> true,
+            "details" -> Json.obj(
+              "name" -> "testAccountName",
+              "sortCode" -> sortCode,
+              "number" -> accountNumber)
           )
         )
 

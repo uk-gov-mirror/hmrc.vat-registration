@@ -305,10 +305,13 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
         | "registrationId":"$registrationId",
         | "status":"draft",
         | "bankAccount":{
-        |   "n ame":"testAccountName",
-        |   "accountSortCode":"$sortCode",
-        |   "accountNumber":"$encryptedAccountNumber"
-        | }
+        |   "isProvided":true,
+        |   "details":{
+        |     "name":"testAccountName",
+        |     "sortCode":"$sortCode",
+        |     "number":"$encryptedAccountNumber"
+        |    }
+        |  }
         |}
       """.stripMargin).as[JsObject]
 
