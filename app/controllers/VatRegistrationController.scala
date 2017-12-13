@@ -112,6 +112,16 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
       }
   }
 
+  def fetchTradingDetails(regId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      authenticated { _ =>
+        registrationService.retrieveTradingDetails(regId) map {
+          case Some(tradingDetails) => Ok(Json.toJson(tradingDetails))
+          case None => NotFound
+        }
+      }
+  }
+
   def updateSicAndCompliance(id: RegistrationId): Action[JsValue] = patch[VatSicAndCompliance](registrationService, id)
 
   def updateVatContact(id: RegistrationId): Action[JsValue] = patch[VatContact](registrationService, id)

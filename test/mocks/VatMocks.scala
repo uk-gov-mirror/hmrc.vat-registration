@@ -25,7 +25,7 @@ import common.{RegistrationId, TransactionId}
 import connectors._
 import enums.VatRegStatus
 import models._
-import models.api.VatScheme
+import models.api.{TradingDetails, VatScheme}
 import models.external.IncorporationStatus
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers._
@@ -116,6 +116,11 @@ trait VatMocks extends WSHTTPMock {
       val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
       when(mockRegistrationService.retrieveVatScheme(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
+    }
+
+    def mockRetrieveTradingDetails(tradingDetails: Option[TradingDetails]): Unit = {
+      when(mockRegistrationService.retrieveTradingDetails(ArgumentMatchers.any())(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(tradingDetails))
     }
 
     def mockRetrieveVatScheme(id: RegistrationId, vatScheme: VatScheme): Unit = {

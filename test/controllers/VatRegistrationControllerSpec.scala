@@ -88,6 +88,16 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       controller.retrieveVatScheme(regId)(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
     }
 
+    "call to fetchTradingDetails return Ok with TradingDetails if it found trading details" in new Setup {
+      ServiceMocks.mockRetrieveTradingDetails(Some(TradingDetails(Some("tradingDetails"),Some(true))))
+      controller.fetchTradingDetails("regId")(FakeRequest()) returnsStatus OK
+    }
+
+    "call to fetchTradingDetails return Not found without trading details if it did not find trading details" in new Setup {
+      ServiceMocks.mockRetrieveTradingDetails(None)
+      controller.fetchTradingDetails("regId")(FakeRequest()) returnsStatus NOT_FOUND
+    }
+
     "return 503 if RegistrationService encounters any problems" in new Setup {
       ServiceMocks.mockFailedCreateNewRegistration(regId)
       controller.newVatRegistration()(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
@@ -148,7 +158,8 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         when(mockRegistrationMongoRepository.updateTradingDetails(any(), any())(any()))
           .thenReturn(Future.successful(tradingDetails))
 
-        val request: FakeRequest[JsObject] = FakeRequest().withBody(Json.obj("tradingName" -> tradingName, "eoriRequested" -> true))
+        val request: FakeRequest[JsObject] = FakeRequest().
+          withBody(Json.obj("tradingDetails" -> Json.obj("tradingName" -> tradingName, "eoriRequested" -> true)))
 
         val result: Result = controller.updateTradingDetails(registrationId)(request)
 

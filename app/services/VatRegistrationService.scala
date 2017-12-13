@@ -25,7 +25,7 @@ import common.exceptions._
 import common.{LogicalGroup, RegistrationId}
 import connectors._
 import enums.VatRegStatus
-import models.api.VatScheme
+import models.api.{TradingDetails, VatScheme}
 import models.external.CurrentProfile
 import models.{AcknowledgementReferencePath, ElementPath}
 import org.slf4j.LoggerFactory
@@ -121,6 +121,10 @@ trait RegistrationService extends ApplicativeSyntax with FutureInstances {
 
   def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[VatScheme] =
     OptionT(registrationRepository.retrieveVatScheme(id)).toRight(ResourceNotFound(id.value))
+
+  def retrieveTradingDetails(regId: String)(implicit hc: HeaderCarrier): Future[Option[TradingDetails]] = {
+    registrationRepository.retrieveTradingDetails(regId)
+  }
 
   def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G)(implicit hc: HeaderCarrier): ServiceResult[G] =
     toEitherT(registrationRepository.updateLogicalGroup(id, group))
