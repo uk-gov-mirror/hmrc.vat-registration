@@ -24,7 +24,6 @@ import connectors.AuthConnector
 import enums.VatRegStatus
 import models.ElementPath
 import models.api._
-import play.api.http.Writeable
 import play.api.libs.json._
 import play.api.mvc._
 import repositories.{RegistrationMongo, RegistrationMongoRepository}
