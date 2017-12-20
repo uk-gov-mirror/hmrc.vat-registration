@@ -16,8 +16,7 @@
 
 package repositories
 
-import java.time.LocalDate
-import javax.inject.{Inject, Named}
+import javax.inject.Inject
 
 import cats.data.OptionT
 import common.exceptions._
@@ -26,10 +25,9 @@ import enums.VatRegStatus
 import models._
 import models.api._
 import play.api.Logger
-import play.api.libs.json.{JsObject, Json, OFormat, Writes}
+import play.api.libs.json.{JsObject, Json, OFormat, Reads, Writes}
 import play.modules.reactivemongo.{MongoDbConnection, ReactiveMongoComponent}
 import reactivemongo.api.DB
-import reactivemongo.api.commands.UpdateWriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
 import reactivemongo.json.BSONFormats
@@ -39,7 +37,6 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
 
 class RegistrationMongo @Inject()(mongo: ReactiveMongoComponent) extends ReactiveMongoFormats {
   lazy val store = new RegistrationMongoRepository(mongo.mongoConnector.db)
@@ -54,7 +51,7 @@ trait RegistrationRepository {
   def prepareRegistrationSubmission(id: RegistrationId, ackRef : String)(implicit hc: HeaderCarrier): Future[Boolean]
   def finishRegistrationSubmission(id : RegistrationId, status : VatRegStatus.Value)(implicit hc : HeaderCarrier) : Future[VatRegStatus.Value]
   def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit hc: HeaderCarrier): Future[Boolean]
-  def updateIVStatus(regId: String, ivStatus: Boolean)(implicit hc: HeaderCarrier): Future[Boolean]
+  def updateIVStatus(regId: String, ivStatus: Boolean)(implicit ex: ExecutionContext): Future[Boolean]
   def saveTransId(transId: String, regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String]
   def fetchRegByTxId(transId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]]
   def retrieveTradingDetails(regId: String)(implicit hc: HeaderCarrier): Future[Option[TradingDetails]]
@@ -82,7 +79,7 @@ class RegistrationMongoRepository (mongo: () => DB)
 
   private[repositories] def ridSelector(id: RegistrationId) = BSONDocument("registrationId" -> BSONString(id.value))
   private[repositories] def tidSelector(id: String) = BSONDocument("transactionId" -> id)
-  private def regIdSelector(regId: String)                  = BSONDocument("registrationId" -> regId)
+  private[repositories] def regIdSelector(regId: String)                  = BSONDocument("registrationId" -> regId)
 
   override def indexes: Seq[Index] = Seq(
     Index(
@@ -172,20 +169,52 @@ class RegistrationMongoRepository (mongo: () => DB)
     collection.find(tidSelector(transId)).one[VatScheme]
   }
 
-  override def updateIVStatus(regId: String, ivStatus: Boolean)(implicit hc: HeaderCarrier): Future[Boolean] = {
-    val updateDocument = BSONDocument("$set" -> BSONDocument("lodgingOfficer.ivPassed" -> BSONBoolean(ivStatus)))
-    collection.find(regIdSelector(regId)).one[VatScheme] flatMap {
-      case Some(_) => collection.update(regIdSelector(regId), updateDocument) map { wr =>
-        if(wr.ok) {
-          ivStatus
-        } else {
-          logger.error(s"[updateIVStatus] - There was a problem setting the IV status for regId $regId")
-          throw UpdateFailed(RegistrationId(regId), "lodgingOfficer.ivPassed")
-        }
+  private def fetchBlock[T](regId: String, key: String)(implicit ec: ExecutionContext, rds: Reads[T]): Future[Option[T]] = {
+    val projection = Json.obj(key -> 1)
+    collection.find(regIdSelector(regId), projection).one[JsObject].map { doc =>
+      doc.flatMap { js =>
+        (js \ key).validateOpt[T].get
       }
-      case None =>
-        logger.error(s"[updateIVStatus] - No VAT registration could be found for regId ${regId}")
+    }
+  }
+
+  private[repositories] def updateBlock[T](regId: String, data: T, key: String = "")(implicit ec: ExecutionContext, writes: Writes[T]): Future[T] = {
+    def toCamelCase(str: String): String = str.head.toLower + str.tail
+
+    val selectorKey = if(key=="") toCamelCase(data.getClass.getSimpleName) else key
+
+    val setDoc = Json.obj("$set" -> Json.obj(selectorKey -> Json.toJson(data)))
+    collection.update(regIdSelector(regId), setDoc) map { updateResult =>
+      if (updateResult.n == 0) {
+        Logger.warn(s"[${data.getClass.getSimpleName}] updating for regId : $regId - No document found")
+        throw MissingRegDocument(RegistrationId(regId))
+      } else {
+        Logger.info(s"[${data.getClass.getSimpleName}] updating for regId : $regId - documents modified : ${updateResult.nModified}")
+        data
+      }
+    } recover {
+      case e =>
+        Logger.warn(s"Unable to update ${toCamelCase(data.getClass.getSimpleName)} for regId: $regId, Error: ${e.getMessage}")
+        throw e
+    }
+  }
+
+  override def updateIVStatus(regId: String, ivStatus: Boolean)(implicit ex: ExecutionContext): Future[Boolean] = {
+    val querySelect = Json.obj("registrationId" -> regId, "lodgingOfficer" -> Json.obj("$exists" -> true))
+    val setDoc = Json.obj("$set" -> Json.obj("lodgingOfficer.ivPassed" -> ivStatus))
+
+    collection.update(querySelect, setDoc) map { updateResult =>
+      if (updateResult.n == 0) {
+        Logger.warn(s"[LodgingOfficer] updating ivPassed for regId : $regId - No document found or the document does not have lodgingOfficer defined")
         throw new MissingRegDocument(RegistrationId(regId))
+      } else {
+        Logger.info(s"[LodgingOfficer] updating ivPassed for regId : $regId - documents modified : ${updateResult.nModified}")
+        ivStatus
+      }
+    } recover {
+      case e =>
+        Logger.warn(s"Unable to update ivPassed in LodgingOfficer for regId: $regId, Error: ${e.getMessage}")
+        throw e
     }
   }
 
@@ -231,55 +260,24 @@ class RegistrationMongoRepository (mongo: () => DB)
     }
   }
 
-  def getEligibility(regId: String)(implicit hc: HeaderCarrier): Future[Option[Eligibility]] = {
-    val projection = BSONDocument("eligibility" -> 1)
-    collection.find(regIdSelector(regId), projection).one[JsObject].map { doc =>
-      doc.flatMap { js =>
-        (js \ "eligibility").validateOpt[Eligibility].get
-      }
-    }
+  def getEligibility(regId: String)(implicit ec: ExecutionContext): Future[Option[Eligibility]] =
+    fetchBlock[Eligibility](regId, "eligibility")
+
+  def updateEligibility(regId: String, eligibility: Eligibility)(implicit ec: ExecutionContext): Future[Eligibility] = {
+    updateBlock(regId, eligibility)
   }
 
-  def updateEligibility(regId: String, eligibility: Eligibility)(implicit hc: HeaderCarrier): Future[Eligibility] = {
-    val setDoc = BSONDocument("$set" -> BSONDocument("eligibility" -> BSONFormats.toBSON(Json.toJson(eligibility)).get))
-    collection.update(regIdSelector(regId), setDoc) map { updateResult =>
-      if (updateResult.n == 0) {
-        Logger.warn(s"[Eligibility] updating eligibility for regId : $regId - No document found")
-        throw MissingRegDocument(RegistrationId(regId))
-      } else {
-        Logger.info(s"[Eligibility] updating eligibility for regId : $regId - documents modified : ${updateResult.nModified}")
-        eligibility
-      }
-    } recover {
-      case e =>
-        Logger.warn(s"Unable to update eligibility for regId: $regId, Error: ${e.getMessage}")
-        throw e
-    }
+  def getThreshold(regId: String)(implicit ec: ExecutionContext): Future[Option[Threshold]] =
+    fetchBlock[Threshold](regId, "threshold")
+
+  def updateThreshold(regId: String, threshold: Threshold)(implicit ec: ExecutionContext): Future[Threshold] = {
+    updateBlock(regId, threshold)
   }
 
-  def getThreshold(regId: String)(implicit hc: HeaderCarrier): Future[Option[Threshold]] = {
-    val projection = BSONDocument("threshold" -> 1)
-    collection.find(regIdSelector(regId), projection).one[JsObject].map { doc =>
-      doc.flatMap { js =>
-        (js \ "threshold").validateOpt[Threshold].get
-      }
-    }
-  }
+  def getLodgingOfficer(regId: String)(implicit ec: ExecutionContext): Future[Option[LodgingOfficer]] =
+    fetchBlock[LodgingOfficer](regId, "lodgingOfficer")
 
-  def updateThreshold(regId: String, threshold: Threshold)(implicit hc: HeaderCarrier): Future[Threshold] = {
-    val setDoc = BSONDocument("$set" -> BSONDocument("threshold" -> BSONFormats.toBSON(Json.toJson(threshold)).get))
-    collection.update(regIdSelector(regId), setDoc) map { updateResult =>
-      if (updateResult.n == 0) {
-        Logger.warn(s"[Threshold] updating threshold for regId : $regId - No document found")
-        throw MissingRegDocument(RegistrationId(regId))
-      } else {
-        Logger.info(s"[Threshold] updating threshold for regId : $regId - documents modified : ${updateResult.nModified}")
-        threshold
-      }
-    } recover {
-      case e =>
-        Logger.warn(s"Unable to update threshold for regId: $regId, Error: ${e.getMessage}")
-        throw e
-    }
+  def updateLodgingOfficer(regId: String, lodgingOfficer: LodgingOfficer)(implicit ec: ExecutionContext): Future[LodgingOfficer] = {
+    updateBlock(regId, lodgingOfficer)
   }
 }

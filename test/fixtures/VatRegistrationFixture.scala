@@ -47,7 +47,7 @@ trait VatRegistrationFixture {
       tradingName = Some("some-trader-name")),
     euTrading = VatEuTrading(selection = true, eoriApplication = Some(true))
   )
-  val scrsAddress = ScrsAddress("line1", "line2", None, None, Some("XX XX"), Some("UK"))
+  val scrsAddress = Address("line1", "line2", None, None, Some("XX XX"), Some("UK"))
   val sicCode = SicCode("88888888", "description", "displayDetails")
   val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description", None, None, mainBusinessActivity = sicCode)
   val vatDigitalContact = VatDigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
@@ -72,8 +72,9 @@ trait VatRegistrationFixture {
     ))
   )
 
-  val name = Name(forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
-  val formerName = FormerName("Bob Smith", date)
+  val name = Name(first = Some("Forename"), middle = None, last = Some("Surname"), forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
+  val oldName = Name(first = Some("Bob Smith"), middle = None, last = None, forename = None, surname = None, title = None, otherForenames = None)
+  val formerName = FormerName("Bob Smith", date, name = oldName, change = date)
   val contact = OfficerContactDetails(Some("test@test.com"), None, None)
   val vatScheme: VatScheme = VatScheme(regId, status = VatRegStatus.draft)
   val exception = new Exception("Exception")
@@ -84,7 +85,7 @@ trait VatRegistrationFixture {
     annualCostsLimited = Some("yesWithin12months"),
     doYouWantToUseThisRate = Some(false),
     whenDoYouWantToJoinFrs = Some("VAT_REGISTRATION_DATE"))
-  val changeOfName = ChangeOfName(true, Some(FormerName("", LocalDate.now())))
+  val changeOfName = ChangeOfName(true, Some(FormerName(formerName = "", LocalDate.now(), name = oldName, change = LocalDate.now())))
 
   def incorporationStatus(status: String = "accepted", incorpDate: LocalDate = LocalDate.now()): IncorporationStatus =
     IncorporationStatus(
@@ -102,8 +103,21 @@ trait VatRegistrationFixture {
       )
     )
 
-  val validEligibility = Eligibility(1,"thisIsAValidReason")
-  val upsertEligibility = Eligibility(1,"thisIsAnUpsert")
-  val validThreshold = Threshold(false,Some("voluntaryReason"),Some(LocalDate.now()),Some(LocalDate.now()))
-  val upsertThreshold = Threshold(true,None,Some(LocalDate.now()),Some(LocalDate.now()))
+  val validEligibility          = Eligibility(1,"thisIsAValidReason")
+  val upsertEligibility         = Eligibility(1,"thisIsAnUpsert")
+  val validThreshold            = Threshold(false,Some("voluntaryReason"),Some(LocalDate.now()),Some(LocalDate.now()))
+  val upsertThreshold           = Threshold(true,None,Some(LocalDate.now()),Some(LocalDate.now()))
+  val currentAddress            = Address("12 Lukewarm","Oriental lane")
+  val skylakeValiarm            = Name(first = Some("Skylake"), middle = None, last = Some("Valiarm"))
+  val skylakeDigitalContact     = VatDigitalContact("skylake@vilikariet.com", None, None)
+  val lodgingOfficerDetails     = LodgingOfficerDetails(currentAddress = currentAddress, None, None, contact = skylakeDigitalContact)
+  val validLodgingOfficerPreIV  = LodgingOfficer(
+    dob = LocalDate.now(),
+    nino = "AB123456A",
+    role = "secretary",
+    name = skylakeValiarm,
+    ivPassed = None,
+    details = None
+  )
+  val validLodgingOfficerPostIv = validLodgingOfficerPreIV.copy(ivPassed = Some(true), details = Some(lodgingOfficerDetails))
 }
