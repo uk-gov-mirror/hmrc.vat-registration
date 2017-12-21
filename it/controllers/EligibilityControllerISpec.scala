@@ -89,6 +89,17 @@ class EligibilityControllerISpec extends IntegrationStubbing with ITFixtures {
       })
     }
 
+    "return 204" in new Setup {
+      given
+        .user.isAuthorised
+
+      insertIntoDb(emptyVatScheme("regId"))
+
+      await(client(controllers.routes.EligibilityController.getEligibility("regId").url).get() map { response =>
+        response.status shouldBe 204
+      })
+    }
+
     "return 404 if no document found" in new Setup {
       given
         .user.isAuthorised

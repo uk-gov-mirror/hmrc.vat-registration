@@ -545,13 +545,13 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
       await(result) shouldBe None
     }
 
-    "return None from a none existing registration" in new Setup {
+    "throw a MissingRegDocument for a none existing registration" in new Setup {
       val result = for {
         _   <- repository.insert(vatScheme.copy(eligibility = Some(eligibility)))
         res <- repository.getEligibility("wrongRegId")
       } yield res
 
-      await(result) shouldBe None
+      a[MissingRegDocument] shouldBe thrownBy(await(result))
     }
 
     "return an exception if there is no version in eligibility block in repository" in new Setup {
@@ -631,13 +631,13 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
       await(result) shouldBe None
     }
 
-    "return None from a none existing registration" in new Setup {
+    "throw a MissingRegDocument for a none existing registration" in new Setup {
       val result = for {
         _   <- repository.insert(vatScheme.copy(threshold = Some(threshold)))
         res <- repository.getThreshold("wrongRegId")
       } yield res
 
-      await(result) shouldBe None
+      a[MissingRegDocument] shouldBe thrownBy(await(result))
     }
 
     "return an exception if there is no mandatory registration in threshold block in repository" in new Setup {
@@ -741,13 +741,13 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
       await(result) shouldBe None
     }
 
-    "return None from a none existing registration" in new Setup {
+    "throw a MissingRegDocument for a none existing registration" in new Setup {
       val result = for {
         _   <- repository.insert(vatScheme.copy(lodgingOfficer = Some(lodgingOfficer)))
         res <- repository.getLodgingOfficer("wrongRegId")
       } yield res
 
-      await(result) shouldBe None
+      a[MissingRegDocument] shouldBe thrownBy(await(result))
     }
 
     "return an exception if there is no name in lodging officer block in repository" in new Setup {

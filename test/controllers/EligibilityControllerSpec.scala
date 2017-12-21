@@ -41,19 +41,22 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
     def userIsAuthorised(): Unit = AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
     def userIsNotAuthorised(): Unit = AuthorisationMocks.mockNotLoggedInOrAuthorised()
 
-    def getsEligibilityData(): OngoingStubbing[Future[Option[Eligibility]]] = when(mockEligibilityService.getEligibility(any())(any()))
+    def getEligibilityData(): OngoingStubbing[Future[Option[Eligibility]]] = when(mockEligibilityService.getEligibility(any())(any()))
       .thenReturn(Future.successful(Some(validEligibility)))
 
-    def getsNoEligibilityData(): OngoingStubbing[Future[Option[Eligibility]]] = when(mockEligibilityService.getEligibility(any())(any()))
+    def getEligibilityDataNotFound(): OngoingStubbing[Future[Option[Eligibility]]] = when(mockEligibilityService.getEligibility(any())(any()))
+      .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
+
+    def getNoEligibilityData(): OngoingStubbing[Future[Option[Eligibility]]] = when(mockEligibilityService.getEligibility(any())(any()))
       .thenReturn(Future.successful(None))
 
-    def upsertsEligibility(): OngoingStubbing[Future[Eligibility]] = when(mockEligibilityService.upsertEligibility(any(), any())(any()))
+    def updateEligibility(): OngoingStubbing[Future[Eligibility]] = when(mockEligibilityService.upsertEligibility(any(), any())(any()))
       .thenReturn(Future.successful(upsertEligibility))
 
-    def upsertEligibilityFails(): OngoingStubbing[Future[Eligibility]] = when(mockEligibilityService.upsertEligibility(any(), any())(any()))
+    def updateEligibilityFails(): OngoingStubbing[Future[Eligibility]] = when(mockEligibilityService.upsertEligibility(any(), any())(any()))
       .thenReturn(Future.failed(new Exception))
 
-    def upsertEligibilityNotFound(): OngoingStubbing[Future[Eligibility]] = when(mockEligibilityService.upsertEligibility(any(), any())(any()))
+    def updateEligibilityNotFound(): OngoingStubbing[Future[Eligibility]] = when(mockEligibilityService.upsertEligibility(any(), any())(any()))
       .thenReturn(Future.failed(new MissingRegDocument(RegistrationId("testId"))))
   }
 
@@ -83,7 +86,7 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
   "getEligibility" should {
     "returns a valid json if found for id" in new Setup {
       userIsAuthorised()
-      getsEligibilityData()
+      getEligibilityData()
 
       val result = controller.getEligibility("testId")(FakeRequest())
 
@@ -91,9 +94,18 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
       jsonBodyOf(await(result)) shouldBe validEligibilityJson
     }
 
+    "returns 204 if none found" in new Setup {
+      userIsAuthorised()
+      getNoEligibilityData()
+
+      val result = controller.getEligibility("testId")(FakeRequest())
+
+      status(result) shouldBe 204
+    }
+
     "returns 404 if none found" in new Setup {
       userIsAuthorised()
-      getsNoEligibilityData()
+      getEligibilityDataNotFound()
 
       val result = controller.getEligibility("testId")(FakeRequest())
 
@@ -119,7 +131,7 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
     "returns 200 if successful" in new Setup {
       userIsAuthorised()
-      upsertsEligibility()
+      updateEligibility()
       val result = controller.updateEligibility("testId")(FakeRequest().withBody[JsObject](upsertEligibilityJson))
       status(result) shouldBe 200
       jsonBodyOf(await(result)) shouldBe upsertEligibilityJson
@@ -127,21 +139,21 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
     "returns 400 if json received is invalid" in new Setup {
       userIsAuthorised()
-      upsertEligibilityFails()
+      updateEligibilityFails()
       val result = controller.updateEligibility("testId")(FakeRequest().withBody[JsObject](invalidUpsertJson))
       status(result) shouldBe 400
     }
 
     "returns 404 if the registration is not found" in new Setup {
       userIsAuthorised()
-      upsertEligibilityNotFound()
+      updateEligibilityNotFound()
       val result = controller.updateEligibility("testId")(FakeRequest().withBody[JsObject](upsertEligibilityJson))
       status(result) shouldBe 404
     }
 
     "returns 500 if an error occurs" in new Setup {
       userIsAuthorised()
-      upsertEligibilityFails()
+      updateEligibilityFails()
       val result = controller.updateEligibility("testId")(FakeRequest().withBody[JsObject](upsertEligibilityJson))
       status(result) shouldBe 500
     }

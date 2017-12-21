@@ -133,6 +133,17 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing with ITFixtures 
       })
     }
 
+    "return 204" in new Setup {
+      given
+        .user.isAuthorised
+
+      insertIntoDb(emptyVatScheme("regId"))
+
+      await(client(controllers.routes.LodgingOfficerController.getLodgingOfficer("regId").url).get() map { response =>
+        response.status shouldBe 204
+      })
+    }
+
     "return 404 if no document found" in new Setup {
       given
         .user.isAuthorised

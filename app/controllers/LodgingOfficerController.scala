@@ -36,9 +36,7 @@ trait LodgingOfficerController extends VatRegistrationBaseController {
   def getLodgingOfficer(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
-        lodgingOfficerService.getLodgingOfficer(regId) map {
-          _.fold(NotFound(""))(officer => Ok(Json.toJson(officer)))
-        }
+        lodgingOfficerService.getLodgingOfficer(regId) sendResult
       }
   }
 
