@@ -249,6 +249,38 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       }
     }
 
+    "fetchReturns" should {
+      val registrationId = "reg-12345"
+      val date = LocalDate.of(2017, 1, 1)
+      val returns = Returns(true, "quarterly", Some("jan"), Some(date))
+
+      val expected = Json.obj(
+        "reclaimVatOnMostReturns" -> true,
+        "frequency" -> "quarterly",
+        "staggerStart" -> "jan",
+        "vatStartDate" -> date
+      )
+
+      "return a OK if the returns is present in the database" in new Setup {
+        when(mockRegistrationMongoRepository.fetchReturns(any())(any()))
+          .thenReturn(Future.successful(Some(returns)))
+
+        val result = controller.fetchReturns(registrationId)(FakeRequest())
+
+        status(result) shouldBe OK
+        await(jsonBodyOf(result)) shouldBe expected
+      }
+
+      "return a NOT_FOUND if the returns is not present" in new Setup {
+        when(mockRegistrationMongoRepository.fetchReturns(any())(any()))
+          .thenReturn(Future.successful(None))
+
+        val result = controller.fetchReturns(registrationId)(FakeRequest())
+
+        status(result) shouldBe NOT_FOUND
+      }
+    }
+
 
     "updateTurnoverEstimates" should {
 
@@ -282,7 +314,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       val registrationId = "reg-12345"
       val startDate = LocalDate of (1990, 10, 10)
 
-      val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN_FEB_MAR), startDate)
+      val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN), Some(startDate))
 
       when(mockRegistrationMongo.store).thenReturn(mockRegistrationMongoRepository)
 
@@ -293,8 +325,8 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         val request: FakeRequest[JsObject] = FakeRequest().withBody(Json.obj(
           "reclaimVatOnMostReturns" -> true,
           "frequency" -> MONTHLY,
-          "staggerStart" -> JAN_FEB_MAR,
-          "vatStartDate" -> startDate)
+          "staggerStart" -> JAN,
+          "vatStartDate" -> Some(startDate))
         )
 
         val result: Result = controller.updateReturns(registrationId)(request)

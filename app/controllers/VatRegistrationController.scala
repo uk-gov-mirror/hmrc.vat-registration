@@ -65,6 +65,14 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
     patch[VatFinancials](registrationService, id)
   }
 
+  def fetchReturns(regId: String) : Action[AnyContent] = Action.async {
+    implicit request =>
+      registrationRepository.fetchReturns(regId) map {
+        case Some(returns) => Ok(Json.toJson(returns))
+        case None          => NotFound
+      }
+  }
+
   def updateReturns(regId: String): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
       authenticated { _ =>
