@@ -43,19 +43,22 @@ class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
     def userIsAuthorised(): Unit = AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
     def userIsNotAuthorised(): Unit = AuthorisationMocks.mockNotLoggedInOrAuthorised()
 
-    def getsThresholdData(): OngoingStubbing[Future[Option[Threshold]]] = when(mockThresholdService.getThreshold(any())(any()))
+    def getThresholdData(): OngoingStubbing[Future[Option[Threshold]]] = when(mockThresholdService.getThreshold(any())(any()))
       .thenReturn(Future.successful(Some(validThreshold)))
 
-    def getsNoThresholdData(): OngoingStubbing[Future[Option[Threshold]]] = when(mockThresholdService.getThreshold(any())(any()))
+    def getThresholdDataNotFound(): OngoingStubbing[Future[Option[Threshold]]] = when(mockThresholdService.getThreshold(any())(any()))
+      .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
+
+    def getNoThresholdData(): OngoingStubbing[Future[Option[Threshold]]] = when(mockThresholdService.getThreshold(any())(any()))
       .thenReturn(Future.successful(None))
 
-    def upsertsThreshold(): OngoingStubbing[Future[Threshold]] = when(mockThresholdService.upsertThreshold(any(), any())(any()))
+    def updateThreshold(): OngoingStubbing[Future[Threshold]] = when(mockThresholdService.upsertThreshold(any(), any())(any()))
       .thenReturn(Future.successful(upsertThreshold))
 
-    def upsertThresholdFails(): OngoingStubbing[Future[Threshold]] = when(mockThresholdService.upsertThreshold(any(), any())(any()))
+    def updateThresholdFails(): OngoingStubbing[Future[Threshold]] = when(mockThresholdService.upsertThreshold(any(), any())(any()))
       .thenReturn(Future.failed(new Exception))
 
-    def upsertThresholdNotFound(): OngoingStubbing[Future[Threshold]] = when(mockThresholdService.upsertThreshold(any(), any())(any()))
+    def updateThresholdNotFound(): OngoingStubbing[Future[Threshold]] = when(mockThresholdService.upsertThreshold(any(), any())(any()))
       .thenReturn(Future.failed(new MissingRegDocument(RegistrationId("testId"))))
   }
 
@@ -88,7 +91,7 @@ class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
   "getThreshold" should {
     "returns a valid json if found for id" in new Setup {
       userIsAuthorised()
-      getsThresholdData()
+      getThresholdData()
 
       val result = controller.getThreshold("testId")(FakeRequest())
 
@@ -96,9 +99,18 @@ class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
       jsonBodyOf(await(result)) shouldBe validThresholdJson
     }
 
+    "returns 204 if none found" in new Setup {
+      userIsAuthorised()
+      getNoThresholdData()
+
+      val result = controller.getThreshold("testId")(FakeRequest())
+
+      status(result) shouldBe 204
+    }
+
     "returns 404 if none found" in new Setup {
       userIsAuthorised()
-      getsNoThresholdData()
+      getThresholdDataNotFound()
 
       val result = controller.getThreshold("testId")(FakeRequest())
 
@@ -124,7 +136,7 @@ class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
     "returns 200 if successful" in new Setup {
       userIsAuthorised()
-      upsertsThreshold()
+      updateThreshold()
       val result = controller.updateThreshold("testId")(FakeRequest().withBody[JsObject](upsertTresholdJson))
       status(result) shouldBe 200
       jsonBodyOf(await(result)) shouldBe upsertTresholdJson
@@ -132,21 +144,21 @@ class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
     "returns 400 if json received is invalid" in new Setup {
       userIsAuthorised()
-      upsertThresholdFails()
+      updateThresholdFails()
       val result = controller.updateThreshold("testId")(FakeRequest().withBody[JsObject](invalidUpsertJson))
       status(result) shouldBe 400
     }
 
     "returns 404 if the registration is not found" in new Setup {
       userIsAuthorised()
-      upsertThresholdNotFound()
+      updateThresholdNotFound()
       val result = controller.updateThreshold("testId")(FakeRequest().withBody[JsObject](upsertTresholdJson))
       status(result) shouldBe 404
     }
 
     "returns 500 if an error occurs" in new Setup {
       userIsAuthorised()
-      upsertThresholdFails()
+      updateThresholdFails()
       val result = controller.updateThreshold("testId")(FakeRequest().withBody[JsObject](upsertTresholdJson))
       status(result) shouldBe 500
     }

@@ -18,7 +18,6 @@ package services
 
 import common.RegistrationId
 import common.exceptions._
-import connectors.BusinessRegistrationConnector
 import enums.VatRegStatus
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
@@ -29,10 +28,10 @@ import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import play.api.libs.json.Json
-import repositories.RegistrationRepository
-
-import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture {
 

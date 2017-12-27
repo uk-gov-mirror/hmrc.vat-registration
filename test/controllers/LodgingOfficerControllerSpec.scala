@@ -46,6 +46,9 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
     def getLodgingOfficerData(): OngoingStubbing[Future[Option[LodgingOfficer]]] = when(mockLodgingOfficerService.getLodgingOfficer(any())(any()))
       .thenReturn(Future.successful(Some(validLodgingOfficerPreIV)))
 
+    def getLodgingOfficerNotFound(): OngoingStubbing[Future[Option[LodgingOfficer]]] = when(mockLodgingOfficerService.getLodgingOfficer(any())(any()))
+      .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
+
     def getNoLodgingOfficerData(): OngoingStubbing[Future[Option[LodgingOfficer]]] = when(mockLodgingOfficerService.getLodgingOfficer(any())(any()))
       .thenReturn(Future.successful(None))
 
@@ -124,9 +127,18 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
       jsonBodyOf(await(result)) shouldBe validLodgingOfficerJson
     }
 
-    "returns 404 if none found" in new Setup {
+    "returns 204 if none found" in new Setup {
       userIsAuthorised()
       getNoLodgingOfficerData()
+
+      val result = controller.getLodgingOfficer("testId")(FakeRequest())
+
+      status(result) shouldBe 204
+    }
+
+    "returns 404 if none found" in new Setup {
+      userIsAuthorised()
+      getLodgingOfficerNotFound()
 
       val result = controller.getLodgingOfficer("testId")(FakeRequest())
 

@@ -35,10 +35,8 @@ trait ThresholdController extends VatRegistrationBaseController {
 
   def getThreshold(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      authenticated{ authority =>
-        thresholdService.getThreshold(regId) map {
-          _.fold(NotFound(""))(threshold => Ok(Json.toJson(threshold)))
-        }
+      authenticated { _ =>
+        thresholdService.getThreshold(regId) sendResult
       }
   }
 

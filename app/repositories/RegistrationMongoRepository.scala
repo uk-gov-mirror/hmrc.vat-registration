@@ -45,12 +45,12 @@ class RegistrationMongo @Inject()(mongo: ReactiveMongoComponent) extends Reactiv
 trait RegistrationRepository {
   def createNewVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[VatScheme]
   def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[Option[VatScheme]]
-  def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G], hc: HeaderCarrier): Future[G]
+  def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G], ec: ExecutionContext): Future[G]
   def deleteVatScheme(regId: String)(implicit hc: HeaderCarrier): Future[Boolean]
   def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String]
   def prepareRegistrationSubmission(id: RegistrationId, ackRef : String)(implicit hc: HeaderCarrier): Future[Boolean]
   def finishRegistrationSubmission(id : RegistrationId, status : VatRegStatus.Value)(implicit hc : HeaderCarrier) : Future[VatRegStatus.Value]
-  def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit hc: HeaderCarrier): Future[Boolean]
+  def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit ex: ExecutionContext): Future[Boolean]
   def updateIVStatus(regId: String, ivStatus: Boolean)(implicit ex: ExecutionContext): Future[Boolean]
   def saveTransId(transId: String, regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String]
   def fetchRegByTxId(transId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]]
@@ -107,14 +107,14 @@ class RegistrationMongoRepository (mongo: () => DB)
     collection.find(regIdSelector(regId), tradingDetailsProj).one[TradingDetails]
   }
 
-  override def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G], hc: HeaderCarrier): Future[G] =
+  override def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G], ec: ExecutionContext): Future[G] =
     OptionT(collection.findAndUpdate(ridSelector(id), BSONDocument("$set" -> BSONDocument(logicalGroup.name -> w.writes(group))))
       .map(_.value)).map(_ => group).getOrElse {
       logger.error(s"[updateLogicalGroup] - There was a problem updating logical group ${logicalGroup.name} for regId ${id.value}")
       throw UpdateFailed(id, logicalGroup.name)
     }
 
-  private def unsetElement(id: RegistrationId, element: String)(implicit hc: HeaderCarrier): Future[Boolean] =
+  private def unsetElement(id: RegistrationId, element: String)(implicit ex: ExecutionContext): Future[Boolean] =
     OptionT(collection.findAndUpdate(ridSelector(id), BSONDocument("$unset" -> BSONDocument(element -> "")))
       .map(_.value)).map(_ => true).getOrElse {
       logger.error(s"[unsetElement] - There was a problem unsetting element $element for regId ${id.value}")
@@ -135,7 +135,7 @@ class RegistrationMongoRepository (mongo: () => DB)
     }
   }
 
-  override def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit hc: HeaderCarrier): Future[Boolean] =
+  override def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit ex: ExecutionContext): Future[Boolean] =
     unsetElement(id, elementPath.path)
 
   override def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String] =
@@ -172,7 +172,7 @@ class RegistrationMongoRepository (mongo: () => DB)
   private def fetchBlock[T](regId: String, key: String)(implicit ec: ExecutionContext, rds: Reads[T]): Future[Option[T]] = {
     val projection = Json.obj(key -> 1)
     collection.find(regIdSelector(regId), projection).one[JsObject].map { doc =>
-      doc.flatMap { js =>
+      doc.fold(throw new MissingRegDocument(RegistrationId(regId))) { js =>
         (js \ key).validateOpt[T].get
       }
     }
@@ -271,13 +271,19 @@ class RegistrationMongoRepository (mongo: () => DB)
     fetchBlock[Threshold](regId, "threshold")
 
   def updateThreshold(regId: String, threshold: Threshold)(implicit ec: ExecutionContext): Future[Threshold] = {
+    //TODO - Need to maintain old model VatServiceEligibility to not break frontend service - TO BE REMOVE once frontend service use Eligibility model
+    val necessity = if (threshold.mandatoryRegistration) "obligatory" else "voluntary"
+    val overThreshold = threshold.overThresholdDate.fold(VatThresholdPostIncorp(false, None))(date => VatThresholdPostIncorp(true, Some(date)))
+    val expectedOverThreshold = threshold.expectedOverThresholdDate.fold(VatExpectedThresholdPostIncorp(false, None))(date => VatExpectedThresholdPostIncorp(true, Some(date)))
+    val eligibilityChoice = VatEligibilityChoice(necessity = necessity, vatThresholdPostIncorp = Some(overThreshold), vatExpectedThresholdPostIncorp = Some(expectedOverThreshold))
+    updateLogicalGroup(RegistrationId(regId), VatServiceEligibility(vatEligibilityChoice = Some(eligibilityChoice)))
+
     updateBlock(regId, threshold)
   }
 
   def getLodgingOfficer(regId: String)(implicit ec: ExecutionContext): Future[Option[LodgingOfficer]] =
     fetchBlock[LodgingOfficer](regId, "lodgingOfficer")
 
-  def updateLodgingOfficer(regId: String, lodgingOfficer: LodgingOfficer)(implicit ec: ExecutionContext): Future[LodgingOfficer] = {
+  def updateLodgingOfficer(regId: String, lodgingOfficer: LodgingOfficer)(implicit ec: ExecutionContext): Future[LodgingOfficer] =
     updateBlock(regId, lodgingOfficer)
-  }
 }

@@ -36,9 +36,7 @@ trait EligibilityController extends VatRegistrationBaseController {
   def getEligibility(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { authority =>
-        eligibilityService.getEligibility(regId) map {
-          _.fold(NotFound(""))(eligibility => Ok(Json.toJson(eligibility)))
-        }
+        eligibilityService.getEligibility(regId) sendResult
       }
   }
 

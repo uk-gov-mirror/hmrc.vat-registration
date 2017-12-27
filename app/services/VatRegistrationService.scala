@@ -35,7 +35,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class VatRegistrationService @Inject()(val brConnector: BusinessRegistrationConnector,
                                        regMongo: RegistrationMongo) extends RegistrationService with ServicesConfig {
@@ -61,7 +61,7 @@ trait RegistrationService extends ApplicativeSyntax with FutureInstances {
     case t: Throwable           => Left(GenericError(t))
   }
 
-  private def toEitherT[T](eventualT: Future[T])(implicit hc: HeaderCarrier) =
+  private def toEitherT[T](eventualT: Future[T])(implicit ex: ExecutionContext) =
     EitherT[Future, LeftState, T](eventualT.map(Right(_)).recover(repositoryErrorHandler))
 
   private def getOrCreateVatScheme(profile: CurrentProfile)(implicit hc: HeaderCarrier): Future[Either[LeftState, VatScheme]] =
@@ -126,7 +126,7 @@ trait RegistrationService extends ApplicativeSyntax with FutureInstances {
     registrationRepository.retrieveTradingDetails(regId)
   }
 
-  def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G)(implicit hc: HeaderCarrier): ServiceResult[G] =
+  def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G)(implicit ec: ExecutionContext): ServiceResult[G] =
     toEitherT(registrationRepository.updateLogicalGroup(id, group))
 
   def deleteVatScheme(regId: String, validStatuses: VatRegStatus.Value*)(implicit hc: HeaderCarrier): Future[Boolean] = {
@@ -141,7 +141,7 @@ trait RegistrationService extends ApplicativeSyntax with FutureInstances {
     } yield deleted
   }
 
-  def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit hc: HeaderCarrier): ServiceResult[Boolean] =
+  def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit ex: ExecutionContext): ServiceResult[Boolean] =
     toEitherT(registrationRepository.deleteByElement(id, elementPath))
 
   def retrieveAcknowledgementReference(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[String] =

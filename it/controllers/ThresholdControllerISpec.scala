@@ -94,6 +94,17 @@ class ThresholdControllerISpec extends IntegrationStubbing with ITFixtures {
       })
     }
 
+    "return 204 if successfully obtained" in new Setup {
+      given
+        .user.isAuthorised
+
+      insertIntoDb(emptyVatScheme("regId"))
+
+      await(client(controllers.routes.ThresholdController.getThreshold("regId").url).get() map { response =>
+        response.status shouldBe 204
+      })
+    }
+
     "return 404 if no document found" in new Setup {
       given
         .user.isAuthorised
