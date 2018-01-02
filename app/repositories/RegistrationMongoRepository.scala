@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,6 +56,7 @@ trait RegistrationRepository {
   def fetchRegByTxId(transId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]]
   def retrieveTradingDetails(regId: String)(implicit hc: HeaderCarrier): Future[Option[TradingDetails]]
   def updateTradingDetails(regId: String, tradingDetails: TradingDetails)(implicit ex: ExecutionContext): Future[TradingDetails]
+  def fetchReturns(regId: String)(implicit hc: HeaderCarrier): Future[Option[Returns]]
   def updateReturns(regId: String, returns: Returns)(implicit ex: ExecutionContext): Future[Returns]
   def fetchBankAccount(regId: String)(implicit ex: ExecutionContext): Future[Option[BankAccount]]
   def updateBankAccount(regId: String, bankAcount: BankAccount)(implicit ex: ExecutionContext): Future[BankAccount]
@@ -224,6 +225,16 @@ class RegistrationMongoRepository (mongo: () => DB)
     collection.update(selector, update) map { updateResult =>
       Logger.info(s"[TradingDetails] updating trading details for regId : $regId - documents modified : ${updateResult.nModified}")
       tradingDetails
+    }
+  }
+
+  override def fetchReturns(regId: String)(implicit hc: HeaderCarrier): Future[Option[Returns]] = {
+    val selector = regIdSelector(regId)
+    val projection = Json.obj("returns" -> 1)
+    collection.find(selector, projection).one[JsObject].map { doc =>
+      doc.flatMap { js =>
+        (js \ "returns").validateOpt[Returns].get
+      }
     }
   }
 

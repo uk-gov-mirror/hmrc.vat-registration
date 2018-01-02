@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,14 +40,14 @@ object VatFinancials {
 case class Returns(reclaimVatOnMostReturns: Boolean,
                    frequency: String,
                    staggerStart: Option[String],
-                   vatStartDate: LocalDate)
+                   vatStartDate: Option[LocalDate])
 
 object Returns extends VatAccountingPeriodValidator {
   implicit val format: OFormat[Returns] = (
     (__ \ "reclaimVatOnMostReturns").format[Boolean] and
     (__ \ "frequency").format[String](frequencyValidator) and
     (__ \ "staggerStart").formatNullable[String](staggerStartValidator) and
-    (__ \ "vatStartDate").format[LocalDate]
+    (__ \ "vatStartDate").formatNullable[LocalDate]
   )(Returns.apply, unlift(Returns.unapply))
 }
 

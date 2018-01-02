@@ -86,6 +86,21 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
        |}
       """.stripMargin).as[JsObject]
 
+  val returns = Returns(reclaimVatOnMostReturns = true, "quarterly", Some("jan"), Some(date))
+  val vatSchemeWithReturns: JsObject = Json.parse(
+    s"""
+       |{
+       |  "registrationId":"$registrationId",
+       |  "status":"draft",
+       |  "returns":{
+       |    "reclaimVatOnMostReturns":true,
+       |    "frequency":"quarterly",
+       |    "staggerStart":"jan",
+       |    "vatStartDate":"$date"
+       |  }
+       |}
+     """.stripMargin).as[JsObject]
+
   "Calling createNewVatScheme" should {
 
     "create a new, blank VatScheme with the correct ID" in new Setup {
@@ -461,6 +476,24 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     }
   }
 
+  "fetchReturns" should {
+    "return a Returns case class if one is found in mongo with the supplied regId" in new Setup {
+      insert(vatSchemeWithReturns)
+
+      val fetchedReturns: Option[Returns] = repository.fetchReturns(registrationId)
+
+      fetchedReturns shouldBe Some(returns)
+    }
+
+    "return None if no BankAccount is found in mongo for the supplied regId" in new Setup {
+      count shouldBe 0
+
+      val fetchedReturns: Option[Returns] = repository.fetchReturns(registrationId)
+
+      fetchedReturns shouldBe None
+    }
+  }
+
   "updateReturns" should {
 
     val registrationId: String = "reg-12345"
@@ -469,11 +502,11 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     val otherUsersVatScheme = vatSchemeJson(otherRegId)
 
     val MONTHLY = "monthly"
-    val JAN_FEB_MAR = "jan,feb,mar"
+    val JAN = "jan"
 
     val startDate = LocalDate of (1990, 10, 10)
 
-    val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN_FEB_MAR), startDate)
+    val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN), Some(startDate))
 
     val vatSchemeWithReturns = Json.parse(
       s"""
@@ -483,7 +516,7 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
         | "returns":{
         |   "reclaimVatOnMostReturns":true,
         |   "frequency":"$MONTHLY",
-        |   "staggerStart":"$JAN_FEB_MAR",
+        |   "staggerStart":"$JAN",
         |   "vatStartDate":"$startDate"
         | }
         |}

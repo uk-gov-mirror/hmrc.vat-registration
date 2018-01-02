@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,10 +34,9 @@ trait VatBankAccountValidator extends Validation {
 }
 
 trait VatAccountingPeriodValidator extends Validation {
-  val JAN_FEB_MAR = "jan_feb_mar"
-  val APR_MAY_JUN = "apr_may_jun"
-  val JUL_AUG_SEP = "jul_aug_sep"
-  val OCT_NOV_DEC = "oct_nov_dec"
+  val JAN = "jan"
+  val FEB = "feb"
+  val MAR = "mar"
 
   val MONTHLY = "monthly"
   val QUARTERLY = "quarterly"
@@ -46,7 +45,7 @@ trait VatAccountingPeriodValidator extends Validation {
   @deprecated("use staggerStartValidator instead")
   val periodStartValidator: Format[String] = acceptOnly("feb_may_aug_nov", "mar_jun_sep_dec", "jan_apr_jul_oct")
 
-  val staggerStartValidator: Format[String] = acceptOnly(JAN_FEB_MAR, APR_MAY_JUN, JUL_AUG_SEP, OCT_NOV_DEC)
+  val staggerStartValidator: Format[String] = acceptOnly(JAN, FEB, MAR)
   val frequencyValidator: Format[String]    = acceptOnly(MONTHLY, QUARTERLY)
 }
 

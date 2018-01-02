@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,6 +63,14 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
   def updateVatFinancials(id: RegistrationId): Action[JsValue] = {
     implicit val format: Format[VatFinancials] = Format(VatFinancials.format, encryptedFinancials)
     patch[VatFinancials](registrationService, id)
+  }
+
+  def fetchReturns(regId: String) : Action[AnyContent] = Action.async {
+    implicit request =>
+      registrationRepository.fetchReturns(regId) map {
+        case Some(returns) => Ok(Json.toJson(returns))
+        case None          => NotFound
+      }
   }
 
   def updateReturns(regId: String): Action[JsValue] = Action.async(parse.json) {
