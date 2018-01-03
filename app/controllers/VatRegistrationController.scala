@@ -94,7 +94,7 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
     implicit request =>
       authenticated { _ =>
         withJsonBody[BankAccount]{ bankAccount =>
-          registrationRepository.updateBankAccount(regId, bankAccount) map ( _ => Ok)
+          registrationRepository.updateBankAccount(regId, bankAccount) map ( _ => Ok(Json.toJson(bankAccount)))
         }
       }
   }

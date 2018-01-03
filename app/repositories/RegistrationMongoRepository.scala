@@ -250,12 +250,14 @@ class RegistrationMongoRepository (mongo: () => DB)
   override def fetchBankAccount(regId: String)(implicit ex: ExecutionContext): Future[Option[BankAccount]] = {
     val selector = regIdSelector(regId)
     val projection = Json.obj("bankAccount" -> 1)
-    collection.find(selector, projection).one[BankAccount](BankAccountMongoFormat.encryptedFormat, ex)
+    collection.find(selector, projection).one[JsObject].map(
+      _.flatMap (js => (js \ "bankAccount").validateOpt(BankAccountMongoFormat.encryptedFormat).get)
+    )
   }
 
   override def updateBankAccount(regId: String, bankAccount: BankAccount)(implicit ex: ExecutionContext): Future[BankAccount] = {
     val selector = regIdSelector(regId)
-    val update = BSONDocument("$set" -> Json.toJson(bankAccount)(BankAccountMongoFormat.encryptedFormat))
+    val update = BSONDocument("$set" -> Json.obj("bankAccount" -> Json.toJson(bankAccount)(BankAccountMongoFormat.encryptedFormat)))
     collection.update(selector, update) map { updateResult =>
       Logger.info(s"[Returns] updating bank account for regId : $regId - documents modified : ${updateResult.nModified}")
       bankAccount
