@@ -259,14 +259,6 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
 
     val tradingName = "testTradingName"
 
-    def vatSchemeJson(regId: String = registrationId): JsObject = Json.parse(
-      s"""
-        |{
-        | "registrationId":"$regId",
-        | "status":"draft"
-        |}
-      """.stripMargin).as[JsObject]
-
     def vatSchemeWithTradingDetailsJson: JsObject = Json.parse(
       s"""
          |{
@@ -351,11 +343,16 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
 
     "return a BankAccount case class if one is found in mongo with the supplied regId" in new Setup {
       insert(vatSchemeWithBankAccount)
-      //fetchAll shouldBe ""
 
       val fetchedBankAccount: Option[BankAccount] = repository.fetchBankAccount(registrationId)
 
       fetchedBankAccount shouldBe Some(bankAccount)
+    }
+
+    "return a None if a VatScheme already exists but a bank account block does not" in new Setup {
+      insert(vatSchemeJson(registrationId))
+      val fetchedBankAccount: Option[BankAccount] = repository.fetchBankAccount(registrationId)
+      fetchedBankAccount shouldBe None
     }
 
     "return None if no BankAccount is found in mongo for the supplied regId" in new Setup {
@@ -365,21 +362,9 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
 
       fetchedBankAccount shouldBe None
     }
-  }
 
-  "updateBankAccount" should {
-
-    "return a BankAccount case class if one is found in mongo with the supplied regId" in new Setup {
-      insert(vatSchemeWithBankAccount)
-      //fetchAll shouldBe ""
-
-      val fetchedBankAccount: Option[BankAccount] = repository.fetchBankAccount(registrationId)
-
-      fetchedBankAccount shouldBe Some(bankAccount)
-    }
-
-    "return None if no BankAccount is found in mongo for the supplied regId" in new Setup {
-      count shouldBe 0
+    "return None if other users' data exists but no BankAccount is found in mongo for the supplied regId" in new Setup {
+      insert(otherUsersVatScheme)
 
       val fetchedBankAccount: Option[BankAccount] = repository.fetchBankAccount(registrationId)
 
