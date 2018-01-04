@@ -25,7 +25,7 @@ import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models._
 import models.api._
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.Results.Accepted
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -66,7 +66,10 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
     )
 
     AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
+    when(mockRegistrationMongo.store).thenReturn(mockRegistrationMongoRepository)
   }
+
+  val registrationId = "reg-12345"
 
   "GET /" should {
 
@@ -281,6 +284,38 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       }
     }
 
+    "fetchTurnoverEstimates" should {
+
+      val vatTaxable = 1000L
+      val turnoverEstimates = TurnoverEstimates(vatTaxable)
+
+      "return a 200 and TurnoverEstimates json when it is returned from the repository" in new Setup {
+        when(mockRegistrationMongoRepository.fetchTurnoverEstimates(any())(any()))
+          .thenReturn(Future.successful(Some(turnoverEstimates)))
+
+        val result: Result = await(controller.fetchTurnoverEstimates(registrationId)(FakeRequest()))
+        val expectedJson: JsValue = Json.obj("vatTaxable" -> 1000)
+
+        status(result) shouldBe 200
+        contentAsJson(result) shouldBe expectedJson
+      }
+
+      "return a 204 and no json when a None is returned from the repository" in new Setup {
+        when(mockRegistrationMongoRepository.fetchTurnoverEstimates(any())(any()))
+          .thenReturn(Future.successful(None))
+
+        val result: Result = await(controller.fetchTurnoverEstimates(registrationId)(FakeRequest()))
+        status(result) shouldBe 204
+      }
+
+      "return a 404 when a MissingRegDocument exception is thrown" in new Setup {
+        when(mockRegistrationMongoRepository.fetchTurnoverEstimates(any())(any()))
+          .thenReturn(Future.failed(MissingRegDocument(regId)))
+
+        val result: Result = await(controller.fetchTurnoverEstimates(registrationId)(FakeRequest()))
+        status(result) shouldBe 404
+      }
+    }
 
     "updateTurnoverEstimates" should {
 

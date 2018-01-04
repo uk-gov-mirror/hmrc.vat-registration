@@ -23,6 +23,8 @@ PATCH        /:regId/returns                        controllers.VatRegistrationC
 
 GET          /:regId/bank-account                   controllers.VatRegistrationController.fetchBankAccountDetails(regId)
 PATCH        /:regId/bank-account                   controllers.VatRegistrationController.updateBankAccountDetails(regId)
+
+GET          /:regId/turnover-estimates             controllers.VatRegistrationController.fetchTurnoverEstimates(regId)
 PATCH        /:regId/turnover-estimates             controllers.VatRegistrationController.updateTurnoverEstimates(regId)
 
 GET          /:regId/acknowledgement-reference      controllers.VatRegistrationController.getAcknowledgementReference(regId: RegistrationId)

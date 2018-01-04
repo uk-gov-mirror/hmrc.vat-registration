@@ -103,6 +103,17 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
        |}
      """.stripMargin).as[JsObject]
 
+  val vatTaxable = 1000L
+  val turnoverEstimates: TurnoverEstimates = TurnoverEstimates(vatTaxable)
+  def vatSchemeWithTurnoverEstimates(regId: String = registrationId): JsObject = vatSchemeJson(regId) ++ Json.parse(
+    """
+      |{
+      | "turnoverEstimates":{
+      |   "vatTaxable":1000
+      | }
+      |}
+    """.stripMargin).as[JsObject]
+
   "Calling createNewVatScheme" should {
 
     "create a new, blank VatScheme with the correct ID" in new Setup {
@@ -126,9 +137,6 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     }
 
   }
-
-
-
 
   "Calling updateLogicalGroup" should {
 
@@ -408,6 +416,28 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
       await(repository.updateBankAccount(registrationId, bankAccount))
 
       fetchAll without _id shouldBe Some(otherUsersVatScheme)
+    }
+  }
+
+  "fetchTurnoverEstimates" should {
+
+    "return a TurnoverEstimates case class if one is found in mongo with the supplied regId" in new Setup {
+      insert(vatSchemeWithTurnoverEstimates())
+
+      val fetchedTurnoverEstimates: Option[TurnoverEstimates] = repository.fetchTurnoverEstimates(registrationId)
+      fetchedTurnoverEstimates shouldBe Some(turnoverEstimates)
+    }
+
+    "return None when a document exists for the user but there is no TurnoverEstimates block" in new Setup {
+      insert(vatSchemeJson())
+
+      val fetchedTurnoverEstimates: Option[TurnoverEstimates] = repository.fetchTurnoverEstimates(registrationId)
+      fetchedTurnoverEstimates shouldBe None
+    }
+
+    "throw a MissingRegDocument exception if a registration document is not found for the provided reg Id" in new Setup {
+      val ex: MissingRegDocument = intercept[MissingRegDocument](await(repository.fetchTurnoverEstimates(registrationId)))
+      ex.getMessage shouldBe s"No Registration document found for regId: $registrationId"
     }
   }
 

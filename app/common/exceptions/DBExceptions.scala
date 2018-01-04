@@ -32,7 +32,9 @@ case class NoRegIdException(msg: String) extends NoStackTrace
 case class NoCompanyName(msg: String) extends NoStackTrace
 case class NoIncorpDate(msg: String) extends NoStackTrace
 case class NoVatSchemeWithTransId(id: TransactionId) extends NoStackTrace
-case class MissingRegDocument(id: RegistrationId) extends NoStackTrace with DBExceptions
+case class MissingRegDocument(id: RegistrationId) extends NoStackTrace with DBExceptions {
+  override def getMessage: String = s"No Registration document found for regId: ${id.value}"
+}
 
 case class UpdateFailed(id: RegistrationId, attemptedModel: String) extends NoStackTrace with DBExceptions
 case class InsertFailed(id: RegistrationId, attemptedModel: String) extends NoStackTrace with DBExceptions
