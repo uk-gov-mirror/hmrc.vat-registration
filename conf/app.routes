@@ -18,7 +18,9 @@ PATCH        /:regID/service-eligibility            controllers.VatRegistrationC
 PATCH        /:regID/lodging-officer                controllers.VatRegistrationController.updateLodgingOfficer(regID: RegistrationId)
 PATCH        /:regID/flat-rate-scheme               controllers.VatRegistrationController.updateFlatRateScheme(regID: RegistrationId)
 
+GET          /:regId/returns                        controllers.VatRegistrationController.fetchReturns(regId)
 PATCH        /:regId/returns                        controllers.VatRegistrationController.updateReturns(regId)
+
 GET          /:regId/bank-account                   controllers.VatRegistrationController.fetchBankAccountDetails(regId)
 PATCH        /:regId/bank-account                   controllers.VatRegistrationController.updateBankAccountDetails(regId)
 PATCH        /:regId/turnover-estimates             controllers.VatRegistrationController.updateTurnoverEstimates(regId)
