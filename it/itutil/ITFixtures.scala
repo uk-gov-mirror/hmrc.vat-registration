@@ -26,7 +26,8 @@ trait ITFixtures {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val date = LocalDate.of(2017, 1, 1)
+  val date: LocalDate = LocalDate.of(2017, 1, 1)
+  val startDate = StartDate(Some(date))
   val regId = RegistrationId("123")
   val vatScheme = VatScheme(regId, None, status = VatRegStatus.draft)
   val vatChoice = VatChoice(vatStartDate = VatStartDate(selection = "COMPANY_REGISTRATION_DATE", startDate = Some(date)))

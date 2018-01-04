@@ -18,13 +18,14 @@ package models
 
 import java.time.LocalDate
 
-import models.api.Returns
+import models.api.{Returns, StartDate}
 import models.submission.DESSubmission
 import play.api.libs.json.{JsSuccess, JsValue, Json}
 
 class ReturnsSpec extends JsonFormatValidation {
 
-  val date: LocalDate = LocalDate.of(2017, 1, 1)
+  val dateValue: LocalDate = LocalDate.of(2017, 1, 1)
+  val date = StartDate(Some(dateValue))
 
   val fullJson: JsValue = Json.parse(
     s"""
@@ -32,7 +33,9 @@ class ReturnsSpec extends JsonFormatValidation {
        |  "reclaimVatOnMostReturns" : true,
        |  "frequency" : "quarterly",
        |  "staggerStart" : "jan",
-       |  "vatStartDate" : "$date"
+       |  "start" : {
+       |    "date" : "$dateValue"
+       |  }
        |}
         """.stripMargin
   )
@@ -41,7 +44,7 @@ class ReturnsSpec extends JsonFormatValidation {
     reclaimVatOnMostReturns = true,
     "quarterly",
     Some("jan"),
-    Some(date)
+    date
   )
 
   "Converting a Returns model into JSON" should {

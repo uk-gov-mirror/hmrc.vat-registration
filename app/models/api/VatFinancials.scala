@@ -37,17 +37,23 @@ object VatFinancials {
   )(VatFinancials.apply, unlift(VatFinancials.unapply))
 }
 
+case class StartDate(date: Option[LocalDate])
+
+object StartDate {
+  implicit val format: OFormat[StartDate] = Json.format[StartDate]
+}
+
 case class Returns(reclaimVatOnMostReturns: Boolean,
                    frequency: String,
                    staggerStart: Option[String],
-                   vatStartDate: Option[LocalDate])
+                   date: StartDate)
 
 object Returns extends VatAccountingPeriodValidator {
   implicit val format: OFormat[Returns] = (
     (__ \ "reclaimVatOnMostReturns").format[Boolean] and
     (__ \ "frequency").format[String](frequencyValidator) and
     (__ \ "staggerStart").formatNullable[String](staggerStartValidator) and
-    (__ \ "vatStartDate").formatNullable[LocalDate]
+    (__ \ "start").format[StartDate]
   )(Returns.apply, unlift(Returns.unapply))
 }
 

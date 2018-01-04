@@ -251,14 +251,14 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
     "fetchReturns" should {
       val registrationId = "reg-12345"
-      val date = LocalDate.of(2017, 1, 1)
-      val returns = Returns(true, "quarterly", Some("jan"), Some(date))
+      val date = StartDate(Some(LocalDate.of(2017, 1, 1)))
+      val returns = Returns(true, "quarterly", Some("jan"), date)
 
       val expected = Json.obj(
         "reclaimVatOnMostReturns" -> true,
         "frequency" -> "quarterly",
         "staggerStart" -> "jan",
-        "vatStartDate" -> date
+        "start" -> date
       )
 
       "return a OK if the returns is present in the database" in new Setup {
@@ -312,9 +312,9 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       import Returns._
 
       val registrationId = "reg-12345"
-      val startDate = LocalDate of (1990, 10, 10)
+      val startDate = StartDate(Some(LocalDate of (1990, 10, 10)))
 
-      val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN), Some(startDate))
+      val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN), startDate)
 
       when(mockRegistrationMongo.store).thenReturn(mockRegistrationMongoRepository)
 
@@ -326,7 +326,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
           "reclaimVatOnMostReturns" -> true,
           "frequency" -> MONTHLY,
           "staggerStart" -> JAN,
-          "vatStartDate" -> Some(startDate))
+          "start" -> Some(startDate))
         )
 
         val result: Result = controller.updateReturns(registrationId)(request)
