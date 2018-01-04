@@ -86,7 +86,7 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
        |}
       """.stripMargin).as[JsObject]
 
-  val returns = Returns(reclaimVatOnMostReturns = true, "quarterly", Some("jan"), Some(date))
+  val returns = Returns(reclaimVatOnMostReturns = true, "quarterly", Some("jan"), startDate)
   val vatSchemeWithReturns: JsObject = Json.parse(
     s"""
        |{
@@ -96,7 +96,9 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
        |    "reclaimVatOnMostReturns":true,
        |    "frequency":"quarterly",
        |    "staggerStart":"jan",
-       |    "vatStartDate":"$date"
+       |    "start":{
+       |      "date":"$date"
+       |    }
        |  }
        |}
      """.stripMargin).as[JsObject]
@@ -489,9 +491,10 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     val MONTHLY = "monthly"
     val JAN = "jan"
 
-    val startDate = LocalDate of (1990, 10, 10)
+    val dateValue = LocalDate of (1990, 10, 10)
+    val startDate = StartDate(Some(dateValue))
 
-    val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN), Some(startDate))
+    val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN), startDate)
 
     val vatSchemeWithReturns = Json.parse(
       s"""
@@ -502,7 +505,9 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
         |   "reclaimVatOnMostReturns":true,
         |   "frequency":"$MONTHLY",
         |   "staggerStart":"$JAN",
-        |   "vatStartDate":"$startDate"
+        |   "start":{
+        |     "date":"$dateValue"
+        |   }
         | }
         |}
       """.stripMargin).as[JsObject]
