@@ -37,6 +37,7 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NoStackTrace
 
 class RegistrationMongo @Inject()(mongo: ReactiveMongoComponent) extends ReactiveMongoFormats {
   lazy val store = new RegistrationMongoRepository(mongo.mongoConnector.db)
@@ -60,6 +61,7 @@ trait RegistrationRepository {
   def updateReturns(regId: String, returns: Returns)(implicit ex: ExecutionContext): Future[Returns]
   def fetchBankAccount(regId: String)(implicit ex: ExecutionContext): Future[Option[BankAccount]]
   def updateBankAccount(regId: String, bankAcount: BankAccount)(implicit ex: ExecutionContext): Future[BankAccount]
+  def fetchTurnoverEstimates(regId: String)(implicit ec: ExecutionContext): Future[Option[TurnoverEstimates]]
   def updateTurnoverEstimates(regId: String, turnoverEstimate: TurnoverEstimates)(implicit ex: ExecutionContext): Future[TurnoverEstimates]
 }
 
@@ -262,6 +264,13 @@ class RegistrationMongoRepository (mongo: () => DB)
       Logger.info(s"[Returns] updating bank account for regId : $regId - documents modified : ${updateResult.nModified}")
       bankAccount
     }
+  }
+
+  override def fetchTurnoverEstimates(regId: String)(implicit ec: ExecutionContext): Future[Option[TurnoverEstimates]] = {
+    val selector = regIdSelector(regId)
+    collection.find(selector).one[JsObject].map(
+      _.fold(throw MissingRegDocument(RegistrationId(regId)))(js => (js \ "turnoverEstimates").validateOpt[TurnoverEstimates].get)
+    )
   }
 
   override def updateTurnoverEstimates(regId: String, turnoverEstimate: TurnoverEstimates)(implicit ex: ExecutionContext): Future[TurnoverEstimates] = {

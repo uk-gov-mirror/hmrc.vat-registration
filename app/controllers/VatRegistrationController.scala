@@ -99,6 +99,18 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
       }
   }
 
+  def fetchTurnoverEstimates(regId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      authenticated { _ =>
+        registrationRepository.fetchTurnoverEstimates(regId) map {
+          case Some(turnoverEstimates) => Ok(Json.toJson(turnoverEstimates))
+          case None                    => NoContent
+        } recover {
+          case _: MissingRegDocument   => NotFound
+        }
+      }
+  }
+
   def updateTurnoverEstimates(regId: String): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
       authenticated { _ =>
