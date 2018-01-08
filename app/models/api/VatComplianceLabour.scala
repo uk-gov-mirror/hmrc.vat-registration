@@ -17,11 +17,11 @@
 package models.api
 
 import play.api.libs.json._
-
+@deprecated
 case class VatComplianceLabour(labour: Boolean, workers: Option[Int],
                                temporaryContracts: Option[Boolean],
                                skilledWorkers: Option[Boolean])
-
+@deprecated
 object VatComplianceLabour {
   implicit val format: OFormat[VatComplianceLabour] = Json.format[VatComplianceLabour]
 }

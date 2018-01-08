@@ -64,6 +64,7 @@ trait VatMocks extends WSHTTPMock {
   lazy val mockEligibilityService = mock[EligibilityService]
   lazy val mockThresholdService = mock[ThresholdService]
   lazy val mockLodgingOfficerService = mock[LodgingOfficerService]
+  lazy val mockSicAndComplianceService = mock[SicAndComplianceService]
 
 
   object AuthorisationMocks {

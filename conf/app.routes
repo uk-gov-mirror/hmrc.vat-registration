@@ -52,3 +52,8 @@ PATCH       /:regId/threshold                       controllers.ThresholdControl
 GET         /:regId/officer                         controllers.LodgingOfficerController.getLodgingOfficer(regId: String)
 PATCH       /:regId/officer                         controllers.LodgingOfficerController.updateLodgingOfficer(regId: String)
 PATCH       /:regId/update-iv-status/:ivPassed      controllers.LodgingOfficerController.updateIVStatus(regId, ivPassed: Boolean)
+
+# rename to sic-and-compliance once the old ones are removed
+GET         /:regId/sicAndComp                      controllers.SicAndComplianceController.getSicAndCompliance(regId: String)
+PATCH       /:regId/sicAndComp                      controllers.SicAndComplianceController.updateSicAndCompliance(regId: String)
+

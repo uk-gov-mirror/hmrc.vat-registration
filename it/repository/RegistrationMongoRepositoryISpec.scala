@@ -919,4 +919,84 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
       a[MissingRegDocument] shouldBe thrownBy(await(repository.updateIVStatus(vatScheme.id.value, true)))
     }
   }
+
+  "calling getSicAndCompliance" should {
+    val validSicAndCompliance = Some(SicAndCompliance(
+      "this is my business description",
+      ComplianceLabour(1000,Some(true),Some(true)),
+      SicCode("11111111","the flu","sic details")
+    ))
+    "return a SicAndComplianceModel from existing data based on the reg Id" in new Setup {
+      val result = for {
+        _ <- repository.insert(vatScheme)
+        _ <- repository.updateSicAndCompliance(vatScheme.id.value,validSicAndCompliance.get)
+        _ = count shouldBe 1
+        res <- repository.getSicAndCompliance(vatScheme.id.value)
+      } yield res
+
+      await(result).get shouldBe validSicAndCompliance.get
+    }
+    "return None from an existing registration that exists but SicAndCompliance does not exist" in new Setup {
+      val result = for {
+        _ <- repository.insert(vatScheme)
+        res <- repository.getSicAndCompliance(vatScheme.id.value)
+      } yield res
+      await(result) shouldBe None
+    }
+    "return a MissingRegDocument when nothing is returned from mongo for the reg id" in new Setup {
+      val result = repository.getSicAndCompliance("madeUpRegId")
+
+      a[MissingRegDocument] shouldBe thrownBy(await(result))
+    }
+    "return an exception if the json is incorrect in the repository (an element is missing)" in new Setup {
+     val json = Json.toJson(
+       Json.obj("registrationId" -> regId.value,
+                "status" -> VatRegStatus.draft,
+                "sicAndCompliance" -> Json.toJson(validSicAndCompliance).as[JsObject].-( "businessDescription")))
+      insert(json.as[JsObject])
+      an[Exception] shouldBe thrownBy(await(repository.getSicAndCompliance(vatScheme.id.value)))
+    }
+  }
+  "calling updateSicAndCompliance" should {
+    val validSicAndCompliance = Some(SicAndCompliance(
+      "this is my business description",
+      ComplianceLabour(1000,Some(true),Some(true)),
+      SicCode("12345678","the flu","sic details")
+    ))
+    "return an amended SicAndCompliance Model when an entry already exists in the repo for 1 field" in new Setup {
+      val amendedModel = validSicAndCompliance.map(a => a.copy(businessDescription = "fooBarWizz"))
+      val result = for {
+      _ <- repository.insert(vatScheme.copy(sicAndCompliance = validSicAndCompliance))
+      _ = count shouldBe 1
+      res <- repository.updateSicAndCompliance(vatScheme.id.value, amendedModel.get)
+      } yield res
+
+      await(result) shouldBe amendedModel.get
+    }
+    "return an amended Option SicAndCompliance Model when an entry already exists and all fields have changed in the model" in new Setup {
+      val amendedModel = SicAndCompliance(
+        "foo",
+        ComplianceLabour(1,None,None),
+        SicCode("foo","bar","wizz"))
+      val result = for{
+        _ <- repository.insert(vatScheme.copy(sicAndCompliance = validSicAndCompliance))
+        res <- repository.updateSicAndCompliance(vatScheme.id.value, amendedModel)
+      }yield res
+      await(result) shouldBe amendedModel
+    }
+    "return an SicAndComplance Model when the block did not exist in the existing reg doc" in new Setup {
+      val result = for {
+        _ <- repository.insert(vatScheme)
+        _ = count shouldBe 1
+        res <- repository.updateSicAndCompliance(vatScheme.id.value, validSicAndCompliance.get)
+      }yield res
+          await(result) shouldBe validSicAndCompliance.get
+      }
+
+    "return an MissingRegDocument if registration document does not exist for the registration id" in new Setup {
+      val result = repository.updateSicAndCompliance("madeUpRegId",validSicAndCompliance.get)
+      a[MissingRegDocument] shouldBe thrownBy(await(result))
+    }
+  }
+
 }

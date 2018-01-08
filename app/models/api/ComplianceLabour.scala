@@ -16,10 +16,18 @@
 
 package models.api
 
-import play.api.libs.json._
-@deprecated
-case class VatComplianceCultural(notForProfit: Boolean)
-@deprecated
-object VatComplianceCultural {
-  implicit val format: OFormat[VatComplianceCultural] = Json.format[VatComplianceCultural]
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{OFormat, __}
+
+case class ComplianceLabour(numberOfWorkers:Int,
+                            temporaryContracts:Option[Boolean],
+                            skilledWorkers:Option[Boolean])
+
+object ComplianceLabour{
+
+  implicit val formats:OFormat[ComplianceLabour] = (
+      (__ \"numberOfWorkers").format[Int] and
+      (__ \"temporaryContracts").formatNullable[Boolean] and
+      (__ \"skilledWorkers").formatNullable[Boolean]
+    )(ComplianceLabour.apply, unlift(ComplianceLabour.unapply))
 }
