@@ -30,6 +30,7 @@ case class VatScheme(id: RegistrationId,
                      vatContact: Option[VatContact] = None,
                      vatEligibility: Option[VatServiceEligibility] = None,
                      eligibility: Option[Eligibility] = None,
+                     bankAccount: Option[BankAccount] = None,
                      threshold: Option[Threshold] = None,
                      acknowledgementReference: Option[String] = None,
                      vatFlatRateScheme: Option[VatFlatRateScheme] = None,
@@ -47,6 +48,24 @@ object VatScheme {
     (__ \ "vatContact").readNullable[VatContact] and
     (__ \ "vatEligibility").readNullable[VatServiceEligibility] and
     (__ \ "eligibility").readNullable[Eligibility] and
+    (__ \ "bankAccount").readNullable[BankAccount] and
+    (__ \ "threshold").readNullable[Threshold] and
+    (__ \ "acknowledgementReference").readNullable[String] and
+    (__ \ "vatFlatRateScheme").readNullable[VatFlatRateScheme] and
+    (__ \ "status").read[VatRegStatus.Value]
+  )(VatScheme.apply _)
+
+  val mongoReads: Reads[VatScheme] = (
+    (__ \ "registrationId").read[RegistrationId] and
+    (__ \ "transactionId").readNullable[TransactionId] and
+    (__ \ "tradingDetails").readNullable[VatTradingDetails] and
+    (__ \ "lodgingOfficer").readNullable[LodgingOfficer] and
+    (__ \ "financials").readNullable[VatFinancials] and
+    (__ \ "vatSicAndCompliance").readNullable[VatSicAndCompliance] and
+    (__ \ "vatContact").readNullable[VatContact] and
+    (__ \ "vatEligibility").readNullable[VatServiceEligibility] and
+    (__ \ "eligibility").readNullable[Eligibility] and
+    (__ \ "bankAccount").readNullable[BankAccount](BankAccountMongoFormat.encryptedFormat) and
     (__ \ "threshold").readNullable[Threshold] and
     (__ \ "acknowledgementReference").readNullable[String] and
     (__ \ "vatFlatRateScheme").readNullable[VatFlatRateScheme] and
@@ -63,6 +82,7 @@ object VatScheme {
     (__ \ "vatContact").writeNullable[VatContact] and
     (__ \ "vatEligibility").writeNullable[VatServiceEligibility] and
     (__ \ "eligibility").writeNullable[Eligibility] and
+    (__ \ "bankAccount").writeNullable[BankAccount] and
     (__ \ "threshold").writeNullable[Threshold] and
     (__ \ "acknowledgementReference").writeNullable[String] and
     (__ \ "vatFlatRateScheme").writeNullable[VatFlatRateScheme] and
