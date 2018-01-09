@@ -68,7 +68,7 @@ trait RegistrationRepository {
 
 object RegistrationMongoFormats extends ReactiveMongoFormats {
   val encryptedFinancials: OFormat[VatFinancials] = VatFinancials.format(VatBankAccountMongoFormat.encryptedFormat)
-  val vatSchemeFormat: OFormat[VatScheme] = OFormat(VatScheme.reads(encryptedFinancials), VatScheme.writes(encryptedFinancials))
+  val vatSchemeFormat: OFormat[VatScheme] = OFormat(VatScheme.mongoReads, VatScheme.writes(encryptedFinancials))
 }
 
 class RegistrationMongoRepository (mongo: () => DB)
