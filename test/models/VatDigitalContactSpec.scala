@@ -53,7 +53,7 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[VatDigitalContact](json)
-      result shouldHaveErrors (JsPath() \ "email" -> ValidationError("error.pattern"))
+      result shouldHaveErrors (JsPath() \ "email" -> ValidationError("error.email"))
     }
 
     "fail from Json with invalid email length" in {

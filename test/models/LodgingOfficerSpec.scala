@@ -68,7 +68,7 @@ class LodgingOfficerSpec extends JsonFormatValidation with VatRegistrationFixtur
 
       "Contact email is invalid" in {
         val lodgingOfficer = vatLodgingOfficer.copy(contact = Some(OfficerContactDetails(Some("£$%^&&*"), None, None)))
-        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "contact" \ "email" -> ValidationError("error.pattern"))
+        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "contact" \ "email" -> ValidationError("error.email"))
       }
 
       "Contact tel is invalid" in {
