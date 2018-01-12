@@ -20,10 +20,10 @@ import java.time.LocalDate
 
 import play.api.libs.json.Json
 
-case class FormerName(@deprecated("Use name instead", "SCRS-9379") formerName: String,
-                      @deprecated("Use change", "SCRS-9379") dateOfNameChange: LocalDate,
-                      name: Name,
-                      change: LocalDate)
+case class FormerName(@deprecated("Use name instead", "SCRS-9379") formerName: Option[String],
+                      @deprecated("Use change", "SCRS-9379") dateOfNameChange: Option[LocalDate],
+                      name: Option[Name], //TODO: Once VAT FE is refactored, change the model to a mandatory Name
+                      change: Option[LocalDate]) //TODO: Once VAT FE is refactored, change the model to a mandatory LocalDate
 
 object FormerName {
   implicit val format = Json.format[FormerName]

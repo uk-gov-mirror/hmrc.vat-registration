@@ -215,8 +215,8 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
           registrationService.updateIVStatus(regId, json.\("ivPassed").as[Boolean]) map { _ =>
             Ok(json)
           } recover {
-            case _ =>
-              logger.error(s"[VatRegistrationController] - [updateIVStatus] - There was a problem updating the IV status for regId $regId")
+            case e =>
+              logger.error(s"[VatRegistrationController] - [updateIVStatus] - There was a problem updating the IV status for regId $regId - err: ${e.getMessage}")
               InternalServerError
           }
         }

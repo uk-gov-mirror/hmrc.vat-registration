@@ -33,7 +33,7 @@ trait ITFixtures {
   val vatChoice = VatChoice(vatStartDate = VatStartDate(selection = "COMPANY_REGISTRATION_DATE", startDate = Some(date)))
   val tradingName = TradingName(selection = true, Some("some-trading-name"))
   val oldName = Name(first = Some("Bob Smith"), middle = None, last = None, forename = None, surname = None, title = None, otherForenames = None)
-  val changeOfName = ChangeOfName(true, Some(FormerName("", LocalDate.now(), name = oldName, change = LocalDate.now())))
+  val changeOfName = ChangeOfName(true, Some(FormerName(None, None, name = Some(oldName), change = Some(LocalDate.now()))))
 
   val vatTradingDetails = VatTradingDetails(
     vatChoice = vatChoice,
@@ -83,7 +83,7 @@ trait ITFixtures {
     title = Some("Title")
   )
   val contact                   = OfficerContactDetails(Some("test@test.com"), None, None)
-  val formerName                = FormerName("Bob Smith", date, name = oldName, change = date)
+  val formerName                = FormerName(Some("Bob Smith"), Some(date), name = Some(oldName), change = Some(date))
   val currentOrPreviousAddress  = CurrentOrPreviousAddress(false, Some(scrsAddress))
   val vatLodgingOfficer         = LodgingOfficer(
     currentAddress            = Some(scrsAddress),
