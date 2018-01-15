@@ -32,6 +32,7 @@ case class VatScheme(id: RegistrationId,
                      vatContact: Option[VatContact] = None,
                      vatEligibility: Option[VatServiceEligibility] = None,
                      eligibility: Option[Eligibility] = None,
+                     turnoverEstimates: Option[TurnoverEstimates] = None,
                      bankAccount: Option[BankAccount] = None,
                      threshold: Option[Threshold] = None,
                      acknowledgementReference: Option[String] = None,
@@ -52,6 +53,7 @@ object VatScheme {
     (__ \ "vatContact").readNullable[VatContact] and
     (__ \ "vatEligibility").readNullable[VatServiceEligibility] and
     (__ \ "eligibility").readNullable[Eligibility] and
+    (__ \ "turnoverEstimates").readNullable[TurnoverEstimates] and
     (__ \ "bankAccount").readNullable[BankAccount] and
     (__ \ "threshold").readNullable[Threshold] and
     (__ \ "acknowledgementReference").readNullable[String] and
@@ -71,6 +73,7 @@ object VatScheme {
     (__ \ "vatContact").readNullable[VatContact] and
     (__ \ "vatEligibility").readNullable[VatServiceEligibility] and
     (__ \ "eligibility").readNullable[Eligibility] and
+    (__ \ "turnoverEstimates").readNullable[TurnoverEstimates] and
     (__ \ "bankAccount").readNullable[BankAccount](BankAccountMongoFormat.encryptedFormat) and
     (__ \ "threshold").readNullable[Threshold] and
     (__ \ "acknowledgementReference").readNullable[String] and
@@ -90,6 +93,7 @@ object VatScheme {
     (__ \ "vatContact").writeNullable[VatContact] and
     (__ \ "vatEligibility").writeNullable[VatServiceEligibility] and
     (__ \ "eligibility").writeNullable[Eligibility] and
+    (__ \ "turnoverEstimates").writeNullable[TurnoverEstimates] and
     (__ \ "bankAccount").writeNullable[BankAccount] and
     (__ \ "threshold").writeNullable[Threshold] and
     (__ \ "acknowledgementReference").writeNullable[String] and
