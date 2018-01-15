@@ -74,7 +74,7 @@ trait VatRegistrationFixture {
 
   val name = Name(first = Some("Forename"), middle = None, last = Some("Surname"), forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
   val oldName = Name(first = Some("Bob Smith"), middle = None, last = None, forename = None, surname = None, title = None, otherForenames = None)
-  val formerName = FormerName("Bob Smith", date, name = oldName, change = date)
+  val formerName = FormerName(Some("Bob Smith"), Some(date), name = Some(oldName), change = Some(date))
   val contact = OfficerContactDetails(Some("test@test.com"), None, None)
   val vatScheme: VatScheme = VatScheme(regId, status = VatRegStatus.draft)
   val exception = new Exception("Exception")
@@ -85,7 +85,7 @@ trait VatRegistrationFixture {
     annualCostsLimited = Some("yesWithin12months"),
     doYouWantToUseThisRate = Some(false),
     whenDoYouWantToJoinFrs = Some("VAT_REGISTRATION_DATE"))
-  val changeOfName = ChangeOfName(true, Some(FormerName(formerName = "", LocalDate.now(), name = oldName, change = LocalDate.now())))
+  val changeOfName = ChangeOfName(true, Some(FormerName(formerName = None, None, name = Some(oldName), change = Some(LocalDate.now()))))
 
   def incorporationStatus(status: String = "accepted", incorpDate: LocalDate = LocalDate.now()): IncorporationStatus =
     IncorporationStatus(
