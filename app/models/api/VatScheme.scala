@@ -67,6 +67,7 @@ object VatScheme {
     (__ \ "financials").readNullable[VatFinancials] and
     (__ \ "returns").readNullable[Returns] and
     (__ \ "vatSicAndCompliance").readNullable[VatSicAndCompliance] and
+    (__ \ "sicAndCompliance").readNullable[SicAndCompliance] and
     (__ \ "vatContact").readNullable[VatContact] and
     (__ \ "vatEligibility").readNullable[VatServiceEligibility] and
     (__ \ "eligibility").readNullable[Eligibility] and

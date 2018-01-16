@@ -24,8 +24,7 @@ import play.api.libs.json._
 @deprecated
 case class VatFinancials(bankAccount: Option[VatBankAccount] = None,
                          turnoverEstimate: Long,
-                         zeroRatedTurnoverEstimate: Option[Long] = None,
-                         reclaimVatOnMostReturns: Boolean)
+                         zeroRatedTurnoverEstimate: Option[Long] = None)
 
 object VatFinancials {
   implicit def format(implicit f: OFormat[VatBankAccount]): OFormat[VatFinancials] = (
