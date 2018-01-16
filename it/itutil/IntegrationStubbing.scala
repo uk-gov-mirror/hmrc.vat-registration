@@ -15,7 +15,11 @@
  */
 package itutil
 
+import models.api.VatScheme
 import play.api.test.Helpers.OK
+import reactivemongo.api.commands.WriteResult
+
+import scala.concurrent.Future
 
 trait IntegrationStubbing extends IntegrationSpecBase {
 
@@ -23,10 +27,17 @@ trait IntegrationStubbing extends IntegrationSpecBase {
     implicit val builder: PreconditionBuilder = this
 
     def user: User = User()
+    def regRepo:RegRepo = RegRepo()
   }
 
   def given: PreconditionBuilder = new PreconditionBuilder
 
+  case class RegRepo()(implicit builder: PreconditionBuilder) {
+    def insertIntoDb(v:VatScheme,f:VatScheme => Future[WriteResult]): PreconditionBuilder = {
+     await(f(v))
+      builder
+    }
+  }
   case class User()(implicit builder: PreconditionBuilder) {
     def isAuthorised: PreconditionBuilder = {
       stubPost("/write/audit", OK, """{"x":2}""")

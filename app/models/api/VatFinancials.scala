@@ -21,6 +21,7 @@ import java.time.LocalDate
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
+@deprecated
 case class VatFinancials(bankAccount: Option[VatBankAccount] = None,
                          turnoverEstimate: Long,
                          zeroRatedTurnoverEstimate: Option[Long] = None)

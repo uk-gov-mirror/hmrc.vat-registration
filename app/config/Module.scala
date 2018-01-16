@@ -30,6 +30,7 @@ class Module extends AbstractModule {
     bind(classOf[EligibilityController]).to(classOf[EligibilityControllerImpl]).asEagerSingleton()
     bind(classOf[ThresholdController]).to(classOf[ThresholdControllerImpl]).asEagerSingleton()
     bind(classOf[LodgingOfficerController]).to(classOf[LodgingOfficerControllerImpl]).asEagerSingleton()
+    bind(classOf[SicAndComplianceController]).to(classOf[SicAndComplianceControllerImpl]).asEagerSingleton()
     //TODO: Should all services be done this way or is it just the controller.
 //    bind(classOf[services.LodgingOfficerSrv]).to(classOf[services.LodgingOfficerService]).asEagerSingleton()
 //    bind(classOf[services.EligibilitySrv]).to(classOf[services.EligibilityService]).asEagerSingleton()

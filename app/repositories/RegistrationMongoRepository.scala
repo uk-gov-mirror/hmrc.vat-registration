@@ -308,4 +308,10 @@ class RegistrationMongoRepository (mongo: () => DB)
 
   def updateLodgingOfficer(regId: String, lodgingOfficer: LodgingOfficer)(implicit ec: ExecutionContext): Future[LodgingOfficer] =
     updateBlock(regId, lodgingOfficer)
+
+  def updateSicAndCompliance(regId:String, sicAndCompliance:SicAndCompliance)(implicit ec:ExecutionContext): Future[SicAndCompliance] =
+    updateBlock(regId,sicAndCompliance)
+
+  def getSicAndCompliance(regId:String)(implicit ec:ExecutionContext):Future[Option[SicAndCompliance]] =
+    fetchBlock[SicAndCompliance](regId,"sicAndCompliance")
 }

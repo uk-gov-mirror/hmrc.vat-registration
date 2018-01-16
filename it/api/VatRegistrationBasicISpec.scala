@@ -134,14 +134,13 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
     "return an Ok" in new Setup() {
       given
         .user.isAuthorised
+       val result =  for {
+          _ <-    repo.createNewVatScheme(RegistrationId("testRegId"))
+          _ <-    repo.updateLodgingOfficer("testRegId", vatLodgingOfficer)
+          res <-  client(controllers.routes.VatRegistrationController.updateIVStatus("testRegId").url).patch(Json.parse("""{"ivPassed" : true}"""))
+        } yield res
+        result.status shouldBe 200
 
-      repo.createNewVatScheme(RegistrationId("testRegId"))
-      repo.updateLodgingOfficer("testRegId", vatLodgingOfficer)
-
-      val result = await(client(controllers.routes.VatRegistrationController.updateIVStatus("testRegId").url).patch(Json.parse("""{"ivPassed" : true}""")))
-      result.status shouldBe OK
-
-      await(repo.remove("registrationId" -> "testRegId"))
     }
 
     "return an INS" in {
@@ -176,12 +175,12 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
 
     def mockIncorpUpdate(): StubMapping =
       stubFor(post(urlMatching(s"/incorporation-information/subscribe/$transID/regime/$regime/subscriber/$subscriber"))
-      .willReturn(
-        aResponse()
-          .withStatus(200)
-          .withBody(incorpUpdate(accepted))
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withBody(incorpUpdate(accepted))
+        )
       )
-    )
 
     def mockNoIncorpUpdate(): StubMapping =
       stubFor(post(urlMatching(s"/incorporation-information/subscribe/$transID/regime/$regime/subscriber/$subscriber"))

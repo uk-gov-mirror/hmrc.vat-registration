@@ -48,7 +48,7 @@ trait LodgingOfficerController extends VatRegistrationBaseController {
               officerResponse => Ok(Json.toJson(officerResponse))
             } recover {
               case _: MissingRegDocument => NotFound(s"Registration not found for regId: $regId")
-              case e => InternalServerError(s"An error occurred while updating lodging officer: ${e.getMessage}")
+              case e => InternalServerError(s"An error occurred while updating lodging officer: for regId: $regId ${e.getMessage}")
             }
           }
       }

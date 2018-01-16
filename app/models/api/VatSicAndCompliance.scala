@@ -18,13 +18,13 @@ package models.api
 
 import play.api.libs.json._
 
-
+@deprecated
 case class VatSicAndCompliance(businessDescription: String,
                                culturalCompliance: Option[VatComplianceCultural] = None,
                                labourCompliance: Option[VatComplianceLabour] = None,
                                financialCompliance: Option[VatComplianceFinancial] = None,
                                mainBusinessActivity: SicCode)
-
+@deprecated
 object VatSicAndCompliance {
   implicit val format: OFormat[VatSicAndCompliance] = Json.format[VatSicAndCompliance]
 }

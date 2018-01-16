@@ -24,6 +24,7 @@ import java.time.LocalDate
 
 import common.{RegistrationId, TransactionId}
 import enums.VatRegStatus
+import play.api.libs.json.{JsObject, Json}
 
 trait VatRegistrationFixture {
   val regId = RegistrationId("testId")
@@ -115,4 +116,26 @@ trait VatRegistrationFixture {
     details = None
   )
   val validLodgingOfficerPostIv = validLodgingOfficerPreIV.copy(ivPassed = Some(true), details = Some(lodgingOfficerDetails))
+
+  val validSicAndCompliance = Some(SicAndCompliance(
+    "this is my business description",
+    ComplianceLabour(1000,Some(true),Some(true)),
+    SicCode("12345678","the flu","sic details")
+  ))
+  val validSicAndComplianceJson = Json.parse(
+    s"""
+       |{
+       | "businessDescription": "this is my business description",
+       | "labourCompliance" : {
+       | "numberOfWorkers": 1000,
+       | "temporaryContracts":true,
+       | "skilledWorkers":true
+           },
+       "mainBusinessActivity": {
+       "id": "12345678",
+       "description": "the flu",
+       "displayDetails": "sic details"
+           }
+       |}
+    """.stripMargin).as[JsObject]
 }

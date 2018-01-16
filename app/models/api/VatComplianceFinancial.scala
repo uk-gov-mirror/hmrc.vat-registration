@@ -18,6 +18,7 @@ package models.api
 
 import play.api.libs.json._
 
+@deprecated
 case class VatComplianceFinancial(adviceOrConsultancyOnly: Boolean,
                                   actAsIntermediary: Boolean,
                                   chargeFees: Option[Boolean] = None,
@@ -26,7 +27,7 @@ case class VatComplianceFinancial(adviceOrConsultancyOnly: Boolean,
                                   vehicleOrEquipmentLeasing: Option[Boolean] = None,
                                   investmentFundManagementServices: Option[Boolean] = None,
                                   manageFundsAdditional: Option[Boolean] = None)
-
+@deprecated
 object VatComplianceFinancial {
   implicit val format: OFormat[VatComplianceFinancial] = Json.format[VatComplianceFinancial]
 }
