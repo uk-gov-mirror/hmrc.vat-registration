@@ -139,8 +139,8 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
 
   "Calling updateLogicalGroup" should {
 
-    "should update to VatTradingDetails success" in new Setup {
-      repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(vatTradingDetails)) returns vatTradingDetails
+    "should update to TradingDetails success" in new Setup {
+      repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(tradingDetails)) returns tradingDetails
     }
 
     "should update to VatSicAndCompliance success" in new Setup {
@@ -160,7 +160,7 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     }
 
     "should throw UpdateFailed exception when regId not found" in new Setup {
-      repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(vatTradingDetails, RegistrationId("0"))) failedWith classOf[UpdateFailed]
+      repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(tradingDetails, RegistrationId("0"))) failedWith classOf[UpdateFailed]
     }
 
   }
@@ -266,84 +266,68 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
 
   "updateTradingDetails" should {
 
-    val tradingName = "testTradingName"
+    val tradingDetails = TradingDetails(Some("trading-name"), Some(true))
 
-    def vatSchemeWithTradingDetailsJson: JsObject = Json.parse(
-      s"""
-         |{
-         | "registrationId":"$registrationId",
-         | "status":"draft",
-         | "tradingDetails":{
-         |   "tradingName":"$tradingName"
-         | }
-         |}
-      """.stripMargin).as[JsObject]
+    "update tradingDetails block in registration when there is no tradingDetails data" in new Setup {
+      val result = for {
+        _                   <- repository.insert(vatScheme)
+        _                   <- repository.updateTradingDetails(vatScheme.id.value, tradingDetails)
+        Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
+      } yield updatedScheme.tradingDetails
 
-    val otherRegId = "other-reg-12345"
-    val otherUsersVatScheme = vatSchemeJson(otherRegId)
-
-    val tradingDetails: TradingDetails = TradingDetails(Some(tradingName), None)
-
-    "update the registration doc with the provided trading details" in new Setup {
-      insert(vatSchemeJson())
-
-      await(repository.updateTradingDetails(registrationId, tradingDetails))
-
-      fetchAll without _id shouldBe Some(vatSchemeWithTradingDetailsJson)
+      await(result) shouldBe Some(tradingDetails)
     }
 
-    "not update or insert new data into the registration doc if the supplied details already exist on the doc" in new Setup {
-      insert(vatSchemeWithTradingDetailsJson)
+    "update tradingDetails block in registration when there is already tradingDetails data" in new Setup {
+      val otherTradingDetails = TradingDetails(Some("other-trading-name"), Some(true))
+      val result = for {
+        _                   <- repository.insert(vatScheme.copy(tradingDetails = Some(tradingDetails)))
+        _                   <- repository.updateTradingDetails(vatScheme.id.value, tradingDetails)
+        Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
+      } yield updatedScheme.tradingDetails
 
-      await(repository.updateTradingDetails(registrationId, tradingDetails))
-
-      fetchAll without _id shouldBe Some(vatSchemeWithTradingDetailsJson)
+      await(result) shouldBe Some(tradingDetails)
     }
 
-    "not update or insert trading details if a registration doc doesn't already exist" in new Setup {
-      count shouldBe 0
+    "not update or insert tradingDetails if registration does not exist" in new Setup {
+      await(repository.insert(vatScheme))
 
-      await(repository.updateTradingDetails(registrationId, tradingDetails))
+      count shouldBe 1
+      await(repository.findAll()).head shouldBe vatScheme
 
-      fetchAll without _id shouldBe None
-    }
-
-    "not update or insert trading details if a registration doc associated with the given reg id doesn't already exist" in new Setup {
-      insert(otherUsersVatScheme)
-
-      fetchAll without _id shouldBe Some(otherUsersVatScheme)
-
-      await(repository.updateTradingDetails(registrationId, tradingDetails))
-
-      fetchAll without _id shouldBe Some(otherUsersVatScheme)
+      a[MissingRegDocument] shouldBe thrownBy(await(repository.updateTradingDetails("wrongRegId", tradingDetails)))
     }
   }
 
   "Calling retrieveTradingDetails" should {
 
-    val tradingName = "testTradingName"
+    val tradingDetails = TradingDetails(Some("trading-name"), Some(true))
 
-    val tradingDetails: TradingDetails = TradingDetails(Some(tradingName), Some(true))
+    "return trading details data from an existing registration containing data" in new Setup {
+      val result = for {
+        _   <- repository.insert(vatScheme.copy(tradingDetails = Some(tradingDetails)))
+        res <- repository.retrieveTradingDetails(vatScheme.id.value)
+      } yield res
 
-    def vatSchemeWithTradingDetailsJson(regId: String): JsObject = Json.parse(
-      s"""
-         |{
-         | "registrationId":"$regId",
-         | "status":"draft",
-         | "tradingDetails":{
-         |   "tradingName":"$tradingName",
-         |   "eoriRequested":true
-         | }
-         |}
-      """.stripMargin).as[JsObject]
-
-    "retrieve a TradingDetails object if it exists for the registration id" in new Setup {
-      insert(vatSchemeWithTradingDetailsJson(registrationId))
-      await(repository.retrieveTradingDetails(registrationId)).get shouldBe tradingDetails
+      await(result) shouldBe Some(tradingDetails)
     }
 
-    "return None if a TradingDetails does not exist for the registration id" in new Setup {
-      await(repository.retrieveTradingDetails(registrationId)) shouldBe None
+    "return None from an existing registration containing no data" in new Setup {
+      val result = for {
+        _   <- repository.insert(vatScheme)
+        res <- repository.retrieveTradingDetails(vatScheme.id.value)
+      } yield res
+
+      await(result) shouldBe None
+    }
+
+    "throw a MissingRegDocument for a none existing registration" in new Setup {
+      val result = for {
+        _   <- repository.insert(vatScheme.copy(tradingDetails = Some(tradingDetails)))
+        res <- repository.retrieveTradingDetails("wrongRegId")
+      } yield res
+
+      a[MissingRegDocument] shouldBe thrownBy(await(result))
     }
 
   }

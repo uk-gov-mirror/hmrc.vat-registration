@@ -5,11 +5,8 @@ POST         /incorporation-data                    controllers.ProcessIncorpora
 
 GET          /:regId/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regId: RegistrationId)
 
-PATCH        /:regID/trading-details                controllers.VatRegistrationController.updateVatTradingDetails(regID: RegistrationId)
-# uncomment when legacy trading details API gets removed or renamed
-#PATCH        /:regId/trading-details                controllers.VatRegistrationController.updateTradingDetails(regId)
-
-GET          /:regId/trading-details                controllers.VatRegistrationController.fetchTradingDetails(regId)
+GET          /:regId/trading-details                controllers.TradingDetailsController.fetchTradingDetails(regId)
+PATCH        /:regId/trading-details                controllers.TradingDetailsController.updateTradingDetails(regId)
 
 PATCH        /:regID/vat-financials                 controllers.VatRegistrationController.updateVatFinancials(regID: RegistrationId)
 PATCH        /:regID/sic-and-compliance             controllers.VatRegistrationController.updateSicAndCompliance(regID: RegistrationId)

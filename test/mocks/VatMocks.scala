@@ -65,6 +65,7 @@ trait VatMocks extends WSHTTPMock {
   lazy val mockThresholdService = mock[ThresholdService]
   lazy val mockLodgingOfficerService = mock[LodgingOfficerService]
   lazy val mockSicAndComplianceService = mock[SicAndComplianceService]
+  lazy val mockTradingDetailsService = mock[TradingDetailsService]
 
 
   object AuthorisationMocks {
@@ -118,11 +119,6 @@ trait VatMocks extends WSHTTPMock {
       val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
       when(mockRegistrationService.retrieveVatScheme(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
-    }
-
-    def mockRetrieveTradingDetails(tradingDetails: Option[TradingDetails]): Unit = {
-      when(mockRegistrationService.retrieveTradingDetails(ArgumentMatchers.any())(ArgumentMatchers.any()))
-        .thenReturn(Future.successful(tradingDetails))
     }
 
     def mockRetrieveVatScheme(id: RegistrationId, vatScheme: VatScheme): Unit = {

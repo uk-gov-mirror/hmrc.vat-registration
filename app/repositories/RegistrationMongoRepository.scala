@@ -26,7 +26,7 @@ import models._
 import models.api._
 import play.api.Logger
 import play.api.libs.json.{JsObject, Json, OFormat, Reads, Writes}
-import play.modules.reactivemongo.{MongoDbConnection, ReactiveMongoComponent}
+import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
@@ -37,7 +37,6 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NoStackTrace
 
 class RegistrationMongo @Inject()(mongo: ReactiveMongoComponent) extends ReactiveMongoFormats {
   lazy val store = new RegistrationMongoRepository(mongo.mongoConnector.db)
@@ -55,7 +54,7 @@ trait RegistrationRepository {
   def updateIVStatus(regId: String, ivStatus: Boolean)(implicit ex: ExecutionContext): Future[Boolean]
   def saveTransId(transId: String, regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String]
   def fetchRegByTxId(transId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]]
-  def retrieveTradingDetails(regId: String)(implicit hc: HeaderCarrier): Future[Option[TradingDetails]]
+  def retrieveTradingDetails(regId: String)(implicit ex: ExecutionContext): Future[Option[TradingDetails]]
   def updateTradingDetails(regId: String, tradingDetails: TradingDetails)(implicit ex: ExecutionContext): Future[TradingDetails]
   def fetchReturns(regId: String)(implicit hc: HeaderCarrier): Future[Option[Returns]]
   def updateReturns(regId: String, returns: Returns)(implicit ex: ExecutionContext): Future[Returns]
@@ -103,11 +102,6 @@ class RegistrationMongoRepository (mongo: () => DB)
 
   override def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
     collection.find(ridSelector(id)).one[VatScheme]
-  }
-
-  override def retrieveTradingDetails(regId: String)(implicit hc: HeaderCarrier): Future[Option[TradingDetails]] = {
-    val tradingDetailsProj = BSONDocument("tradingDetails" -> 1, "_id" -> 0)
-    collection.find(regIdSelector(regId), tradingDetailsProj).one[TradingDetails]
   }
 
   override def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G], ec: ExecutionContext): Future[G] =
@@ -221,15 +215,6 @@ class RegistrationMongoRepository (mongo: () => DB)
     }
   }
 
-  override def updateTradingDetails(regId: String, tradingDetails: TradingDetails)(implicit ex: ExecutionContext): Future[TradingDetails] = {
-    val selector = regIdSelector(regId)
-    val update = BSONDocument("$set" -> Json.toJson(tradingDetails))
-    collection.update(selector, update) map { updateResult =>
-      Logger.info(s"[TradingDetails] updating trading details for regId : $regId - documents modified : ${updateResult.nModified}")
-      tradingDetails
-    }
-  }
-
   override def fetchReturns(regId: String)(implicit hc: HeaderCarrier): Future[Option[Returns]] = {
     val selector = regIdSelector(regId)
     val projection = Json.obj("returns" -> 1)
@@ -238,6 +223,14 @@ class RegistrationMongoRepository (mongo: () => DB)
         (js \ "returns").validateOpt[Returns].get
       }
     }
+  }
+
+  override def retrieveTradingDetails(regId: String)(implicit ex: ExecutionContext): Future[Option[TradingDetails]] = {
+    fetchBlock[TradingDetails](regId, "tradingDetails")
+  }
+
+  override def updateTradingDetails(regId: String, tradingDetails: TradingDetails)(implicit ex: ExecutionContext): Future[TradingDetails] = {
+    updateBlock(regId, tradingDetails, "tradingDetails")
   }
 
   override def updateReturns(regId: String, returns: Returns)(implicit ex: ExecutionContext): Future[Returns] = {

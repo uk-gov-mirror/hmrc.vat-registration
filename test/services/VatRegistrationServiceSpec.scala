@@ -124,11 +124,7 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
 
   "call to updateLogicalGroup" should {
 
-    val tradingDetails = VatTradingDetails(
-      tradingName = TradingName(
-        selection = true,
-        tradingName = Some("some-trader-name")),
-      euTrading = VatEuTrading(selection = true, eoriApplication = Some(true)))
+    val tradingDetails = TradingDetails(Some("test-name"), Some(false))
 
     "return Success response " in new Setup {
       when(mockRegistrationRepository.updateLogicalGroup(RegistrationId("1"), tradingDetails)).thenReturn(tradingDetails)
@@ -148,24 +144,6 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
       when(mockRegistrationRepository.updateLogicalGroup(regId, tradingDetails)).thenReturn(Future.failed(t))
 
       service.updateLogicalGroup(regId, tradingDetails) returnsLeft ResourceNotFound(s"No registration found for registration ID: $regId")
-    }
-  }
-
-  "call to retrieveTradingDetails" should {
-    val fullTradingDetails = TradingDetails(Some("tradingName"),Some(true))
-
-    "return a trading details if one exists in the database for the registration id" in new Setup {
-      when(mockRegistrationRepository.retrieveTradingDetails(ArgumentMatchers.any())(ArgumentMatchers.any()))
-        .thenReturn(Future.successful(Some(fullTradingDetails)))
-
-      await(service.retrieveTradingDetails("1")) shouldBe Some(fullTradingDetails)
-    }
-
-    "return a None if no trading details exist for the registration id" in new Setup {
-      when(mockRegistrationRepository.retrieveTradingDetails(ArgumentMatchers.any())(ArgumentMatchers.any()))
-        .thenReturn(Future.successful(None))
-
-      await(service.retrieveTradingDetails("1")) shouldBe None
     }
   }
 

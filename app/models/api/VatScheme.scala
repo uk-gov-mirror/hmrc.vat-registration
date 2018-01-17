@@ -23,7 +23,7 @@ import play.api.libs.json._
 
 case class VatScheme(id: RegistrationId,
                      transactionId: Option[TransactionId] = None,
-                     tradingDetails: Option[VatTradingDetails] = None,
+                     tradingDetails: Option[TradingDetails] = None,
                      lodgingOfficer: Option[LodgingOfficer] = None,
                      financials: Option[VatFinancials] = None,
                      returns: Option[Returns] = None,
@@ -44,7 +44,7 @@ object VatScheme {
   def reads(implicit r: Reads[VatFinancials]): Reads[VatScheme] = (
     (__ \ "registrationId").read[RegistrationId] and
     (__ \ "transactionId").readNullable[TransactionId] and
-    (__ \ "tradingDetails").readNullable[VatTradingDetails] and
+    (__ \ "tradingDetails").readNullable[TradingDetails] and
     (__ \ "lodgingOfficer").readNullable[LodgingOfficer] and
     (__ \ "financials").readNullable[VatFinancials](r) and
     (__ \ "returns").readNullable[Returns] and
@@ -64,7 +64,7 @@ object VatScheme {
   val mongoReads: Reads[VatScheme] = (
     (__ \ "registrationId").read[RegistrationId] and
     (__ \ "transactionId").readNullable[TransactionId] and
-    (__ \ "tradingDetails").readNullable[VatTradingDetails] and
+    (__ \ "tradingDetails").readNullable[TradingDetails] and
     (__ \ "lodgingOfficer").readNullable[LodgingOfficer] and
     (__ \ "financials").readNullable[VatFinancials] and
     (__ \ "returns").readNullable[Returns] and
@@ -84,7 +84,7 @@ object VatScheme {
   def writes(implicit w: Writes[VatFinancials]): OWrites[VatScheme] = (
     (__ \ "registrationId").write[RegistrationId] and
     (__ \ "transactionId").writeNullable[TransactionId] and
-    (__ \ "tradingDetails").writeNullable[VatTradingDetails] and
+    (__ \ "tradingDetails").writeNullable[TradingDetails] and
     (__ \ "lodgingOfficer").writeNullable[LodgingOfficer] and
     (__ \ "financials").writeNullable[VatFinancials](w) and
     (__ \ "returns").writeNullable[Returns] and

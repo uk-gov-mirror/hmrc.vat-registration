@@ -18,6 +18,7 @@ package config
 
 import com.google.inject.AbstractModule
 import controllers._
+import services.{TradingDetailsService, TradingDetailsSrv}
 
 class Module extends AbstractModule {
 
@@ -31,6 +32,8 @@ class Module extends AbstractModule {
     bind(classOf[ThresholdController]).to(classOf[ThresholdControllerImpl]).asEagerSingleton()
     bind(classOf[LodgingOfficerController]).to(classOf[LodgingOfficerControllerImpl]).asEagerSingleton()
     bind(classOf[SicAndComplianceController]).to(classOf[SicAndComplianceControllerImpl]).asEagerSingleton()
+    bind(classOf[TradingDetailsController]).to(classOf[TradingDetailsControllerImpl]).asEagerSingleton()
+    bind(classOf[TradingDetailsSrv]).to(classOf[TradingDetailsService]).asEagerSingleton()
     //TODO: Should all services be done this way or is it just the controller.
 //    bind(classOf[services.LodgingOfficerSrv]).to(classOf[services.LodgingOfficerService]).asEagerSingleton()
 //    bind(classOf[services.EligibilitySrv]).to(classOf[services.EligibilityService]).asEagerSingleton()

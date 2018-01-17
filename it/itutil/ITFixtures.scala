@@ -33,18 +33,7 @@ trait ITFixtures {
   val tradingName = TradingName(selection = true, Some("some-trading-name"))
   val oldName = Name(first = Some("Bob Smith"), middle = None, last = None, forename = None, surname = None, title = None, otherForenames = None)
   val changeOfName = ChangeOfName(true, Some(FormerName(None, None, name = Some(oldName), change = Some(LocalDate.now()))))
-
-  val vatTradingDetails = VatTradingDetails(
-    tradingName = tradingName,
-    euTrading = VatEuTrading(
-      selection = true,
-      eoriApplication = Some(true)
-    )
-  )
-  val tradingDetails = VatTradingDetails(
-    tradingName = tradingName,
-    euTrading = VatEuTrading(selection = true, eoriApplication = Some(true))
-  )
+  val tradingDetails = TradingDetails(Some("test-name"), Some(true))
   val returns = Returns(
     reclaimVatOnMostReturns = true,
     frequency = "quarterly",
