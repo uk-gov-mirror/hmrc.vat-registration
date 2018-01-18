@@ -120,28 +120,6 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
       }
   }
 
-  @deprecated
-  def updateVatTradingDetails(id: RegistrationId): Action[JsValue] = patch[VatTradingDetails](registrationService, id)
-
-  def updateTradingDetails(regId: String): Action[JsValue] = Action.async(parse.json) {
-    implicit request =>
-      authenticated { _ =>
-        withJsonBody[TradingDetails]{ tradingDetails =>
-          registrationRepository.updateTradingDetails(regId, tradingDetails) map ( _ => Ok)
-        }
-      }
-  }
-
-  def fetchTradingDetails(regId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authenticated { _ =>
-        registrationService.retrieveTradingDetails(regId) map {
-          case Some(tradingDetails) => Ok(Json.toJson(tradingDetails))
-          case None => NotFound
-        }
-      }
-  }
-
   def updateSicAndCompliance(id: RegistrationId): Action[JsValue] = patch[VatSicAndCompliance](registrationService, id)
 
   def updateVatContact(id: RegistrationId): Action[JsValue] = patch[VatContact](registrationService, id)

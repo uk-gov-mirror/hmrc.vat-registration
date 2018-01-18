@@ -93,16 +93,6 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       controller.retrieveVatScheme(regId)(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
     }
 
-    "call to fetchTradingDetails return Ok with TradingDetails if it found trading details" in new Setup {
-      ServiceMocks.mockRetrieveTradingDetails(Some(TradingDetails(Some("tradingDetails"),Some(true))))
-      controller.fetchTradingDetails("regId")(FakeRequest()) returnsStatus OK
-    }
-
-    "call to fetchTradingDetails return Not found without trading details if it did not find trading details" in new Setup {
-      ServiceMocks.mockRetrieveTradingDetails(None)
-      controller.fetchTradingDetails("regId")(FakeRequest()) returnsStatus NOT_FOUND
-    }
-
     "return 503 if RegistrationService encounters any problems" in new Setup {
       ServiceMocks.mockFailedCreateNewRegistration(regId)
       controller.newVatRegistration()(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
@@ -132,42 +122,6 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         controller.updateVatFinancials(regId)(fakeRequest) returnsStatus SERVICE_UNAVAILABLE
       }
 
-    }
-
-    "updateVatTradingDetails" should {
-
-      val fakeRequest = FakeRequest().withBody(Json.toJson(tradingDetails))
-
-      "call updateTradingDetails return ACCEPTED" in new Setup {
-        ServiceMocks.mockSuccessfulUpdateLogicalGroup(tradingDetails)
-        controller.updateVatTradingDetails(regId)(fakeRequest) returns Accepted(Json.toJson(tradingDetails))
-      }
-
-      "call updateTradingDetails return ServiceUnavailable" in new Setup {
-        ServiceMocks.mockServiceUnavailableUpdateLogicalGroup(tradingDetails, exception)
-        controller.updateVatTradingDetails(regId)(fakeRequest) returnsStatus SERVICE_UNAVAILABLE
-      }
-    }
-
-    "updateTradingDetails" should {
-
-      val registrationId = "reg-12345"
-      val tradingName = "testTradingName"
-      val tradingDetails = TradingDetails(Some("testTradingName"), Some(true))
-
-      when(mockRegistrationMongo.store).thenReturn(mockRegistrationMongoRepository)
-
-      "return a 200 if the update to mongo is successful" in new Setup {
-        when(mockRegistrationMongoRepository.updateTradingDetails(any(), any())(any()))
-          .thenReturn(Future.successful(tradingDetails))
-
-        val request: FakeRequest[JsObject] = FakeRequest().
-          withBody(Json.obj("tradingDetails" -> Json.obj("tradingName" -> tradingName, "eoriRequested" -> true)))
-
-        val result: Result = controller.updateTradingDetails(registrationId)(request)
-
-        status(result) shouldBe OK
-      }
     }
 
     "updateBankAccountDetails" should {

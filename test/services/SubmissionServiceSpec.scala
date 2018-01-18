@@ -365,13 +365,13 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
 
   "Calling buildTopUpDesSubmission" should {
 
-    val schemeReturns = Returns(true, "monthly", None, StartDate(date = Some(date)))
+    val someLocalDateNow = Some(LocalDate.now())
+    val someDateTimeNow = Some(DateTime.now())
+
+    val schemeReturns = Returns(true, "monthly", None, StartDate(date = someLocalDateNow))
     val vatScheme = VatScheme(RegistrationId("1"), Some(TransactionId("1")), returns = Some(schemeReturns), status = VatRegStatus.draft)
     val vatSchemeNoTradingDetails = VatScheme(RegistrationId("1"), None, None, None, status = VatRegStatus.draft)
     val vatSchemeNoStartDate = VatScheme(RegistrationId("1"), Some(TransactionId("1")), None, None, status = VatRegStatus.draft)
-
-    val someLocalDateNow = Some(LocalDate.of(2017, 1, 1))
-    val someDateTimeNow = Some(DateTime.now())
 
     val topUpAccepted = TopUpSubmission("ackRef", "accepted", someLocalDateNow, someDateTimeNow)
     val topUpRejected = TopUpSubmission("ackRef", "rejected")

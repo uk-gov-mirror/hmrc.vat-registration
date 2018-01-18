@@ -122,10 +122,6 @@ trait RegistrationService extends ApplicativeSyntax with FutureInstances {
   def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[VatScheme] =
     OptionT(registrationRepository.retrieveVatScheme(id)).toRight(ResourceNotFound(id.value))
 
-  def retrieveTradingDetails(regId: String)(implicit hc: HeaderCarrier): Future[Option[TradingDetails]] = {
-    registrationRepository.retrieveTradingDetails(regId)
-  }
-
   def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G)(implicit ec: ExecutionContext): ServiceResult[G] =
     toEitherT(registrationRepository.updateLogicalGroup(id, group))
 

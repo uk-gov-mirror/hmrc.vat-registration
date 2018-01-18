@@ -24,25 +24,17 @@ import java.time.LocalDate
 
 import common.{RegistrationId, TransactionId}
 import enums.VatRegStatus
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 
 trait VatRegistrationFixture {
   val regId = RegistrationId("testId")
   val txId: TransactionId = TransactionId("1")
   val regime = "vat"
   val subscriber = "scrs"
-
   val now = LocalDate.now(ZoneId.systemDefault())
-
   val userId = "userId"
   val ackRefNumber = "BRPY000000000001"
-  val date = LocalDate.of(2017, 1, 1)
-  val tradingDetails: VatTradingDetails = VatTradingDetails(
-    tradingName = TradingName(
-      selection = true,
-      tradingName = Some("some-trader-name")),
-    euTrading = VatEuTrading(selection = true, eoriApplication = Some(true))
-  )
+  val date: LocalDate = LocalDate.of(2018, 1, 1)
   val scrsAddress = Address("line1", "line2", None, None, Some("XX XX"), Some("UK"))
   val sicCode = SicCode("88888888", "description", "displayDetails")
   val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description", None, None, mainBusinessActivity = sicCode)
@@ -138,4 +130,22 @@ trait VatRegistrationFixture {
            }
        |}
     """.stripMargin).as[JsObject]
+
+  val validFullTradingDetails: TradingDetails = TradingDetails(Some("trading-name"), Some(true))
+  val validFullTradingDetailsJson: JsObject = Json.parse(
+    s"""
+       |{
+       | "tradingName":"trading-name",
+       | "eoriRequested":true
+       |}
+     """.stripMargin).as[JsObject]
+
+  val invalidTradingDetailsJson: JsObject = Json.parse(
+    s"""
+       |{
+       | "tradingName":"trading-name",
+       | "eriroREf":true
+       |}
+     """.stripMargin).as[JsObject]
+
 }
