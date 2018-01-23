@@ -105,10 +105,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
     "updateVatFinancials" should {
 
-      val vatFinancials = VatFinancials(Some(VatBankAccount("Reddy", "10-01-01", "12345678")),
-        turnoverEstimate = 10000000000L,
-        zeroRatedTurnoverEstimate = Some(10000000000L)
-      )
+      val vatFinancials = VatFinancials(zeroRatedTurnoverEstimate = Some(10000000000L))
 
       val fakeRequest = FakeRequest().withBody(Json.toJson(vatFinancials))
 

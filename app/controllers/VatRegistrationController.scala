@@ -27,7 +27,6 @@ import models.api._
 import play.api.libs.json._
 import play.api.mvc._
 import repositories.{RegistrationMongo, RegistrationMongoRepository}
-import repositories.RegistrationMongoFormats.encryptedFinancials
 import services._
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import utils.VATFeatureSwitches
@@ -61,7 +60,7 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
 
   @deprecated
   def updateVatFinancials(id: RegistrationId): Action[JsValue] = {
-    implicit val format: Format[VatFinancials] = Format(VatFinancials.format, encryptedFinancials)
+    implicit val format: Format[VatFinancials] = VatFinancials.format
     patch[VatFinancials](registrationService, id)
   }
 

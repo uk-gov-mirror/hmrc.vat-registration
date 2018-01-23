@@ -65,16 +65,11 @@ trait RegistrationRepository {
 }
 
 
-object RegistrationMongoFormats extends ReactiveMongoFormats {
-  val encryptedFinancials: OFormat[VatFinancials] = VatFinancials.format(VatBankAccountMongoFormat.encryptedFormat)
-  val vatSchemeFormat: OFormat[VatScheme] = OFormat(VatScheme.mongoReads, VatScheme.writes(encryptedFinancials))
-}
-
 class RegistrationMongoRepository (mongo: () => DB)
   extends ReactiveRepository[VatScheme, BSONObjectID](
     collectionName = "registration-information",
     mongo = mongo,
-    domainFormat = RegistrationMongoFormats.vatSchemeFormat
+    domainFormat = VatScheme.format
   ) with RegistrationRepository {
 
   import cats.instances.future._

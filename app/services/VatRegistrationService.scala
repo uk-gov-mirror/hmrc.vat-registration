@@ -79,7 +79,7 @@ trait RegistrationService extends ApplicativeSyntax with FutureInstances {
         case Some(ar) =>
           Left[LeftState, String](AcknowledgementReferenceExists(s"""Registration ID $id already has an acknowledgement reference of: $ar""")).toEitherT
         case None =>
-          EitherT.liftT(registrationRepository.updateByElement(id, AcknowledgementReferencePath, ackRef))
+          EitherT.liftT[Future, LeftState, String](registrationRepository.updateByElement(id, AcknowledgementReferencePath, ackRef))
       })
 
   def getStatus(regId: RegistrationId)(implicit hc: HeaderCarrier): Future[JsValue] = {
