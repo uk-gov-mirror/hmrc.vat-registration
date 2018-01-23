@@ -111,7 +111,7 @@ trait VatRegistrationFixture {
 
   val validSicAndCompliance = Some(SicAndCompliance(
     "this is my business description",
-    ComplianceLabour(1000,Some(true),Some(true)),
+    Some(ComplianceLabour(1000,Some(true),Some(true))),
     SicCode("12345678","the flu","sic details")
   ))
   val validSicAndComplianceJson = Json.parse(

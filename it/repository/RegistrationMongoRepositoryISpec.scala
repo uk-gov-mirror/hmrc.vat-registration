@@ -907,7 +907,7 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
   "calling getSicAndCompliance" should {
     val validSicAndCompliance = Some(SicAndCompliance(
       "this is my business description",
-      ComplianceLabour(1000,Some(true),Some(true)),
+      Some(ComplianceLabour(1000,Some(true),Some(true))),
       SicCode("11111111","the flu","sic details")
     ))
     "return a SicAndComplianceModel from existing data based on the reg Id" in new Setup {
@@ -944,7 +944,7 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
   "calling updateSicAndCompliance" should {
     val validSicAndCompliance = Some(SicAndCompliance(
       "this is my business description",
-      ComplianceLabour(1000,Some(true),Some(true)),
+      Some(ComplianceLabour(1000,Some(true),Some(true))),
       SicCode("12345678","the flu","sic details")
     ))
     "return an amended SicAndCompliance Model when an entry already exists in the repo for 1 field" in new Setup {
@@ -960,7 +960,7 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     "return an amended Option SicAndCompliance Model when an entry already exists and all fields have changed in the model" in new Setup {
       val amendedModel = SicAndCompliance(
         "foo",
-        ComplianceLabour(1,None,None),
+        Some(ComplianceLabour(1,None,None)),
         SicCode("foo","bar","wizz"))
       val result = for{
         _ <- repository.insert(vatScheme.copy(sicAndCompliance = validSicAndCompliance))
