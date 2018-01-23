@@ -19,15 +19,15 @@ package models.api
 import play.api.libs.json.{OFormat, __}
 import play.api.libs.functional.syntax._
 
-case class SicAndCompliance(businessDescription:String,
-                            labourCompliance:ComplianceLabour,
-                            mainBusinessActivity:SicCode)
+case class SicAndCompliance(businessDescription: String,
+                            labourCompliance: Option[ComplianceLabour],
+                            mainBusinessActivity: SicCode)
 
 object SicAndCompliance {
 
   implicit val formats = (
         (__ \ "businessDescription").format[String] and
-        (__ \ "labourCompliance").format[ComplianceLabour] and
+        (__ \ "labourCompliance").formatNullable[ComplianceLabour] and
         (__ \ "mainBusinessActivity").format[SicCode]
   )(SicAndCompliance.apply, unlift(SicAndCompliance.unapply))
   }
