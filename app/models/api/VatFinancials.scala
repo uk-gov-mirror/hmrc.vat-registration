@@ -22,16 +22,10 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 @deprecated
-case class VatFinancials(bankAccount: Option[VatBankAccount] = None,
-                         turnoverEstimate: Long,
-                         zeroRatedTurnoverEstimate: Option[Long] = None)
+case class VatFinancials(zeroRatedTurnoverEstimate: Option[Long] = None)
 
 object VatFinancials {
-  implicit def format(implicit f: OFormat[VatBankAccount]): OFormat[VatFinancials] = (
-    (__ \ "bankAccount").formatNullable[VatBankAccount](f) and
-    (__ \ "turnoverEstimate").format[Long] and
-    (__ \ "zeroRatedTurnoverEstimate").formatNullable[Long]
-  )(VatFinancials.apply, unlift(VatFinancials.unapply))
+  implicit val format : OFormat[VatFinancials] = Json.format[VatFinancials]
 }
 
 case class StartDate(date: Option[LocalDate])

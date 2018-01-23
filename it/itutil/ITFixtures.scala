@@ -55,10 +55,7 @@ trait ITFixtures {
 
   val EstimateValue: Long = 1000L
   val zeroRatedTurnoverEstimate: Long = 1000L
-  val vatFinancials = VatFinancials(
-    bankAccount = Some(VatBankAccount("Reddy", "101010", "100000000000")),
-    turnoverEstimate = EstimateValue,
-    zeroRatedTurnoverEstimate = Some(zeroRatedTurnoverEstimate)
+  val vatFinancials = VatFinancials(zeroRatedTurnoverEstimate = Some(zeroRatedTurnoverEstimate)
   )
 
   val scrsAddress               = Address("line1", "line2", None, None, Some("XX XX"), Some("UK"))
