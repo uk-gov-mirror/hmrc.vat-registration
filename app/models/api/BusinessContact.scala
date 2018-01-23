@@ -18,15 +18,17 @@ package models.api
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import play.api.libs.json.Reads._
 
-case class VatDigitalContact(email: String, tel: Option[String], mobile: Option[String])
+case class BusinessContact(digitalContact: DigitalContact,
+                           website:Option[String],
+                           ppob:Address)
 
-object VatDigitalContact extends VatDigitalContactValidator {
+object BusinessContact {
 
-  implicit val format: OFormat[VatDigitalContact] = (
-    (__ \ "email").format[String](maxLength[String](70) keepAnd emailValidator) and
-    (__ \ "tel").formatNullable[String](telValidator) and
-    (__ \ "mobile").formatNullable[String](mobileValidator)
-  )(VatDigitalContact.apply, unlift(VatDigitalContact.unapply))
+  implicit val formats:OFormat[BusinessContact] = (
+    (__ \ "digitalContact").format[DigitalContact] and
+    (__ \ "website").formatNullable[String] and
+    (__ \ "ppob").format[Address]
+  )(BusinessContact.apply, unlift(BusinessContact.unapply))
+
 }

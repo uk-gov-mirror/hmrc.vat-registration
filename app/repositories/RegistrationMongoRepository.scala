@@ -302,4 +302,12 @@ class RegistrationMongoRepository (mongo: () => DB)
 
   def getSicAndCompliance(regId:String)(implicit ec:ExecutionContext):Future[Option[SicAndCompliance]] =
     fetchBlock[SicAndCompliance](regId,"sicAndCompliance")
+
+  def updateBusinessContact(regId:String, businessCont:BusinessContact)(implicit ec:ExecutionContext): Future[BusinessContact] =
+    updateBlock(regId,businessCont)
+
+  def getBusinessContact(regId:String)(implicit ec:ExecutionContext):Future[Option[BusinessContact]] =
+    fetchBlock[BusinessContact](regId,"businessContact")
+
+
 }

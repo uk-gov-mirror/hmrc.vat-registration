@@ -38,8 +38,8 @@ trait VatRegistrationFixture {
   val scrsAddress = Address("line1", "line2", None, None, Some("XX XX"), Some("UK"))
   val sicCode = SicCode("88888888", "description", "displayDetails")
   val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description", None, None, mainBusinessActivity = sicCode)
-  val vatDigitalContact = VatDigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
-  val vatContact = VatContact(digitalContact = vatDigitalContact, website = None, ppob = scrsAddress)
+  val digitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
+  val vatContact = VatContact(digitalContact = digitalContact, website = None, ppob = scrsAddress)
   val vatEligibility = VatServiceEligibility(
     haveNino = Some(true),
     doingBusinessAbroad = Some(true),
@@ -97,7 +97,7 @@ trait VatRegistrationFixture {
   val upsertThreshold           = Threshold(true,None,Some(LocalDate.now()),Some(LocalDate.now()))
   val currentAddress            = Address("12 Lukewarm","Oriental lane")
   val skylakeValiarm            = Name(first = Some("Skylake"), middle = None, last = Some("Valiarm"))
-  val skylakeDigitalContact     = VatDigitalContact("skylake@vilikariet.com", None, None)
+  val skylakeDigitalContact     = DigitalContact("skylake@vilikariet.com", None, None)
   val lodgingOfficerDetails     = LodgingOfficerDetails(currentAddress = currentAddress, None, None, contact = skylakeDigitalContact)
   val validLodgingOfficerPreIV  = LodgingOfficer(
     dob = LocalDate.now(),
@@ -114,6 +114,31 @@ trait VatRegistrationFixture {
     Some(ComplianceLabour(1000,Some(true),Some(true))),
     SicCode("12345678","the flu","sic details")
   ))
+
+  val validBusinessContact  = Some(BusinessContact(
+    digitalContact = DigitalContact("email@email.com",Some("12345"),Some("54321")),
+    website = Some("www.foo.com"),
+    ppob = Address("line1","line2",None,None,None,Some("foo"))
+  ))
+
+  val validBusinessContactJson = Json.parse(
+    s"""{
+       |"digitalContact":{
+       |"email": "email@email.com",
+       |"tel": "12345",
+       |"mobile": "54321"
+       |},
+       |"website": "www.foo.com",
+       |"ppob": {
+       |"line1": "line1",
+       |"line2": "line2",
+       |"country": "foo"
+       | }
+       |}
+       |
+     """.stripMargin
+  ).as[JsObject]
+
   val validSicAndComplianceJson = Json.parse(
     s"""
        |{

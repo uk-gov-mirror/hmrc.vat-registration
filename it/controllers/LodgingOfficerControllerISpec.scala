@@ -60,7 +60,7 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing with ITFixtures 
 
   val currentAddress            = Address("12 Lukewarm","Oriental lane")
   val skylakeValiarm            = Name(first = Some("Skylake"), middle = None, last = Some("Valiarm"))
-  val skylakeDigitalContact     = VatDigitalContact("skylake@vilikariet.com", None, None)
+  val skylakeDigitalContact     = DigitalContact("skylake@vilikariet.com", None, None)
   val lodgingOfficerDetails     = LodgingOfficerDetails(currentAddress = currentAddress, None, None, contact = skylakeDigitalContact)
   val validLodgingOfficerPreIV  = LodgingOfficer(
     dob = LocalDate.now(),

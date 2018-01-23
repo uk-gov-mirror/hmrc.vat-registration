@@ -16,14 +16,17 @@
 
 package models.api
 
+import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import play.api.libs.json.Reads._
 
-@deprecated("please use BusinessContact Instead")
-case class VatContact(digitalContact: DigitalContact,
-                      website: Option[String] = None,
-                      ppob: Address)
+case class DigitalContact(email: String, tel: Option[String], mobile: Option[String])
 
-@deprecated("please use BusinessContact Instead")
-object VatContact {
-  implicit val format: OFormat[VatContact] = Json.format[VatContact]
+object DigitalContact extends VatDigitalContactValidator {
+
+  implicit val format: OFormat[DigitalContact] = (
+    (__ \ "email").format[String](maxLength[String](70) keepAnd emailValidator) and
+    (__ \ "tel").formatNullable[String](telValidator) and
+    (__ \ "mobile").formatNullable[String](mobileValidator)
+  )(DigitalContact.apply, unlift(DigitalContact.unapply))
 }

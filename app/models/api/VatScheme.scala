@@ -30,6 +30,7 @@ case class VatScheme(id: RegistrationId,
                      vatSicAndCompliance: Option[VatSicAndCompliance] = None,
                      sicAndCompliance: Option[SicAndCompliance] = None,
                      vatContact: Option[VatContact] = None,
+                     businessContact: Option[BusinessContact] = None,
                      vatEligibility: Option[VatServiceEligibility] = None,
                      eligibility: Option[Eligibility] = None,
                      turnoverEstimates: Option[TurnoverEstimates] = None,
@@ -41,6 +42,27 @@ case class VatScheme(id: RegistrationId,
 
 object VatScheme {
 
+  def reads(implicit r: Reads[VatFinancials]): Reads[VatScheme] = (
+    (__ \ "registrationId").read[RegistrationId] and
+    (__ \ "transactionId").readNullable[TransactionId] and
+    (__ \ "tradingDetails").readNullable[TradingDetails] and
+    (__ \ "lodgingOfficer").readNullable[LodgingOfficer] and
+    (__ \ "financials").readNullable[VatFinancials](r) and
+    (__ \ "returns").readNullable[Returns] and
+    (__ \ "vatSicAndCompliance").readNullable[VatSicAndCompliance] and
+    (__ \ "sicAndCompliance").readNullable[SicAndCompliance] and
+    (__ \ "vatContact").readNullable[VatContact] and
+    (__ \ "businessContact").readNullable[BusinessContact] and
+    (__ \ "vatEligibility").readNullable[VatServiceEligibility] and
+    (__ \ "eligibility").readNullable[Eligibility] and
+    (__ \ "turnoverEstimates").readNullable[TurnoverEstimates] and
+    (__ \ "bankAccount").readNullable[BankAccount] and
+    (__ \ "threshold").readNullable[Threshold] and
+    (__ \ "acknowledgementReference").readNullable[String] and
+    (__ \ "vatFlatRateScheme").readNullable[VatFlatRateScheme] and
+    (__ \ "status").read[VatRegStatus.Value]
+  )(VatScheme.apply _)
+
   val mongoReads: Reads[VatScheme] = (
     (__ \ "registrationId").read[RegistrationId] and
     (__ \ "transactionId").readNullable[TransactionId] and
@@ -51,6 +73,7 @@ object VatScheme {
     (__ \ "vatSicAndCompliance").readNullable[VatSicAndCompliance] and
     (__ \ "sicAndCompliance").readNullable[SicAndCompliance] and
     (__ \ "vatContact").readNullable[VatContact] and
+    (__ \ "businessContact").readNullable[BusinessContact] and
     (__ \ "vatEligibility").readNullable[VatServiceEligibility] and
     (__ \ "eligibility").readNullable[Eligibility] and
     (__ \ "turnoverEstimates").readNullable[TurnoverEstimates] and
@@ -71,6 +94,7 @@ object VatScheme {
     (__ \ "vatSicAndCompliance").writeNullable[VatSicAndCompliance] and
     (__ \ "sicAndCompliance").writeNullable[SicAndCompliance] and
     (__ \ "vatContact").writeNullable[VatContact] and
+    (__ \ "businessContact").writeNullable[BusinessContact] and
     (__ \ "vatEligibility").writeNullable[VatServiceEligibility] and
     (__ \ "eligibility").writeNullable[Eligibility] and
     (__ \ "turnoverEstimates").writeNullable[TurnoverEstimates] and
