@@ -54,3 +54,6 @@ PATCH       /:regId/update-iv-status/:ivPassed      controllers.LodgingOfficerCo
 GET         /:regId/sicAndComp                      controllers.SicAndComplianceController.getSicAndCompliance(regId: String)
 PATCH       /:regId/sicAndComp                      controllers.SicAndComplianceController.updateSicAndCompliance(regId: String)
 
+# new api links
+GET         /:regId/business-contact                controllers.BusinessContactController.getBusinessContact(regId: String)
+PATCH       /:regId/business-contact                controllers.BusinessContactController.updateBusinessContact(regId: String)

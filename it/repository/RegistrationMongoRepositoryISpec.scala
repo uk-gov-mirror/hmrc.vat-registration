@@ -734,7 +734,7 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
       currentAddress = scrsAddress,
       changeOfName = None,
       previousAddress = None,
-      contact = VatDigitalContact(
+      contact = DigitalContact(
         email = "test@t.com",
         tel = None,
         mobile = None
@@ -832,7 +832,7 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
         currentAddress = scrsAddress,
         changeOfName = None,
         previousAddress = None,
-        contact = VatDigitalContact(
+        contact = DigitalContact(
           email = "test@t.com",
           tel = None,
           mobile = None
@@ -963,7 +963,7 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
         Some(ComplianceLabour(1,None,None)),
         SicCode("foo","bar","wizz"))
       val result = for{
-        _ <- repository.insert(vatScheme.copy(sicAndCompliance = validSicAndCompliance))
+        _   <- repository.insert(vatScheme.copy(sicAndCompliance = validSicAndCompliance))
         res <- repository.updateSicAndCompliance(vatScheme.id.value, amendedModel)
       }yield res
       await(result) shouldBe amendedModel
@@ -979,6 +979,78 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
 
     "return an MissingRegDocument if registration document does not exist for the registration id" in new Setup {
       val result = repository.updateSicAndCompliance("madeUpRegId",validSicAndCompliance.get)
+      a[MissingRegDocument] shouldBe thrownBy(await(result))
+    }
+  }
+  //
+  "calling getBusinessContact" should {
+
+    "return a BusinessContact Model from existing data based on the reg Id" in new Setup {
+      val result = for {
+        _ <- repository.insert(vatScheme)
+        _ <- repository.updateBusinessContact(vatScheme.id.value,businessContact)
+        _ = count shouldBe 1
+        res <- repository.getBusinessContact(vatScheme.id.value)
+      } yield res
+
+      await(result).get shouldBe businessContact
+    }
+    "return None from an existing registration that exists but BusinessContact does not exist" in new Setup {
+      val result = for {
+        _   <- repository.insert(vatScheme)
+        res <- repository.getBusinessContact(vatScheme.id.value)
+      } yield res
+      await(result) shouldBe None
+    }
+    "return a MissingRegDocument when nothing is returned from mongo for the reg id" in new Setup {
+      val result = repository.getBusinessContact("madeUpRegId")
+
+      a[MissingRegDocument] shouldBe thrownBy(await(result))
+    }
+    "return an exception if the json is incorrect in the repository (an element is missing)" in new Setup {
+      val json = Json.toJson(
+        Json.obj("registrationId" -> regId.value,
+          "status" -> VatRegStatus.draft,
+          "businessContact" -> Json.toJson(businessContact).as[JsObject].-( "digitalContact")))
+      insert(json.as[JsObject])
+      an[Exception] shouldBe thrownBy(await(repository.getBusinessContact(vatScheme.id.value)))
+    }
+  }
+  "calling updateBusinessContact" should {
+    "return an amended Business Contact Model when an entry already exists in the repo for 1 field" in new Setup {
+      val amendedModel = businessContact.copy(website = Some("fooBARUpdated"))
+
+      val result = for {
+        _    <- repository.insert(vatScheme.copy(businessContact = Some(businessContact)))
+        _   = count shouldBe 1
+        res <- repository.updateBusinessContact(vatScheme.id.value, amendedModel)
+      } yield res
+
+      await(result) shouldBe amendedModel
+    }
+    "return an amended Option BusinessContact Model when an entry already exists and all fields have changed in the model" in new Setup {
+      val amendedModel = businessContact.copy(
+        digitalContact = DigitalContact("foozle",Some("2434738"),Some("37483784")),
+        website = Some("myLittleWebsite"),
+        ppob = Address("lino1","lino2",None,None,None,Some("Funsville"))
+      )
+      val result = for{
+        _ <- repository.insert(vatScheme.copy(businessContact = Some(businessContact)))
+        res <- repository.updateBusinessContact(vatScheme.id.value, amendedModel)
+      }yield res
+      await(result) shouldBe amendedModel
+    }
+    "return an BusinessContact Model when the block did not exist in the existing reg doc" in new Setup {
+      val result = for {
+        _ <- repository.insert(vatScheme)
+        _ = count shouldBe 1
+        res <- repository.updateBusinessContact(vatScheme.id.value, businessContact)
+      }yield res
+      await(result) shouldBe businessContact
+    }
+
+    "return an MissingRegDocument if registration document does not exist for the registration id" in new Setup {
+      val result = repository.updateBusinessContact("madeUpRegId",businessContact)
       a[MissingRegDocument] shouldBe thrownBy(await(result))
     }
   }

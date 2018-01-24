@@ -17,7 +17,7 @@
 package models
 
 import helpers.VatRegSpec
-import models.api.VatDigitalContact
+import models.api.DigitalContact
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
 
@@ -26,7 +26,7 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
 
   "Creating a VatDigitalContact model from Json" should {
 
-    implicit val format = VatDigitalContact.format
+    implicit val format = DigitalContact.format
 
     "complete successfully from full Json" in {
       val json = Json.parse(
@@ -37,9 +37,9 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
            |  "mobile":"12345678910"
            |}
         """.stripMargin)
-      val tstVatDigitalContact = VatDigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
+      val tstVatDigitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
 
-      Json.fromJson[VatDigitalContact](json) shouldBe JsSuccess(tstVatDigitalContact)
+      Json.fromJson[DigitalContact](json) shouldBe JsSuccess(tstVatDigitalContact)
     }
 
     "fail from Json with invalid char email" in {
@@ -52,7 +52,7 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
            |}
         """.stripMargin)
 
-      val result = Json.fromJson[VatDigitalContact](json)
+      val result = Json.fromJson[DigitalContact](json)
       result shouldHaveErrors (JsPath() \ "email" -> ValidationError("error.email"))
     }
 
@@ -66,7 +66,7 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
            |}
         """.stripMargin)
 
-      val result = Json.fromJson[VatDigitalContact](json)
+      val result = Json.fromJson[DigitalContact](json)
       result shouldHaveErrors (JsPath() \ "email" -> ValidationError("error.maxLength", 70))
     }
 
@@ -80,7 +80,7 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
            |}
         """.stripMargin)
 
-      val result = Json.fromJson[VatDigitalContact](json)
+      val result = Json.fromJson[DigitalContact](json)
       result shouldHaveErrors (JsPath() \ "tel" -> ValidationError("error.pattern"))
     }
 
@@ -94,7 +94,7 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
            |}
         """.stripMargin)
 
-      val result = Json.fromJson[VatDigitalContact](json)
+      val result = Json.fromJson[DigitalContact](json)
       result shouldHaveErrors (JsPath() \ "mobile" -> ValidationError("error.pattern"))
     }
 
