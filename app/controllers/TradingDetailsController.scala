@@ -47,8 +47,11 @@ trait TradingDetailsController extends VatRegistrationBaseController {
           tradingDetailsService.updateTradingDetails(regId, tradingDetails) map {
             tdResponse => Ok(Json.toJson(tdResponse))
           } recover {
-            case _: MissingRegDocument => NotFound(s"[updateTradingDetails] Registration not found for regId: $regId")
-            case e => InternalServerError(s"An error occurred while updating lodging officer: for regId: $regId, ${e.getMessage}")
+            case _: MissingRegDocument =>
+              NotFound(s"[TradingDetailsController] [updateTradingDetails] Registration not found for regId: $regId")
+            case e =>
+              InternalServerError(s"[TradingDetailsController] [updateTradingDetails] " +
+              s"An error occurred while updating trading details: for regId: $regId, ${e.getMessage}")
           }
         }
       }

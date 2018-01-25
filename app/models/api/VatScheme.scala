@@ -37,31 +37,10 @@ case class VatScheme(id: RegistrationId,
                      bankAccount: Option[BankAccount] = None,
                      threshold: Option[Threshold] = None,
                      acknowledgementReference: Option[String] = None,
-                     vatFlatRateScheme: Option[VatFlatRateScheme] = None,
+                     flatRateScheme: Option[FlatRateScheme] = None,
                      status: VatRegStatus.Value)
 
 object VatScheme {
-
-  def reads(implicit r: Reads[VatFinancials]): Reads[VatScheme] = (
-    (__ \ "registrationId").read[RegistrationId] and
-    (__ \ "transactionId").readNullable[TransactionId] and
-    (__ \ "tradingDetails").readNullable[TradingDetails] and
-    (__ \ "lodgingOfficer").readNullable[LodgingOfficer] and
-    (__ \ "financials").readNullable[VatFinancials](r) and
-    (__ \ "returns").readNullable[Returns] and
-    (__ \ "vatSicAndCompliance").readNullable[VatSicAndCompliance] and
-    (__ \ "sicAndCompliance").readNullable[SicAndCompliance] and
-    (__ \ "vatContact").readNullable[VatContact] and
-    (__ \ "businessContact").readNullable[BusinessContact] and
-    (__ \ "vatEligibility").readNullable[VatServiceEligibility] and
-    (__ \ "eligibility").readNullable[Eligibility] and
-    (__ \ "turnoverEstimates").readNullable[TurnoverEstimates] and
-    (__ \ "bankAccount").readNullable[BankAccount] and
-    (__ \ "threshold").readNullable[Threshold] and
-    (__ \ "acknowledgementReference").readNullable[String] and
-    (__ \ "vatFlatRateScheme").readNullable[VatFlatRateScheme] and
-    (__ \ "status").read[VatRegStatus.Value]
-  )(VatScheme.apply _)
 
   val mongoReads: Reads[VatScheme] = (
     (__ \ "registrationId").read[RegistrationId] and
@@ -80,7 +59,7 @@ object VatScheme {
     (__ \ "bankAccount").readNullable[BankAccount](BankAccountMongoFormat.encryptedFormat) and
     (__ \ "threshold").readNullable[Threshold] and
     (__ \ "acknowledgementReference").readNullable[String] and
-    (__ \ "vatFlatRateScheme").readNullable[VatFlatRateScheme] and
+    (__ \ "flatRateScheme").readNullable[FlatRateScheme] and
     (__ \ "status").read[VatRegStatus.Value]
   )(VatScheme.apply _)
 
@@ -101,7 +80,7 @@ object VatScheme {
     (__ \ "bankAccount").writeNullable[BankAccount] and
     (__ \ "threshold").writeNullable[Threshold] and
     (__ \ "acknowledgementReference").writeNullable[String] and
-    (__ \ "vatFlatRateScheme").writeNullable[VatFlatRateScheme] and
+    (__ \ "flatRateScheme").writeNullable[FlatRateScheme] and
     (__ \ "status").write[VatRegStatus.Value]
   )(unlift(VatScheme.unapply))
 

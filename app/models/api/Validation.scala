@@ -50,12 +50,6 @@ trait VatAccountingPeriodValidator extends Validation {
   val frequencyValidator: Format[String]    = acceptOnly(MONTHLY, QUARTERLY)
 }
 
-trait VatFlatRateSchemeValidator extends Validation {
-  val annualCostsLimited: Format[String]      = acceptOnly("no", "yes", "yesWithin12months")
-  val annualCostsInclusive: Format[String]    = acceptOnly("no", "yes", "yesWithin12months")
-  val whenDoYouWantToJoinFrs: Format[String]  = acceptOnly("VAT_REGISTRATION_DATE", "DIFFERENT_DATE")
-}
-
 trait VatChoiceValidator extends Validation {
   val necessityValidator: Format[String] = acceptOnly("voluntary", "obligatory")
   val reasonValidator: Format[String]    = acceptOnly("COMPANY_ALREADY_SELLS_TAXABLE_GOODS_OR_SERVICES", "COMPANY_INTENDS_TO_SELLS_TAXABLE_GOODS_OR_SERVICES_IN_THE_FUTURE", "NEITHER")

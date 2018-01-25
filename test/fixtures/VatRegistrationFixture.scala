@@ -67,12 +67,6 @@ trait VatRegistrationFixture {
   val vatScheme: VatScheme = VatScheme(regId, status = VatRegStatus.draft)
   val exception = new Exception("Exception")
   val currentOrPreviousAddress = CurrentOrPreviousAddress(false, Some(scrsAddress))
-  val vatFlatRateScheme = VatFlatRateScheme(
-    joinFrs = true,
-    annualCostsInclusive = Some("yesWithin12months"),
-    annualCostsLimited = Some("yesWithin12months"),
-    doYouWantToUseThisRate = Some(false),
-    whenDoYouWantToJoinFrs = Some("VAT_REGISTRATION_DATE"))
   val changeOfName = ChangeOfName(true, Some(FormerName(formerName = None, None, name = Some(oldName), change = Some(LocalDate.now()))))
 
   def incorporationStatus(status: String = "accepted", incorpDate: LocalDate = LocalDate.now()): IncorporationStatus =
@@ -170,6 +164,62 @@ trait VatRegistrationFixture {
        |{
        | "tradingName":"trading-name",
        | "eriroREf":true
+       |}
+     """.stripMargin).as[JsObject]
+
+  val validFullFRSDetails: FRSDetails =
+    FRSDetails(
+      overBusinessGoods = false,
+      overBusinessGoodsPercent = Some(true),
+      vatInclusiveTurnover = Some(12345678),
+      start = Some(StartDate(Some(date))),
+      categoryOfBusiness = "testCategory",
+      percent = 15
+    )
+  val validFullFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = true, Some(validFullFRSDetails))
+  val validEmptyFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = false, None)
+
+  val validFullFRSDetailsJson: JsObject = Json.parse(
+    s"""
+       |{
+       |  "overBusinessGoods":false,
+       |  "overBusinessGoodsPercent":true,
+       |  "vatInclusiveTurnover":12345678,
+       |  "start":{
+       |    "date":"$date"
+       |  },
+       |  "categoryOfBusiness":"testCategory",
+       |  "percent":15
+       |}
+     """.stripMargin).as[JsObject]
+
+  val validFullFlatRateSchemeJson: JsObject = Json.parse(
+    s"""
+       |{
+       |  "joinFrs":true,
+       |  "frsDetails":$validFullFRSDetailsJson
+       |}
+     """.stripMargin).as[JsObject]
+
+  val detailsPresentJoinFrsFalse: JsObject = Json.parse(
+    s"""
+       |{
+       |  "joinFrs":false,
+       |  "frsDetails":$validFullFRSDetailsJson
+       |}
+     """.stripMargin).as[JsObject]
+
+  val validEmptyFlatRateSchemeJson: JsObject = Json.parse(
+    s"""
+       |{
+       |  "joinFrs":false
+       |}
+     """.stripMargin).as[JsObject]
+
+  val invalidFlatRateSchemeJson: JsObject = Json.parse(
+    s"""
+       |{
+       |
        |}
      """.stripMargin).as[JsObject]
 

@@ -62,6 +62,9 @@ trait RegistrationRepository {
   def updateBankAccount(regId: String, bankAcount: BankAccount)(implicit ex: ExecutionContext): Future[BankAccount]
   def fetchTurnoverEstimates(regId: String)(implicit ec: ExecutionContext): Future[Option[TurnoverEstimates]]
   def updateTurnoverEstimates(regId: String, turnoverEstimate: TurnoverEstimates)(implicit ex: ExecutionContext): Future[TurnoverEstimates]
+  def fetchFlatRateScheme(regId: String)(implicit ec: ExecutionContext): Future[Option[FlatRateScheme]]
+  def updateFlatRateScheme(regId: String, flatRateScheme: FlatRateScheme)(implicit ec: ExecutionContext): Future[FlatRateScheme]
+  def removeFlatRateScheme(regId: String)(implicit ec: ExecutionContext): Future[Boolean]
 }
 
 
@@ -309,5 +312,28 @@ class RegistrationMongoRepository (mongo: () => DB)
   def getBusinessContact(regId:String)(implicit ec:ExecutionContext):Future[Option[BusinessContact]] =
     fetchBlock[BusinessContact](regId,"businessContact")
 
+  def fetchFlatRateScheme(regId: String)(implicit ec: ExecutionContext): Future[Option[FlatRateScheme]] =
+    fetchBlock[FlatRateScheme](regId, "flatRateScheme")
+
+  def updateFlatRateScheme(regId: String, flatRateScheme: FlatRateScheme)(implicit ec: ExecutionContext): Future[FlatRateScheme] =
+    updateBlock(regId, flatRateScheme)
+
+  def removeFlatRateScheme(regId: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+    val selector = regIdSelector(regId)
+    val update = BSONDocument("$unset" -> BSONDocument("flatRateScheme" -> ""))
+    collection.update(selector, update) map { updateResult =>
+      if (updateResult.n == 0) {
+        Logger.warn(s"[RegistrationMongoRepository][removeFlatRateScheme] removing for regId : $regId - No document found")
+        throw MissingRegDocument(RegistrationId(regId))
+      } else {
+        Logger.info(s"[RegistrationMongoRepository][removeFlatRateScheme] removing for regId : $regId - documents modified : ${updateResult.nModified}")
+        true
+      }
+    } recover {
+      case e =>
+        Logger.warn(s"[RegistrationMongoRepository][removeFlatRateScheme] Unable to remove for regId: $regId, Error: ${e.getMessage}")
+        throw e
+    }
+  }
 
 }

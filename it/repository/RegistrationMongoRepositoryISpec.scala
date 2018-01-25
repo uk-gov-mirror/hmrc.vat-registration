@@ -102,6 +102,27 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
        |}
      """.stripMargin).as[JsObject]
 
+  val vatSchemeWithFlatRateScheme: JsObject = Json.parse(
+    s"""
+       |{
+       |  "registrationId":"$registrationId",
+       |  "status":"draft",
+       |  "flatRateScheme":{
+       |    "joinFrs":false,
+       |    "frsDetails":{
+       |      "overBusinessGoods":false,
+       |      "overBusinessGoodsPercent":true,
+       |      "vatInclusiveTurnover":12345678,
+       |      "start":{
+       |        "date":"$date"
+       |      },
+       |      "categoryOfBusiness":"testCategory",
+       |      "percent":15
+       |    }
+       |  }
+       |}
+     """.stripMargin).as[JsObject]
+
   val vatTaxable = 1000L
   val turnoverEstimates: TurnoverEstimates = TurnoverEstimates(vatTaxable)
   def vatSchemeWithTurnoverEstimates(regId: String = registrationId): JsObject = vatSchemeJson(regId) ++ Json.parse(
@@ -1052,6 +1073,84 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     "return an MissingRegDocument if registration document does not exist for the registration id" in new Setup {
       val result = repository.updateBusinessContact("madeUpRegId",businessContact)
       a[MissingRegDocument] shouldBe thrownBy(await(result))
+    }
+  }
+
+  "fetchFlatRateScheme" should {
+    "return flat rate scheme data from an existing registration containing data" in new Setup {
+      val result = for {
+        _   <- repository.insert(vatScheme.copy(flatRateScheme = Some(flatRateScheme)))
+        res <- repository.fetchFlatRateScheme(vatScheme.id.value)
+      } yield res
+
+      await(result) shouldBe Some(flatRateScheme)
+    }
+
+    "return None from an existing registration containing no data" in new Setup {
+      val result = for {
+        _   <- repository.insert(vatScheme)
+        res <- repository.fetchFlatRateScheme(vatScheme.id.value)
+      } yield res
+
+      await(result) shouldBe None
+    }
+
+    "throw a MissingRegDocument for a none existing registration" in new Setup {
+      val result = for {
+        _   <- repository.insert(vatScheme.copy(flatRateScheme = Some(flatRateScheme)))
+        res <- repository.fetchFlatRateScheme("wrongRegId")
+      } yield res
+
+      a[MissingRegDocument] shouldBe thrownBy(await(result))
+    }
+  }
+
+  "updateFlatRateScheme" should {
+
+    "update flat rate scheme block in registration when there is no flat rate scheme data" in new Setup {
+      val result = for {
+        _                   <- repository.insert(vatScheme)
+        _                   <- repository.updateFlatRateScheme(vatScheme.id.value, flatRateScheme)
+        Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
+      } yield updatedScheme.flatRateScheme
+
+      await(result) shouldBe Some(flatRateScheme)
+    }
+
+    "update flat rate scheme block in registration when there is already flat rate scheme data" in new Setup {
+      val otherFlatRateScheme = FlatRateScheme(joinFrs = false, None)
+      val result = for {
+        _                   <- repository.insert(vatScheme.copy(flatRateScheme = Some(flatRateScheme)))
+        _                   <- repository.updateFlatRateScheme(vatScheme.id.value, flatRateScheme)
+        Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
+      } yield updatedScheme.flatRateScheme
+
+      await(result) shouldBe Some(flatRateScheme)
+    }
+
+    "not update or insert flat rate scheme if registration does not exist" in new Setup {
+      await(repository.insert(vatScheme))
+
+      count shouldBe 1
+      await(repository.findAll()).head shouldBe vatScheme
+
+      a[MissingRegDocument] shouldBe thrownBy(await(repository.updateFlatRateScheme("wrongRegId", flatRateScheme)))
+    }
+  }
+
+  "removeFlatRateScheme" should {
+    "remove a flatRateScheme block in the registration document if it exists in the registration doc" in new Setup {
+      val result = for {
+        _                   <- repository.insert(vatScheme.copy(flatRateScheme = Some(flatRateScheme)))
+        _                   <- repository.removeFlatRateScheme(vatScheme.id.value)
+        updatedScheme       <- repository.retrieveVatScheme(vatScheme.id)
+      } yield updatedScheme
+
+      await(result) shouldBe Some(vatScheme)
+    }
+
+    "throw a MissingRegDocument if the vat scheme does not exist for the regId" in new Setup {
+      a[MissingRegDocument] shouldBe thrownBy(await(repository.removeFlatRateScheme(vatScheme.id.value)))
     }
   }
 
