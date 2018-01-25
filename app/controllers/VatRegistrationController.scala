@@ -128,8 +128,6 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
 
   def updateLodgingOfficer(id: RegistrationId): Action[JsValue] = patch[LodgingOfficer](registrationService, id)
 
-  def updateFlatRateScheme(id: RegistrationId): Action[JsValue] = patch[VatFlatRateScheme](registrationService, id)
-
   def submitVATRegistration(id: RegistrationId) : Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>

@@ -40,6 +40,18 @@ trait ITFixtures {
     staggerStart = Some("jan"),
     start = startDate
   )
+  val frsDetails = FRSDetails(
+    overBusinessGoods = false,
+    overBusinessGoodsPercent = Some(true),
+    vatInclusiveTurnover = Some(12345678),
+    Some(StartDate(Some(date))),
+    "testCategory",
+    15
+  )
+  val flatRateScheme = FlatRateScheme(
+    joinFrs = true,
+    Some(frsDetails)
+  )
   val compliance =
     VatSicAndCompliance(
       businessDescription = "some-business-description",

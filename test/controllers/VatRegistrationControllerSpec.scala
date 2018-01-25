@@ -381,22 +381,6 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       }
     }
 
-    "updateFlatRateScheme" should {
-
-      val fakeRequest = FakeRequest().withBody(Json.toJson(vatFlatRateScheme))
-
-      "call updateFlatRateScheme return ACCEPTED" in new Setup {
-        ServiceMocks.mockSuccessfulUpdateLogicalGroup(vatFlatRateScheme)
-        controller.updateFlatRateScheme(regId)(fakeRequest) returns Accepted(Json.toJson(vatFlatRateScheme))
-      }
-
-      "call updateFlatRateScheme return ServiceUnavailable" in new Setup {
-        ServiceMocks.mockServiceUnavailableUpdateLogicalGroup(vatFlatRateScheme, exception)
-        controller.updateFlatRateScheme(regId)(fakeRequest) returnsStatus SERVICE_UNAVAILABLE
-      }
-
-    }
-
     "getAcknowledgementReference" should {
 
       "call getAcknowledgementReference return Ok with Acknowledgement Reference" in new Setup {

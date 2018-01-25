@@ -43,14 +43,6 @@ object ElementPath {
       LabWorkersPath,
       LabTempContractsPath,
       LabSkilledWorkersPath,
-      VatFlatRateSchemePath,
-      VatFrsAnnualCostsInclusivePath,
-      VatFrsAnnualCostsLimitedPath,
-      VatFrsUseThisRate,
-      VatFrsWhenToJoin,
-      VatFrsStartDate,
-      VatFrsBusCategory,
-      VatFrsPercentage,
       VatStatusPath
     ).map(ep => (ep.name, ep)).toMap
 
@@ -167,46 +159,6 @@ case object VatTransIdPath extends ElementPath {
 case object VatRegIdPath extends ElementPath {
   override val path = "registrationId"
   override val name = "registrationId"
-}
-
-case object VatFlatRateSchemePath extends ElementPath {
-  override val path = "vatFlatRateScheme"
-  override val name = "vat-flat-rate-scheme"
-}
-
-case object VatFrsAnnualCostsInclusivePath extends ElementPath {
-  override val path = "vatFlatRateScheme.annualCostsInclusive"
-  override val name = "vat-frs-annual-costs-inclusive"
-}
-
-case object VatFrsAnnualCostsLimitedPath extends ElementPath {
-  override val path = "vatFlatRateScheme.annualCostsLimited"
-  override val name = "vat-frs-annual-costs-limited"
-}
-
-case object VatFrsUseThisRate extends ElementPath {
-  override val path = "vatFlatRateScheme.doYouWantToUseThisRate"
-  override val name = "vat-frs-use-this-rate"
-}
-
-case object VatFrsWhenToJoin extends ElementPath {
-  override val path = "vatFlatRateScheme.whenDoYouWantToJoinFrs"
-  override val name = "vat-frs-when-to-join"
-}
-
-case object VatFrsStartDate extends ElementPath {
-  override val path = "vatFlatRateScheme.startDate"
-  override val name = "vat-frs-start-date"
-}
-
-case object VatFrsBusCategory extends ElementPath {
-  override val path = "vatFlatRateScheme.categoryOfBusiness"
-  override val name = "vat-frs-business-category"
-}
-
-case object VatFrsPercentage extends ElementPath {
-  override val path = "vatFlatRateScheme.percentage"
-  override val name = "vat-frs-percentage"
 }
 
 // $COVERAGE-ON$
