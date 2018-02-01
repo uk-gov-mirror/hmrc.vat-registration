@@ -76,7 +76,7 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(None)
       when(mockRegistrationRepository.createNewVatScheme(RegistrationId("1"))).thenReturn(vatScheme)
 
-      service.createNewRegistration() returnsRight vatScheme
+      await(service.createNewRegistration().value) shouldBe Right(vatScheme)
     }
 
     "error when creating VatScheme" in new Setup {
