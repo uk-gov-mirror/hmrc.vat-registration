@@ -1,5 +1,6 @@
 package controllers
 
+import auth.Crypto
 import common.RegistrationId
 import enums.VatRegStatus
 import itutil.{ITFixtures, IntegrationStubbing, WiremockHelper}
@@ -9,6 +10,7 @@ import play.api.libs.ws.WSClient
 import play.api.test.FakeApplication
 import play.modules.reactivemongo.ReactiveMongoComponent
 import repositories.{RegistrationMongo, RegistrationMongoRepository}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class BusinessContactControllerISpec  extends IntegrationStubbing with ITFixtures  {
@@ -26,16 +28,18 @@ class BusinessContactControllerISpec  extends IntegrationStubbing with ITFixture
     "microservice.services.company-registration.port" -> s"$mockPort",
     "microservice.services.incorporation-information.host" -> s"$mockHost",
     "microservice.services.incorporation-information.port" -> s"$mockPort",
-    "microservice.services.incorporation-information.uri" -> "/incorporation-information"
+    "microservice.services.incorporation-information.uri" -> "/incorporation-information",
+    "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
   ))
 
   lazy val reactiveMongoComponent = app.injector.instanceOf[ReactiveMongoComponent]
   lazy val ws   = app.injector.instanceOf(classOf[WSClient])
+  lazy val crypto: Crypto = app.injector.instanceOf(classOf[Crypto])
 
   private def client(path: String) = ws.url(s"http://localhost:$port$path").withFollowRedirects(false)
 
   class Setup {
-    val mongo = new RegistrationMongo(reactiveMongoComponent)
+    val mongo = new RegistrationMongo(reactiveMongoComponent, crypto)
     val repo: RegistrationMongoRepository = mongo.store
     await(repo.drop)
     await(repo.ensureIndexes)

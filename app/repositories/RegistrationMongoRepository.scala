@@ -18,14 +18,16 @@ package repositories
 
 import javax.inject.Inject
 
+import auth.Crypto
 import cats.data.OptionT
 import common.exceptions._
-import common.{LogicalGroup, RegistrationId}
+import common.{LogicalGroup, RegistrationId, TransactionId}
 import enums.VatRegStatus
 import models._
 import models.api._
+import play.api.libs.functional.syntax._
 import play.api.Logger
-import play.api.libs.json.{JsObject, Json, OFormat, Reads, Writes}
+import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.{Index, IndexType}
@@ -35,11 +37,12 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import cats.instances.future._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class RegistrationMongo @Inject()(mongo: ReactiveMongoComponent) extends ReactiveMongoFormats {
-  lazy val store = new RegistrationMongoRepository(mongo.mongoConnector.db)
+class RegistrationMongo @Inject()(mongo: ReactiveMongoComponent, crypto: Crypto) extends ReactiveMongoFormats {
+  lazy val store = new RegistrationMongoRepository(mongo.mongoConnector.db, crypto)
 }
 
 trait RegistrationRepository {
@@ -67,15 +70,14 @@ trait RegistrationRepository {
   def removeFlatRateScheme(regId: String)(implicit ec: ExecutionContext): Future[Boolean]
 }
 
-
-class RegistrationMongoRepository (mongo: () => DB)
+class RegistrationMongoRepository (mongo: () => DB, crypto: Crypto)
   extends ReactiveRepository[VatScheme, BSONObjectID](
     collectionName = "registration-information",
     mongo = mongo,
-    domainFormat = VatScheme.format
+    domainFormat = VatScheme.mongoFormat(crypto)
   ) with RegistrationRepository {
 
-  import cats.instances.future._
+  private val bankAccountCryptoFormatter = BankAccountMongoFormat.encryptedFormat(crypto)
 
   private[repositories] def ridSelector(id: RegistrationId) = BSONDocument("registrationId" -> BSONString(id.value))
   private[repositories] def tidSelector(id: String) = BSONDocument("transactionId" -> id)
@@ -89,9 +91,14 @@ class RegistrationMongoRepository (mongo: () => DB)
     )
   )
 
+  //TODO: should be written with $set to not use vatscheme writes
   override def createNewVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[VatScheme] = {
-    val newReg = VatScheme(id, status = VatRegStatus.draft)
-    collection.insert(newReg) map (_ => newReg) recover {
+    val set = Json.obj(
+      "registrationId" -> Json.toJson(id.value),
+      "status" -> Json.toJson(VatRegStatus.draft)
+    )
+
+    collection.insert(set) map (_ => VatScheme(id, status = VatRegStatus.draft)) recover {
       case e =>
         logger.error(s"[createNewVatScheme] - Unable to insert new VAT Scheme for registration ID $id, Error: ${e.getMessage}")
         throw InsertFailed(id, "VatScheme")
@@ -244,13 +251,13 @@ class RegistrationMongoRepository (mongo: () => DB)
     val selector = regIdSelector(regId)
     val projection = Json.obj("bankAccount" -> 1)
     collection.find(selector, projection).one[JsObject].map(
-      _.flatMap (js => (js \ "bankAccount").validateOpt(BankAccountMongoFormat.encryptedFormat).get)
+      _.flatMap (js => (js \ "bankAccount").validateOpt(bankAccountCryptoFormatter).get)
     )
   }
 
   override def updateBankAccount(regId: String, bankAccount: BankAccount)(implicit ex: ExecutionContext): Future[BankAccount] = {
     val selector = regIdSelector(regId)
-    val update = BSONDocument("$set" -> Json.obj("bankAccount" -> Json.toJson(bankAccount)(BankAccountMongoFormat.encryptedFormat)))
+    val update = BSONDocument("$set" -> Json.obj("bankAccount" -> Json.toJson(bankAccount)(bankAccountCryptoFormatter)))
     collection.update(selector, update) map { updateResult =>
       Logger.info(s"[Returns] updating bank account for regId : $regId - documents modified : ${updateResult.nModified}")
       bankAccount
@@ -335,5 +342,4 @@ class RegistrationMongoRepository (mongo: () => DB)
         throw e
     }
   }
-
 }

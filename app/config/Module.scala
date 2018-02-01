@@ -16,6 +16,7 @@
 
 package config
 
+import auth.{Crypto, CryptoImpl}
 import com.google.inject.AbstractModule
 import controllers._
 import services.{TradingDetailsService, TradingDetailsSrv}
@@ -23,7 +24,9 @@ import services.{TradingDetailsService, TradingDetailsSrv}
 class Module extends AbstractModule {
 
   override def configure(): Unit = {
+    bind(classOf[Crypto]).to(classOf[CryptoImpl]).asEagerSingleton()
     bind(classOf[ProcessIncorporationsController]).to(classOf[ProcessIncorporationsControllerImpl]).asEagerSingleton()
+    bind(classOf[VatRegistrationController]).to(classOf[VatRegistrationControllerImpl]).asEagerSingleton()
     bind(classOf[connectors.AuthConnector]).to(classOf[connectors.VatRegAuthConnector]).asEagerSingleton()
     bind(classOf[connectors.BusinessRegistrationConnector]).to(classOf[connectors.VatRegBusinessRegistrationConnector]).asEagerSingleton()
     bind(classOf[connectors.IncorporationInformationConnector]).to(classOf[connectors.VatRegIncorporationInformationConnector ]).asEagerSingleton()

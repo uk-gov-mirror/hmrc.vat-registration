@@ -26,7 +26,7 @@ import play.api.test.Helpers._
 
 class IncorporationInformationControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
-  import fakeApplication.materializer
+  import play.api.test.Helpers._
 
   class Setup {
     val controller = new IncorporationInformationController(mockAuthConnector, mockIIConnector)
@@ -57,7 +57,7 @@ class IncorporationInformationControllerSpec extends VatRegSpec with VatRegistra
       IIMocks.mockIncorporationStatus(status)
       val res = controller.getIncorporationInformation(txId)(FakeRequest())
       res returnsStatus OK
-      res returnsJson Json.toJson(status)
+      await(contentAsJson(res)) shouldBe Json.toJson(status)
     }
 
   }

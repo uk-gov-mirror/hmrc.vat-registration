@@ -21,6 +21,7 @@ import java.time.LocalDate
 import common.RegistrationId
 import common.exceptions.MissingRegDocument
 import common.exceptions.UpdateFailed
+import connectors.AuthConnector
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models._
@@ -34,6 +35,8 @@ import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import play.api.http.Status
 import play.api.mvc.Result
+import repositories.{RegistrationMongo, RegistrationMongoRepository}
+import services.{RegistrationService, SubmissionService}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -41,7 +44,7 @@ import scala.concurrent.Future
 
 class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
-  import fakeApplication.materializer
+  import play.api.test.Helpers._
 
   val vatLodgingOfficer       = LodgingOfficer(
     currentAddress            = Some(scrsAddress),
@@ -57,17 +60,21 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
   )
 
 
-  class Setup {
-    val controller = new VatRegistrationController(
-      mockAuthConnector,
-      mockRegistrationService,
-      mockSubmissionService,
-      mockRegistrationMongo
-    )
+  class SetupMocks(mockSubmission: Boolean) {
+    val controller = new VatRegistrationController{
+      override val auth: AuthConnector = mockAuthConnector
+      override val registrationService: RegistrationService = mockRegistrationService
+      override val submissionService: SubmissionService = mockSubmissionService
+      override val registrationRepository: RegistrationMongoRepository = mockRegistrationMongoRepository
+
+      override private[controllers] def useMockSubmission = mockSubmission
+    }
 
     AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
-    when(mockRegistrationMongo.store).thenReturn(mockRegistrationMongoRepository)
   }
+
+  class Setup extends SetupMocks(false)
+  class SetupWithMockSubmission extends SetupMocks(true)
 
   val registrationId = "reg-12345"
 
@@ -177,7 +184,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         val result = controller.fetchBankAccountDetails(registrationId)(FakeRequest())
 
         status(result) shouldBe OK
-        await(jsonBodyOf(result)) shouldBe expected
+        await(contentAsJson(result)) shouldBe expected
       }
     }
 
@@ -220,7 +227,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         val result = controller.fetchReturns(registrationId)(FakeRequest())
 
         status(result) shouldBe OK
-        await(jsonBodyOf(result)) shouldBe expected
+        await(contentAsJson(result)) shouldBe expected
       }
 
       "return a NOT_FOUND if the returns is not present" in new Setup {
@@ -398,12 +405,10 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         controller.getAcknowledgementReference(regId)(FakeRequest()) returnsStatus CONFLICT
       }
 
-      "return the fake acknowledgement reference for a regID if mock submission is enabled" in new Setup {
-        System.setProperty("feature.mockSubmission", "true")
-
+      "return the fake acknowledgement reference for a regID if mock submission is enabled" in new SetupWithMockSubmission {
         val result = controller.getAcknowledgementReference(regId)(FakeRequest())
         result returnsStatus OK
-        result returnsJson Json.toJson("BRVT000000" + regId)
+        await(contentAsJson(result)) shouldBe Json.toJson("BRVT000000" + regId)
       }
     }
 
@@ -419,8 +424,9 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
           """.stripMargin)
 
         ServiceMocks.mockGetDocumentStatus(json)
-        controller.getDocumentStatus(regId)(FakeRequest()) returnsStatus OK
-        controller.getDocumentStatus(regId)(FakeRequest()) returnsJson json
+        val result = controller.getDocumentStatus(regId)(FakeRequest())
+        result returnsStatus OK
+        await(contentAsJson(result)) shouldBe json
       }
 
       "return a Not Found response if there is no VAT Registration for the user's ID" in new Setup {
@@ -482,7 +488,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       val response = await(controller.submitVATRegistration(regId)(FakeRequest()))
 
       status(response) shouldBe Status.BAD_REQUEST
-      bodyOf(response) shouldBe "Registration was submitted without full data: missing data"
+      contentAsString(response) shouldBe "Registration was submitted without full data: missing data"
     }
 
     "return an Ok response with acknowledgement reference for a valid submit" in new Setup {
@@ -497,16 +503,14 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       val response = controller.submitVATRegistration(regId)(FakeRequest())
 
       status(response) shouldBe Status.OK
-      jsonBodyOf(await(response)) shouldBe Json.toJson("BRVT00000000001")
+      await(contentAsJson(response)) shouldBe Json.toJson("BRVT00000000001")
     }
 
-    "return an Ok response with fake ack ref for a mock submission" in new Setup {
-      System.setProperty("feature.mockSubmission", "true")
-
+    "return an Ok response with fake ack ref for a mock submission" in new SetupWithMockSubmission {
       val response = controller.submitVATRegistration(regId)(FakeRequest())
 
       status(response) shouldBe Status.OK
-      jsonBodyOf(await(response)) shouldBe Json.toJson(s"BRVT000000$regId")
+      await(contentAsJson(response)) shouldBe Json.toJson(s"BRVT000000$regId")
     }
   }
 

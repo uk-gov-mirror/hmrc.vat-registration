@@ -17,11 +17,12 @@
 package models
 
 import fixtures.VatRegistrationFixture
+import helpers.BaseSpec
 import models.api.{FRSDetails, FlatRateScheme}
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
 
-class FlatRateSchemeSpec extends JsonFormatValidation with VatRegistrationFixture {
+class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegistrationFixture {
 
   "Creating a FlatRateScheme model from Json" should {
     "complete successfully" in {

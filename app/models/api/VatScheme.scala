@@ -16,10 +16,13 @@
 
 package models.api
 
+import auth.Crypto
 import common.{RegistrationId, TransactionId}
 import enums.VatRegStatus
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+
+import scala.util.control.NoStackTrace
 
 case class VatScheme(id: RegistrationId,
                      transactionId: Option[TransactionId] = None,
@@ -42,27 +45,6 @@ case class VatScheme(id: RegistrationId,
 
 object VatScheme {
 
-  val mongoReads: Reads[VatScheme] = (
-    (__ \ "registrationId").read[RegistrationId] and
-    (__ \ "transactionId").readNullable[TransactionId] and
-    (__ \ "tradingDetails").readNullable[TradingDetails] and
-    (__ \ "lodgingOfficer").readNullable[LodgingOfficer] and
-    (__ \ "financials").readNullable[VatFinancials] and
-    (__ \ "returns").readNullable[Returns] and
-    (__ \ "vatSicAndCompliance").readNullable[VatSicAndCompliance] and
-    (__ \ "sicAndCompliance").readNullable[SicAndCompliance] and
-    (__ \ "vatContact").readNullable[VatContact] and
-    (__ \ "businessContact").readNullable[BusinessContact] and
-    (__ \ "vatEligibility").readNullable[VatServiceEligibility] and
-    (__ \ "eligibility").readNullable[Eligibility] and
-    (__ \ "turnoverEstimates").readNullable[TurnoverEstimates] and
-    (__ \ "bankAccount").readNullable[BankAccount](BankAccountMongoFormat.encryptedFormat) and
-    (__ \ "threshold").readNullable[Threshold] and
-    (__ \ "acknowledgementReference").readNullable[String] and
-    (__ \ "flatRateScheme").readNullable[FlatRateScheme] and
-    (__ \ "status").read[VatRegStatus.Value]
-  )(VatScheme.apply _)
-
   val apiWrites : OWrites[VatScheme] = (
     (__ \ "registrationId").write[RegistrationId] and
     (__ \ "transactionId").writeNullable[TransactionId] and
@@ -84,5 +66,24 @@ object VatScheme {
     (__ \ "status").write[VatRegStatus.Value]
   )(unlift(VatScheme.unapply))
 
-  implicit val format: OFormat[VatScheme] = OFormat(mongoReads, apiWrites)
+  def mongoFormat(crypto: Crypto): OFormat[VatScheme] = (
+    (__ \ "registrationId").format[RegistrationId] and
+      (__ \ "transactionId").formatNullable[TransactionId] and
+      (__ \ "tradingDetails").formatNullable[TradingDetails] and
+      (__ \ "lodgingOfficer").formatNullable[LodgingOfficer] and
+      (__ \ "financials").formatNullable[VatFinancials] and
+      (__ \ "returns").formatNullable[Returns] and
+      (__ \ "vatSicAndCompliance").formatNullable[VatSicAndCompliance] and
+      (__ \ "sicAndCompliance").formatNullable[SicAndCompliance] and
+      (__ \ "vatContact").formatNullable[VatContact] and
+      (__ \ "businessContact").formatNullable[BusinessContact] and
+      (__ \ "vatEligibility").formatNullable[VatServiceEligibility] and
+      (__ \ "eligibility").formatNullable[Eligibility] and
+      (__ \ "turnoverEstimates").formatNullable[TurnoverEstimates] and
+      (__ \ "bankAccount").formatNullable[BankAccount](BankAccountMongoFormat.encryptedFormat(crypto)) and
+      (__ \ "threshold").formatNullable[Threshold] and
+      (__ \ "acknowledgementReference").formatNullable[String] and
+      (__ \ "flatRateScheme").formatNullable[FlatRateScheme] and
+      (__ \ "status").format[VatRegStatus.Value]
+    )(VatScheme.apply, unlift(VatScheme.unapply))
 }

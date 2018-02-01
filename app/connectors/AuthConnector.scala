@@ -17,12 +17,12 @@
 package connectors
 
 import config.WSHttp
-import org.slf4j.{Logger, LoggerFactory}
+import play.api.Logger
 import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.play.config.ServicesConfig
-
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+
 import scala.concurrent.Future
 import uk.gov.hmrc.http._
 
@@ -38,25 +38,23 @@ object Authority {
   implicit val format = Json.format[Authority]
 }
 
-class VatRegAuthConnector extends AuthConnector {
+class VatRegAuthConnector extends AuthConnector with ServicesConfig {
   lazy val serviceUrl = baseUrl("auth")
   val authorityUri    = "auth/authority"
   val http: CoreGet   = WSHttp
 }
 
-trait AuthConnector extends ServicesConfig with RawResponseReads {
+trait AuthConnector extends RawResponseReads {
 
   val serviceUrl: String
   val authorityUri: String
   val http: CoreGet
 
-  private val logger: Logger = LoggerFactory.getLogger(getClass)
-
   def getCurrentAuthority()(implicit headerCarrier: HeaderCarrier): Future[Option[Authority]] = {
     val getUrl = s"""$serviceUrl/$authorityUri"""
-    logger.debug(s"[getCurrentAuthority] - GET $getUrl")
+    Logger.debug(s"[getCurrentAuthority] - GET $getUrl")
     http.GET[HttpResponse](getUrl) flatMap { response =>
-      logger.debug(s"[getCurrentAuthority] - RESPONSE status: ${response.status}, body: ${response.body}")
+      Logger.debug(s"[getCurrentAuthority] - RESPONSE status: ${response.status}, body: ${response.body}")
       response.status match {
         case OK =>
           val uri         = (response.json \ "uri").as[String]

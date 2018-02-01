@@ -16,10 +16,11 @@
 
 package models
 
+import helpers.BaseSpec
 import models.api.{SicCode, VatComplianceCultural, VatComplianceLabour, VatSicAndCompliance}
 import play.api.libs.json.{JsSuccess, Json}
 
-class VatSicAndComplianceSpec extends JsonFormatValidation {
+class VatSicAndComplianceSpec extends BaseSpec with JsonFormatValidation {
 
   "Creating a VatSicAndCompliance model from Json" should {
 

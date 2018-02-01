@@ -27,7 +27,7 @@ import services.RegistrationService
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
-abstract class VatRegistrationBaseController extends BaseController with Authenticated with FutureInstances {
+trait VatRegistrationBaseController extends BaseController with Authenticated with FutureInstances {
 
   val logger: Logger = LoggerFactory.getLogger(getClass)
 

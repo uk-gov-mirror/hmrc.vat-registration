@@ -19,11 +19,12 @@ package models
 import java.time.LocalDate
 
 import fixtures.VatRegistrationFixture
+import helpers.BaseSpec
 import models.api._
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{Format, JsPath, Json}
 
-class LodgingOfficerSpec extends JsonFormatValidation with VatRegistrationFixture {
+class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegistrationFixture {
 
   private def writeAndRead[T](t: T)(implicit fmt: Format[T]) = fmt.reads(Json.toJson(fmt.writes(t)))
 

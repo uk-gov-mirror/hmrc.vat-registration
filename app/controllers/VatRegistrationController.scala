@@ -33,20 +33,29 @@ import utils.VATFeatureSwitches
 
 import scala.concurrent.Future
 
-class VatRegistrationController @Inject()(val auth: AuthConnector,
-                                          registrationService: RegistrationService,
-                                          submissionService: SubmissionService,
-                                          registrationMongo: RegistrationMongo) extends VatRegistrationBaseController {
-
+class VatRegistrationControllerImpl @Inject()(val auth: AuthConnector,
+                                          val registrationService: RegistrationService,
+                                          val submissionService: SubmissionService,
+                                          val registrationMongo: RegistrationMongo) extends VatRegistrationController {
   val registrationRepository: RegistrationMongoRepository = registrationMongo.store
+  private[controllers] override def useMockSubmission: Boolean = VATFeatureSwitches.mockSubmission.enabled
+}
+
+trait VatRegistrationController extends VatRegistrationBaseController {
+
+  val auth: AuthConnector
+  val registrationService: RegistrationService
+  val submissionService: SubmissionService
+  val registrationRepository: RegistrationMongoRepository
+
+  private[controllers] def useMockSubmission: Boolean
 
   val errorHandler: (LeftState) => Result = err => err.toResult
-
-  private[controllers] def useMockSubmission: Boolean = VATFeatureSwitches.mockSubmission.enabled
 
   def newVatRegistration: Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
+        implicit val writes = VatScheme.apiWrites
         registrationService.createNewRegistration.fold(errorHandler, vatScheme => Created(Json.toJson(vatScheme)))
       }
   }
@@ -54,6 +63,7 @@ class VatRegistrationController @Inject()(val auth: AuthConnector,
   def retrieveVatScheme(id: RegistrationId): Action[AnyContent] = Action.async {
     implicit request =>
       authenticated { _ =>
+        implicit val writes = VatScheme.apiWrites
         registrationService.retrieveVatScheme(id).fold(errorHandler, vatScheme => Ok(Json.toJson(vatScheme)))
       }
   }

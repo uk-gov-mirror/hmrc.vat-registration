@@ -29,7 +29,8 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing with ITFixture
     "microservice.services.company-registration.port" -> s"$mockPort",
     "microservice.services.incorporation-information.host" -> s"$mockHost",
     "microservice.services.incorporation-information.port" -> s"$mockPort",
-    "microservice.services.incorporation-information.uri" -> "/incorporation-information"
+    "microservice.services.incorporation-information.uri" -> "/incorporation-information",
+    "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
   ))
 
   lazy val reactiveMongoComponent = app.injector.instanceOf[ReactiveMongoComponent]
@@ -38,7 +39,7 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing with ITFixture
   private def client(path: String) = ws.url(s"http://localhost:$port$path").withFollowRedirects(false)
 
   class Setup {
-    val mongo = new RegistrationMongo(reactiveMongoComponent)
+    val mongo = new RegistrationMongo(reactiveMongoComponent, cryptoForTest)
     val repo: RegistrationMongoRepository = mongo.store
     await(repo.drop)
     await(repo.ensureIndexes)

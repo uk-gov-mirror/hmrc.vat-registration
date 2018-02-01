@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-import sbt.Tests.{Group, SubProcess}
-import sbt._
+package helpers
 
-object TestPhases {
-  def oneForkedJvmPerSuite(tests: Seq[TestDefinition]): Seq[Group] = tests map {
-    test => Group(test.name, Seq(test), SubProcess(ForkOptions(runJVMOptions = Seq("-Dtest.name=" + test.name))))
-  }
-}
+import org.scalatest.{BeforeAndAfterEach, ParallelTestExecution}
+import org.scalatest.mockito.MockitoSugar
+import uk.gov.hmrc.play.test.UnitSpec
+
+trait BaseSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach with ParallelTestExecution

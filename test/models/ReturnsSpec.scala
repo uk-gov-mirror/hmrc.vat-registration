@@ -18,11 +18,12 @@ package models
 
 import java.time.LocalDate
 
+import helpers.BaseSpec
 import models.api.{Returns, StartDate}
 import models.submission.DESSubmission
 import play.api.libs.json.{JsSuccess, JsValue, Json}
 
-class ReturnsSpec extends JsonFormatValidation {
+class ReturnsSpec extends BaseSpec with JsonFormatValidation {
 
   val dateValue: LocalDate = LocalDate.of(2017, 1, 1)
   val date = StartDate(Some(dateValue))

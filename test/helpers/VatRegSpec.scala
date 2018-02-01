@@ -16,17 +16,19 @@
 
 package helpers
 
+import java.time.LocalTime
+
 import cats.instances.FutureInstances
-import cats.syntax.ApplicativeSyntax
 import connectors.{Authority, UserIds}
 import mocks.VatMocks
 import org.mockito.Mockito.reset
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, Inside}
-import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
+import org.scalatest.{BeforeAndAfterEach, Inside, ParallelTestExecution}
+import uk.gov.hmrc.play.test.UnitSpec
 
-abstract class VatRegSpec extends UnitSpec with WithFakeApplication
-  with Inside with MockitoSugar with VatMocks with FutureAssertions with BeforeAndAfterEach with FutureInstances with ApplicativeSyntax {
+trait VatRegSpec extends UnitSpec
+  with Inside with MockitoSugar with VatMocks with FutureAssertions
+  with BeforeAndAfterEach with FutureInstances  with ParallelTestExecution {
 
   protected def testAuthority(userId: String): Authority = Authority(userId, userId, userId, UserIds(userId, userId))
 
@@ -38,7 +40,6 @@ abstract class VatRegSpec extends UnitSpec with WithFakeApplication
     reset(mockAuthorisationResource)
     reset(mockBusRegConnector)
     reset(mockRegistrationRepository)
-    reset(mockTestOnlyRepo)
     reset(mockHttp)
     reset(mockSubmissionService)
     reset(mockVatRegistrationService)

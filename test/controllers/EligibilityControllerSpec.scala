@@ -31,7 +31,7 @@ import scala.concurrent.Future
 
 class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
-  import fakeApplication.materializer
+  import play.api.test.Helpers._
 
   class Setup {
     val controller = new EligibilityControllerImpl (
@@ -91,7 +91,7 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
       val result = controller.getEligibility("testId")(FakeRequest())
 
       status(result) shouldBe 200
-      jsonBodyOf(await(result)) shouldBe validEligibilityJson
+      await(contentAsJson(result)) shouldBe validEligibilityJson
     }
 
     "returns 204 if none found" in new Setup {
@@ -134,7 +134,7 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
       updateEligibility()
       val result = controller.updateEligibility("testId")(FakeRequest().withBody[JsObject](upsertEligibilityJson))
       status(result) shouldBe 200
-      jsonBodyOf(await(result)) shouldBe upsertEligibilityJson
+      await(contentAsJson(result)) shouldBe upsertEligibilityJson
     }
 
     "returns 400 if json received is invalid" in new Setup {

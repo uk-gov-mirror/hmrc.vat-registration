@@ -16,11 +16,12 @@
 
 package models
 
+import helpers.BaseSpec
 import models.api.Eligibility
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
 
-class EligibilitySpec extends JsonFormatValidation {
+class EligibilitySpec extends BaseSpec with JsonFormatValidation {
   "Eligibility model" should {
     "successfully read from valid json" in {
       val json = Json.parse(

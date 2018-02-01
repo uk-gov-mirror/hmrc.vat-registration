@@ -27,7 +27,7 @@ import play.api.test.Helpers._
 import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
 
-class AuthorisationSpec extends VatRegSpec with BeforeAndAfter {
+class AuthorisationSpec extends VatRegSpec {
 
   implicit val hc   = HeaderCarrier()
 
