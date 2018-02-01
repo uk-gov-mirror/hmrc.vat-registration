@@ -31,7 +31,7 @@ import uk.gov.hmrc.play.http.ws.WSHttp
 
 import scala.concurrent.Future
 
-class DesConnectorSpec extends VatRegSpec with BeforeAndAfter {
+class DesConnectorSpec extends VatRegSpec {
 
   implicit val hc = HeaderCarrier()
   val realmockHttp = mock[WSHttp]
@@ -67,7 +67,6 @@ class DesConnectorSpec extends VatRegSpec with BeforeAndAfter {
 
   "submitToDES with a DES Submission Model" should {
     "successfully POST" in new SetupWithProxy {
-
       mockHttpPOST[DESSubmission, HttpResponse](s"${connector.desStubUrl}/${connector.desStubURI}", HttpResponse(202))
 
       await(connector.submitToDES(validDesSubmission, "regId").status) shouldBe 202

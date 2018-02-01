@@ -33,7 +33,7 @@ import scala.concurrent.Future
 
 class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
-  import fakeApplication.materializer
+  import play.api.test.Helpers._
 
   class Setup {
     val controller = new ThresholdControllerImpl (
@@ -96,7 +96,7 @@ class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
       val result = controller.getThreshold("testId")(FakeRequest())
 
       status(result) shouldBe 200
-      jsonBodyOf(await(result)) shouldBe validThresholdJson
+      await(contentAsJson(result)) shouldBe validThresholdJson
     }
 
     "returns 204 if none found" in new Setup {
@@ -139,7 +139,7 @@ class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
       updateThreshold()
       val result = controller.updateThreshold("testId")(FakeRequest().withBody[JsObject](upsertTresholdJson))
       status(result) shouldBe 200
-      jsonBodyOf(await(result)) shouldBe upsertTresholdJson
+      await(contentAsJson(result)) shouldBe upsertTresholdJson
     }
 
     "returns 400 if json received is invalid" in new Setup {

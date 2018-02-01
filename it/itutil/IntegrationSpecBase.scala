@@ -15,14 +15,26 @@
  */
 package itutil
 
+import auth.Crypto
 import org.scalatest._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatestplus.play.OneServerPerSuite
+import play.api.Configuration
+import play.api.libs.json.{JsString, Reads, Writes}
+import uk.gov.hmrc.crypto.{CompositeSymmetricCrypto, CryptoWithKeysFromConfig}
 import uk.gov.hmrc.play.test.UnitSpec
 
 trait IntegrationSpecBase extends UnitSpec
   with OneServerPerSuite with ScalaFutures with IntegrationPatience with Matchers
   with WiremockHelper with BeforeAndAfterEach with BeforeAndAfterAll {
+
+  val cryptoForTest: Crypto = new Crypto {
+    def crypto: CompositeSymmetricCrypto = CryptoWithKeysFromConfig(
+      baseConfigKey = "mongo-encryption",
+      configuration = app.injector.instanceOf(classOf[Configuration]))
+    override val rds: Reads[String] = Reads[String](_.validate[String])
+    override val wts: Writes[String] = Writes[String](s => JsString(s))
+  }
 
   override def beforeEach(): Unit = {
     resetWiremock()

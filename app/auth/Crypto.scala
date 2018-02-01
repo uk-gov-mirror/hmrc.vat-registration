@@ -16,8 +16,18 @@
 
 package auth
 
+import javax.inject.Inject
+
+import play.api.Configuration
 import play.api.libs.json.{JsString, Reads, Writes}
-import uk.gov.hmrc.crypto.{CryptoWithKeysFromConfig, CompositeSymmetricCrypto, Crypted, PlainText}
+import uk.gov.hmrc.crypto.{CompositeSymmetricCrypto, Crypted, CryptoWithKeysFromConfig, PlainText}
+
+class CryptoImpl @Inject()(config: Configuration) extends Crypto {
+  override lazy val crypto: CompositeSymmetricCrypto = CryptoWithKeysFromConfig(
+    baseConfigKey = "mongo-encryption",
+    configuration = config
+  )
+}
 
 trait Crypto {
   def crypto: CompositeSymmetricCrypto

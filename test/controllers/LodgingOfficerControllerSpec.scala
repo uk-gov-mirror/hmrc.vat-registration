@@ -33,7 +33,7 @@ import scala.concurrent.Future
 
 class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
-  import fakeApplication.materializer
+  import play.api.test.Helpers._
 
   class Setup {
     val controller = new LodgingOfficerControllerImpl(
@@ -124,7 +124,7 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
       val result = controller.getLodgingOfficer("testId")(FakeRequest())
 
       status(result) shouldBe 200
-      jsonBodyOf(await(result)) shouldBe validLodgingOfficerJson
+      await(contentAsJson(result)) shouldBe validLodgingOfficerJson
     }
 
     "returns 204 if none found" in new Setup {
@@ -167,7 +167,7 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
       updateLodgingOfficerSuccess()
       val result = controller.updateLodgingOfficer("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
       status(result) shouldBe 200
-      jsonBodyOf(await(result)) shouldBe upsertLodgingOfficerJson
+      await(contentAsJson(result)) shouldBe upsertLodgingOfficerJson
     }
 
     "returns 400 if json received is invalid" in new Setup {
@@ -206,7 +206,7 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
 
         val result = controller.updateIVStatus("testId", true)(FakeRequest())
         status(result) shouldBe 200
-        jsonBodyOf(await(result)) shouldBe JsBoolean(true)
+        await(contentAsJson(result)) shouldBe JsBoolean(true)
       }
     }
 

@@ -32,7 +32,7 @@ import scala.concurrent.Future
 
 class BusinessContactControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
-  import fakeApplication.materializer
+  import play.api.test.Helpers._
 
   class Setup {
     val controller = new BusinessContactControllerImpl(
@@ -55,7 +55,7 @@ class BusinessContactControllerSpec extends VatRegSpec with VatRegistrationFixtu
       val result = controller.getBusinessContact("fooBarWizzBang")(FakeRequest())
 
       status(result) shouldBe 200
-      jsonBodyOf(await(result)) shouldBe validBusinessContactJson
+      await(contentAsJson(result)) shouldBe validBusinessContactJson
 
     }
     "return 204 when nothing is returned but document exists" in new Setup {
@@ -84,7 +84,7 @@ class BusinessContactControllerSpec extends VatRegSpec with VatRegistrationFixtu
       mockUpdateBusinessContactToSoService(Future.successful(validBusinessContact.get))
       val result = controller.updateBusinessContact("fooBarWizz")(FakeRequest().withBody[JsObject](validBusinessContactJson))
       status(result) shouldBe 200
-      jsonBodyOf(await(result)) shouldBe validBusinessContactJson
+      await(contentAsJson(result)) shouldBe validBusinessContactJson
     }
     "returns 404 if regId not found" in new Setup {
       userIsAuthorised()

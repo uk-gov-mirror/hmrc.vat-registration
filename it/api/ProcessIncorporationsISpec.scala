@@ -48,7 +48,8 @@ class ProcessIncorporationsISpec extends IntegrationStubbing with ITFixtures {
     "microservice.services.des-stub.port" -> s"$mockPort",
     "microservice.services.incorporation-information.host" -> s"$mockHost",
     "microservice.services.incorporation-information.port" -> s"$mockPort",
-    "microservice.services.incorporation-information.uri" -> "/incorporation-information"
+    "microservice.services.incorporation-information.uri" -> "/incorporation-information",
+    "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
   ))
 
   lazy val reactiveMongoComponent = app.injector.instanceOf[ReactiveMongoComponent]
@@ -57,7 +58,7 @@ class ProcessIncorporationsISpec extends IntegrationStubbing with ITFixtures {
   private def client(path: String) = ws.url(s"http://localhost:$port$path").withFollowRedirects(false)
 
   class Setup {
-    val mongo = new RegistrationMongo(reactiveMongoComponent)
+    val mongo = new RegistrationMongo(reactiveMongoComponent, cryptoForTest)
     val sequenceMongo = new SequenceMongo(reactiveMongoComponent)
     val repo: RegistrationMongoRepository = mongo.store
     val sequenceRepository: SequenceMongoRepository = sequenceMongo.store

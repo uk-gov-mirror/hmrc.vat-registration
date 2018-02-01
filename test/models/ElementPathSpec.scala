@@ -16,10 +16,11 @@
 
 package models
 
+import helpers.BaseSpec
 import play.api.libs.json._
 import uk.gov.hmrc.play.test.UnitSpec
 
-class ElementPathSpec extends UnitSpec  {
+class ElementPathSpec extends BaseSpec  {
 
   val format  = ElementPath.ElementPathFormatter
 

@@ -14,18 +14,37 @@
  * limitations under the License.
  */
 
-import TestPhases.oneForkedJvmPerTest
+import TestPhases.oneForkedJvmPerSuite
 import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
 val appName = "vat-registration"
+val testThreads = 12
 
 lazy val scoverageSettings = Seq(
   ScoverageKeys.coverageExcludedPackages  := "<empty>;Reverse.*;config.*;.*(AuthService|BuildInfo|Routes).*",
   ScoverageKeys.coverageMinimum           := 100,
   ScoverageKeys.coverageFailOnMinimum     := false,
   ScoverageKeys.coverageHighlighting      := true
+)
+
+lazy val aliases: Seq[Def.Setting[_]] = Seq(
+  addCommandAlias("testTime", "testOnly * -- -oD")
+).flatten
+
+lazy val testSettings = Seq(
+  fork                       in IntegrationTest := false,
+  testForkedParallel         in IntegrationTest := false,
+  parallelExecution          in IntegrationTest := false,
+  logBuffered                in IntegrationTest := false,
+  testGrouping               in IntegrationTest := oneForkedJvmPerSuite((definedTests in IntegrationTest).value),
+  unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest) (base => Seq(base / "it")).value,
+  fork                       in Test            := true,
+  testForkedParallel         in Test            := true,
+  parallelExecution          in Test            := true,
+  logBuffered                in Test            := false,
+  addTestReportOption(IntegrationTest, "int-test-reports")
 )
 
 lazy val microservice = Project(appName, file("."))
@@ -37,17 +56,14 @@ lazy val microservice = Project(appName, file("."))
   .settings(defaultSettings(): _*)
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
+  .settings(testSettings: _*)
+  .settings(aliases: _*)
   .settings(
-    scalaVersion                                  := "2.11.11",
-    libraryDependencies                           ++= AppDependencies(),
-    retrieveManaged                               := true,
-    evictionWarningOptions in update              := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
-    routesImport                                  ++= Seq("config.CustomPathBinder._", "common.{RegistrationId, TransactionId}", "models.ElementPath"),
-    Keys.fork in IntegrationTest                  := false,
-    unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest) (base => Seq(base / "it")).value,
-    addTestReportOption(IntegrationTest, "int-test-reports"),
-    testGrouping in IntegrationTest               := oneForkedJvmPerTest((definedTests in IntegrationTest).value),
-    parallelExecution in IntegrationTest          := false,
-    resolvers                                     ++= Seq(Resolver.bintrayRepo("hmrc", "releases"), Resolver.jcenterRepo)
+    scalaVersion                     := "2.11.11",
+    libraryDependencies              ++= AppDependencies(),
+    retrieveManaged                  := true,
+    cancelable             in Global := true,
+    evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
+    routesImport                     ++= Seq("config.CustomPathBinder._", "common.{RegistrationId, TransactionId}", "models.ElementPath"),
+    resolvers                        ++= Seq(Resolver.bintrayRepo("hmrc", "releases"), Resolver.jcenterRepo)
   )
-

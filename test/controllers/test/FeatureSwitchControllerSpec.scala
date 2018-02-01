@@ -16,18 +16,12 @@
 
 package controllers.test
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import org.scalatest.BeforeAndAfterEach
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.play.test.UnitSpec
 
-
 class FeatureSwitchControllerSpec extends UnitSpec with BeforeAndAfterEach {
-
-  implicit val system = ActorSystem("CR")
-  implicit val materializer = ActorMaterializer()
 
   override def beforeEach() {
     System.clearProperty("feature.mockSubmission")
@@ -42,8 +36,7 @@ class FeatureSwitchControllerSpec extends UnitSpec with BeforeAndAfterEach {
     "return a 200 and display all feature flags and their " in new Setup {
       val result = controller.show(FakeRequest())
       status(result) shouldBe 200
-      bodyOf(await(result)) shouldBe
-        "mockSubmission false\n"
+      contentAsString(await(result)) shouldBe "mockSubmission false\n"
     }
   }
 
@@ -55,7 +48,7 @@ class FeatureSwitchControllerSpec extends UnitSpec with BeforeAndAfterEach {
 
       val result = controller.switch(featureName, featureState)(FakeRequest())
       status(result) shouldBe OK
-      bodyOf(await(result)) shouldBe "BooleanFeatureSwitch(mockSubmission,false)"
+      contentAsString(await(result)) shouldBe "BooleanFeatureSwitch(mockSubmission,false)"
     }
 
     "return a mockSubmission feature state set to true when we specify on" in new Setup {
@@ -64,7 +57,7 @@ class FeatureSwitchControllerSpec extends UnitSpec with BeforeAndAfterEach {
 
       val result = controller.switch(featureName, featureState)(FakeRequest())
       status(result) shouldBe OK
-      bodyOf(await(result)) shouldBe "BooleanFeatureSwitch(mockSubmission,true)"
+      contentAsString(await(result)) shouldBe "BooleanFeatureSwitch(mockSubmission,true)"
     }
 
     "return a submissionCheck feature state set to false as a default when we specify xxxx" in new Setup {
@@ -73,7 +66,7 @@ class FeatureSwitchControllerSpec extends UnitSpec with BeforeAndAfterEach {
 
       val result = controller.switch(featureName, featureState)(FakeRequest())
       status(result) shouldBe OK
-      bodyOf(await(result)) shouldBe "BooleanFeatureSwitch(mockSubmission,false)"
+      contentAsString(await(result)) shouldBe "BooleanFeatureSwitch(mockSubmission,false)"
     }
 
     "return a bad request when we specify a non implemented feature name" in new Setup {

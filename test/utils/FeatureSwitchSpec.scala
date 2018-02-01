@@ -16,7 +16,6 @@
 
 package utils
 
-import org.joda.time.DateTime
 import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.play.test.UnitSpec
 

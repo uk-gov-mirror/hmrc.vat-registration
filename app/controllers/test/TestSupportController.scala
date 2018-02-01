@@ -22,7 +22,6 @@ import auth.Authenticated
 import connectors.test.BusinessRegistrationTestConnector
 import connectors.{AuthConnector, BusinessRegistrationConnector}
 import play.api.mvc.{Action, AnyContent}
-import repositories.test.{TestOnlyMongo, TestOnlyRepository}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
@@ -31,8 +30,7 @@ import scala.util.{Left, Right}
 
 class TestSupportController @Inject()(val auth: AuthConnector,
                                       brConnector: BusinessRegistrationConnector,
-                                      brTestConnector: BusinessRegistrationTestConnector,
-                                      testMongo: TestOnlyMongo) extends BaseController with Authenticated {
+                                      brTestConnector: BusinessRegistrationTestConnector) extends BaseController with Authenticated {
   // $COVERAGE-OFF$
 
   def currentProfileSetup(): Action[AnyContent] = Action.async { implicit request =>
@@ -45,13 +43,8 @@ class TestSupportController @Inject()(val auth: AuthConnector,
     }
   }
 
-  def dropCollection(): Action[AnyContent] = Action.async { implicit request =>
-    authenticated { _ =>
-      testMongo.store.dropCollection map {
-        _ => Ok("Collection Dropped")
-      }
-    }
-  }
+  // TODO This should be removed - just double check there are no callers in ATs or the FE
+  def dropCollection(): Action[AnyContent] = ???
 
   // $COVERAGE-ON$
 }

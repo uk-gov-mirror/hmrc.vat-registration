@@ -23,15 +23,11 @@ import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.play.http._
 
 import scala.concurrent.Future
 import uk.gov.hmrc.http.{ HeaderCarrier, HttpGet, HttpPost, HttpResponse }
 import uk.gov.hmrc.http.logging.SessionId
 
-/**
-  * Created by crispy on 03/08/16.
-  */
 class AuthConnectorSpec extends VatRegSpec {
 
   implicit val hc = HeaderCarrier()

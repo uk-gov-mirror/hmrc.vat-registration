@@ -30,7 +30,7 @@ import scala.concurrent.Future
 
 class TradingDetailsControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
-  import fakeApplication.materializer
+  import play.api.test.Helpers._
 
   class Setup {
     val controller = new TradingDetailsControllerImpl(
@@ -51,7 +51,7 @@ class TradingDetailsControllerSpec extends VatRegSpec with VatRegistrationFixtur
       val result: Future[Result] = controller.fetchTradingDetails("testId")(FakeRequest())
 
       status(result) shouldBe 200
-      await(jsonBodyOf(result)) shouldBe validFullTradingDetailsJson
+      await(contentAsJson(result)) shouldBe validFullTradingDetailsJson
     }
 
     "return a NoContent if the trading details block is not present in the document" in new Setup {
@@ -94,7 +94,7 @@ class TradingDetailsControllerSpec extends VatRegSpec with VatRegistrationFixtur
       val result: Future[Result] = controller.updateTradingDetails("testId")(FakeRequest().withBody[JsObject](validFullTradingDetailsJson))
 
       status(result) shouldBe 200
-      jsonBodyOf(await(result)) shouldBe validFullTradingDetailsJson
+      await(contentAsJson(result)) shouldBe validFullTradingDetailsJson
     }
 
     "returns NotFound if the registration is not found" in new Setup {

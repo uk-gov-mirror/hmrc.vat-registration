@@ -17,10 +17,12 @@
 package models.external
 
 import java.time.LocalDate
+
+import helpers.BaseSpec
 import models.JsonFormatValidation
 import play.api.libs.json.{JsSuccess, Json}
 
-class IncorporationInfoSpec extends JsonFormatValidation {
+class IncorporationInfoSpec extends BaseSpec with JsonFormatValidation {
 
   "IncorporationStatus" should {
     "deserialise from full Json" in {

@@ -16,14 +16,21 @@
 
 package services
 
+import cats.instances.FutureInstances
+import cats.syntax.ApplicativeSyntax
 import common.RegistrationId
 import common.exceptions.MissingRegDocument
+import connectors.{Authority, UserIds}
 import fixtures.VatRegistrationFixture
-import helpers.VatRegSpec
+import helpers.{FutureAssertions, VatRegSpec}
+import mocks.VatMocks
 import models.api.FlatRateScheme
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
+import org.scalatest.{BeforeAndAfterEach, Inside}
+import org.scalatest.mockito.MockitoSugar
 import repositories.RegistrationMongoRepository
+import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

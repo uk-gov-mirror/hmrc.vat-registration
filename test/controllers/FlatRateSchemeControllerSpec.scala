@@ -30,7 +30,7 @@ import scala.concurrent.Future
 
 class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
-  import fakeApplication.materializer
+  import play.api.test.Helpers._
 
   class Setup {
     val controller = new FlatRateSchemeControllerImpl(
@@ -51,7 +51,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       val result: Future[Result] = controller.fetchFlatRateScheme("testId")(FakeRequest())
 
       status(result) shouldBe 200
-      await(jsonBodyOf(result)) shouldBe validFullFlatRateSchemeJson
+      await(contentAsJson(result)) shouldBe validFullFlatRateSchemeJson
     }
 
     "return an OK with a valid flat rate scheme json where the frsDetails is not present" in new Setup {
@@ -62,7 +62,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       val result: Future[Result] = controller.fetchFlatRateScheme("testId")(FakeRequest())
 
       status(result) shouldBe 200
-      await(jsonBodyOf(result)) shouldBe validEmptyFlatRateSchemeJson
+      await(contentAsJson(result)) shouldBe validEmptyFlatRateSchemeJson
     }
 
     "return a NoContent if the flat rate scheme block is not present in the document" in new Setup {
@@ -103,7 +103,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       val result: Future[Result] = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
 
       status(result) shouldBe 200
-      jsonBodyOf(await(result)) shouldBe validFullFlatRateSchemeJson
+      await(contentAsJson(result)) shouldBe validFullFlatRateSchemeJson
     }
 
     "returns Ok if successful with a missing frsDetails" in new Setup {
@@ -114,7 +114,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       val result: Future[Result] = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validEmptyFlatRateSchemeJson))
 
       status(result) shouldBe 200
-      jsonBodyOf(await(result)) shouldBe validEmptyFlatRateSchemeJson
+      await(contentAsJson(result)) shouldBe validEmptyFlatRateSchemeJson
     }
 
     "returns NotFound if the registration is not found" in new Setup {

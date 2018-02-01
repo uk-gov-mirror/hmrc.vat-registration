@@ -16,10 +16,11 @@
 
 package models
 
+import helpers.BaseSpec
 import models.api.TradingDetails
 import play.api.libs.json.{JsSuccess, JsValue, Json}
 
-class TradingDetailsSpec extends JsonFormatValidation {
+class TradingDetailsSpec extends BaseSpec with JsonFormatValidation {
 
   val fullJson: JsValue = Json.parse(
     """

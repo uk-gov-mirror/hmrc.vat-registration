@@ -29,7 +29,9 @@ import org.mockito.Mockito._
 import play.api.libs.json.{JsBoolean, JsObject}
 import play.api.test.FakeRequest
 class SicAndComplianceControllerSpec extends VatRegSpec with VatRegistrationFixture {
-  import fakeApplication.materializer
+
+  import play.api.test.Helpers._
+
   class Setup {
     val controller = new SicAndComplianceControllerImpl(
       sicAndComplianceService = mockSicAndComplianceService,
@@ -50,7 +52,7 @@ class SicAndComplianceControllerSpec extends VatRegSpec with VatRegistrationFixt
       val result = controller.getSicAndCompliance("fooBarWizzBang")(FakeRequest())
 
       status(result) shouldBe 200
-      jsonBodyOf(await(result)) shouldBe validSicAndComplianceJson
+      await(contentAsJson(result)) shouldBe validSicAndComplianceJson
 
     }
     "return 204 when nothing is returned but document exists" in new Setup {
@@ -79,7 +81,7 @@ class SicAndComplianceControllerSpec extends VatRegSpec with VatRegistrationFixt
       mockUpdateSickAndComplianceFromService(Future.successful(validSicAndCompliance.get))
       val result = controller.updateSicAndCompliance("fooBarWizz")(FakeRequest().withBody[JsObject](validSicAndComplianceJson))
       status(result) shouldBe 200
-      jsonBodyOf(await(result)) shouldBe validSicAndComplianceJson
+      await(contentAsJson(result)) shouldBe validSicAndComplianceJson
     }
     "returns 404 if regId not found" in new Setup {
       userIsAuthorised()
