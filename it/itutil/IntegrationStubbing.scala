@@ -15,9 +15,11 @@
  */
 package itutil
 
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor, urlMatching}
 import models.api.VatScheme
 import play.api.test.Helpers.OK
 import reactivemongo.api.commands.WriteResult
+import uk.gov.hmrc.auth.core.AuthenticateHeaderParser
 
 import scala.concurrent.Future
 
@@ -39,16 +41,27 @@ trait IntegrationStubbing extends IntegrationSpecBase {
     }
   }
   case class User()(implicit builder: PreconditionBuilder) {
+    val authoriseData =
+      s"""{
+         | "internalId": "Int-xxx",
+         | "externalId": "Ext-xxx",
+         | "credentials": {
+         |   "providerId": "xxx2",
+         |   "providerType": "some-provider-type"
+         | }
+         |}""".stripMargin
+
     def isAuthorised: PreconditionBuilder = {
       stubPost("/write/audit", OK, """{"x":2}""")
       stubPost("/write/audit/merged", OK, """{"x":2}""")
-      stubGet("/auth/authority", OK, """{"uri":"xxx","credentials":{"gatewayId":"xxx2"},"userDetailsLink":"xxx3","ids":"/auth/ids"}""")
-      stubGet("/auth/ids", OK, """{"internalId":"Int-xxx","externalId":"Ext-xxx"}""")
+      stubPost("/auth/authorise", OK, authoriseData)
       builder
     }
-
+// def exceptionHeaders(value: String) = Map(AuthenticateHeaderParser.WWW_AUTHENTICATE -> s"""MDTP detail="$value"""")
     def isNotAuthorised: PreconditionBuilder = {
-      stubGet("/auth/authority", 403, "")
+      stubFor(post(urlMatching("/auth/authorise")).willReturn(aResponse().withStatus(401).withBody("""{"internalId": "Int-xxx"}""").withHeader(AuthenticateHeaderParser.WWW_AUTHENTICATE,s"""MDTP detail="InvalidBearerToken"""")))
+
+      stubPost("/write/audit", OK, """{"x":2}""")
       stubPost("/write/audit/merged", OK, """{"x":2}""")
       builder
     }

@@ -22,24 +22,26 @@ import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models.api.SicAndCompliance
 import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
+import play.api.libs.json.JsObject
+import play.api.test.FakeRequest
+import repositories.RegistrationMongoRepository
+import uk.gov.hmrc.auth.core.AuthConnector
 
 import scala.concurrent.Future
-import org.mockito.Mockito._
-import play.api.libs.json.{JsBoolean, JsObject}
-import play.api.test.FakeRequest
 class SicAndComplianceControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
   import play.api.test.Helpers._
 
   class Setup {
-    val controller = new SicAndComplianceControllerImpl(
-      sicAndComplianceService = mockSicAndComplianceService,
-      auth = mockAuthConnector
-    )
+    val controller = new SicAndComplianceControllerImpl(sicAndComplianceService = mockSicAndComplianceService){
+      override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
+      override lazy val authConnector: AuthConnector = mockAuthConnector
+    }
   }
-  def userIsAuthorised(): Unit = AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
-  def userIsNotAuthorised(): Unit = AuthorisationMocks.mockNotLoggedInOrAuthorised()
+  def userIsAuthorised(): Unit = AuthorisationMocks.mockAuthenticated(userId)
+  def userIsNotAuthorised(): Unit = AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
 
   def mockGetSicAndComplianceFromService(res:Future[Option[SicAndCompliance]]):OngoingStubbing[Future[Option[SicAndCompliance]]] = when(mockSicAndComplianceService.getSicAndCompliance(any())(any())).thenReturn(res)
 

@@ -25,15 +25,17 @@ import common.{RegistrationId, TransactionId}
 import connectors._
 import enums.VatRegStatus
 import models._
-import models.api.{TradingDetails, VatScheme}
+import models.api.VatScheme
 import models.external.IncorporationStatus
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
+import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import repositories._
 import services._
+import uk.gov.hmrc.auth.core.{AuthConnector, InvalidBearerToken}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost}
 import utils.VATFeatureSwitches
 
@@ -46,7 +48,7 @@ trait VatMocks extends WSHTTPMock {
   lazy val mockAuthConnector = mock[AuthConnector]
   lazy val mockIIConnector = mock[IncorporationInformationConnector]
   lazy val mockRegistrationService = mock[RegistrationService]
-  lazy val mockAuthorisationResource = mock[AuthorisationResource[String]]
+  lazy val mockAuthorisationResource = mock[AuthorisationResource]
   lazy val mockBusRegConnector = mock[BusinessRegistrationConnector]
   lazy val mockRegistrationRepository = mock[RegistrationRepository]
   lazy val mockRegistrationMongoRepository = mock[RegistrationMongoRepository]
@@ -70,20 +72,52 @@ trait VatMocks extends WSHTTPMock {
 
   object AuthorisationMocks {
 
-    def mockSuccessfulAuthorisation(authority: Authority): Unit = {
-      when(mockAuthConnector.getCurrentAuthority()(any[HeaderCarrier]()))
-        .thenReturn(Future.successful(Some(authority)))
+    def mockAuthenticated(intId: String): OngoingStubbing[Future[Option[String]]] = {
+      when(mockAuthConnector.authorise[Option[String]](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(Future.successful(Some(intId)))
     }
 
-    def mockNotLoggedInOrAuthorised(): Unit = {
-      when(mockAuthConnector.getCurrentAuthority()(any[HeaderCarrier]()))
-        .thenReturn(Future.successful(None))
+    def mockAuthenticatedLoggedInNoCorrespondingData(): OngoingStubbing[Future[Option[String]]] = {
+      when(mockAuthConnector.authorise[Option[String]](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(Future.successful(None))
     }
 
-    def mockNotAuthorised(authority: Authority): Unit = {
-      when(mockAuthConnector.getCurrentAuthority()(any[HeaderCarrier]()))
-        .thenReturn(Future.successful(Some(authority)))
+    def mockNotLoggedInOrAuthenticated(): OngoingStubbing[Future[Option[String]]] = {
+      when(mockAuthConnector.authorise[Option[String]](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any()))
+        .thenReturn(Future.failed(new InvalidBearerToken("Invalid Bearer Token")))
     }
+
+
+    def mockAuthorised(regId: String, internalId: String): OngoingStubbing[Future[Option[String]]] = {
+      when(mockAuthConnector.authorise[Option[String]](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any()))
+        .thenReturn(Future.successful(Some(internalId)))
+
+      when(mockRegistrationRepository.getInternalId(ArgumentMatchers.eq(regId))(ArgumentMatchers.any[HeaderCarrier]()))
+        .thenReturn(Future.successful(Some(internalId)))
+    }
+
+    def mockNotAuthorised(regId: String, internalId: String): OngoingStubbing[Future[Option[String]]] = {
+      when(mockAuthConnector.authorise[Option[String]](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any()))
+        .thenReturn(Future.successful(Some(internalId)))
+
+      when(mockRegistrationRepository.getInternalId(ArgumentMatchers.eq(regId))(ArgumentMatchers.any[HeaderCarrier]()))
+        .thenReturn(Future.successful(Some(internalId + "xxx")))
+    }
+
+
+      def mockAuthResourceNotFound(regId: String, internalId: String): OngoingStubbing[Future[Option[String]]] = {
+        when(mockAuthConnector.authorise[Option[String]](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any()))
+          .thenReturn(Future.successful(Some(internalId)))
+
+        when(mockRegistrationRepository.getInternalId(ArgumentMatchers.eq(regId))(ArgumentMatchers.any[HeaderCarrier]()))
+          .thenReturn(Future.successful(None))
+      }
+
+      def mockNotLoggedInOrAuthorised(regId: String): OngoingStubbing[Future[Option[String]]] = {
+        when(mockAuthConnector.authorise[Option[String]](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any()))
+          .thenReturn(Future.successful(None))
+
+        when(mockRegistrationRepository.getInternalId(ArgumentMatchers.eq(regId))(ArgumentMatchers.any[HeaderCarrier]()))
+          .thenReturn(Future.successful(Some("SomeInternalId")))
+      }
 
   }
 
@@ -142,18 +176,6 @@ trait VatMocks extends WSHTTPMock {
         .thenReturn(Future.failed(new InvalidSubmissionStatus("")))
     }
 
-    def mockDeleteByElement(id: RegistrationId, elementPath: ElementPath): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
-      when(mockRegistrationService.deleteByElement(idMatcher, ArgumentMatchers.any())(ArgumentMatchers.any()))
-        .thenReturn(serviceResult(true))
-    }
-
-    def mockDeleteByElementThrowsException(id: RegistrationId, elementPath: ElementPath): Unit = {
-      val exception = new Exception("Exception")
-      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
-      when(mockRegistrationService.deleteByElement(idMatcher, ArgumentMatchers.any())(ArgumentMatchers.any()))
-        .thenReturn(serviceError[Boolean](GenericDatabaseError(exception, Some("regId"))))
-    }
 
     def mockSuccessfulCreateNewRegistration(registrationId: RegistrationId): Unit = {
       when(mockRegistrationService.createNewRegistration()(any[HeaderCarrier]()))
@@ -201,14 +223,6 @@ trait VatMocks extends WSHTTPMock {
       val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
       when(mockSubmissionService.getAcknowledgementReference(idMatcher)(ArgumentMatchers.any()))
         .thenReturn(serviceError[String](AcknowledgementReferenceExists("regId")))
-    }
-
-    def mockServiceUnavailableUpdateLogicalGroup[G](group: G, exception: Exception): Unit = {
-      // required to do like this because of how Mockito matchers work with Scala Value Classes
-      //http://stackoverflow.com/a/34934179/81520
-      val idMatcher: RegistrationId = RegistrationId(ArgumentMatchers.anyString())
-      when(mockRegistrationService.updateLogicalGroup(idMatcher, ArgumentMatchers.any[G]())(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
-        .thenReturn(serviceError[G](GenericError(exception)))
     }
   }
 }

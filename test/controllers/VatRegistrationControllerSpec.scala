@@ -20,23 +20,19 @@ import java.time.LocalDate
 
 import common.RegistrationId
 import common.exceptions.MissingRegDocument
-import common.exceptions.UpdateFailed
-import connectors.AuthConnector
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import models._
 import models.api._
-import play.api.libs.json.{JsObject, JsValue, Json}
-import play.api.mvc.Results.Accepted
-import play.api.test.FakeRequest
-import play.api.test.Helpers._
-import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import play.api.http.Status
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.Result
-import repositories.{RegistrationMongo, RegistrationMongoRepository}
+import play.api.test.FakeRequest
+import repositories.RegistrationMongoRepository
 import services.{RegistrationService, SubmissionService}
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -62,15 +58,15 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
   class SetupMocks(mockSubmission: Boolean) {
     val controller = new VatRegistrationController{
-      override val auth: AuthConnector = mockAuthConnector
       override val registrationService: RegistrationService = mockRegistrationService
       override val submissionService: SubmissionService = mockSubmissionService
       override val registrationRepository: RegistrationMongoRepository = mockRegistrationMongoRepository
-
+      override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
+      override lazy val authConnector: AuthConnector = mockAuthConnector
       override private[controllers] def useMockSubmission = mockSubmission
     }
 
-    AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
+    AuthorisationMocks.mockAuthenticated(userId)
   }
 
   class Setup extends SetupMocks(false)
@@ -81,7 +77,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
   "GET /" should {
 
     "return 403 if user not authenticated" in new Setup {
-      AuthorisationMocks.mockNotLoggedInOrAuthorised()
+      AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
       controller.newVatRegistration(FakeRequest()) returnsStatus FORBIDDEN
     }
 
@@ -109,25 +105,6 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       ServiceMocks.mockFailedCreateNewRegistrationWithDbError(regId)
       controller.newVatRegistration()(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
     }
-
-    "updateVatFinancials" should {
-
-      val vatFinancials = VatFinancials(zeroRatedTurnoverEstimate = Some(10000000000L))
-
-      val fakeRequest = FakeRequest().withBody(Json.toJson(vatFinancials))
-
-      "call updateVatFinancials return ACCEPTED" in new Setup {
-        ServiceMocks.mockSuccessfulUpdateLogicalGroup(vatFinancials)
-        controller.updateVatFinancials(regId)(fakeRequest) returnsStatus ACCEPTED
-      }
-
-      "call updateVatFinancials return ServiceUnavailable" in new Setup {
-        ServiceMocks.mockServiceUnavailableUpdateLogicalGroup(vatFinancials, exception)
-        controller.updateVatFinancials(regId)(fakeRequest) returnsStatus SERVICE_UNAVAILABLE
-      }
-
-    }
-
     "updateBankAccountDetails" should {
 
       val registrationId = "reg-12345"
@@ -201,7 +178,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         when(mockRegistrationMongoRepository.fetchBankAccount(any())(any()))
           .thenReturn(Future.successful(None))
 
-       val result = controller.fetchBankAccountDetails(registrationId)(FakeRequest())
+        val result = controller.fetchBankAccountDetails(registrationId)(FakeRequest())
 
         status(result) shouldBe NOT_FOUND
 
@@ -326,68 +303,6 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       }
     }
 
-    "updateSicAndCompliance" should {
-
-      val fakeRequest = FakeRequest().withBody(Json.toJson(sicAndCompliance))
-
-      "call updateSicAndCompliance return ACCEPTED" in new Setup {
-        ServiceMocks.mockSuccessfulUpdateLogicalGroup(sicAndCompliance)
-        controller.updateSicAndCompliance(regId)(fakeRequest) returns Accepted(Json.toJson(sicAndCompliance))
-      }
-
-      "call updateSicAndCompliance return ServiceUnavailable" in new Setup {
-        ServiceMocks.mockServiceUnavailableUpdateLogicalGroup(sicAndCompliance, exception)
-        controller.updateSicAndCompliance(regId)(fakeRequest) returnsStatus SERVICE_UNAVAILABLE
-      }
-
-    }
-
-    "updateVatContact" should {
-
-      val fakeRequest = FakeRequest().withBody(Json.toJson(vatContact))
-
-      "call updateVatContact return ACCEPTED" in new Setup {
-        ServiceMocks.mockSuccessfulUpdateLogicalGroup(vatContact)
-        controller.updateVatContact(regId)(fakeRequest) returns Accepted(Json.toJson(vatContact))
-      }
-
-      "call updateVatContact return ServiceUnavailable" in new Setup {
-        ServiceMocks.mockServiceUnavailableUpdateLogicalGroup(vatContact, exception)
-        controller.updateVatContact(regId)(fakeRequest) returnsStatus SERVICE_UNAVAILABLE
-      }
-
-    }
-
-    "updateVatEligibility" should {
-
-      val fakeRequest = FakeRequest().withBody(Json.toJson(vatEligibility))
-
-      "call updateVatEligibility return ACCEPTED" in new Setup {
-        ServiceMocks.mockSuccessfulUpdateLogicalGroup(vatEligibility)
-        controller.updateVatEligibility(regId)(fakeRequest) returns Accepted(Json.toJson(vatEligibility))
-      }
-
-      "call updateVatEligibility return ServiceUnavailable" in new Setup {
-        ServiceMocks.mockServiceUnavailableUpdateLogicalGroup(vatEligibility, exception)
-        controller.updateVatEligibility(regId)(fakeRequest) returnsStatus SERVICE_UNAVAILABLE
-      }
-    }
-
-    "updateVatLodgingOfficer" should {
-
-      val fakeRequest = FakeRequest().withBody(Json.toJson(vatLodgingOfficer))
-
-      "call updateVatLodgingOfficer return ACCEPTED" in new Setup {
-        ServiceMocks.mockSuccessfulUpdateLogicalGroup(vatLodgingOfficer)
-        controller.updateLodgingOfficer(regId)(fakeRequest) returns Accepted(Json.toJson(vatLodgingOfficer))
-      }
-
-      "call updateVatLodgingOfficer return ServiceUnavailable" in new Setup {
-        ServiceMocks.mockServiceUnavailableUpdateLogicalGroup(vatLodgingOfficer, exception)
-        controller.updateLodgingOfficer(regId)(fakeRequest) returnsStatus SERVICE_UNAVAILABLE
-      }
-    }
-
     "getAcknowledgementReference" should {
 
       "call getAcknowledgementReference return Ok with Acknowledgement Reference" in new Setup {
@@ -453,23 +368,11 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         status(controller.deleteVatScheme("testId")(FakeRequest())) shouldBe PRECONDITION_FAILED
       }
     }
-
-    "deleteByElement" should {
-      "call to deleteByElement return Ok with VatScheme" in new Setup {
-        ServiceMocks.mockDeleteByElement(regId, VatBankAccountPath)
-        controller.deleteByElement(regId, VatBankAccountPath)(FakeRequest()) returnsStatus OK
-      }
-
-      "call to deleteBankAccountDetails return ServiceUnavailable" in new Setup {
-        ServiceMocks.mockDeleteByElementThrowsException(regId, VatBankAccountPath)
-        controller.deleteByElement(regId, VatBankAccountPath)(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
-      }
-    }
   }
 
   "Calling submitPAYERegistration" should {
     "return a Forbidden response if the user is not logged in" in new Setup {
-      AuthorisationMocks.mockNotLoggedInOrAuthorised()
+      AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
 
       val response = controller.submitVATRegistration(regId)(FakeRequest())
 
@@ -511,32 +414,6 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
       status(response) shouldBe Status.OK
       await(contentAsJson(response)) shouldBe Json.toJson(s"BRVT000000$regId")
-    }
-  }
-
-  "updateIVStatus" should {
-    "return an Ok" when {
-      "the users IV status has been successfully updated" in new Setup {
-        val request = FakeRequest().withBody(Json.parse("""{"ivPassed" : true}"""))
-
-        when(mockRegistrationService.updateIVStatus(ArgumentMatchers.any[String](), ArgumentMatchers.any[Boolean]())(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(true))
-
-        val result = controller.updateIVStatus("testRegId")(request)
-        status(result) shouldBe OK
-      }
-    }
-
-    "return an InternalServerError" when {
-      "there was a problem updating the users IV status" in new Setup {
-        val request = FakeRequest().withBody(Json.parse("""{"ivPassed" : true}"""))
-
-        when(mockRegistrationService.updateIVStatus(ArgumentMatchers.any[String](), ArgumentMatchers.any[Boolean]())(ArgumentMatchers.any()))
-          .thenReturn(Future.failed(UpdateFailed(RegistrationId("testRegId"), "testModel")))
-
-        val result = controller.updateIVStatus("testRegId")(request)
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-      }
     }
   }
 }

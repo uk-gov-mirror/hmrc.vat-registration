@@ -39,7 +39,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class VatRegistrationService @Inject()(val brConnector: BusinessRegistrationConnector,
                                        regMongo: RegistrationMongo) extends RegistrationService with ServicesConfig {
-  override val registrationRepository: RegistrationRepository = regMongo.store
+
+  val registrationRepository: RegistrationRepository = regMongo.store
   override lazy val vatRestartUrl = getString("api.vatRestartURL")
   override lazy val vatCancelUrl  = getString("api.vatCancelURL")
 }
@@ -96,7 +97,6 @@ trait RegistrationService extends ApplicativeSyntax with FutureInstances {
 
         val base = Json.obj(
           "status"     -> registration.status
-          //"lastUpdate" -> lastUpdate
         )
 
         val ackRef = registration.acknowledgementReference.fold(Json.obj())(ref => Json.obj("ackRef" -> ref))
@@ -137,14 +137,7 @@ trait RegistrationService extends ApplicativeSyntax with FutureInstances {
     } yield deleted
   }
 
-  def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit ex: ExecutionContext): ServiceResult[Boolean] =
-    toEitherT(registrationRepository.deleteByElement(id, elementPath))
-
   def retrieveAcknowledgementReference(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[String] =
     retrieveVatScheme(id).subflatMap(_.acknowledgementReference.toRight(ResourceNotFound("AcknowledgementId")))
 
-  @deprecated("Use LodgingOfficerController.updateIVStatus instead", "SCRS-9379")
-  def updateIVStatus(regId: String, ivStatus: Boolean)(implicit hc: HeaderCarrier): Future[Boolean] = {
-    registrationRepository.updateIVStatus(regId, ivStatus)
-  }
 }

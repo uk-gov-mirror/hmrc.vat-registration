@@ -23,20 +23,25 @@ import models.external.IncorporationStatus
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import repositories.RegistrationMongoRepository
+import uk.gov.hmrc.auth.core.AuthConnector
 
 class IncorporationInformationControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
   import play.api.test.Helpers._
 
   class Setup {
-    val controller = new IncorporationInformationController(mockAuthConnector, mockIIConnector)
-    AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
+    val controller = new IncorporationInformationController(mockIIConnector,mockSubmissionService){
+      override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
+      override lazy val authConnector: AuthConnector = mockAuthConnector
+    }
+   AuthorisationMocks.mockAuthenticated(userId)
   }
 
   "GET /incorporation-information/:txId" should {
 
     "return 403 if user not authenticated" in new Setup {
-      AuthorisationMocks.mockNotLoggedInOrAuthorised()
+      AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
       controller.getIncorporationInformation(txId)(FakeRequest()) returnsStatus FORBIDDEN
     }
 

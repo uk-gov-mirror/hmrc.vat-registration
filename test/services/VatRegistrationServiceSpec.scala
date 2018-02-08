@@ -208,20 +208,6 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
     }
   }
 
-
-  "call to deleteByElement" should {
-    "return Success response " in new Setup {
-      when(mockRegistrationRepository.deleteByElement(RegistrationId("1"), VatBankAccountPath)).thenReturn(Future.successful(true))
-      service.deleteByElement(RegistrationId("1"), VatBankAccountPath) returnsRight true
-    }
-
-    "return Error response " in new Setup {
-      val t = new RuntimeException("Exception")
-      when(mockRegistrationRepository.deleteByElement(RegistrationId("1"), VatBankAccountPath)).thenReturn(Future.failed(t))
-      service.deleteByElement(RegistrationId("1"), VatBankAccountPath) returnsLeft GenericError(t)
-    }
-  }
-
   "call to retrieveAcknowledgementReference" should {
 
     "call to retrieveAcknowledgementReference return AcknowledgementReference from DB" in new Setup {
@@ -235,7 +221,6 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
       service.retrieveAcknowledgementReference(RegistrationId("1")) returnsLeft ResourceNotFound("AcknowledgementId")
     }
   }
-
 
   "call to getStatus" should {
     "return a correct JsValue" in new Setup {
@@ -265,25 +250,6 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
 
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(Some(vatSchemeWithAckRefNum)))
       await(service.getStatus(RegistrationId("1"))) shouldBe expectedJson
-    }
-  }
-  "updateIVStatus" should {
-    "return a boolean" when {
-      "the user IV status has been updated" in new Setup {
-        when(mockRegistrationRepository.updateIVStatus(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(true))
-
-        val result = await(service.updateIVStatus("testRegId", true))
-        result shouldBe true
-      }
-    }
-
-    "throw an updated failed" in new Setup {
-      when(mockRegistrationRepository.updateIVStatus(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
-        .thenReturn(Future.failed(UpdateFailed(RegistrationId("testRegId"), "testModel")))
-
-      intercept[UpdateFailed](await(service.updateIVStatus("testRegId", true)))
-
     }
   }
 }

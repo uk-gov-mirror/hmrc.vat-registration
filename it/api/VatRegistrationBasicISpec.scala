@@ -131,28 +131,6 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
     }
   }
 
-  "/:regId/update-iv-status" should {
-    "return an Ok" in new Setup() {
-      given
-        .user.isAuthorised
-       val result =  for {
-          _ <-    repo.createNewVatScheme(RegistrationId("testRegId"))
-          _ <-    repo.updateLodgingOfficer("testRegId", vatLodgingOfficer)
-          res <-  client(controllers.routes.VatRegistrationController.updateIVStatus("testRegId").url).patch(Json.parse("""{"ivPassed" : true}"""))
-        } yield res
-        result.status shouldBe 200
-
-    }
-
-    "return an INS" in {
-      given
-        .user.isAuthorised
-
-      val result = await(client("/vatreg/testRegId2/update-iv-status").patch(Json.parse("""{"ivPassed" : true}""")))
-      result.status shouldBe INTERNAL_SERVER_ERROR
-    }
-  }
-
   "/:regId/submit-registration" should {
     val registrationID = "testRegId"
     val regime = "vat"

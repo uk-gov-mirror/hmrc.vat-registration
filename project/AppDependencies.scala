@@ -22,18 +22,21 @@ object AppDependencies {
 }
 
 object CompileDependencies {
-  val domainVersion         = "5.0.0"
-  val bootstrapVersion      = "6.13.0"
-  val reactiveMongoVersion  = "5.2.0"
-  val urlBindersVersion     = "2.1.0"
-  val catsVersion           = "0.9.0"
+  val domainVersion                       = "5.1.0"
+  val bootstrapVersion                    = "6.15.0"
+  val reactiveMongoVersion                = "5.2.0"
+  val urlBindersVersion                   = "2.1.0"
+  val catsVersion                         = "0.9.0"
+  private val authClientVersion           = "2.5.0"
 
   val compile = Seq(
     "uk.gov.hmrc"   %% "play-reactivemongo"     % reactiveMongoVersion,
     "uk.gov.hmrc"   %% "microservice-bootstrap" % bootstrapVersion,
     "uk.gov.hmrc"   %% "play-url-binders"       % urlBindersVersion,
     "uk.gov.hmrc"   %% "domain"                 % domainVersion,
-    "org.typelevel" %% "cats"                   % catsVersion
+    "org.typelevel" %% "cats"                   % catsVersion,
+    "uk.gov.hmrc" %% "auth-client"              % authClientVersion
+
   )
 
   def apply(): Seq[ModuleID] = compile
@@ -42,7 +45,7 @@ object CompileDependencies {
 object UnitTestDependencies extends CommonTestDependencies {
   override val scope: Configuration = Test
 
-  val mockitoVersion = "2.12.0"
+  val mockitoVersion = "2.13.0"
 
   override val testDependencies: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"             %% "hmrctest"                       % hmrcTestVersion           % scope,
@@ -72,7 +75,7 @@ object IntegrationTestDependencies extends CommonTestDependencies {
 }
 
 trait CommonTestDependencies {
-  val hmrcTestVersion          = "2.3.0"
+  val hmrcTestVersion          = "3.0.0"
   val scalaTestPlusVersion     = "2.0.1"
   val scoverageVersion         = "1.3.1"
   val reactiveMongoTestVersion = "2.0.0"

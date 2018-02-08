@@ -18,30 +18,35 @@ package controllers
 
 import javax.inject.Inject
 
+import auth.{Authorisation, AuthorisationResource}
 import common.exceptions.MissingRegDocument
+import config.AuthClientConnector
 import play.api.mvc.{Action, AnyContent}
 import services.SicAndComplianceService
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import connectors.AuthConnector
 import models.api.SicAndCompliance
 import play.api.libs.json.{JsValue, Json}
+import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.play.microservice.controller.BaseController
 
-class SicAndComplianceControllerImpl @Inject()(val sicAndComplianceService: SicAndComplianceService,
-                                             val auth: AuthConnector) extends SicAndComplianceController
+class SicAndComplianceControllerImpl @Inject()(val sicAndComplianceService: SicAndComplianceService) extends SicAndComplianceController {
+  val resourceConn: AuthorisationResource                              = sicAndComplianceService.registrationRepository
+  override lazy val authConnector: AuthConnector                       = AuthClientConnector
+}
 
-trait SicAndComplianceController extends VatRegistrationBaseController {
+trait SicAndComplianceController extends BaseController with Authorisation {
   val sicAndComplianceService: SicAndComplianceService
 
   def getSicAndCompliance(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      authenticated { _ =>
+      isAuthenticated { _ =>
         sicAndComplianceService.getSicAndCompliance(regId) sendResult
       }
   }
 
   def updateSicAndCompliance(regId: String) = Action.async[JsValue](parse.json) {
     implicit request =>
-      authenticated { _ =>
+      isAuthenticated { _ =>
         withJsonBody[SicAndCompliance] { sicAndComp =>
           sicAndComplianceService.updateSicAndCompliance(regId, sicAndComp)
             .map(a => Ok(Json.toJson(a)))

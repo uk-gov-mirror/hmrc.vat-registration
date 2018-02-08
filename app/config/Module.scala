@@ -27,7 +27,6 @@ class Module extends AbstractModule {
     bind(classOf[Crypto]).to(classOf[CryptoImpl]).asEagerSingleton()
     bind(classOf[ProcessIncorporationsController]).to(classOf[ProcessIncorporationsControllerImpl]).asEagerSingleton()
     bind(classOf[VatRegistrationController]).to(classOf[VatRegistrationControllerImpl]).asEagerSingleton()
-    bind(classOf[connectors.AuthConnector]).to(classOf[connectors.VatRegAuthConnector]).asEagerSingleton()
     bind(classOf[connectors.BusinessRegistrationConnector]).to(classOf[connectors.VatRegBusinessRegistrationConnector]).asEagerSingleton()
     bind(classOf[connectors.IncorporationInformationConnector]).to(classOf[connectors.VatRegIncorporationInformationConnector ]).asEagerSingleton()
     bind(classOf[services.RegistrationService]).to(classOf[services.VatRegistrationService]).asEagerSingleton()

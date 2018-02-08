@@ -16,9 +16,11 @@
 
 package auth
 
-import connectors.{AuthConnector, Authority}
-import org.slf4j.{Logger, LoggerFactory}
+import play.api.Logger
 import play.api.mvc.Result
+import play.api.mvc.Results._
+import uk.gov.hmrc.auth.core.retrieve.Retrievals.internalId
+import uk.gov.hmrc.auth.core.{AuthorisationException, AuthorisedFunctions}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
@@ -26,38 +28,58 @@ import scala.concurrent.Future
 
 sealed trait AuthorisationResult
 case object NotLoggedInOrAuthorised extends AuthorisationResult
-case class NotAuthorised(authContext: Authority) extends AuthorisationResult
-case class Authorised(authContext: Authority) extends AuthorisationResult
-case class AuthResourceNotFound(authContext: Authority) extends AuthorisationResult
+case class NotAuthorised(intId: String) extends AuthorisationResult
+case class Authorised(intId: String) extends AuthorisationResult
+case class AuthResourceNotFound(intId: String) extends AuthorisationResult
 
-trait Authorisation[I] {
+trait Authorisation extends AuthorisedFunctions {
 
-  val auth: AuthConnector
-  val resourceConn : AuthorisationResource[I]
+  val resourceConn : AuthorisationResource
 
-  private val logger: Logger = LoggerFactory.getLogger(getClass)
-
-  def authorised(id: I)(f: => AuthorisationResult => Future[Result])(implicit hc: HeaderCarrier): Future[Result] = {
-    for {
-      authority <- auth.getCurrentAuthority()
-      resource  <- resourceConn.getInternalId(id)
-      result    <- f(mapToAuthResult(authority, resource))
-    } yield result
+  def isAuthenticated(f: String => Future[Result])(implicit hc: HeaderCarrier): Future[Result] = {
+    authorised().retrieve(internalId) { id =>
+      id.fold {
+        Logger.warn("[Authorisation] - [isAuthenticated] : No internalId present; FORBIDDEN")
+        Future.successful(Forbidden("Missing internalId for the logged in user"))
+      }(f)
+    }.recoverWith {
+      case e: AuthorisationException => {
+        Logger.warn("[Authorisation] - [isAuthenticated]: AuthorisationException (auth returned a 401")
+        Future.successful(Forbidden)
+      }
+      case ex: Exception => Future.failed(throw ex)
+    }
+  }
+// TODO: implement this on every controller where it is needed when user story is played
+  def isAuthorised(regId: String)(f: => AuthorisationResult => Future[Result])(implicit hc: HeaderCarrier): Future[Result] = {
+    authorised().retrieve(internalId) { id =>
+      resourceConn.getInternalId(regId) flatMap { resource =>
+        f(mapToAuthResult(id, resource))
+      }
+    } recoverWith {
+      case ar: AuthorisationException =>
+        Logger.warn(s"[Authorisation] - [isAuthorised]: An error occurred, err: ${ar.getMessage}")
+        f(NotLoggedInOrAuthorised)
+      case e =>
+        throw e
+    }
   }
 
-  private def mapToAuthResult(authContext: Option[Authority], resource: Option[(I,String)] ) : AuthorisationResult = {
+  private def mapToAuthResult(authContext: Option[String], resource: Option[(String)] ) : AuthorisationResult = {
     authContext match {
       case None =>
-        logger.warn("[mapToAuthResult]: No authority was found")
+        Logger.warn("[mapToAuthResult]: No authority was found")
         NotLoggedInOrAuthorised
-      case Some(context) => resource match {
+      case Some(id) =>
+        resource match {
         case None =>
-          logger.info("[mapToAuthResult]: No auth resource was found for the current user")
-          AuthResourceNotFound(context)
-        case Some((_, context.ids.internalId)) => Authorised(context)
-        case Some((_, _)) =>
-          logger.warn("[mapToAuthResult]: The current user is not authorised to access this resource")
-          NotAuthorised (context)
+          Logger.info("[Authorisation] [mapToAuthResult]: No auth resource was found for the current user")
+          AuthResourceNotFound(id)
+        case Some(resourceId) if resourceId == id =>
+          Authorised(id)
+        case _ =>
+          Logger.warn("[mapToAuthResult]: The current user is not authorised to access this resource")
+          NotAuthorised(id)
       }
     }
   }

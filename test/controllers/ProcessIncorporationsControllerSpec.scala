@@ -21,14 +21,12 @@ import akka.stream.ActorMaterializer
 import models.external.IncorpStatus
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers
-import org.mockito.Matchers._
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import services.SubmissionService
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future

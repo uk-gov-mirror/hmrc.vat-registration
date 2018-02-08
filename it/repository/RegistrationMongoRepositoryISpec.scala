@@ -193,21 +193,6 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     }
   }
 
-  "Calling deleteByElement" should {
-
-    "delete BankAccountDetails object when one exists" in new Setup {
-      val schemeWithAccount = vatScheme.copy(financials = Some(vatFinancials))
-      repository.insert(schemeWithAccount).flatMap(_ => repository.deleteByElement(schemeWithAccount.id, VatBankAccountPath)) returns true
-    }
-
-    "delete BankAccountDetails object when one does not exist" in new Setup {
-      repository.insert(vatScheme).flatMap(_ => repository.deleteByElement(vatScheme.id, VatBankAccountPath)) returns true
-    }
-
-    "return a None when there is no corresponding VatScheme object" in new Setup {
-      repository.insert(vatScheme).flatMap(_ => repository.deleteByElement(RegistrationId("0"), VatBankAccountPath)) failedWith classOf[UpdateFailed]
-    }
-  }
 
   val ACK_REF_NUM = "REF0000001"
   "Calling updateByElement" should {
@@ -1151,6 +1136,12 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
 
     "throw a MissingRegDocument if the vat scheme does not exist for the regId" in new Setup {
       a[MissingRegDocument] shouldBe thrownBy(await(repository.removeFlatRateScheme(vatScheme.id.value)))
+    }
+  }
+  // TODO: As part of implementing authorised user story
+  "getInternalId" should {
+    "return a fixed string because it is curently stubbed for a future user story" in new Setup {
+      await(repository.getInternalId("foo")) shouldBe Some("FooBarWizzBangFizz")
     }
   }
 

@@ -16,7 +16,6 @@
 
 package controllers
 
-import play.api.mvc.Result
 import common.RegistrationId
 import common.exceptions.MissingRegDocument
 import fixtures.VatRegistrationFixture
@@ -24,7 +23,10 @@ import helpers.VatRegSpec
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import play.api.libs.json.JsObject
+import play.api.mvc.Result
 import play.api.test.FakeRequest
+import repositories.RegistrationMongoRepository
+import uk.gov.hmrc.auth.core.AuthConnector
 
 import scala.concurrent.Future
 
@@ -33,13 +35,13 @@ class TradingDetailsControllerSpec extends VatRegSpec with VatRegistrationFixtur
   import play.api.test.Helpers._
 
   class Setup {
-    val controller = new TradingDetailsControllerImpl(
-      tradingDetailsService = mockTradingDetailsService,
-      auth = mockAuthConnector
-    )
+    val controller = new TradingDetailsControllerImpl(tradingDetailsService = mockTradingDetailsService){
+      override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
+      override lazy val authConnector: AuthConnector = mockAuthConnector
+    }
 
-    def userIsAuthorised(): Unit = AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
-    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockNotLoggedInOrAuthorised()
+    def userIsAuthorised(): Unit = AuthorisationMocks.mockAuthenticated(userId)
+    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
   }
 
   "fetchTradingDetails" should {

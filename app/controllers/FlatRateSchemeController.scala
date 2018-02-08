@@ -18,40 +18,48 @@ package controllers
 
 import javax.inject.Inject
 
+import auth.Authorisation
 import common.exceptions.MissingRegDocument
-import connectors.AuthConnector
+import config.AuthClientConnector
 import models.api.FlatRateScheme
+import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
 import services.FlatRateSchemeService
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import uk.gov.hmrc.play.microservice.controller.BaseController
 
-class FlatRateSchemeControllerImpl @Inject()(val flatRateSchemeService: FlatRateSchemeService,
-                                             val auth: AuthConnector) extends FlatRateSchemeController
+class FlatRateSchemeControllerImpl @Inject()(val flatRateSchemeService: FlatRateSchemeService) extends FlatRateSchemeController {
 
-trait FlatRateSchemeController extends VatRegistrationBaseController {
+  val resourceConn = flatRateSchemeService.registrationRepository
+  override lazy val authConnector:AuthConnector = AuthClientConnector
+
+}
+
+trait FlatRateSchemeController extends BaseController with Authorisation {
 
   val flatRateSchemeService: FlatRateSchemeService
 
   def fetchFlatRateScheme(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      authenticated { _ =>
+      isAuthenticated { _ =>
         flatRateSchemeService.retrieveFlatRateScheme(regId) sendResult
       }
   }
 
   def updateFlatRateScheme(regId: String): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
-      authenticated { _ =>
+      isAuthenticated { _ =>
         withJsonBody[FlatRateScheme]{ flatRateScheme =>
           flatRateSchemeService.updateFlatRateScheme(regId, flatRateScheme) map {
             frsResponse => Ok(Json.toJson(frsResponse))
           } recover {
             case mrd: MissingRegDocument =>
-              logger.error(s"[FlatRateSchemeController] [updateFlatRateScheme] Registration not found for regId: $regId", mrd)
+              Logger.error(s"[FlatRateSchemeController] [updateFlatRateScheme] Registration not found for regId: $regId", mrd)
               NotFound
             case e =>
-              logger.error(s"[FlatRateSchemeController] [updateFlatRateScheme] " +
+              Logger.error(s"[FlatRateSchemeController] [updateFlatRateScheme] " +
                 s"An error occurred while updating flat rate scheme: for regId: $regId, ${e.getMessage}", e)
               InternalServerError
           }
@@ -61,15 +69,15 @@ trait FlatRateSchemeController extends VatRegistrationBaseController {
 
   def removeFlatRateScheme(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      authenticated { _ =>
+      isAuthenticated { _ =>
         flatRateSchemeService.removeFlatRateScheme(regId) map { result =>
           Ok
         } recover {
           case mrd: MissingRegDocument =>
-            logger.error(s"[FlatRateSchemeController] [removeFlatRateScheme] Registration not found for regId: $regId", mrd)
+            Logger.error(s"[FlatRateSchemeController] [removeFlatRateScheme] Registration not found for regId: $regId", mrd)
             NotFound
           case e =>
-            logger.error(s"[FlatRateSchemeController] [removeFlatRateScheme] " +
+            Logger.error(s"[FlatRateSchemeController] [removeFlatRateScheme] " +
               s"An error occurred while remove flat rate scheme: for regId: $regId, ${e.getMessage}", e)
             InternalServerError
         }

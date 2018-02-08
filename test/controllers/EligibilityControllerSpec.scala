@@ -26,6 +26,8 @@ import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.FakeRequest
+import repositories.RegistrationMongoRepository
+import uk.gov.hmrc.auth.core.AuthConnector
 
 import scala.concurrent.Future
 
@@ -34,12 +36,12 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
   import play.api.test.Helpers._
 
   class Setup {
-    val controller = new EligibilityControllerImpl (
-      eligibilityService = mockEligibilityService,
-      auth = mockAuthConnector
-    )
-    def userIsAuthorised(): Unit = AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
-    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockNotLoggedInOrAuthorised()
+    val controller = new EligibilityControllerImpl (eligibilityService = mockEligibilityService){
+      override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
+      override lazy val authConnector: AuthConnector = mockAuthConnector
+    }
+    def userIsAuthorised(): Unit = AuthorisationMocks.mockAuthenticated(userId)
+    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
 
     def getEligibilityData(): OngoingStubbing[Future[Option[Eligibility]]] = when(mockEligibilityService.getEligibility(any())(any()))
       .thenReturn(Future.successful(Some(validEligibility)))

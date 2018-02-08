@@ -8,11 +8,8 @@ GET          /:regId/get-scheme                     controllers.VatRegistrationC
 GET          /:regId/trading-details                controllers.TradingDetailsController.fetchTradingDetails(regId)
 PATCH        /:regId/trading-details                controllers.TradingDetailsController.updateTradingDetails(regId)
 
-PATCH        /:regID/vat-financials                 controllers.VatRegistrationController.updateVatFinancials(regID: RegistrationId)
-PATCH        /:regID/sic-and-compliance             controllers.VatRegistrationController.updateSicAndCompliance(regID: RegistrationId)
-PATCH        /:regID/vat-contact                    controllers.VatRegistrationController.updateVatContact(regID: RegistrationId)
-PATCH        /:regID/service-eligibility            controllers.VatRegistrationController.updateVatEligibility(regID: RegistrationId)
-PATCH        /:regID/lodging-officer                controllers.VatRegistrationController.updateLodgingOfficer(regID: RegistrationId)
+GET          /:regId/turnover-estimates             controllers.VatRegistrationController.fetchTurnoverEstimates(regId)
+PATCH        /:regId/turnover-estimates             controllers.VatRegistrationController.updateTurnoverEstimates(regId)
 
 GET          /:regId/flat-rate-scheme               controllers.FlatRateSchemeController.fetchFlatRateScheme(regId)
 PATCH        /:regId/flat-rate-scheme               controllers.FlatRateSchemeController.updateFlatRateScheme(regId)
@@ -21,42 +18,32 @@ DELETE       /:regId/flat-rate-scheme               controllers.FlatRateSchemeCo
 GET          /:regId/returns                        controllers.VatRegistrationController.fetchReturns(regId)
 PATCH        /:regId/returns                        controllers.VatRegistrationController.updateReturns(regId)
 
-GET          /:regId/bank-account                   controllers.VatRegistrationController.fetchBankAccountDetails(regId)
-PATCH        /:regId/bank-account                   controllers.VatRegistrationController.updateBankAccountDetails(regId)
-
-GET          /:regId/turnover-estimates             controllers.VatRegistrationController.fetchTurnoverEstimates(regId)
-PATCH        /:regId/turnover-estimates             controllers.VatRegistrationController.updateTurnoverEstimates(regId)
-
 GET          /:regId/acknowledgement-reference      controllers.VatRegistrationController.getAcknowledgementReference(regId: RegistrationId)
 
 GET          /incorporation-information/:txId       controllers.IncorporationInformationController.getIncorporationInformation(txId: TransactionId)
 
 DELETE       /:regId/delete-scheme                  controllers.VatRegistrationController.deleteVatScheme(regId: String)
 
-DELETE       /:regId/delete/:element                controllers.VatRegistrationController.deleteByElement(regId: RegistrationId, element: ElementPath)
-
 PUT          /:regID/submit-registration            controllers.VatRegistrationController.submitVATRegistration(regID : RegistrationId)
 
 GET          /:regId/status                         controllers.VatRegistrationController.getDocumentStatus(regId: RegistrationId)
 
-PATCH        /:regId/update-iv-status               controllers.VatRegistrationController.updateIVStatus(regId)
-
-### new api links
 GET         /:regId/eligibility                     controllers.EligibilityController.getEligibility(regId: String)
 PATCH       /:regId/eligibility                     controllers.EligibilityController.updateEligibility(regId: String)
+
+GET          /:regId/bank-account                   controllers.VatRegistrationController.fetchBankAccountDetails(regId)
+PATCH        /:regId/bank-account                   controllers.VatRegistrationController.updateBankAccountDetails(regId)
 
 GET         /:regId/threshold                       controllers.ThresholdController.getThreshold(regId: String)
 PATCH       /:regId/threshold                       controllers.ThresholdController.updateThreshold(regId: String)
 
-# rename to lodging officer once the old ones are removed
 GET         /:regId/officer                         controllers.LodgingOfficerController.getLodgingOfficer(regId: String)
 PATCH       /:regId/officer                         controllers.LodgingOfficerController.updateLodgingOfficer(regId: String)
 PATCH       /:regId/update-iv-status/:ivPassed      controllers.LodgingOfficerController.updateIVStatus(regId, ivPassed: Boolean)
 
-# rename to sic-and-compliance once the old ones are removed
 GET         /:regId/sicAndComp                      controllers.SicAndComplianceController.getSicAndCompliance(regId: String)
 PATCH       /:regId/sicAndComp                      controllers.SicAndComplianceController.updateSicAndCompliance(regId: String)
 
-# new api links
+
 GET         /:regId/business-contact                controllers.BusinessContactController.getBusinessContact(regId: String)
 PATCH       /:regId/business-contact                controllers.BusinessContactController.updateBusinessContact(regId: String)

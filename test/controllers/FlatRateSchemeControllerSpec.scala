@@ -25,6 +25,8 @@ import org.mockito.Mockito._
 import play.api.libs.json.JsObject
 import play.api.mvc.Result
 import play.api.test.FakeRequest
+import repositories.RegistrationMongoRepository
+import uk.gov.hmrc.auth.core.AuthConnector
 
 import scala.concurrent.Future
 
@@ -33,13 +35,13 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
   import play.api.test.Helpers._
 
   class Setup {
-    val controller = new FlatRateSchemeControllerImpl(
-      flatRateSchemeService = mockFlatRateSchemeService,
-      auth = mockAuthConnector
-    )
+    val controller = new FlatRateSchemeControllerImpl(flatRateSchemeService = mockFlatRateSchemeService){
+      override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
+      override lazy val authConnector: AuthConnector = mockAuthConnector
+    }
 
-    def userIsAuthorised(): Unit = AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
-    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockNotLoggedInOrAuthorised()
+    def userIsAuthorised(): Unit = AuthorisationMocks.mockAuthenticated(userId)
+    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
   }
 
   "fetchFlatRateScheme" should {
