@@ -48,6 +48,8 @@ trait ITFixtures {
     "testCategory",
     15
   )
+
+
   val flatRateScheme = FlatRateScheme(
     joinFrs = true,
     Some(frsDetails)

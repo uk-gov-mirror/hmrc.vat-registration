@@ -18,31 +18,36 @@ package controllers
 
 import javax.inject.Inject
 
+import auth.{Authorisation, AuthorisationResource}
 import common.exceptions.MissingRegDocument
-import connectors.AuthConnector
+import config.AuthClientConnector
 import models.api.LodgingOfficer
 import play.api.libs.json.{JsBoolean, JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
 import services.LodgingOfficerService
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import uk.gov.hmrc.play.microservice.controller.BaseController
 
-class LodgingOfficerControllerImpl @Inject()(val lodgingOfficerService: LodgingOfficerService,
-                                          val auth: AuthConnector) extends LodgingOfficerController
+class LodgingOfficerControllerImpl @Inject()(val lodgingOfficerService: LodgingOfficerService) extends LodgingOfficerController{
+  val resourceConn: AuthorisationResource                              = lodgingOfficerService.registrationRepository
+  override lazy val authConnector: AuthConnector                       = AuthClientConnector
+}
 
-trait LodgingOfficerController extends VatRegistrationBaseController {
+trait LodgingOfficerController extends BaseController with Authorisation {
 
   val lodgingOfficerService: LodgingOfficerService
 
   def getLodgingOfficer(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      authenticated { _ =>
+      isAuthenticated { _ =>
         lodgingOfficerService.getLodgingOfficer(regId) sendResult
       }
   }
 
   def updateLodgingOfficer(regId: String): Action[JsValue] = Action.async[JsValue](parse.json) {
     implicit request =>
-      authenticated { _ =>
+      isAuthenticated { _ =>
           withJsonBody[LodgingOfficer] { officer =>
             lodgingOfficerService.updateLodgingOfficer(regId, officer) map {
               officerResponse => Ok(Json.toJson(officerResponse))
@@ -56,7 +61,7 @@ trait LodgingOfficerController extends VatRegistrationBaseController {
 
   def updateIVStatus(regId: String, ivPassed: Boolean): Action[AnyContent] = Action.async {
     implicit request =>
-      authenticated { _ =>
+      isAuthenticated { _ =>
         lodgingOfficerService.updateIVStatus(regId, ivPassed) map { _ =>
             Ok(JsBoolean(ivPassed))
         } recover {

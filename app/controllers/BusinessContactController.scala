@@ -16,34 +16,40 @@
 
 package controllers
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 
+import auth.{Authorisation, AuthorisationResource}
 import common.exceptions.MissingRegDocument
-import connectors.AuthConnector
+import config.AuthClientConnector
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
 import services.BusinessContactService
 import models.api.BusinessContact
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import uk.gov.hmrc.play.microservice.controller.BaseController
 
-class BusinessContactControllerImpl @Inject()(val businessContactService: BusinessContactService,
-                                             val auth: AuthConnector
-                                             ) extends BusinessContactController
 
-trait BusinessContactController extends VatRegistrationBaseController {
+class BusinessContactControllerImpl @Inject()(val businessContactService: BusinessContactService) extends BusinessContactController {
+
+  val resourceConn = businessContactService.registrationRepository
+  override lazy val authConnector:AuthConnector = AuthClientConnector
+}
+
+trait BusinessContactController extends BaseController with Authorisation{
 
 val businessContactService:BusinessContactService
 
   def getBusinessContact(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      authenticated { _ =>
+      isAuthenticated { _ =>
         businessContactService.getBusinessContact(regId).sendResult
       }
   }
 
   def updateBusinessContact(regId: String): Action[JsValue] = Action.async[JsValue](parse.json) {
     implicit request =>
-      authenticated { _ =>
+      isAuthenticated { _ =>
         withJsonBody[BusinessContact] { businessCont =>
           businessContactService.updateBusinessContact(regId, businessCont) map {
             businessConResponse => Ok(Json.toJson(businessConResponse))

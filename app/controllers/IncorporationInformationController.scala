@@ -18,24 +18,29 @@ package controllers
 
 import javax.inject.Inject
 
-import auth.Authenticated
-import cats.instances.FutureInstances
+import auth.{Authorisation, AuthorisationResource}
 import common.TransactionId
-import connectors.{AuthConnector, IncorporationInformationConnector}
+import config.AuthClientConnector
+import connectors.IncorporationInformationConnector
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent}
+import services.SubmissionService
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.microservice.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
-class IncorporationInformationController @Inject()(val auth: AuthConnector,
-                                                   iiConnector: IncorporationInformationConnector) extends BaseController with Authenticated with FutureInstances {
+
+class IncorporationInformationController @Inject()(val iiConnector: IncorporationInformationConnector,
+                                                   val submissionService: SubmissionService) extends BaseController with Authorisation {
+  override lazy val authConnector: AuthConnector = AuthClientConnector
+  val resourceConn: AuthorisationResource = submissionService.registrationRepository
 
   private val REGIME = "vat"
   private val SUBSCRIBER = "scrs"
 
   def getIncorporationInformation(transactionId: TransactionId): Action[AnyContent] = Action.async {
     implicit request =>
-      authenticated { user =>
+      isAuthenticated { user =>
         iiConnector.retrieveIncorporationStatus(transactionId, REGIME, SUBSCRIBER).map {status =>
           status.fold(Ok(""))(incorpstatus => Ok(Json.toJson(incorpstatus)))
         }

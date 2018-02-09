@@ -18,24 +18,31 @@ package controllers.test
 
 import javax.inject.Inject
 
-import auth.Authenticated
+import auth.{Authorisation, AuthorisationResource}
 import cats.instances.FutureInstances
 import common.TransactionId
-import connectors.AuthConnector
+import config.AuthClientConnector
 import connectors.test.IncorporationInformationTestConnector
 import play.api.mvc.{Action, AnyContent}
+import repositories.{RegistrationMongo, RegistrationMongoRepository}
+import services.{LodgingOfficerService, VatRegistrationService}
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.microservice.controller.BaseController
-
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 
-class IncorporationInformationTestController @Inject()(val auth: AuthConnector,
-                                                       iiTestConnector: IncorporationInformationTestConnector) extends BaseController with Authenticated with FutureInstances {
-  // $COVERAGE-OFF$
+class IncorporationInformationTestController @Inject()(val iiTestConnector: IncorporationInformationTestConnector,
+                                                       lodgingOfficer: LodgingOfficerService) extends IncorpInfoTestCon {
+
+  val resourceConn: AuthorisationResource                              =  lodgingOfficer.registrationRepository
+  override lazy val authConnector: AuthConnector = AuthClientConnector
+}
+  trait IncorpInfoTestCon extends BaseController with Authorisation with FutureInstances {
+
+    val iiTestConnector:IncorporationInformationTestConnector
 
   def incorpCompany(transactionId: TransactionId): Action[AnyContent] = Action.async { implicit request =>
-    authenticated { _ =>
+    isAuthenticated { _ =>
       iiTestConnector.incorpCompany(transactionId).map(_ => Ok)
     }
   }
-  // $COVERAGE-ON$
 }

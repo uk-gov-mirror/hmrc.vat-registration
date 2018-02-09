@@ -26,7 +26,8 @@ import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
 import play.api.libs.json.JsObject
 import play.api.test.FakeRequest
-import services.BusinessContactService
+import repositories.RegistrationMongoRepository
+import uk.gov.hmrc.auth.core.AuthConnector
 
 import scala.concurrent.Future
 
@@ -35,14 +36,15 @@ class BusinessContactControllerSpec extends VatRegSpec with VatRegistrationFixtu
   import play.api.test.Helpers._
 
   class Setup {
-    val controller = new BusinessContactControllerImpl(
-      businessContactService = mockBusinessContactService,
-      auth = mockAuthConnector
-    )
-  }
-    def userIsAuthorised(): Unit = AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
-    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockNotLoggedInOrAuthorised()
+    val controller = new BusinessContactControllerImpl(mockBusinessContactService) {
+      override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
+      override lazy val authConnector: AuthConnector = mockAuthConnector
+    }
 
+    def userIsAuthorised(): Unit = AuthorisationMocks.mockAuthenticated(userId)
+
+    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
+  }
     def mockGetBusinessContactFromService(res:Future[Option[BusinessContact]]):OngoingStubbing[Future[Option[BusinessContact]]] = when(mockBusinessContactService.getBusinessContact(any())(any())).thenReturn(res)
 
     def mockUpdateBusinessContactToSoService(res:Future[BusinessContact]) :OngoingStubbing[Future[BusinessContact]] = when(mockBusinessContactService.updateBusinessContact(any(),any())(any())).thenReturn(res)

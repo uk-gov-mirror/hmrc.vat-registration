@@ -22,12 +22,14 @@ import common.RegistrationId
 import common.exceptions.MissingRegDocument
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import models.api.{Eligibility, LodgingOfficer}
+import models.api.LodgingOfficer
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
-import play.api.libs.json.{JsBoolean, JsObject, JsValue, Json}
+import play.api.libs.json.{JsBoolean, JsObject, Json}
 import play.api.test.FakeRequest
+import repositories.RegistrationMongoRepository
+import uk.gov.hmrc.auth.core.AuthConnector
 
 import scala.concurrent.Future
 
@@ -36,12 +38,13 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
   import play.api.test.Helpers._
 
   class Setup {
-    val controller = new LodgingOfficerControllerImpl(
-      lodgingOfficerService = mockLodgingOfficerService,
-      auth = mockAuthConnector
-    )
-    def userIsAuthorised(): Unit = AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
-    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockNotLoggedInOrAuthorised()
+    val controller = new LodgingOfficerControllerImpl(lodgingOfficerService = mockLodgingOfficerService){
+      override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
+      override lazy val authConnector: AuthConnector = mockAuthConnector
+    }
+
+    def userIsAuthorised(): Unit = AuthorisationMocks.mockAuthenticated(userId)
+    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
 
     def getLodgingOfficerData(): OngoingStubbing[Future[Option[LodgingOfficer]]] = when(mockLodgingOfficerService.getLodgingOfficer(any())(any()))
       .thenReturn(Future.successful(Some(validLodgingOfficerPreIV)))

@@ -18,31 +18,38 @@ package controllers
 
 import javax.inject.Inject
 
+import auth.Authorisation
 import common.exceptions.MissingRegDocument
-import connectors.AuthConnector
+import config.AuthClientConnector
+
 import models.api.Eligibility
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
 import services.EligibilityService
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import uk.gov.hmrc.play.microservice.controller.BaseController
 
-class EligibilityControllerImpl @Inject()(val eligibilityService: EligibilityService,
-                                          val auth: AuthConnector) extends EligibilityController
+class EligibilityControllerImpl @Inject()(val eligibilityService: EligibilityService) extends EligibilityController {
 
-trait EligibilityController extends VatRegistrationBaseController {
+  val resourceConn = eligibilityService.registrationRepository
+  override lazy val authConnector:AuthConnector = AuthClientConnector
+}
+
+trait EligibilityController extends BaseController with Authorisation {
 
   val eligibilityService: EligibilityService
 
   def getEligibility(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      authenticated { authority =>
+      isAuthenticated { authority =>
         eligibilityService.getEligibility(regId) sendResult
       }
   }
 
   def updateEligibility(regId: String): Action[JsValue] = Action.async[JsValue](parse.json) {
     implicit request =>
-      authenticated {
+      isAuthenticated {
         context =>
           withJsonBody[Eligibility] { eligibility =>
             eligibilityService.upsertEligibility(regId, eligibility) map {

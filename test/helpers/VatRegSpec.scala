@@ -16,10 +16,7 @@
 
 package helpers
 
-import java.time.LocalTime
-
 import cats.instances.FutureInstances
-import connectors.{Authority, UserIds}
 import mocks.VatMocks
 import org.mockito.Mockito.reset
 import org.scalatest.mockito.MockitoSugar
@@ -30,7 +27,7 @@ trait VatRegSpec extends UnitSpec
   with Inside with MockitoSugar with VatMocks with FutureAssertions
   with BeforeAndAfterEach with FutureInstances  with ParallelTestExecution {
 
-  protected def testAuthority(userId: String): Authority = Authority(userId, userId, userId, UserIds(userId, userId))
+
 
   override def beforeEach() {
     reset(mockRegistrationService)
@@ -45,3 +42,4 @@ trait VatRegSpec extends UnitSpec
     reset(mockVatRegistrationService)
   }
 }
+

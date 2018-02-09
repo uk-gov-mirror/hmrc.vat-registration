@@ -16,8 +16,10 @@
 
 package auth
 
+import uk.gov.hmrc.http.HeaderCarrier
+
 import scala.concurrent.Future
 
-trait AuthorisationResource[I] {
-  def getInternalId(id: I): Future[Option[(I, String)]]
+trait AuthorisationResource {
+  def getInternalId(id: String)(implicit hc : HeaderCarrier) : Future[Option[String]]
 }

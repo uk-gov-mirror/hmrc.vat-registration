@@ -22,12 +22,14 @@ import common.RegistrationId
 import common.exceptions.MissingRegDocument
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import models.api.{Eligibility, Threshold}
+import models.api.Threshold
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.FakeRequest
+import repositories.RegistrationMongoRepository
+import uk.gov.hmrc.auth.core.AuthConnector
 
 import scala.concurrent.Future
 
@@ -36,12 +38,12 @@ class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
   import play.api.test.Helpers._
 
   class Setup {
-    val controller = new ThresholdControllerImpl (
-      thresholdService = mockThresholdService,
-      auth = mockAuthConnector
-    )
-    def userIsAuthorised(): Unit = AuthorisationMocks.mockSuccessfulAuthorisation(testAuthority(userId))
-    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockNotLoggedInOrAuthorised()
+    val controller = new ThresholdControllerImpl(thresholdService = mockThresholdService){
+      override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
+      override lazy val authConnector: AuthConnector = mockAuthConnector
+    }
+    def userIsAuthorised(): Unit = AuthorisationMocks.mockAuthenticated(userId)
+    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
 
     def getThresholdData(): OngoingStubbing[Future[Option[Threshold]]] = when(mockThresholdService.getThreshold(any())(any()))
       .thenReturn(Future.successful(Some(validThreshold)))

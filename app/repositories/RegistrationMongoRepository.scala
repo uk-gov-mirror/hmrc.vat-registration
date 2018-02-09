@@ -18,7 +18,7 @@ package repositories
 
 import javax.inject.Inject
 
-import auth.Crypto
+import auth.{AuthorisationResource, Crypto}
 import cats.data.OptionT
 import common.exceptions._
 import common.{LogicalGroup, RegistrationId, TransactionId}
@@ -53,7 +53,6 @@ trait RegistrationRepository {
   def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String]
   def prepareRegistrationSubmission(id: RegistrationId, ackRef : String)(implicit hc: HeaderCarrier): Future[Boolean]
   def finishRegistrationSubmission(id : RegistrationId, status : VatRegStatus.Value)(implicit hc : HeaderCarrier) : Future[VatRegStatus.Value]
-  def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit ex: ExecutionContext): Future[Boolean]
   def updateIVStatus(regId: String, ivStatus: Boolean)(implicit ex: ExecutionContext): Future[Boolean]
   def saveTransId(transId: String, regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String]
   def fetchRegByTxId(transId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]]
@@ -67,6 +66,7 @@ trait RegistrationRepository {
   def updateTurnoverEstimates(regId: String, turnoverEstimate: TurnoverEstimates)(implicit ex: ExecutionContext): Future[TurnoverEstimates]
   def fetchFlatRateScheme(regId: String)(implicit ec: ExecutionContext): Future[Option[FlatRateScheme]]
   def updateFlatRateScheme(regId: String, flatRateScheme: FlatRateScheme)(implicit ec: ExecutionContext): Future[FlatRateScheme]
+  def getInternalId(id: String)(implicit hc : HeaderCarrier) : Future[Option[String]]
   def removeFlatRateScheme(regId: String)(implicit ec: ExecutionContext): Future[Boolean]
 }
 
@@ -75,7 +75,7 @@ class RegistrationMongoRepository (mongo: () => DB, crypto: Crypto)
     collectionName = "registration-information",
     mongo = mongo,
     domainFormat = VatScheme.mongoFormat(crypto)
-  ) with RegistrationRepository {
+  ) with RegistrationRepository with AuthorisationResource {
 
   private val bankAccountCryptoFormatter = BankAccountMongoFormat.encryptedFormat(crypto)
 
@@ -136,9 +136,6 @@ class RegistrationMongoRepository (mongo: () => DB, crypto: Crypto)
       wr.ok
     }
   }
-
-  override def deleteByElement(id: RegistrationId, elementPath: ElementPath)(implicit ex: ExecutionContext): Future[Boolean] =
-    unsetElement(id, elementPath.path)
 
   override def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String] =
     setElement(id, elementPath.path, value)
@@ -279,6 +276,8 @@ class RegistrationMongoRepository (mongo: () => DB, crypto: Crypto)
       turnoverEstimate
     }
   }
+
+  def getInternalId(id: String)(implicit hc : HeaderCarrier) : Future[Option[String]] =  Future.successful(Some("FooBarWizzBangFizz"))
 
   def getEligibility(regId: String)(implicit ec: ExecutionContext): Future[Option[Eligibility]] =
     fetchBlock[Eligibility](regId, "eligibility")

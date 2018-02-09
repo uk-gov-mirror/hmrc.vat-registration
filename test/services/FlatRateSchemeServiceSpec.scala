@@ -20,7 +20,7 @@ import cats.instances.FutureInstances
 import cats.syntax.ApplicativeSyntax
 import common.RegistrationId
 import common.exceptions.MissingRegDocument
-import connectors.{Authority, UserIds}
+
 import fixtures.VatRegistrationFixture
 import helpers.{FutureAssertions, VatRegSpec}
 import mocks.VatMocks

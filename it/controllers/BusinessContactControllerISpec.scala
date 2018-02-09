@@ -133,7 +133,6 @@ class BusinessContactControllerISpec  extends IntegrationStubbing with ITFixture
       given
         .user.isAuthorised
         .regRepo.insertIntoDb(vatScheme("fooBar"),repo.insert)
-
       await(client(controllers.routes.BusinessContactController.updateBusinessContact("fooBar").url).patch(validUpdatedBusinessContactJson)) map { response =>
         response.status shouldBe 200
         response.json shouldBe validUpdatedBusinessContactJson
