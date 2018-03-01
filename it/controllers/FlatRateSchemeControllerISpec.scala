@@ -60,8 +60,8 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing with ITFixtures 
 
   val dateNow: LocalDate = LocalDate.of(2018, 1, 1)
 
-  def vatScheme(regId: String): VatScheme = emptyVatScheme(regId).copy(flatRateScheme = Some(
-    FlatRateScheme(joinFrs = true, Some(FRSDetails(overBusinessGoods = false, Some(true), Some(12345678), Some(StartDate(Some(dateNow))), "testCategory", 15))))
+  def vatScheme(regId: String): VatScheme = emptyVatScheme(regId).copy(
+      flatRateScheme = Some(FlatRateScheme(joinFrs = true, Some(frsDetails.copy(startDate = Some(dateNow)))))
   )
 
   def emptyVatScheme(regId: String): VatScheme = VatScheme(id = RegistrationId(regId),status = VatRegStatus.draft)
@@ -70,15 +70,14 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing with ITFixtures 
     s"""
        |{
        |  "joinFrs":true,
-       |  "frsDetails":{
-       |    "overBusinessGoods":false,
-       |    "overBusinessGoodsPercent":true,
-       |    "vatInclusiveTurnover":12345678,
-       |    "start":{
-       |      "date":"$dateNow"
+       |  "frsDetails" : {
+       |    "businessGoods" : {
+       |      "overTurnover": true,
+       |      "estimatedTotalSales": 12345678
        |    },
+       |    "startDate": "$dateNow",
        |    "categoryOfBusiness":"testCategory",
-       |    "percent":15
+       |    "percent":15.00
        |  }
        |}
      """.stripMargin).as[JsObject]
