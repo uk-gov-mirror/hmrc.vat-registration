@@ -16,6 +16,8 @@
 
 package models.api
 
+import java.time.LocalDate
+
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
 
@@ -25,19 +27,24 @@ case class FlatRateScheme(joinFrs: Boolean,
 object FlatRateScheme {
   implicit val read: Reads[FlatRateScheme] = Json.reads[FlatRateScheme]
     .filter(ValidationError(Seq("Mismatch between frsDetails presence and joinFrs"))) { frs =>
-      frs.frsDetails match {
-      case Some(_) => frs.joinFrs
-      case None => !frs.joinFrs
+      if (frs.joinFrs) frs.frsDetails.isDefined else true
     }
-  }
 
   implicit val writes: OWrites[FlatRateScheme] = Json.writes[FlatRateScheme]
 }
 
-case class FRSDetails(overBusinessGoods: Boolean,
-                      overBusinessGoodsPercent: Option[Boolean],
-                      vatInclusiveTurnover: Option[Long],
-                      start: Option[StartDate],
+case class BusinessGoods(estimatedTotalSales: Long, overTurnover: Boolean)
+
+object BusinessGoods {
+  implicit val format = Json.format[BusinessGoods]
+}
+
+case class FRSDetails(@deprecated("use businessGoods instead", "SCRS-10738") overBusinessGoods: Option[Boolean],
+                      @deprecated("use businessGoods instead", "SCRS-10738") overBusinessGoodsPercent: Option[Boolean],
+                      @deprecated("use businessGoods instead", "SCRS-10738") vatInclusiveTurnover: Option[Long],
+                      @deprecated("use startDate instead", "SCRS-10738") start: Option[StartDate],
+                      businessGoods: Option[BusinessGoods],
+                      startDate: Option[LocalDate],
                       categoryOfBusiness: String,
                       percent: BigDecimal)
 
@@ -45,8 +52,8 @@ object FRSDetails {
   implicit val reads: Reads[FRSDetails] = Json.reads[FRSDetails]
     .filter(ValidationError(Seq("Mismatch between vatInclusiveTurnover presence and overBusinessGoods"))) { details =>
       details.vatInclusiveTurnover match {
-        case Some(_) => !details.overBusinessGoods
-        case None => details.overBusinessGoods
+        case Some(_) => details.overBusinessGoods.contains(false)
+        case None    => details.overBusinessGoods.fold(true)(identity)
       }
     }
 

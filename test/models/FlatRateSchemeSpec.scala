@@ -25,13 +25,16 @@ import play.api.libs.json.{JsPath, JsSuccess, Json}
 class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegistrationFixture {
 
   "Creating a FlatRateScheme model from Json" should {
-    "complete successfully" in {
+    "complete successfully with FRS details" in {
       Json.fromJson[FlatRateScheme](validFullFlatRateSchemeJson) shouldBe JsSuccess(validFullFlatRateScheme)
     }
 
-    "fail to read from json if joinFrs value is missing" in {
-      val result = Json.fromJson[FlatRateScheme](invalidFlatRateSchemeJson)
-      result shouldHaveErrors (JsPath() \ "joinFrs" -> ValidationError("error.path.missing"))
+    "complete successfully without FRS details" in {
+      Json.fromJson[FlatRateScheme](validEmptyFlatRateSchemeJson) shouldBe JsSuccess(validEmptyFlatRateScheme)
+    }
+
+    "complete successfully with FRS details and joinFrs set to false" in {
+      Json.fromJson[FlatRateScheme](detailsPresentJoinFrsFalse) shouldBe JsSuccess(validFullFlatRateScheme.copy(joinFrs = false))
     }
 
     "fail to read from json if frsDetails is not present when joinFrs is true" in {
@@ -39,40 +42,20 @@ class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegi
       val result = Json.fromJson[FlatRateScheme](json)
       result shouldHaveErrors (JsPath() -> ValidationError("Mismatch between frsDetails presence and joinFrs"))
     }
-
-    "fail to read from json if frsDetails is present when joinFrs is false" in {
-      val result = Json.fromJson[FlatRateScheme](detailsPresentJoinFrsFalse)
-      result shouldHaveErrors (JsPath() -> ValidationError("Mismatch between frsDetails presence and joinFrs"))
-    }
   }
 
   "Creating a FRSDetails from Json" should {
-    "complete successfully" in {
-      Json.fromJson[FRSDetails](validFullFRSDetailsJson) shouldBe JsSuccess(validFullFRSDetails)
+    "complete successfully with businessGoods" in {
+      Json.fromJson[FRSDetails](validFullFRSDetailsJsonWithBusinessGoods) shouldBe JsSuccess(validFullFRSDetails)
     }
-
-    "fail to read from json if overBusinessGoods is missing" in {
-      val json = Json.parse(
-        s"""
-          |{
-          |  "overBusinessGoodsPercent":true,
-          |  "vatInclusiveTurnover":12345678,
-          |  "startDate":"$date",
-          |  "categoryOfBusiness":"testCategory",
-          |  "percent":15
-          |}
-        """.stripMargin)
-      val result = Json.fromJson[FRSDetails](json)
-      result shouldHaveErrors (JsPath() \ "overBusinessGoods" -> ValidationError("error.path.missing"))
+    "complete successfully without businessGoods" in {
+      Json.fromJson[FRSDetails](validFRSDetailsJsonWithoutBusinessGoods) shouldBe JsSuccess(validFullFRSDetails.copy(businessGoods = None))
     }
 
     "fail to read from json if categoryOfBusiness is missing" in {
       val json = Json.parse(
         s"""
            |{
-           |  "overBusinessGoods":true,
-           |  "overBusinessGoodsPercent":true,
-           |  "vatInclusiveTurnover":12345678,
            |  "startDate":"$date",
            |  "percent":15
            |}
@@ -85,45 +68,12 @@ class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegi
       val json = Json.parse(
         s"""
            |{
-           |  "overBusinessGoods":true,
-           |  "overBusinessGoodsPercent":true,
-           |  "vatInclusiveTurnover":12345678,
            |  "startDate":"$date",
            |  "categoryOfBusiness":"testCategory"
            |}
          """.stripMargin)
       val result = Json.fromJson[FRSDetails](json)
       result shouldHaveErrors (JsPath() \ "percent" -> ValidationError("error.path.missing"))
-    }
-
-    "fail to read from json if vatInclusiveTurnover is not present when overBusinessGoods is false" in {
-      val json = Json.parse(
-        s"""
-          |{
-          |  "overBusinessGoods":false,
-          |  "startDate":"$date",
-          |  "categoryOfBusiness":"testCategory",
-          |  "percent":15
-          |}
-        """.stripMargin)
-      val result = Json.fromJson[FRSDetails](json)
-      result shouldHaveErrors (JsPath() -> ValidationError("Mismatch between vatInclusiveTurnover presence and overBusinessGoods"))
-    }
-
-    "fail to read from json if vatInclusiveTurnover is present when overBusinessGoods is true" in {
-      val json = Json.parse(
-        s"""
-          |{
-          |  "overBusinessGoods":true,
-          |  "overBusinessGoodsPercent":true,
-          |  "vatInclusiveTurnover":12345678,
-          |  "startDate":"$date",
-          |  "categoryOfBusiness":"testCategory",
-          |  "percent":15
-          |}
-        """.stripMargin)
-      val result = Json.fromJson[FRSDetails](json)
-      result shouldHaveErrors (JsPath() -> ValidationError("Mismatch between vatInclusiveTurnover presence and overBusinessGoods"))
     }
   }
 

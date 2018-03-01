@@ -41,12 +41,14 @@ trait ITFixtures {
     start = startDate
   )
   val frsDetails = FRSDetails(
-    overBusinessGoods = false,
-    overBusinessGoodsPercent = Some(true),
-    vatInclusiveTurnover = Some(12345678),
-    Some(StartDate(Some(date))),
-    "testCategory",
-    15
+    overBusinessGoods         = None,
+    overBusinessGoodsPercent  = None,
+    vatInclusiveTurnover      = None,
+    businessGoods             = Some(BusinessGoods(12345678L,true)),
+    start                     = None,
+    startDate                 = Some(date),
+    categoryOfBusiness        = "testCategory",
+    percent                   = 15
   )
 
 
