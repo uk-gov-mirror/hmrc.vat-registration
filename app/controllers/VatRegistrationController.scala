@@ -24,7 +24,6 @@ import common.RegistrationId
 import common.exceptions.{InvalidSubmissionStatus, LeftState, MissingRegDocument}
 import config.AuthClientConnector
 import enums.VatRegStatus
-import models.ElementPath
 import models.api._
 import play.api.Logger
 import play.api.libs.json._

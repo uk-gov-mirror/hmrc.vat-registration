@@ -27,7 +27,6 @@ object ElementPath {
   implicit object ElementPathFormatter extends Format[ElementPath] {
     private val pathMap: Map[String, ElementPath] = Seq[ElementPath](
       VatBankAccountPath,
-      ZeroRatedTurnoverEstimatePath,
       AccountingPeriodStartPath,
       MainBusinessActivityPath,
       CulturalCompliancePath,
@@ -59,10 +58,6 @@ case object VatBankAccountPath extends ElementPath {
   override val name = "vat-bank-account"
 }
 
-case object ZeroRatedTurnoverEstimatePath extends ElementPath {
-  override val path = "financials.zeroRatedTurnoverEstimate"
-  override val name = "zero-rated-turnover-estimate"
-}
 
 case object AccountingPeriodStartPath extends ElementPath {
   override val path = "financials.accountingPeriods.periodStart"

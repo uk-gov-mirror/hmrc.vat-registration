@@ -25,9 +25,9 @@ import common.exceptions._
 import common.{LogicalGroup, RegistrationId}
 import connectors._
 import enums.VatRegStatus
-import models.api.{TradingDetails, VatScheme}
+import models.AcknowledgementReferencePath
+import models.api.VatScheme
 import models.external.CurrentProfile
-import models.{AcknowledgementReferencePath, ElementPath}
 import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsValue, Json, Writes}
 import repositories.{RegistrationMongo, RegistrationRepository}

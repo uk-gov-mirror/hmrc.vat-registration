@@ -21,13 +21,6 @@ import java.time.LocalDate
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-@deprecated
-case class VatFinancials(zeroRatedTurnoverEstimate: Option[Long] = None)
-
-object VatFinancials {
-  implicit val format : OFormat[VatFinancials] = Json.format[VatFinancials]
-}
-
 case class StartDate(date: Option[LocalDate])
 
 object StartDate {
