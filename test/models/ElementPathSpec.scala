@@ -28,13 +28,11 @@ class ElementPathSpec extends BaseSpec  {
 
     "writes should return name" in {
       format.writes(VatBankAccountPath) shouldBe JsString(VatBankAccountPath.name)
-      format.writes(ZeroRatedTurnoverEstimatePath) shouldBe JsString(ZeroRatedTurnoverEstimatePath.name)
       format.writes(AccountingPeriodStartPath) shouldBe JsString(AccountingPeriodStartPath.name)
     }
 
     "reads should return elementPath" in {
       format.reads(JsString(VatBankAccountPath.name)) shouldBe JsSuccess(VatBankAccountPath)
-      format.reads(JsString(ZeroRatedTurnoverEstimatePath.name)) shouldBe JsSuccess(ZeroRatedTurnoverEstimatePath)
       format.reads(JsString(AccountingPeriodStartPath.name)) shouldBe JsSuccess(AccountingPeriodStartPath)
     }
 

@@ -168,10 +168,6 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
       repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(compliance)) returns compliance
     }
 
-    "should update to VatFinancials success" in new Setup {
-      repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(vatFinancials)) returns vatFinancials
-    }
-
     "should update to VatContact success" in new Setup {
       repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(vatContact)) returns vatContact
     }
