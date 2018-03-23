@@ -32,9 +32,7 @@ import repositories.{RegistrationMongo, RegistrationMongoRepository, SequenceMon
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
-
-  //implicit val hc: HeaderCarrier = HeaderCarrier()
+class VatRegistrationBasicISpec extends IntegrationStubbing {
 
   val mockHost = WiremockHelper.wiremockHost
   val mockPort = WiremockHelper.wiremockPort
@@ -54,27 +52,11 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
     "microservice.services.incorporation-information.uri" -> "/incorporation-information",
     "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
   ))
-
-  lazy val reactiveMongoComponent = app.injector.instanceOf[ReactiveMongoComponent]
-  lazy val ws   = app.injector.instanceOf(classOf[WSClient])
-
-  private def client(path: String) = ws.url(s"http://localhost:$port$path").withFollowRedirects(false)
-
   val transID = "transID"
   val crn = "crn"
   val accepted = "accepted"
 
-  class Setup {
-    val mongo = new RegistrationMongo(reactiveMongoComponent, cryptoForTest)
-    val sequenceMongo = new SequenceMongo(reactiveMongoComponent)
-    val repo: RegistrationMongoRepository = mongo.store
-    val sequenceRepository: SequenceMongoRepository = sequenceMongo.store
-
-    await(repo.drop)
-    await(repo.ensureIndexes)
-    await(sequenceRepository.drop)
-    await(sequenceRepository.ensureIndexes)
-  }
+  class Setup extends SetupHelper
 
   def incorpUpdate(status: String) = {
     s"""
@@ -108,7 +90,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
 
   "VAT Registration API - for initial / basic calls" should {
 
-    "Return a 200 for " in {
+    "Return a 200 for " in new Setup {
       given
         .user.isAuthorised
 
@@ -118,13 +100,13 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
       }
     }
 
-    "Return a 403 for " in {
+    "Return a 403 for " in new Setup {
       client(controllers.routes.VatRegistrationController.newVatRegistration().url).post("test") map { response =>
         response.status shouldBe FORBIDDEN
       }
     }
 
-    "Return a 404 if the registration is missing" in {
+    "Return a 404 if the registration is missing" in new Setup {
       client(s"/12345").post("test") map {
         _.status shouldBe NOT_FOUND
       }
@@ -195,7 +177,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
         )
       )
 
-      repo.createNewVatScheme(RegistrationId(registrationID)).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), returns))
+      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), returns))
 
       val result: WSResponse = await(client(
         controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
@@ -225,7 +207,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
         )
       )
 
-      repo.createNewVatScheme(RegistrationId(registrationID)).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), tradingDetails))
+      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), tradingDetails))
 
       val result = await(client(
         controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
@@ -255,7 +237,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
         )
       )
 
-      repo.createNewVatScheme(RegistrationId(registrationID)).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), tradingDetails))
+      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), tradingDetails))
 
       val result = await(client(
         controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
@@ -268,11 +250,12 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with ITFixtures {
       await(repo.remove("registrationId" -> registrationID))
     }
 
-    "mock the return if the mock submission flag is on" in {
+    "mock the return if the mock submission flag is on" in new Setup{
       given
         .user.isAuthorised
 
       System.setProperty("feature.mockSubmission", "true")
+      await(repo.createNewVatScheme(RegistrationId(registrationID),internalid))
 
       val result = await(client(
         controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")

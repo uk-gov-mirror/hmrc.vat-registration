@@ -29,7 +29,8 @@ trait ITFixtures {
   val date: LocalDate = LocalDate.of(2017, 1, 1)
   val startDate = StartDate(Some(date))
   val regId = RegistrationId("regId")
-  val vatScheme = VatScheme(regId, status = VatRegStatus.draft)
+  val internalid = "INT-123-456-789"
+  val vatScheme = VatScheme(regId, internalId = internalid, status = VatRegStatus.draft)
   val tradingName = TradingName(selection = true, Some("some-trading-name"))
   val oldName = Name(first = Some("Bob Smith"), middle = None, last = None, forename = None, surname = None, title = None, otherForenames = None)
   val changeOfName = ChangeOfName(true, Some(FormerName(None, None, name = Some(oldName), change = Some(LocalDate.now()))))
@@ -99,4 +100,10 @@ trait ITFixtures {
     details                   = None
   )
   val businessContact         = BusinessContact(digitalContact = digitalContact, website = None, ppob = scrsAddress)
+
+  def emptyVatScheme(regId: String): VatScheme = VatScheme(
+    id = RegistrationId(regId),
+    internalId = internalid,
+    status = VatRegStatus.draft
+  )
 }

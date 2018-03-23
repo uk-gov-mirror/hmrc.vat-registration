@@ -14,21 +14,66 @@
  * limitations under the License.
  */
 
+import auth._
 import common.exceptions.MissingRegDocument
+import play.api.Logger
 import play.api.libs.json.{Json, Writes}
-import play.api.mvc.Result
+import play.api.mvc.{Result, Results}
 import play.api.mvc.Results._
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
 package object controllers {
-  implicit class HandleResultToSend[T](f: Future[Option[T]])(implicit writes: Writes[T], ec: ExecutionContext) {
-    def sendResult: Future[Result] = {
-      f map {
-        _.fold(NoContent)(data => Ok(Json.toJson(data)))
+
+  trait SendResult {
+    def sendResult(method:String, regId:String): Future[Result]
+    def missingDoc(method:String,regId:String):Results.Status = {
+      Logger.warn(s"[$method] User has attempted to perform an action, after being authorised, but the document is now missing for regId: $regId")
+      NotFound
+    }
+    def unexpectedException(method:String,regId:String, e:String):Results.Status = {
+      Logger.warn(s"[$method] An unexpected exception has occurred for regId: $regId in [sendResult] with error: ${e}")
+      InternalServerError
+    }
+  }
+
+  implicit class HandleResultToSendJson[T](f: Future[T])(implicit writes: Writes[T], ec: ExecutionContext) extends SendResult {
+    override def sendResult(method:String,regId:String):Future[Result] = {
+      f.map {
+        data => Ok(Json.toJson(data))
       } recover {
-        case _: MissingRegDocument => NotFound
+        case _: MissingRegDocument => missingDoc(method,regId)
+        case e:Exception => unexpectedException(method,regId,e.getMessage)
       }
     }
   }
+
+  implicit class HandleResultToSendOptionJson[T](f: Future[Option[T]])(implicit writes: Writes[T], ec: ExecutionContext) extends SendResult {
+   override def sendResult(method: String, regId: String): Future[Result] = {
+      f map {
+        _.fold(NoContent)(data => Ok(Json.toJson(data)))
+      } recover {
+        case _: MissingRegDocument => missingDoc(method, regId)
+        case e: Exception => unexpectedException(method, regId, e.getMessage)
+      }
+    }
+  }
+
+  implicit class HandleAuthResult(authResult: AuthorisationResult)(implicit hc: HeaderCarrier) {
+    def ifAuthorised(regID: String, controller: String, method: String)(f: => Future[Result]): Future[Result] = authResult match {
+      case Authorised(_) =>
+        f
+      case NotLoggedInOrAuthorised =>
+        Logger.info(s"[$controller] [$method] [ifAuthorised] User not logged in")
+        Future.successful(Forbidden)
+      case NotAuthorised(_) =>
+        Logger.info(s"[$controller] [$method] [ifAuthorised] User logged in but not authorised for resource $regID")
+        Future.successful(Forbidden)
+      case AuthResourceNotFound(_) =>
+        Logger.info(s"[$controller] [$method] [ifAuthorised] User logged in but no resource found for regId $regID")
+        Future.successful(NotFound)
+    }
+  }
+
 }

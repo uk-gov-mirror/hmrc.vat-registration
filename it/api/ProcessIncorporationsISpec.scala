@@ -31,7 +31,7 @@ import repositories.{RegistrationMongo, RegistrationMongoRepository, SequenceMon
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ProcessIncorporationsISpec extends IntegrationStubbing with ITFixtures {
+class ProcessIncorporationsISpec extends IntegrationStubbing {
 
   val mockHost = WiremockHelper.wiremockHost
   val mockPort = WiremockHelper.wiremockPort
@@ -52,22 +52,7 @@ class ProcessIncorporationsISpec extends IntegrationStubbing with ITFixtures {
     "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
   ))
 
-  lazy val reactiveMongoComponent = app.injector.instanceOf[ReactiveMongoComponent]
-  lazy val ws   = app.injector.instanceOf(classOf[WSClient])
-
-  private def client(path: String) = ws.url(s"http://localhost:$port$path").withFollowRedirects(false)
-
-  class Setup {
-    val mongo = new RegistrationMongo(reactiveMongoComponent, cryptoForTest)
-    val sequenceMongo = new SequenceMongo(reactiveMongoComponent)
-    val repo: RegistrationMongoRepository = mongo.store
-    val sequenceRepository: SequenceMongoRepository = sequenceMongo.store
-
-    await(repo.drop)
-    await(repo.ensureIndexes)
-    await(sequenceRepository.drop)
-    await(sequenceRepository.ensureIndexes)
-  }
+  class Setup extends SetupHelper
 
   "/incorporation-data" should {
     val transactionId: String = "transId"
@@ -77,7 +62,7 @@ class ProcessIncorporationsISpec extends IntegrationStubbing with ITFixtures {
 
     def prepareHeldSubmission(repo : RegistrationMongoRepository): Future[Unit] = {
       for {
-        _    <- repo.createNewVatScheme(regIDCase)
+        _    <- repo.createNewVatScheme(regIDCase,internalid)
         _    <- repo.updateLogicalGroup(regIDCase, returns)
         _    <- repo.saveTransId(transactionId, regIDCase)
         _    <- repo.finishRegistrationSubmission(regIDCase, VatRegStatus.held)

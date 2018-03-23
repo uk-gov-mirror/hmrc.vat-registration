@@ -133,7 +133,7 @@ class AuthorisationSpec extends VatRegSpec {
       val regId = "xxx"
       val testInternalId = "tiid"
 
-      AuthorisationMocks.mockAuthResourceNotFound(regId, testInternalId)
+      AuthorisationMocks.mockAuthMongoResourceNotFound(regId, testInternalId)
 
       when(mockRegistrationMongoRepository.getInternalId(ArgumentMatchers.any())(ArgumentMatchers.any())).thenReturn(Future.successful(None))
 

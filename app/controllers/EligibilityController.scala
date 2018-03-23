@@ -42,23 +42,21 @@ trait EligibilityController extends BaseController with Authorisation {
 
   def getEligibility(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { authority =>
-        eligibilityService.getEligibility(regId) sendResult
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "EligibilityController", "getEligibility") {
+          eligibilityService.getEligibility(regId) sendResult("getEligibility", regId)
+        }
       }
   }
 
   def updateEligibility(regId: String): Action[JsValue] = Action.async[JsValue](parse.json) {
     implicit request =>
-      isAuthenticated {
-        context =>
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "EligibilityController", "updateEligibility") {
           withJsonBody[Eligibility] { eligibility =>
-            eligibilityService.upsertEligibility(regId, eligibility) map {
-              eligibilityResponse => Ok(Json.toJson(eligibilityResponse))
-            } recover {
-              case _: MissingRegDocument => NotFound(s"Registration not found for regId: $regId")
-              case e => InternalServerError(s"An error occurred while updating eligibility: ${e.getMessage}")
-            }
+            eligibilityService.upsertEligibility(regId, eligibility) sendResult("updateEligibility",regId)
           }
+        }
       }
   }
 }

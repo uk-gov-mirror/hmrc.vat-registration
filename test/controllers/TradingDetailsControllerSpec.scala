@@ -39,94 +39,83 @@ class TradingDetailsControllerSpec extends VatRegSpec with VatRegistrationFixtur
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
       override lazy val authConnector: AuthConnector = mockAuthConnector
     }
-
-    def userIsAuthorised(): Unit = AuthorisationMocks.mockAuthenticated(userId)
-    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
   }
 
   "fetchTradingDetails" should {
     "return an Ok with valid trading details json if the document contains it" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockTradingDetailsService.retrieveTradingDetails(any())(any()))
         .thenReturn(Future.successful(Some(validFullTradingDetails)))
 
-      val result: Future[Result] = controller.fetchTradingDetails("testId")(FakeRequest())
-
+      val result = controller.fetchTradingDetails("testId")(FakeRequest())
       status(result) shouldBe 200
       await(contentAsJson(result)) shouldBe validFullTradingDetailsJson
     }
 
     "return a NoContent if the trading details block is not present in the document" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockTradingDetailsService.retrieveTradingDetails(any())(any()))
         .thenReturn(Future.successful(None))
 
-      val result: Future[Result] = controller.fetchTradingDetails("testId")(FakeRequest())
-
+      val result = controller.fetchTradingDetails("testId")(FakeRequest())
       status(result) shouldBe 204
     }
 
     "return NotFound if the registration document was not found for the regId provided" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockTradingDetailsService.retrieveTradingDetails(any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
 
-      val result: Future[Result] = controller.fetchTradingDetails("testId")(FakeRequest())
+      val result = controller.fetchTradingDetails("testId")(FakeRequest())
 
       status(result) shouldBe 404
     }
 
     "return Forbidden if the registration document was not found for the regId provided" in new Setup {
-      userIsNotAuthorised()
+      AuthorisationMocks.mockNotLoggedInOrAuthorised(regId.value)
 
-      val result: Future[Result] = controller.fetchTradingDetails("testId")(FakeRequest())
-
+      val result = controller.fetchTradingDetails("testId")(FakeRequest())
       status(result) shouldBe 403
     }
   }
 
-
   "updateTradingDetails" should {
 
     "returns Ok if successful" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockTradingDetailsService.updateTradingDetails(any(), any())(any()))
         .thenReturn(Future.successful(validFullTradingDetails))
 
-      val result: Future[Result] = controller.updateTradingDetails("testId")(FakeRequest().withBody[JsObject](validFullTradingDetailsJson))
+      val result = controller.updateTradingDetails("testId")(FakeRequest().withBody[JsObject](validFullTradingDetailsJson))
 
       status(result) shouldBe 200
       await(contentAsJson(result)) shouldBe validFullTradingDetailsJson
     }
 
     "returns NotFound if the registration is not found" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockTradingDetailsService.updateTradingDetails(any(), any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
 
-      val result: Future[Result] = controller.updateTradingDetails("testId")(FakeRequest().withBody[JsObject](validFullTradingDetailsJson))
-
+      val result = controller.updateTradingDetails("testId")(FakeRequest().withBody[JsObject](validFullTradingDetailsJson))
       status(result) shouldBe 404
     }
 
     "returns InternalServerError if an error occurs" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockTradingDetailsService.updateTradingDetails(any(), any())(any()))
         .thenReturn(Future.failed(new Exception))
 
-      val result: Future[Result] = controller.updateTradingDetails("testId")(FakeRequest().withBody[JsObject](validFullTradingDetailsJson))
-
+      val result = controller.updateTradingDetails("testId")(FakeRequest().withBody[JsObject](validFullTradingDetailsJson))
       status(result) shouldBe 500
     }
 
     "returns Forbidden if user is not authorised" in new Setup {
-      userIsNotAuthorised()
+      AuthorisationMocks.mockNotLoggedInOrAuthorised(regId.value)
 
-      val result: Future[Result] = controller.updateTradingDetails("testId")(FakeRequest().withBody[JsObject](validFullTradingDetailsJson))
-
+      val result = controller.updateTradingDetails("testId")(FakeRequest().withBody[JsObject](validFullTradingDetailsJson))
       status(result) shouldBe 403
     }
 
   }
-
 }

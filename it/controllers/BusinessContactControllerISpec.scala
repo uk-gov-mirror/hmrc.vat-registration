@@ -1,9 +1,7 @@
 package controllers
 
 import auth.Crypto
-import common.RegistrationId
-import enums.VatRegStatus
-import itutil.{ITFixtures, IntegrationStubbing, WiremockHelper}
+import itutil.{IntegrationStubbing, WiremockHelper}
 import models.api.{Address, BusinessContact, DigitalContact, VatScheme}
 import play.api.libs.json.{JsObject, Json}
 import play.api.libs.ws.WSClient
@@ -13,7 +11,7 @@ import repositories.{RegistrationMongo, RegistrationMongoRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class BusinessContactControllerISpec  extends IntegrationStubbing with ITFixtures  {
+class BusinessContactControllerISpec extends IntegrationStubbing {
 
   val mockHost = WiremockHelper.wiremockHost
   val mockPort = WiremockHelper.wiremockPort
@@ -32,18 +30,9 @@ class BusinessContactControllerISpec  extends IntegrationStubbing with ITFixture
     "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
   ))
 
-  lazy val reactiveMongoComponent = app.injector.instanceOf[ReactiveMongoComponent]
-  lazy val ws   = app.injector.instanceOf(classOf[WSClient])
   lazy val crypto: Crypto = app.injector.instanceOf(classOf[Crypto])
 
-  private def client(path: String) = ws.url(s"http://localhost:$port$path").withFollowRedirects(false)
-
-  class Setup {
-    val mongo = new RegistrationMongo(reactiveMongoComponent, crypto)
-    val repo: RegistrationMongoRepository = mongo.store
-    await(repo.drop)
-    await(repo.ensureIndexes)
-  }
+  class Setup extends SetupHelper
 
   val validBusinessContact  = Some(BusinessContact(
     digitalContact = DigitalContact("email@email.com",Some("12345"),Some("54321")),
@@ -90,7 +79,6 @@ class BusinessContactControllerISpec  extends IntegrationStubbing with ITFixture
 
   def vatScheme(regId: String): VatScheme = emptyVatScheme(regId).copy(businessContact = validBusinessContact)
 
-  def emptyVatScheme(regId: String): VatScheme = VatScheme(id = RegistrationId(regId),status = VatRegStatus.draft)
   "getBusinessContact" should {
     "return 200" in new Setup {
       given

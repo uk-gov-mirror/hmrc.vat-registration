@@ -22,12 +22,13 @@ import common.exceptions._
 import common.{LogicalGroup, RegistrationId, TransactionId}
 import enums.VatRegStatus
 import itutil.{FutureAssertions, ITFixtures, MongoBaseSpec}
+import models.AcknowledgementReferencePath
 import models.api._
-import models.{AcknowledgementReferencePath, VatBankAccountPath}
 import org.scalatest.BeforeAndAfterEach
 import play.api.libs.json._
 import reactivemongo.api.commands.WriteResult
 import repositories.{RegistrationMongo, RegistrationMongoRepository}
+import uk.gov.hmrc.http.{HeaderCarrier, UserId}
 import uk.gov.hmrc.mongo.MongoSpecSupport
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
@@ -36,6 +37,8 @@ import scala.concurrent.Future
 
 class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with MongoSpecSupport
   with FutureAssertions with BeforeAndAfterEach with WithFakeApplication with ITFixtures {
+
+
 
   class Setup {
     val mongo: RegistrationMongo = fakeApplication.injector.instanceOf[RegistrationMongo]
@@ -137,13 +140,16 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
   "Calling createNewVatScheme" should {
 
     "create a new, blank VatScheme with the correct ID" in new Setup {
-      await(repository.createNewVatScheme(regId)) shouldBe vatScheme
+      await(repository.createNewVatScheme(regId,internalid)) shouldBe vatScheme
     }
-
-    "throw an InsertFailed exception when creating a new VAT scheme when one already exists" in new Setup {
-      repository.createNewVatScheme(vatScheme.id).flatMap(_ => repository.createNewVatScheme(vatScheme.id)) failedWith classOf[InsertFailed]
+    "throw an InsertFailed exception when creating a new VAT scheme when one already exists with the same int Id and reg id" in new Setup {
+      await(repository.createNewVatScheme(vatScheme.id,internalid))
+      intercept[InsertFailed](await(repository.createNewVatScheme(vatScheme.id, internalid)))
     }
-
+    "throw an InsertFailed exception when creating a new VAT scheme where one already exists with the same regId but different Internal id" in new Setup {
+      await(repository.createNewVatScheme(vatScheme.id,internalid))
+      intercept[InsertFailed](await(repository.createNewVatScheme(vatScheme.id, "fooBarWizz")))
+    }
   }
 
   "Calling retrieveVatScheme" should {
@@ -155,7 +161,6 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     "return a None when there is no corresponding VatScheme object" in new Setup {
       repository.insert(vatScheme).flatMap(_ => repository.retrieveVatScheme(RegistrationId("NOT_THERE"))) returns None
     }
-
   }
 
   "Calling updateLogicalGroup" should {
@@ -331,7 +336,6 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
 
       a[MissingRegDocument] shouldBe thrownBy(await(result))
     }
-
   }
 
   "fetchBankAccount" should {
@@ -1134,11 +1138,21 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
       a[MissingRegDocument] shouldBe thrownBy(await(repository.removeFlatRateScheme(vatScheme.id.value)))
     }
   }
-  // TODO: As part of implementing authorised user story
+
   "getInternalId" should {
-    "return a fixed string because it is curently stubbed for a future user story" in new Setup {
-      await(repository.getInternalId("foo")) shouldBe Some("FooBarWizzBangFizz")
+    "return a Future[Option[String]] containing Some(InternalId)" in new Setup {
+      val result = for {
+        _ <- repository.insert(vatScheme)
+        result <- repository.getInternalId(vatScheme.id.value)
+
+      } yield result
+        await(result) shouldBe Some(internalid)
+    }
+
+    "return a None when no regId document is found" in new Setup {
+      await(repository.getInternalId(vatScheme.id.value)) shouldBe None
     }
   }
+
 
 }

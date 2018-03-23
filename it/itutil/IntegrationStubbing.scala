@@ -23,7 +23,7 @@ import uk.gov.hmrc.auth.core.AuthenticateHeaderParser
 
 import scala.concurrent.Future
 
-trait IntegrationStubbing extends IntegrationSpecBase {
+trait IntegrationStubbing extends IntegrationSpecBase with ITFixtures {
 
   class PreconditionBuilder {
     implicit val builder: PreconditionBuilder = this
@@ -43,7 +43,7 @@ trait IntegrationStubbing extends IntegrationSpecBase {
   case class User()(implicit builder: PreconditionBuilder) {
     val authoriseData =
       s"""{
-         | "internalId": "Int-xxx",
+         | "internalId": "$internalid",
          | "externalId": "Ext-xxx",
          | "credentials": {
          |   "providerId": "xxx2",
@@ -57,9 +57,9 @@ trait IntegrationStubbing extends IntegrationSpecBase {
       stubPost("/auth/authorise", OK, authoriseData)
       builder
     }
-// def exceptionHeaders(value: String) = Map(AuthenticateHeaderParser.WWW_AUTHENTICATE -> s"""MDTP detail="$value"""")
+
     def isNotAuthorised: PreconditionBuilder = {
-      stubFor(post(urlMatching("/auth/authorise")).willReturn(aResponse().withStatus(401).withBody("""{"internalId": "Int-xxx"}""").withHeader(AuthenticateHeaderParser.WWW_AUTHENTICATE,s"""MDTP detail="InvalidBearerToken"""")))
+      stubFor(post(urlMatching("/auth/authorise")).willReturn(aResponse().withStatus(401).withBody(s"""{"internalId": "$internalid"}""").withHeader(AuthenticateHeaderParser.WWW_AUTHENTICATE,s"""MDTP detail="InvalidBearerToken"""")))
 
       stubPost("/write/audit", OK, """{"x":2}""")
       stubPost("/write/audit/merged", OK, """{"x":2}""")

@@ -60,7 +60,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
 
   "call to getAcknowledgementReference" should {
 
-    val vatScheme = VatScheme(RegistrationId("1"), None, None, None, status = VatRegStatus.draft)
+    val vatScheme = VatScheme(RegistrationId("1"),internalId = internalid, None, None, None, status = VatRegStatus.draft)
 
     "return Success response " in new Setup {
       when(mockVatRegistrationService.retrieveAcknowledgementReference(regId)).
@@ -81,6 +81,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
   "getRegByTxId" should {
     val vatScheme = VatScheme(
       RegistrationId("1"),
+      internalId = internalid,
       transactionId = Some(TransactionId("testTransId")),
       acknowledgementReference = Some("testref"),
       status = VatRegStatus.draft
@@ -105,7 +106,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
   }
 
   "ensureAcknowledgementReference" should {
-    val vatScheme = VatScheme(RegistrationId("1"), None, None, None, status = VatRegStatus.draft, acknowledgementReference = Some("testref"))
+    val vatScheme = VatScheme(RegistrationId("1"),internalid, None, None, None, status = VatRegStatus.draft, acknowledgementReference = Some("testref"))
     val sequenceNo = 1
     val formatedRefNumber = f"BRVT$sequenceNo%011d"
 
@@ -135,7 +136,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
   }
 
   "getValidDocumentStatus" should {
-    val vatScheme = VatScheme(RegistrationId("1"), None, None, None, status = VatRegStatus.draft)
+    val vatScheme = VatScheme(RegistrationId("1"),internalid, None, None, None, status = VatRegStatus.draft)
 
     "throw an exception if the document is not available" in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
@@ -326,9 +327,9 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
   "Calling buildDesSubmission" should {
 
     val schemeReturns = Returns(true, "monthly", None, StartDate(date = Some(date)))
-    val vatScheme = VatScheme(RegistrationId("1"), Some(TransactionId("1")), returns = Some(schemeReturns), status = VatRegStatus.draft)
-    val vatSchemeNoTradingDetails = VatScheme(RegistrationId("1"), None, None, None, status = VatRegStatus.draft)
-    val vatSchemeNoStartDate = VatScheme(RegistrationId("1"), Some(TransactionId("1")), None, None, status = VatRegStatus.draft)
+    val vatScheme = VatScheme(RegistrationId("1"),internalid, Some(TransactionId("1")), returns = Some(schemeReturns), status = VatRegStatus.draft)
+    val vatSchemeNoTradingDetails = VatScheme(RegistrationId("1"),internalid, None, None, None, status = VatRegStatus.draft)
+    val vatSchemeNoStartDate = VatScheme(RegistrationId("1"),internalid, Some(TransactionId("1")), None, None, status = VatRegStatus.draft)
 
     val fullDESSubmission = DESSubmission("ackRef", "companyName", Some(date), Some(date))
     val partialDESSubmission = DESSubmission("ackRef", "companyName", None, None)
@@ -369,9 +370,9 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
     val someDateTimeNow = Some(DateTime.now())
 
     val schemeReturns = Returns(true, "monthly", None, StartDate(date = someLocalDateNow))
-    val vatScheme = VatScheme(RegistrationId("1"), Some(TransactionId("1")), returns = Some(schemeReturns), status = VatRegStatus.draft)
-    val vatSchemeNoTradingDetails = VatScheme(RegistrationId("1"), None, None, None, status = VatRegStatus.draft)
-    val vatSchemeNoStartDate = VatScheme(RegistrationId("1"), Some(TransactionId("1")), None, None, status = VatRegStatus.draft)
+    val vatScheme = VatScheme(RegistrationId("1"),internalid, Some(TransactionId("1")), returns = Some(schemeReturns), status = VatRegStatus.draft)
+    val vatSchemeNoTradingDetails = VatScheme(RegistrationId("1"), internalid, None, None, None, status = VatRegStatus.draft)
+    val vatSchemeNoStartDate = VatScheme(RegistrationId("1"),internalid, Some(TransactionId("1")), None, None, status = VatRegStatus.draft)
 
     val topUpAccepted = TopUpSubmission("ackRef", "accepted", someLocalDateNow, someDateTimeNow)
     val topUpRejected = TopUpSubmission("ackRef", "rejected")

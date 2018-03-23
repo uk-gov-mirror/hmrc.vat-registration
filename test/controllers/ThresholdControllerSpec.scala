@@ -42,8 +42,6 @@ class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
       override lazy val authConnector: AuthConnector = mockAuthConnector
     }
-    def userIsAuthorised(): Unit = AuthorisationMocks.mockAuthenticated(userId)
-    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
 
     def getThresholdData(): OngoingStubbing[Future[Option[Threshold]]] = when(mockThresholdService.getThreshold(any())(any()))
       .thenReturn(Future.successful(Some(validThreshold)))
@@ -92,38 +90,34 @@ class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
   "getThreshold" should {
     "returns a valid json if found for id" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       getThresholdData()
 
       val result = controller.getThreshold("testId")(FakeRequest())
-
       status(result) shouldBe 200
       await(contentAsJson(result)) shouldBe validThresholdJson
     }
 
     "returns 204 if none found" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       getNoThresholdData()
 
       val result = controller.getThreshold("testId")(FakeRequest())
-
       status(result) shouldBe 204
     }
 
     "returns 404 if none found" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       getThresholdDataNotFound()
 
       val result = controller.getThreshold("testId")(FakeRequest())
-
       status(result) shouldBe 404
     }
 
     "returns 403 if user is not authorised" in new Setup {
-      userIsNotAuthorised()
+      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
 
       val result = controller.getThreshold("testId")(FakeRequest())
-
       status(result) shouldBe 403
     }
   }
@@ -131,36 +125,41 @@ class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
   "Upsert Threshold" should {
 
     "returns 403 if user is not authorised" in new Setup {
-      userIsNotAuthorised()
+      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
+
       val result = controller.updateThreshold("testId")(FakeRequest().withBody[JsObject](upsertTresholdJson))
       status(result) shouldBe 403
     }
 
     "returns 200 if successful" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       updateThreshold()
+
       val result = controller.updateThreshold("testId")(FakeRequest().withBody[JsObject](upsertTresholdJson))
       status(result) shouldBe 200
       await(contentAsJson(result)) shouldBe upsertTresholdJson
     }
 
     "returns 400 if json received is invalid" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       updateThresholdFails()
+
       val result = controller.updateThreshold("testId")(FakeRequest().withBody[JsObject](invalidUpsertJson))
       status(result) shouldBe 400
     }
 
     "returns 404 if the registration is not found" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       updateThresholdNotFound()
+
       val result = controller.updateThreshold("testId")(FakeRequest().withBody[JsObject](upsertTresholdJson))
       status(result) shouldBe 404
     }
 
     "returns 500 if an error occurs" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       updateThresholdFails()
+
       val result = controller.updateThreshold("testId")(FakeRequest().withBody[JsObject](upsertTresholdJson))
       status(result) shouldBe 500
     }

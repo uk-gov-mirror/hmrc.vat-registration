@@ -43,25 +43,19 @@ trait FlatRateSchemeController extends BaseController with Authorisation {
 
   def fetchFlatRateScheme(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { _ =>
-        flatRateSchemeService.retrieveFlatRateScheme(regId) sendResult
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "FlatRateSchemeController", "fetchFlatRateScheme") {
+          flatRateSchemeService.retrieveFlatRateScheme(regId) sendResult("fetchFlatRateScheme", regId)
+        }
       }
   }
 
   def updateFlatRateScheme(regId: String): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
-      isAuthenticated { _ =>
-        withJsonBody[FlatRateScheme]{ flatRateScheme =>
-          flatRateSchemeService.updateFlatRateScheme(regId, flatRateScheme) map {
-            frsResponse => Ok(Json.toJson(frsResponse))
-          } recover {
-            case mrd: MissingRegDocument =>
-              Logger.error(s"[FlatRateSchemeController] [updateFlatRateScheme] Registration not found for regId: $regId", mrd)
-              NotFound
-            case e =>
-              Logger.error(s"[FlatRateSchemeController] [updateFlatRateScheme] " +
-                s"An error occurred while updating flat rate scheme: for regId: $regId, ${e.getMessage}", e)
-              InternalServerError
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "FlatRateSchemeController", "updateFlatRateScheme") {
+          withJsonBody[FlatRateScheme] { flatRateScheme =>
+            flatRateSchemeService.updateFlatRateScheme(regId, flatRateScheme) sendResult("updateFlatRateScheme",regId)
           }
         }
       }
@@ -69,17 +63,19 @@ trait FlatRateSchemeController extends BaseController with Authorisation {
 
   def removeFlatRateScheme(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { _ =>
-        flatRateSchemeService.removeFlatRateScheme(regId) map { result =>
-          Ok
-        } recover {
-          case mrd: MissingRegDocument =>
-            Logger.error(s"[FlatRateSchemeController] [removeFlatRateScheme] Registration not found for regId: $regId", mrd)
-            NotFound
-          case e =>
-            Logger.error(s"[FlatRateSchemeController] [removeFlatRateScheme] " +
-              s"An error occurred while remove flat rate scheme: for regId: $regId, ${e.getMessage}", e)
-            InternalServerError
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "FlatRateSchemeController", "removeFlatRateScheme") {
+          flatRateSchemeService.removeFlatRateScheme(regId) map { result =>
+            Ok
+          } recover {
+            case mrd: MissingRegDocument =>
+              Logger.error(s"[FlatRateSchemeController] [removeFlatRateScheme] Registration not found for regId: $regId", mrd)
+              NotFound
+            case e =>
+              Logger.error(s"[FlatRateSchemeController] [removeFlatRateScheme] " +
+                s"An error occurred while remove flat rate scheme: for regId: $regId, ${e.getMessage}", e)
+              InternalServerError
+          }
         }
       }
   }

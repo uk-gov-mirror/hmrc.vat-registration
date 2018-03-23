@@ -28,6 +28,7 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 
 trait VatRegistrationFixture {
   val regId = RegistrationId("testId")
+  val internalid = "INT-123-456-789"
   val txId: TransactionId = TransactionId("1")
   val regime = "vat"
   val subscriber = "scrs"
@@ -64,7 +65,7 @@ trait VatRegistrationFixture {
   val oldName = Name(first = Some("Bob Smith"), middle = None, last = None, forename = None, surname = None, title = None, otherForenames = None)
   val formerName = FormerName(Some("Bob Smith"), Some(date), name = Some(oldName), change = Some(date))
   val contact = OfficerContactDetails(Some("test@test.com"), None, None)
-  val vatScheme: VatScheme = VatScheme(regId, status = VatRegStatus.draft)
+  val vatScheme: VatScheme = VatScheme(regId, internalId = internalid, status = VatRegStatus.draft)
   val exception = new Exception("Exception")
   val currentOrPreviousAddress = CurrentOrPreviousAddress(false, Some(scrsAddress))
   val changeOfName = ChangeOfName(true, Some(FormerName(formerName = None, None, name = Some(oldName), change = Some(LocalDate.now()))))

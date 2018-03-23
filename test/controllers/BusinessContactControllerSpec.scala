@@ -40,69 +40,70 @@ class BusinessContactControllerSpec extends VatRegSpec with VatRegistrationFixtu
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
       override lazy val authConnector: AuthConnector = mockAuthConnector
     }
-
-    def userIsAuthorised(): Unit = AuthorisationMocks.mockAuthenticated(userId)
-
-    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
   }
     def mockGetBusinessContactFromService(res:Future[Option[BusinessContact]]):OngoingStubbing[Future[Option[BusinessContact]]] = when(mockBusinessContactService.getBusinessContact(any())(any())).thenReturn(res)
 
     def mockUpdateBusinessContactToSoService(res:Future[BusinessContact]) :OngoingStubbing[Future[BusinessContact]] = when(mockBusinessContactService.updateBusinessContact(any(),any())(any())).thenReturn(res)
 
 
-  "getBusinessContacty" should {
+  "getBusinessContact" should {
     "return valid Json if record returned from service" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       mockGetBusinessContactFromService(Future.successful(validBusinessContact))
-      val result = controller.getBusinessContact("fooBarWizzBang")(FakeRequest())
 
+      val result = controller.getBusinessContact(regId.value)(FakeRequest())
       status(result) shouldBe 200
       await(contentAsJson(result)) shouldBe validBusinessContactJson
 
     }
     "return 204 when nothing is returned but document exists" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       mockGetBusinessContactFromService(Future.successful(None))
-      val result = controller.getBusinessContact("fooBar")(FakeRequest())
 
+      val result = controller.getBusinessContact(regId.value)(FakeRequest())
       status(result) shouldBe 204
     }
     "returns 404 if none found" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       mockGetBusinessContactFromService(Future.failed(MissingRegDocument(RegistrationId("foo"))))
-      val result = controller.getBusinessContact("testId")(FakeRequest())
 
+      val result = controller.getBusinessContact(regId.value)(FakeRequest())
       status(result) shouldBe 404
     }
     "returns 403 if not authorised" in new Setup {
-      userIsNotAuthorised()
-      val result = controller.getBusinessContact("testId")(FakeRequest())
+      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
+
+      val result = controller.getBusinessContact(regId.value)(FakeRequest())
       status(result) shouldBe 403
     }
   }
   "updateBusinessContact" should {
     "return 200 and the updated model as json when a record exists and the update is successful" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       mockUpdateBusinessContactToSoService(Future.successful(validBusinessContact.get))
-      val result = controller.updateBusinessContact("fooBarWizz")(FakeRequest().withBody[JsObject](validBusinessContactJson))
+
+      val result = controller.updateBusinessContact(regId.value)(FakeRequest().withBody[JsObject](validBusinessContactJson))
       status(result) shouldBe 200
       await(contentAsJson(result)) shouldBe validBusinessContactJson
     }
     "returns 404 if regId not found" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       mockUpdateBusinessContactToSoService(Future.failed(MissingRegDocument(RegistrationId("testId"))))
-      val result = controller.updateBusinessContact("fooBarWizz")(FakeRequest().withBody[JsObject](validBusinessContactJson))
+
+      val result = controller.updateBusinessContact(regId.value)(FakeRequest().withBody[JsObject](validBusinessContactJson))
       status(result) shouldBe 404
     }
     "returns 500 if an error occurs" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       mockUpdateBusinessContactToSoService(Future.failed(new Exception))
-      val result = controller.updateBusinessContact("fooBarWizz")(FakeRequest().withBody[JsObject](validBusinessContactJson))
+
+      val result = controller.updateBusinessContact(regId.value)(FakeRequest().withBody[JsObject](validBusinessContactJson))
       status(result) shouldBe 500
     }
     "returns 403 if the user is not authorised" in new Setup {
-      userIsNotAuthorised()
-      val result = controller.updateBusinessContact("fooBarWizz")(FakeRequest().withBody[JsObject](validBusinessContactJson))
+      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
+
+      val result = controller.updateBusinessContact(regId.value)(FakeRequest().withBody[JsObject](validBusinessContactJson))
       status(result) shouldBe 403
     }
   }

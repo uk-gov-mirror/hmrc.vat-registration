@@ -18,7 +18,7 @@ import repositories.{RegistrationMongo, RegistrationMongoRepository, SequenceMon
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class FlatRateSchemeControllerISpec extends IntegrationStubbing with ITFixtures {
+class FlatRateSchemeControllerISpec extends IntegrationStubbing {
 
   val mockHost = WiremockHelper.wiremockHost
   val mockPort = WiremockHelper.wiremockPort
@@ -39,32 +39,13 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing with ITFixtures 
     "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
   ))
 
-  lazy val reactiveMongoComponent = app.injector.instanceOf[ReactiveMongoComponent]
-  lazy val ws   = app.injector.instanceOf(classOf[WSClient])
-
-  private def client(path: String) = ws.url(s"http://localhost:$port$path").withFollowRedirects(false)
-
-  class Setup {
-    val mongo = new RegistrationMongo(reactiveMongoComponent, cryptoForTest)
-    val sequenceMongo = new SequenceMongo(reactiveMongoComponent)
-    val repo: RegistrationMongoRepository = mongo.store
-    val sequenceRepository: SequenceMongoRepository = sequenceMongo.store
-
-    await(repo.drop)
-    await(repo.ensureIndexes)
-    await(sequenceRepository.drop)
-    await(sequenceRepository.ensureIndexes)
-
-    def insertIntoDb(vatScheme: VatScheme): Future[WriteResult] = await(repo.insert(vatScheme))
-  }
+  class Setup extends SetupHelper
 
   val dateNow: LocalDate = LocalDate.of(2018, 1, 1)
 
   def vatScheme(regId: String): VatScheme = emptyVatScheme(regId).copy(
       flatRateScheme = Some(FlatRateScheme(joinFrs = true, Some(frsDetails.copy(startDate = Some(dateNow)))))
   )
-
-  def emptyVatScheme(regId: String): VatScheme = VatScheme(id = RegistrationId(regId),status = VatRegStatus.draft)
 
   val validFullFlatRateSchemeJson: JsObject = Json.parse(
     s"""
