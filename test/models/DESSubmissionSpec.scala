@@ -67,6 +67,4 @@ class DESSubmissionSpec extends BaseSpec with JsonFormatValidation {
       Json.toJson[DESSubmission](testDesPartialSubmission) shouldBe partialJson
     }
   }
-
-
 }

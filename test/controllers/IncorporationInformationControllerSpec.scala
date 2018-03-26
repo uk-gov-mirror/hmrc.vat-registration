@@ -19,7 +19,6 @@ package controllers
 import connectors.IncorporationInformationResponseException
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import models.external.IncorporationStatus
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -28,43 +27,45 @@ import uk.gov.hmrc.auth.core.AuthConnector
 
 class IncorporationInformationControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
-  import play.api.test.Helpers._
 
   class Setup {
-    val controller = new IncorporationInformationController(mockIIConnector,mockSubmissionService){
+    val controller = new IncorporationInformationController(mockIIConnector,mockSubmissionService) {
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
       override lazy val authConnector: AuthConnector = mockAuthConnector
     }
-   AuthorisationMocks.mockAuthenticated(userId)
   }
 
   "GET /incorporation-information/:txId" should {
 
     "return 403 if user not authenticated" in new Setup {
-      AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
+      AuthorisationMocks.mockNotLoggedInOrAuthorised(regId.value)
+
       controller.getIncorporationInformation(txId)(FakeRequest()) returnsStatus FORBIDDEN
     }
 
     "return an except if the II connection update failed" in new Setup {
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       IIMocks.mockIncorporationStatusLeft("incorporation status not known")
 
       intercept[IncorporationInformationResponseException](await(controller.getIncorporationInformation(txId)(FakeRequest())))
     }
 
     "return no object if not found in II" in new Setup {
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       IIMocks.mockIncorporationStatusNone()
+
       val res = controller.getIncorporationInformation(txId)(FakeRequest())
-      res returnsStatus OK
+      status(res) shouldBe OK
     }
 
     "return incorporation status object if found" in new Setup {
-      val status: IncorporationStatus = incorporationStatus()
-      IIMocks.mockIncorporationStatus(status)
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      val iiStatus = incorporationStatus()
+      IIMocks.mockIncorporationStatus(iiStatus)
+
       val res = controller.getIncorporationInformation(txId)(FakeRequest())
-      res returnsStatus OK
-      await(contentAsJson(res)) shouldBe Json.toJson(status)
+      status(res) shouldBe OK
+      await(contentAsJson(res)) shouldBe Json.toJson(iiStatus)
     }
-
   }
-
 }

@@ -20,12 +20,12 @@ import javax.inject.Inject
 
 import auth.{AuthorisationResource, Crypto}
 import cats.data.OptionT
+import cats.instances.future._
 import common.exceptions._
-import common.{LogicalGroup, RegistrationId, TransactionId}
+import common.{LogicalGroup, RegistrationId}
 import enums.VatRegStatus
 import models._
 import models.api._
-import play.api.libs.functional.syntax._
 import play.api.Logger
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
@@ -37,7 +37,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import cats.instances.future._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -46,7 +45,7 @@ class RegistrationMongo @Inject()(mongo: ReactiveMongoComponent, crypto: Crypto)
 }
 
 trait RegistrationRepository {
-  def createNewVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[VatScheme]
+  def createNewVatScheme(id: RegistrationId, intId:String)(implicit hc: HeaderCarrier): Future[VatScheme]
   def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[Option[VatScheme]]
   def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G], ec: ExecutionContext): Future[G]
   def deleteVatScheme(regId: String)(implicit hc: HeaderCarrier): Future[Boolean]
@@ -80,29 +79,39 @@ class RegistrationMongoRepository (mongo: () => DB, crypto: Crypto)
   private val bankAccountCryptoFormatter = BankAccountMongoFormat.encryptedFormat(crypto)
 
   private[repositories] def ridSelector(id: RegistrationId) = BSONDocument("registrationId" -> BSONString(id.value))
-  private[repositories] def tidSelector(id: String) = BSONDocument("transactionId" -> id)
-  private[repositories] def regIdSelector(regId: String)                  = BSONDocument("registrationId" -> regId)
+  private[repositories] def tidSelector(id: String)         = BSONDocument("transactionId" -> id)
+  private[repositories] def regIdSelector(regId: String)    = BSONDocument("registrationId" -> regId)
 
   override def indexes: Seq[Index] = Seq(
     Index(
       name    = Some("RegId"),
       key     = Seq("registrationId" -> IndexType.Ascending),
       unique  = true
+    ),
+    Index(
+      name    = Some("RegIdAndInternalId"),
+      key     = Seq(
+        "registrationId" -> IndexType.Ascending,
+        "internalId" -> IndexType.Ascending
+      ),
+      unique  = true
     )
   )
 
   //TODO: should be written with $set to not use vatscheme writes
-  override def createNewVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[VatScheme] = {
+  override def createNewVatScheme(id: RegistrationId, intId:String)(implicit hc: HeaderCarrier): Future[VatScheme] = {
     val set = Json.obj(
-      "registrationId" -> Json.toJson(id.value),
-      "status" -> Json.toJson(VatRegStatus.draft)
+      "registrationId" -> Json.toJson[String](id.value),
+      "status" -> Json.toJson(VatRegStatus.draft),
+      "internalId" -> Json.toJson[String](intId)
     )
-
-    collection.insert(set) map (_ => VatScheme(id, status = VatRegStatus.draft)) recover {
-      case e =>
-        logger.error(s"[createNewVatScheme] - Unable to insert new VAT Scheme for registration ID $id, Error: ${e.getMessage}")
-        throw InsertFailed(id, "VatScheme")
-    }
+      collection.insert(set).map{_ =>
+      VatScheme(id,internalId = intId, status = VatRegStatus.draft)
+      }.recover{
+        case e:Exception =>
+          Logger.error(s"[RegistrationMongoRepository] [createNewVatScheme] threw an exception when attempting to create a new record with exception: ${e.getMessage} for regId: $id and internalid: $intId")
+          throw new InsertFailed(id, "VatScheme")
+      }
   }
 
   override def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
@@ -277,7 +286,12 @@ class RegistrationMongoRepository (mongo: () => DB, crypto: Crypto)
     }
   }
 
-  def getInternalId(id: String)(implicit hc : HeaderCarrier) : Future[Option[String]] =  Future.successful(Some("FooBarWizzBangFizz"))
+  def getInternalId(id: String)(implicit hc: HeaderCarrier) : Future[Option[String]] = {
+    val projection = Json.obj("internalId" -> 1, "_id" -> 0)
+    collection.find(regIdSelector(id),projection).one[JsObject].map{
+      _.map(js => (js \ "internalId").as[String])
+    }
+  }
 
   def getEligibility(regId: String)(implicit ec: ExecutionContext): Future[Option[Eligibility]] =
     fetchBlock[Eligibility](regId, "eligibility")

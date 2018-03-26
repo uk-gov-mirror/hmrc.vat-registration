@@ -12,7 +12,7 @@ import repositories.{RegistrationMongo, RegistrationMongoRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SicAndComplianceControllerISpec extends IntegrationStubbing with ITFixtures  {
+class SicAndComplianceControllerISpec extends IntegrationStubbing {
 
   val mockHost = WiremockHelper.wiremockHost
   val mockPort = WiremockHelper.wiremockPort
@@ -33,17 +33,8 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing with ITFixture
     "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
   ))
 
-  lazy val reactiveMongoComponent = app.injector.instanceOf[ReactiveMongoComponent]
-  lazy val ws   = app.injector.instanceOf(classOf[WSClient])
+  class Setup extends SetupHelper
 
-  private def client(path: String) = ws.url(s"http://localhost:$port$path").withFollowRedirects(false)
-
-  class Setup {
-    val mongo = new RegistrationMongo(reactiveMongoComponent, cryptoForTest)
-    val repo: RegistrationMongoRepository = mongo.store
-    await(repo.drop)
-    await(repo.ensureIndexes)
-  }
     val validSicAndCompliance = Some(SicAndCompliance(
       "this is my business description",
       Some(ComplianceLabour(1000, Some(true), Some(true))),
@@ -92,7 +83,6 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing with ITFixture
 
   def vatScheme(regId: String): VatScheme = emptyVatScheme(regId).copy(sicAndCompliance = validSicAndCompliance)
 
-  def emptyVatScheme(regId: String): VatScheme = VatScheme(id = RegistrationId(regId),status = VatRegStatus.draft)
     "getSicAndCompliance" should {
       "return 200" in new Setup {
         given

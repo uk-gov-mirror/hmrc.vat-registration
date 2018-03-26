@@ -40,33 +40,34 @@ trait LodgingOfficerController extends BaseController with Authorisation {
 
   def getLodgingOfficer(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { _ =>
-        lodgingOfficerService.getLodgingOfficer(regId) sendResult
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "LodgingOfficerController", "getLodgingOfficer") {
+          lodgingOfficerService.getLodgingOfficer(regId) sendResult("getLodgingOfficer", regId)
+        }
       }
   }
 
   def updateLodgingOfficer(regId: String): Action[JsValue] = Action.async[JsValue](parse.json) {
     implicit request =>
-      isAuthenticated { _ =>
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "LodgingOfficerController", "updateLodgingOfficer") {
           withJsonBody[LodgingOfficer] { officer =>
-            lodgingOfficerService.updateLodgingOfficer(regId, officer) map {
-              officerResponse => Ok(Json.toJson(officerResponse))
-            } recover {
-              case _: MissingRegDocument => NotFound(s"Registration not found for regId: $regId")
-              case e => InternalServerError(s"An error occurred while updating lodging officer: for regId: $regId ${e.getMessage}")
+            lodgingOfficerService.updateLodgingOfficer(regId, officer) sendResult("updateLodgingOfficer",regId)
             }
           }
-      }
+        }
   }
 
   def updateIVStatus(regId: String, ivPassed: Boolean): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { _ =>
-        lodgingOfficerService.updateIVStatus(regId, ivPassed) map { _ =>
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "LodgingOfficerController", "updateIVStatus") {
+          lodgingOfficerService.updateIVStatus(regId, ivPassed) map { _ =>
             Ok(JsBoolean(ivPassed))
-        } recover {
-          case _: MissingRegDocument => NotFound(s"Registration not found or the registration does no have lodgingOfficer defined for regId: $regId")
-          case e => InternalServerError(s"An error occurred while updating lodging officer - ivPassed: ${e.getMessage}")
+          } recover {
+            case _: MissingRegDocument => NotFound(s"Registration not found or the registration does no have lodgingOfficer defined for regId: $regId")
+            case e => InternalServerError(s"An error occurred while updating lodging officer - ivPassed: ${e.getMessage}")
+          }
         }
       }
   }

@@ -41,23 +41,20 @@ trait TradingDetailsController extends BaseController with Authorisation {
 
   def fetchTradingDetails(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { _ =>
-        tradingDetailsService.retrieveTradingDetails(regId) sendResult
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "TradingDetailsController", "fetchTradingDetails") {
+          tradingDetailsService.retrieveTradingDetails(regId) sendResult("fetchTradingDetails", regId)
+        }
       }
   }
 
   def updateTradingDetails(regId: String): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
-      isAuthenticated { _ =>
-        withJsonBody[TradingDetails]{ tradingDetails =>
-          tradingDetailsService.updateTradingDetails(regId, tradingDetails) map {
-            tdResponse => Ok(Json.toJson(tdResponse))
-          } recover {
-            case _: MissingRegDocument =>
-              NotFound(s"[TradingDetailsController] [updateTradingDetails] Registration not found for regId: $regId")
-            case e =>
-              InternalServerError(s"[TradingDetailsController] [updateTradingDetails] " +
-              s"An error occurred while updating trading details: for regId: $regId, ${e.getMessage}")
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "TradingDetailsController", "updateTradingDetails") {
+          withJsonBody[TradingDetails] { tradingDetails =>
+            tradingDetailsService.updateTradingDetails(regId, tradingDetails)
+              .sendResult("updateTradingDetails", regId)
           }
         }
       }

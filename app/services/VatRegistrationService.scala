@@ -65,10 +65,10 @@ trait RegistrationService extends ApplicativeSyntax with FutureInstances {
   private def toEitherT[T](eventualT: Future[T])(implicit ex: ExecutionContext) =
     EitherT[Future, LeftState, T](eventualT.map(Right(_)).recover(repositoryErrorHandler))
 
-  private def getOrCreateVatScheme(profile: CurrentProfile)(implicit hc: HeaderCarrier): Future[Either[LeftState, VatScheme]] =
+  private def getOrCreateVatScheme(profile: CurrentProfile, internalId:String)(implicit hc: HeaderCarrier): Future[Either[LeftState, VatScheme]] =
     registrationRepository.retrieveVatScheme(RegistrationId(profile.registrationID)).flatMap {
       case Some(vatScheme) => Future.successful(Right(vatScheme))
-      case None => registrationRepository.createNewVatScheme(RegistrationId(profile.registrationID))
+      case None => registrationRepository.createNewVatScheme(RegistrationId(profile.registrationID),internalId)
         .map(Right(_)).recover(repositoryErrorHandler)
     }
 
@@ -113,10 +113,10 @@ trait RegistrationService extends ApplicativeSyntax with FutureInstances {
     }
   }
 
-  def createNewRegistration()(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme] =
+  def createNewRegistration(intId:String)(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme] =
     for {
       profile <- EitherT(brConnector.retrieveCurrentProfile)
-      vatScheme <- EitherT(getOrCreateVatScheme(profile))
+      vatScheme <- EitherT(getOrCreateVatScheme(profile,intId))
     } yield vatScheme
 
   def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[VatScheme] =

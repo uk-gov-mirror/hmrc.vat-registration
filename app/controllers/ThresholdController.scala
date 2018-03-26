@@ -40,23 +40,21 @@ trait ThresholdController extends BaseController with Authorisation {
 
   def getThreshold(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { _ =>
-        thresholdService.getThreshold(regId) sendResult
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "ThresholdController", "getThreshold") {
+          thresholdService.getThreshold(regId) sendResult("getThreshold", regId)
+        }
       }
   }
 
   def updateThreshold(regId: String): Action[JsValue] = Action.async[JsValue](parse.json) {
     implicit request =>
-      isAuthenticated {
-        context =>
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "ThresholdController", "updateThreshold") {
           withJsonBody[Threshold] { threshold =>
-            thresholdService.upsertThreshold(regId, threshold) map {
-              thresholdResponse => Ok(Json.toJson(thresholdResponse))
-            } recover {
-              case _: MissingRegDocument => NotFound(s"Registration not found for regId: $regId")
-              case e => InternalServerError(s"An error occurred while updating threshold: ${e.getMessage}")
-            }
+            thresholdService.upsertThreshold(regId, threshold).sendResult("updateThreshold", regId)
           }
+        }
       }
   }
 }

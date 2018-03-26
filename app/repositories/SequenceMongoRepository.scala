@@ -50,12 +50,10 @@ class SequenceMongoRepository (mongo: () => DB)
 
     collection.findAndUpdate(selector, modifier, fetchNewObject = true, upsert = true) map {
       _.result[JsValue] match {
-        // $COVERAGE-OFF$
         case None =>
           logger.error("[SequenceRepository] - [getNext] returned a None when Upserting")
           class InvalidSequence extends NoStackTrace
           throw new InvalidSequence
-        // $COVERAGE-ON$
         case Some(res) => (res \ "seq").as[Int]
       }
     }

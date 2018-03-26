@@ -39,21 +39,21 @@ trait SicAndComplianceController extends BaseController with Authorisation {
 
   def getSicAndCompliance(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { _ =>
-        sicAndComplianceService.getSicAndCompliance(regId) sendResult
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "SicAndComplianceController", "getSicAndCompliance") {
+          sicAndComplianceService.getSicAndCompliance(regId) sendResult("getSicAndCompliance", regId)
+        }
       }
   }
 
   def updateSicAndCompliance(regId: String) = Action.async[JsValue](parse.json) {
     implicit request =>
-      isAuthenticated { _ =>
-        withJsonBody[SicAndCompliance] { sicAndComp =>
-          sicAndComplianceService.updateSicAndCompliance(regId, sicAndComp)
-            .map(a => Ok(Json.toJson(a)))
-            .recover {
-              case _: MissingRegDocument => NotFound(s"Registration not found for regId: $regId")
-              case e: Exception => InternalServerError(s"An error occurred while updating SicAndCompliance for regId: $regId ${e.getMessage}")
-            }
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "SicAndComplianceController", "updateSicAndCompliance") {
+          withJsonBody[SicAndCompliance] { sicAndComp =>
+            sicAndComplianceService.updateSicAndCompliance(regId, sicAndComp)
+              .sendResult("updateSicAndCompliance", regId)
+          }
         }
       }
   }

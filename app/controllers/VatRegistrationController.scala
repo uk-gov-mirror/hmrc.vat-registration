@@ -60,121 +60,139 @@ trait VatRegistrationController extends BaseController with Authorisation with F
 
   def newVatRegistration: Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { _ =>
+      isAuthenticated { internalId =>
         implicit val writes = VatScheme.apiWrites
-        registrationService.createNewRegistration.fold(errorHandler, vatScheme => Created(Json.toJson(vatScheme)))
+        registrationService.createNewRegistration(internalId)
+          .fold(errorHandler, vatScheme => Created(Json.toJson(vatScheme)))
       }
   }
 
   def retrieveVatScheme(id: RegistrationId): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { _ =>
-        implicit val writes = VatScheme.apiWrites
-        registrationService.retrieveVatScheme(id).fold(errorHandler, vatScheme => Ok(Json.toJson(vatScheme)))
+      isAuthorised(id.value) { authResult =>
+        authResult.ifAuthorised(id.value, "VatRegistrationController", "retrieveVatScheme") {
+          implicit val writes = VatScheme.apiWrites
+          registrationService.retrieveVatScheme(id).fold(errorHandler, vatScheme => Ok(Json.toJson(vatScheme)))
+        }
       }
   }
 
-
+// TODO: this returns 404 when other methods return 204. Refactor to return 204 at some point
   def fetchReturns(regId: String) : Action[AnyContent] = Action.async {
     implicit request =>
-      registrationRepository.fetchReturns(regId) map {
-        case Some(returns) => Ok(Json.toJson(returns))
-        case None          => NotFound
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "VatRegistrationController", "fetchReturns") {
+          registrationRepository.fetchReturns(regId) map {
+            case Some(returns) => Ok(Json.toJson(returns))
+            case None => NotFound
+          }
+        }
       }
   }
 
   def updateReturns(regId: String): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
-      isAuthenticated { _ =>
-        withJsonBody[Returns]{ returns =>
-          registrationRepository.updateReturns(regId, returns) map ( _ => Ok)
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "VatRegistrationController", "updateReturns") {
+          withJsonBody[Returns] { returns =>
+            registrationRepository.updateReturns(regId, returns) map (_ => Ok)
+          }
         }
       }
   }
 
   def submitVATRegistration(id: RegistrationId) : Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { _ =>
-        if (!useMockSubmission) {
-          submissionService.submitVatRegistration(id).map { ackRefs =>
-            Ok(Json.toJson(ackRefs))
-          } recover {
-            case ex => BadRequest(s"Registration was submitted without full data: ${ex.getMessage}")
+      isAuthorised(id.value) { authResult =>
+        authResult.ifAuthorised(id.value, "VatRegistrationController", "submitVATRegistration") {
+          if (!useMockSubmission) {
+            submissionService.submitVatRegistration(id).map { ackRefs =>
+              Ok(Json.toJson(ackRefs))
+            } recover {
+              case ex => BadRequest(s"Registration was submitted without full data: ${ex.getMessage}")
+            }
+          } else {
+            Future.successful(Ok(Json.toJson("BRVT000000" + id)))
           }
-        } else {
-          Future.successful(Ok(Json.toJson("BRVT000000" + id)))
         }
       }
   }
 
   def getAcknowledgementReference(id: RegistrationId): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { _ =>
-        if (!useMockSubmission) {
-          submissionService.getAcknowledgementReference(id).fold(errorHandler, ackRefNumber => Ok(Json.toJson(ackRefNumber)))
-        } else {
-          Future.successful(Ok(Json.toJson("BRVT000000" + id)))
+      isAuthorised(id.value) { authResult =>
+        authResult.ifAuthorised(id.value, "VatRegistrationController", "getAcknowledgementReference") {
+          if (!useMockSubmission) {
+            submissionService.getAcknowledgementReference(id).fold(errorHandler, ackRefNumber => Ok(Json.toJson(ackRefNumber)))
+          } else {
+            Future.successful(Ok(Json.toJson("BRVT000000" + id)))
+          }
         }
       }
   }
+
   def fetchTurnoverEstimates(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { _ =>
-        registrationRepository.fetchTurnoverEstimates(regId) map {
-          case Some(turnoverEstimates) => Ok(Json.toJson(turnoverEstimates))
-          case None                    => NoContent
-        } recover {
-          case _: MissingRegDocument   => NotFound
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "VatRegistrationController", "fetchTurnoverEstimates") {
+          registrationRepository.fetchTurnoverEstimates(regId) sendResult("fetchTurnoverEstimates", regId)
         }
       }
   }
 
   def updateTurnoverEstimates(regId: String): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
-      isAuthenticated { _ =>
-        withJsonBody[TurnoverEstimates]{ turnoverEstimates =>
-          registrationRepository.updateTurnoverEstimates(regId, turnoverEstimates) map ( _ => Ok)
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "VatRegistrationController", "updateTurnoverEstimates") {
+          withJsonBody[TurnoverEstimates] { turnoverEstimates =>
+            registrationRepository.updateTurnoverEstimates(regId, turnoverEstimates) map (_ => Ok)
+          }
         }
       }
   }
 
   def deleteVatScheme(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { _ =>
-        registrationService.deleteVatScheme(regId, VatRegStatus.draft, VatRegStatus.rejected) map { deleted =>
-          if(deleted) Ok else InternalServerError
-        } recover {
-          case _: InvalidSubmissionStatus => PreconditionFailed
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "VatRegistrationController", "deleteVatScheme") {
+          registrationService.deleteVatScheme(regId, VatRegStatus.draft, VatRegStatus.rejected) map { deleted =>
+            if (deleted) Ok else InternalServerError
+          } recover {
+            case _: InvalidSubmissionStatus => PreconditionFailed
+          }
         }
       }
   }
+  // TODO: this returns 404 when other methods return 204. Refactor to return 204 at some point
   def fetchBankAccountDetails(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      registrationRepository.fetchBankAccount(regId) map {
-        case Some(bankAccount) => Ok(Json.toJson(bankAccount))
-        case None              => NotFound
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "VatRegistrationController", "fetchBankAccountDetails") {
+          registrationRepository.fetchBankAccount(regId) map {
+            case Some(bankAccount) => Ok(Json.toJson(bankAccount))
+            case None => NotFound
+          }
+        }
       }
   }
 
   def updateBankAccountDetails(regId: String): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
-      isAuthenticated { _ =>
-        withJsonBody[BankAccount]{ bankAccount =>
-          registrationRepository.updateBankAccount(regId, bankAccount) map ( _ => Ok(Json.toJson(bankAccount)))
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "VatRegistrationController", "updateBankAccountDetails") {
+          withJsonBody[BankAccount] { bankAccount =>
+            registrationRepository.updateBankAccount(regId, bankAccount)
+              .sendResult("updateBackAccountDetails",regId)
+          }
         }
       }
   }
 
   def getDocumentStatus(id: RegistrationId): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { _ =>
-        registrationService.getStatus(id) map { statusJson =>
-          Ok(statusJson)
-        } recover {
-          case _: MissingRegDocument => NotFound
-          case e                     =>
-            Logger.error(s"[getDocumentStatus] - There was a problem getting the document status for regId: ${id.value}", e)
-            InternalServerError
+      isAuthorised(id.value) { authResult =>
+        authResult.ifAuthorised(id.value, "VatRegistrationController", "getDocumentStatus") {
+          registrationService.getStatus(id).sendResult("getDocumentStatus", id.value)
         }
       }
   }

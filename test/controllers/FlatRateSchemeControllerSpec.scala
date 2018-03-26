@@ -23,7 +23,6 @@ import helpers.VatRegSpec
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import play.api.libs.json.JsObject
-import play.api.mvc.Result
 import play.api.test.FakeRequest
 import repositories.RegistrationMongoRepository
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -39,151 +38,134 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
       override lazy val authConnector: AuthConnector = mockAuthConnector
     }
-
-    def userIsAuthorised(): Unit = AuthorisationMocks.mockAuthenticated(userId)
-    def userIsNotAuthorised(): Unit = AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
   }
 
   "fetchFlatRateScheme" should {
     "return an OK with a full valid flat rate scheme json if the document contains it" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockFlatRateSchemeService.retrieveFlatRateScheme(any())(any()))
         .thenReturn(Future.successful(Some(validFullFlatRateScheme)))
 
-      val result: Future[Result] = controller.fetchFlatRateScheme("testId")(FakeRequest())
-
+      val result = controller.fetchFlatRateScheme("testId")(FakeRequest())
       status(result) shouldBe 200
       await(contentAsJson(result)) shouldBe validFullFlatRateSchemeJson
     }
 
     "return an OK with a valid flat rate scheme json where the frsDetails is not present" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockFlatRateSchemeService.retrieveFlatRateScheme(any())(any()))
         .thenReturn(Future.successful(Some(validEmptyFlatRateScheme)))
 
-      val result: Future[Result] = controller.fetchFlatRateScheme("testId")(FakeRequest())
-
+      val result = controller.fetchFlatRateScheme("testId")(FakeRequest())
       status(result) shouldBe 200
       await(contentAsJson(result)) shouldBe validEmptyFlatRateSchemeJson
     }
 
     "return a NoContent if the flat rate scheme block is not present in the document" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockFlatRateSchemeService.retrieveFlatRateScheme(any())(any()))
         .thenReturn(Future.successful(None))
 
-      val result: Future[Result] = controller.fetchFlatRateScheme("testId")(FakeRequest())
-
+      val result = controller.fetchFlatRateScheme("testId")(FakeRequest())
       status(result) shouldBe 204
     }
 
     "return NotFound if the registration document was not found for the regId provided" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockFlatRateSchemeService.retrieveFlatRateScheme(any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
 
-      val result: Future[Result] = controller.fetchFlatRateScheme("testId")(FakeRequest())
-
+      val result = controller.fetchFlatRateScheme("testId")(FakeRequest())
       status(result) shouldBe 404
     }
 
     "return Forbidden if the registration document was not found for the regId provided" in new Setup {
-      userIsNotAuthorised()
+      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
 
-      val result: Future[Result] = controller.fetchFlatRateScheme("testId")(FakeRequest())
-
+      val result = controller.fetchFlatRateScheme("testId")(FakeRequest())
       status(result) shouldBe 403
     }
   }
 
   "updateFlatRateScheme" should {
     "returns Ok if successful with a full flat rate scheme" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any())(any()))
         .thenReturn(Future.successful(validFullFlatRateScheme))
 
-      val result: Future[Result] = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
-
+      val result  = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
       status(result) shouldBe 200
       await(contentAsJson(result)) shouldBe validFullFlatRateSchemeJson
     }
 
     "returns Ok if successful with a missing frsDetails" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any())(any()))
         .thenReturn(Future.successful(validEmptyFlatRateScheme))
 
-      val result: Future[Result] = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validEmptyFlatRateSchemeJson))
-
+      val result  = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validEmptyFlatRateSchemeJson))
       status(result) shouldBe 200
       await(contentAsJson(result)) shouldBe validEmptyFlatRateSchemeJson
     }
 
     "returns NotFound if the registration is not found" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
 
-      val result: Future[Result] = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
-
+      val result = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
       status(result) shouldBe 404
     }
 
     "returns InternalServerError if an error occurs" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any())(any()))
         .thenReturn(Future.failed(new Exception))
 
-      val result: Future[Result] = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
-
+      val result = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
       status(result) shouldBe 500
     }
 
     "returns Forbidden if the user is not authoirised" in new Setup {
-      userIsNotAuthorised()
+      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
 
-      val result: Future[Result] = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
-
+      val result = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
       status(result) shouldBe 403
     }
   }
 
   "removeFlatRateScheme" should {
     "returns Ok if successful" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockFlatRateSchemeService.removeFlatRateScheme(any())(any()))
         .thenReturn(Future.successful(true))
 
-      val result: Future[Result] = controller.removeFlatRateScheme("testId")(FakeRequest())
-
+      val result  = controller.removeFlatRateScheme("testId")(FakeRequest())
       status(result) shouldBe 200
     }
 
     "returns NotFound if the registration is not found" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockFlatRateSchemeService.removeFlatRateScheme(any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
 
-      val result: Future[Result] = controller.removeFlatRateScheme("testId")(FakeRequest())
-
+      val result = controller.removeFlatRateScheme("testId")(FakeRequest())
       status(result) shouldBe 404
     }
 
     "returns InternalServerError if an error occurs" in new Setup {
-      userIsAuthorised()
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
       when(mockFlatRateSchemeService.removeFlatRateScheme(any())(any()))
         .thenReturn(Future.failed(new Exception))
 
-      val result: Future[Result] = controller.removeFlatRateScheme("testId")(FakeRequest())
-
+      val result = controller.removeFlatRateScheme("testId")(FakeRequest())
       status(result) shouldBe 500
     }
 
     "returns Forbidden if the user is not authoirised" in new Setup {
-      userIsNotAuthorised()
+      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
 
-      val result: Future[Result] = controller.removeFlatRateScheme("testId")(FakeRequest())
-
+      val result = controller.removeFlatRateScheme("testId")(FakeRequest())
       status(result) shouldBe 403
     }
   }

@@ -25,6 +25,7 @@ import play.api.libs.json._
 import scala.util.control.NoStackTrace
 
 case class VatScheme(id: RegistrationId,
+                     internalId: String,
                      transactionId: Option[TransactionId] = None,
                      tradingDetails: Option[TradingDetails] = None,
                      lodgingOfficer: Option[LodgingOfficer] = None,
@@ -46,6 +47,7 @@ object VatScheme {
 
   val apiWrites : OWrites[VatScheme] = (
     (__ \ "registrationId").write[RegistrationId] and
+    (__ \ "internalId").write[String] and
     (__ \ "transactionId").writeNullable[TransactionId] and
     (__ \ "tradingDetails").writeNullable[TradingDetails] and
     (__ \ "lodgingOfficer").writeNullable[LodgingOfficer] and
@@ -65,7 +67,8 @@ object VatScheme {
   )(unlift(VatScheme.unapply))
 
   def mongoFormat(crypto: Crypto): OFormat[VatScheme] = (
-    (__ \ "registrationId").format[RegistrationId] and
+      (__ \ "registrationId").format[RegistrationId] and
+      (__ \ "internalId").format[String] and
       (__ \ "transactionId").formatNullable[TransactionId] and
       (__ \ "tradingDetails").formatNullable[TradingDetails] and
       (__ \ "lodgingOfficer").formatNullable[LodgingOfficer] and

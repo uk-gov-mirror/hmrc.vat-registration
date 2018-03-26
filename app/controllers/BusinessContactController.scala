@@ -42,22 +42,21 @@ val businessContactService:BusinessContactService
 
   def getBusinessContact(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthenticated { _ =>
-        businessContactService.getBusinessContact(regId).sendResult
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "BusinessContactController", "getBusinessContact") {
+          businessContactService.getBusinessContact(regId) sendResult("getBusinessContact", regId)
+        }
       }
   }
 
   def updateBusinessContact(regId: String): Action[JsValue] = Action.async[JsValue](parse.json) {
     implicit request =>
-      isAuthenticated { _ =>
-        withJsonBody[BusinessContact] { businessCont =>
-          businessContactService.updateBusinessContact(regId, businessCont) map {
-            businessConResponse => Ok(Json.toJson(businessConResponse))
-          } recover {
-            case _: MissingRegDocument => NotFound(s"Registration not found for regId: $regId")
-            case e => InternalServerError(s"An error occurred while updating Business Contact: for regId: $regId ${e.getMessage}")
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "BusinessContactController", "updateBusinessContact") {
+          withJsonBody[BusinessContact] { businessCont =>
+            businessContactService.updateBusinessContact(regId, businessCont) sendResult("updateBusinessContact",regId)
+            }
           }
         }
       }
-  }
 }

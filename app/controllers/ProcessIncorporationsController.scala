@@ -34,7 +34,6 @@ trait ProcessIncorporationsController extends BaseController {
 
   def processIncorp: Action[JsValue] = Action.async[JsValue](parse.json) {
     implicit request =>
-
       implicit val reads = IncorpStatus.reads
       withJsonBody[IncorpStatus] { incorp =>
 

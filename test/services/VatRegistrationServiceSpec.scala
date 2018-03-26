@@ -48,7 +48,7 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
 
   "createNewRegistration" should {
 
-    val vatScheme = VatScheme(RegistrationId("1"), None, None, None, status = VatRegStatus.draft)
+    val vatScheme = VatScheme(RegistrationId("1"),internalid, None, None, None, status = VatRegStatus.draft)
 
     "return a existing VatScheme response " in new Setup {
       val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
@@ -56,7 +56,7 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Some(vatScheme))
 
-      service.createNewRegistration() returnsRight vatScheme
+      service.createNewRegistration(internalid) returnsRight vatScheme
     }
 
     "call to retrieveVatScheme return VatScheme from DB" in new Setup {
@@ -74,9 +74,9 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
 
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(None)
-      when(mockRegistrationRepository.createNewVatScheme(RegistrationId("1"))).thenReturn(vatScheme)
+      when(mockRegistrationRepository.createNewVatScheme(RegistrationId("1"),internalid)).thenReturn(vatScheme)
 
-      await(service.createNewRegistration().value) shouldBe Right(vatScheme)
+      await(service.createNewRegistration(internalid).value) shouldBe Right(vatScheme)
     }
 
     "error when creating VatScheme" in new Setup {
@@ -85,9 +85,9 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
 
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(None)
-      when(mockRegistrationRepository.createNewVatScheme(RegistrationId("1"))).thenReturn(Future.failed(t))
+      when(mockRegistrationRepository.createNewVatScheme(RegistrationId("1"),internalid)).thenReturn(Future.failed(t))
 
-      service.createNewRegistration() returnsLeft GenericError(t)
+      service.createNewRegistration(internalid) returnsLeft GenericError(t)
     }
 
     "error with the DB when creating VatScheme" in new Setup {
@@ -96,28 +96,28 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
 
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(None)
-      when(mockRegistrationRepository.createNewVatScheme(RegistrationId("1"))).thenReturn(Future.failed(t))
+      when(mockRegistrationRepository.createNewVatScheme(RegistrationId("1"),internalid)).thenReturn(Future.failed(t))
 
-      service.createNewRegistration() returnsLeft GenericDatabaseError(t, Some("regId"))
+      service.createNewRegistration(internalid) returnsLeft GenericDatabaseError(t, Some("regId"))
     }
 
     "call to business service return ForbiddenException response " in new Setup {
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(ForbiddenAccess("forbidden")))
 
-      service.createNewRegistration() returnsLeft ForbiddenAccess("forbidden")
+      service.createNewRegistration(internalid) returnsLeft ForbiddenAccess("forbidden")
     }
 
     "call to business service return NotFoundException response " in new Setup {
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(ResourceNotFound("notfound")))
 
-      service.createNewRegistration() returnsLeft ResourceNotFound("notfound")
+      service.createNewRegistration(internalid) returnsLeft ResourceNotFound("notfound")
     }
 
     "call to business service return ErrorResponse response " in new Setup {
       val t = new RuntimeException("Exception")
       when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(GenericError(t)))
 
-      service.createNewRegistration() returnsLeft GenericError(t)
+      service.createNewRegistration(internalid) returnsLeft GenericError(t)
     }
 
   }
@@ -185,7 +185,7 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
 
   "call to saveAcknowledgementReference" should {
 
-    val vatScheme = VatScheme(RegistrationId("1"), None, None, None, status = VatRegStatus.draft)
+    val vatScheme = VatScheme(RegistrationId("1"),internalid, None, None, None, status = VatRegStatus.draft)
 
     "return Success response " in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Some(vatScheme))
