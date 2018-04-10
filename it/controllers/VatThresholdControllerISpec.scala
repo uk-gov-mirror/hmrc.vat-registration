@@ -31,17 +31,9 @@ class VatThresholdControllerISpec extends IntegrationStubbing {
   )
 
   class Setup extends SetupHelper()
-
-  val validBody = Json.parse(s"""
-       |{"date":"2001-06-04"}
-     """.stripMargin).as[JsObject]
-
   "VatThresholds" should {
     "return valid threhold amount and change date for given date" in new Setup {
-      val response = await(
-        client(
-          controllers.routes.VatThresholdController.getThresholdForTime().url)
-          .post(validBody))
+      val response = await(client(controllers.routes.VatThresholdController.getThresholdForTime("2001-06-04").url).get())
       response.status shouldBe 200
       response.body shouldBe """{"since":"2001-04-01","taxable-threshold":"54000"}"""
     }

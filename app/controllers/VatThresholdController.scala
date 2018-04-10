@@ -37,14 +37,13 @@ class VatThresholdControllerImpl @Inject()(val vatThresholdService: VatThreshold
 trait VatThresholdController extends BaseController {
   val vatThresholdService: VatThresholdService
 
-  def getThresholdForTime(): Action[JsValue] = Action.async(parse.json) {
-    implicit request =>
-      withJsonBody[JsObject] { json =>
-        val inputDate = DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime((json \ "date").as[String])
+  def getThresholdForTime(timestamp: String): Action[AnyContent] = Action.async( {
+    implicit request => {
+      val inputDate = DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime(timestamp)
         vatThresholdService.getThresholdForGivenTime(inputDate) match {
           case Some(vatThreshold) => Future.successful(Ok(Json.toJson(vatThreshold)))
           case _ => Future.successful(NotFound)
         }
       }
-  }
+  })
 }
