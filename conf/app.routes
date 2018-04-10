@@ -47,4 +47,4 @@ PATCH       /:regId/sicAndComp                      controllers.SicAndCompliance
 GET         /:regId/business-contact                controllers.BusinessContactController.getBusinessContact(regId: String)
 PATCH       /:regId/business-contact                controllers.BusinessContactController.updateBusinessContact(regId: String)
 
-POST         /threshold                              controllers.VatThresholdController.getThresholdForTime()
+GET         /threshold/:timestamp                   controllers.VatThresholdController.getThresholdForTime(timestamp: String)

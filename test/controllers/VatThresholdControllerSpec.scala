@@ -58,21 +58,17 @@ class VatThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture 
   "getThresholdForTime" should {
     "returns the correct threshold and since date" in new Setup {
       AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
-      val givenObj =  Json.obj("date" -> "2012-03-20")
       val returnObj = Json.obj("taxable-threshold" -> "73000", "since" -> "2011-04-01")
       when(mockVatThresholdService.getThresholdForGivenTime(any())).thenReturn(Some(VatThreshold(date("2011-04-01"), "73000")))
-      val request = FakeRequest().withBody(givenObj)
-      val result = controller.getThresholdForTime()(request)
+      val result = controller.getThresholdForTime("2012-03-20")(FakeRequest())
       status(result) shouldBe OK
       await(contentAsJson(result)) shouldBe returnObj
     }
 
     "return 404 if requested date is before any known thresholds" in new Setup {
       AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
-      val givenObj =  Json.obj("date" -> "2012-03-20")
       when(mockVatThresholdService.getThresholdForGivenTime(any())).thenReturn(None)
-      val request = FakeRequest().withBody(givenObj)
-      val result = controller.getThresholdForTime()(request)
+      val result = controller.getThresholdForTime("2012-03-20")(FakeRequest())
       status(result) shouldBe NOT_FOUND
     }
   }
