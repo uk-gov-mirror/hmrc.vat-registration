@@ -17,19 +17,18 @@
 package services
 
 import javax.inject.Inject
+
+import models.VatThreshold
 import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
 
 import scala.io.Source._
-import java.lang.Thread._
 
-import models.VatThreshold
+class VatThresholdServiceImpl @Inject() extends VatThresholdService {
+  lazy val thresholdsString = fromFile("conf/thresholds.json").mkString
+  lazy val thresholds = Json.parse(thresholdsString).as[List[VatThreshold]]
 
-class VatThresholdServiceImpl @Inject extends VatThresholdService {
-  val thresholdsString = fromFile("conf/thresholds.json").mkString
-  implicit val ThresholdReads = Json.reads[VatThreshold]
-  val thresholds = Json.parse(thresholdsString).as[List[VatThreshold]]
+  implicit lazy val ThresholdReads = Json.reads[VatThreshold]
 }
 
 
