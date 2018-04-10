@@ -19,7 +19,7 @@ package config
 import auth.{Crypto, CryptoImpl}
 import com.google.inject.AbstractModule
 import controllers._
-import services.{TradingDetailsService, TradingDetailsSrv}
+import services.{TradingDetailsService, TradingDetailsSrv, VatThresholdService, VatThresholdServiceImpl}
 
 class Module extends AbstractModule {
 
@@ -38,6 +38,8 @@ class Module extends AbstractModule {
     bind(classOf[TradingDetailsSrv]).to(classOf[TradingDetailsService]).asEagerSingleton()
     bind(classOf[BusinessContactController]).to(classOf[BusinessContactControllerImpl]).asEagerSingleton()
     bind(classOf[FlatRateSchemeController]).to(classOf[FlatRateSchemeControllerImpl]).asEagerSingleton()
+    bind(classOf[VatThresholdController]).to(classOf[VatThresholdControllerImpl]).asEagerSingleton()
+    bind(classOf[VatThresholdService]).to(classOf[VatThresholdServiceImpl]).asEagerSingleton()
     //TODO: Should all services be done this way or is it just the controller.
 //    bind(classOf[services.LodgingOfficerSrv]).to(classOf[services.LodgingOfficerService]).asEagerSingleton()
 //    bind(classOf[services.EligibilitySrv]).to(classOf[services.EligibilityService]).asEagerSingleton()
