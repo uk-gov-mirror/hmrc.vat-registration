@@ -17,15 +17,14 @@
 package services
 
 import javax.inject.Inject
+
+import com.typesafe.config.ConfigRenderOptions
 import models.VatThreshold
 import org.joda.time.DateTime
 import play.api.libs.json._
-import uk.gov.hmrc.play.config.ServicesConfig
 
-import scala.io.Source._
-
-class VatThresholdServiceImpl @Inject() extends VatThresholdService with ServicesConfig {
-  lazy val thresholdString = fromFile(getConfString("ThresholdsJsonLocation", "../conf/thresholds.json")).mkString
+class VatThresholdServiceImpl @Inject()(app : play.api.Application) extends VatThresholdService {
+  lazy val thresholdString = app.configuration.underlying.getList("thresholds").render(ConfigRenderOptions.concise())
   lazy val thresholds = Json.parse(thresholdString).as[List[VatThreshold]]
   implicit lazy val ThresholdReads = Json.reads[VatThreshold]
 }
