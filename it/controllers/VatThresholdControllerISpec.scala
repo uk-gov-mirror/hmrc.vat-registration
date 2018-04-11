@@ -13,8 +13,7 @@ class VatThresholdControllerISpec extends IntegrationStubbing {
   val mockPort = WiremockHelper.wiremockPort
   val mockUrl = s"http://$mockHost:$mockPort"
 
-  override implicit lazy val app = FakeApplication(
-    additionalConfiguration = Map(
+  override implicit lazy val app = FakeApplication(additionalConfiguration = Map(
       "auditing.consumer.baseUri.host" -> s"$mockHost",
       "auditing.consumer.baseUri.port" -> s"$mockPort",
       "microservice.services.auth.host" -> s"$mockHost",
@@ -26,11 +25,13 @@ class VatThresholdControllerISpec extends IntegrationStubbing {
       "microservice.services.incorporation-information.host" -> s"$mockHost",
       "microservice.services.incorporation-information.port" -> s"$mockPort",
       "microservice.services.incorporation-information.uri" -> "/incorporation-information",
+      "microservice.services.ThresholdsJsonLocation" -> "conf/thresholds.json",
       "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
     )
   )
 
   class Setup extends SetupHelper()
+
   "VatThresholds" should {
     "return valid threhold amount and change date for given date" in new Setup {
       val response = await(client(controllers.routes.VatThresholdController.getThresholdForTime("2001-06-04").url).get())
