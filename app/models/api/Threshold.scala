@@ -22,8 +22,9 @@ import play.api.libs.json.{Json, OFormat}
 
 case class Threshold(mandatoryRegistration: Boolean,
                      voluntaryReason: Option[String],
-                     overThresholdDate: Option[LocalDate],
-                     expectedOverThresholdDate: Option[LocalDate])
+                     overThresholdDateThirtyDays: Option[LocalDate],
+                     pastOverThresholdDateThirtyDays: Option[LocalDate],
+                     overThresholdOccuredTwelveMonth: Option[LocalDate])
 
 object Threshold {
   implicit val format: OFormat[Threshold] = Json.format

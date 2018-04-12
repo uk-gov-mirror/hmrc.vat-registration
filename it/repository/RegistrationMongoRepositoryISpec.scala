@@ -652,8 +652,9 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
   "Calling getThreshold" should {
     val threshold = Threshold(mandatoryRegistration = false,
                               voluntaryReason = Some("a reason"),
-                              overThresholdDate = Some(LocalDate.of(2017, 12, 28)),
-                              expectedOverThresholdDate = Some(LocalDate.of(2018, 1, 31)))
+                              overThresholdDateThirtyDays = Some(LocalDate.of(2017, 12, 28)),
+                              pastOverThresholdDateThirtyDays = Some(LocalDate.of(2017, 6, 15)),
+                              overThresholdOccuredTwelveMonth = Some(LocalDate.of(2018, 1, 31)))
 
     "return threshold data from an existing registration containing data" in new Setup {
       val result = for {
@@ -702,7 +703,13 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
   }
 
   "Calling updateThreshold" should {
-    val threshold = Threshold(mandatoryRegistration = false, voluntaryReason = Some("a reason"), overThresholdDate = None, expectedOverThresholdDate = None)
+    val threshold = Threshold(
+      mandatoryRegistration = false,
+      voluntaryReason = Some("a reason"),
+      overThresholdDateThirtyDays = None,
+      pastOverThresholdDateThirtyDays = None,
+      overThresholdOccuredTwelveMonth = None
+    )
 
     "update threshold block in registration when there is no threshold data" in new Setup {
       val result = for {
@@ -715,7 +722,13 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     }
 
     "update threshold block in registration when there is already threshold data" in new Setup {
-      val otherThreshold = Threshold(mandatoryRegistration = true, voluntaryReason = None, overThresholdDate = None, expectedOverThresholdDate = None)
+      val otherThreshold = Threshold(
+        mandatoryRegistration = true,
+        voluntaryReason = None,
+        overThresholdDateThirtyDays = None,
+        pastOverThresholdDateThirtyDays = None,
+        overThresholdOccuredTwelveMonth = None
+      )
       val result = for {
         _                   <- repository.insert(vatScheme.copy(threshold = Some(otherThreshold)))
         _                   <- repository.updateThreshold(vatScheme.id.value, threshold)

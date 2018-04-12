@@ -40,9 +40,9 @@ class IncorporationInformationTestController @Inject()(val iiTestConnector: Inco
 
     val iiTestConnector:IncorporationInformationTestConnector
 
-  def incorpCompany(transactionId: TransactionId): Action[AnyContent] = Action.async { implicit request =>
+  def incorpCompany(transactionId: TransactionId, incorpDate: String): Action[AnyContent] = Action.async { implicit request =>
     isAuthenticated { _ =>
-      iiTestConnector.incorpCompany(transactionId).map(_ => Ok)
+      iiTestConnector.incorpCompany(transactionId, incorpDate).map(_ => Ok)
     }
   }
 }

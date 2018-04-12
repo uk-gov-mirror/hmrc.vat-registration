@@ -44,7 +44,13 @@ class ThresholdControllerISpec extends IntegrationStubbing {
   }
 
   def vatScheme(regId: String): VatScheme = emptyVatScheme(regId).copy(threshold = Some(
-    Threshold(false,Some("voluntaryReason"),Some(LocalDate.now()),Some(LocalDate.now())))
+    Threshold(
+      false,
+      Some("voluntaryReason"),
+      Some(LocalDate.now()),
+      Some(LocalDate.now()),
+      Some(LocalDate.now()))
+    )
   )
 
   val validThresholdJson = Json.parse(
@@ -52,8 +58,9 @@ class ThresholdControllerISpec extends IntegrationStubbing {
        |{
        | "mandatoryRegistration": false,
        | "voluntaryReason": "voluntaryReason",
-       | "overThresholdDate": "${LocalDate.now()}",
-       | "expectedOverThresholdDate": "${LocalDate.now()}"
+       | "overThresholdDateThirtyDays": "${LocalDate.now()}",
+       | "pastOverThresholdDateThirtyDays": "${LocalDate.now()}",
+       | "overThresholdOccuredTwelveMonth": "${LocalDate.now()}"
        |}
     """.stripMargin).as[JsObject]
 

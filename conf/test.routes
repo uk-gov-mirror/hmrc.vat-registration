@@ -1,6 +1,6 @@
 POST        /current-profile-setup                                 controllers.test.TestSupportController.currentProfileSetup()
 POST        /clear                                                 controllers.test.TestSupportController.dropCollection()
-GET         /incorporation-information/incorp-company/:txId        controllers.test.IncorporationInformationTestController.incorpCompany(txId: TransactionId)
+GET         /incorporation-information/incorp-company/:txId/:companyIncorpDate        controllers.test.IncorporationInformationTestController.incorpCompany(txId: TransactionId, companyIncorpDate: String)
 
 GET         /feature-flag/:featureName/:featureStatus              controllers.test.FeatureSwitchController.switch(featureName: String, featureStatus: String)
 GET         /feature-flag                                          controllers.test.FeatureSwitchController.show
