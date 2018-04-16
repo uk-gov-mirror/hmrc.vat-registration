@@ -18,8 +18,8 @@ package models
 
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import play.api.libs.json.{Format, JsString, Reads, Writes, __}
 
 case class VatThreshold(date: DateTime, amount: String)
 
@@ -46,5 +46,5 @@ object VatThreshold {
         (__ \ "taxable-threshold").write[String]
     )(unlift(VatThreshold.unapply))
 
-  implicit val format = Format(reads, writes)
+  implicit val format: Format[VatThreshold] = Format(reads, writes)
 }
