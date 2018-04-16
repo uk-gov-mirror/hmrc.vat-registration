@@ -45,22 +45,22 @@ class VatThresholdServiceSpec extends VatRegSpec with VatRegistrationFixture {
   }
 
   "return most recent threshold for given date" in new Setup {
-    val result = service.getThresholdForGivenTime(date("2001-05-15"))
+    val result = service.getThresholdForGivenDate(date("2001-05-15"))
     result shouldBe Some(VatThreshold(date("2001-01-01"), "1"))
   }
 
   "return most updated threshold for same date edge case" in new Setup {
-    val result = service.getThresholdForGivenTime(date("2002-02-02"))
+    val result = service.getThresholdForGivenDate(date("2002-02-02"))
     result shouldBe Some(VatThreshold(date("2002-02-02"), "2"))
   }
 
   "return most recent threshold for future dates" in new Setup {
-    val result = service.getThresholdForGivenTime(date("2010-01-01"))
+    val result = service.getThresholdForGivenDate(date("2010-01-01"))
     result shouldBe Some(VatThreshold(date("2004-04-04"), "4"))
   }
 
   "return none for date before known thresholds" in new Setup {
-    val result = service.getThresholdForGivenTime(date("2000-01-01"))
+    val result = service.getThresholdForGivenDate(date("2000-01-01"))
     result shouldBe None
   }
 }

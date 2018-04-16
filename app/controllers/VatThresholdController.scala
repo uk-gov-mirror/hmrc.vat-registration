@@ -16,34 +16,25 @@
 
 package controllers
 
-import java.io.FileInputStream
-
 import javax.inject.Inject
-import org.joda.time.DateTime
-import org.joda.time.base.AbstractInstant._
+
 import org.joda.time.format.DateTimeFormat
-import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
-import play.api.mvc._
+import play.api.libs.json.Json
+import play.api.mvc.{Action, AnyContent}
+import services.VatThresholdService
 import uk.gov.hmrc.play.microservice.controller.BaseController
-import services._
 
-import util.control.Breaks._
-import scala.concurrent.Future
-import scala.util.parsing.json.JSONObject
-import scala.util.{Failure, Success, Try}
-
-class VatThresholdControllerImpl @Inject()(val vatThresholdService: VatThresholdService) extends VatThresholdController {}
+class VatThresholdControllerImpl @Inject()(val vatThresholdService: VatThresholdService) extends VatThresholdController
 
 trait VatThresholdController extends BaseController {
   val vatThresholdService: VatThresholdService
 
-  def getThresholdForTime(timestamp: String): Action[AnyContent] = Action.async( {
-    implicit request => {
-      val inputDate = DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime(timestamp)
-        vatThresholdService.getThresholdForGivenTime(inputDate) match {
-          case Some(vatThreshold) => Future.successful(Ok(Json.toJson(vatThreshold)))
-          case _ => Future.successful(NotFound)
-        }
+  def getThresholdForDate(date: String): Action[AnyContent] = Action {
+    implicit request =>
+      val inputDate = DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime(date)
+      vatThresholdService.getThresholdForGivenDate(inputDate) match {
+        case Some(vatThreshold) => Ok(Json.toJson(vatThreshold))
+        case _ => NotFound
       }
-  })
+  }
 }

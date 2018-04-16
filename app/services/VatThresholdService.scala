@@ -26,19 +26,14 @@ import play.api.libs.json._
 class VatThresholdServiceImpl @Inject()(app : play.api.Application) extends VatThresholdService {
   lazy val thresholdString = app.configuration.underlying.getList("thresholds").render(ConfigRenderOptions.concise())
   lazy val thresholds = Json.parse(thresholdString).as[List[VatThreshold]]
-  implicit lazy val ThresholdReads = Json.reads[VatThreshold]
 }
 
 trait VatThresholdService {
   val thresholds: List[VatThreshold]
 
-  def getThresholdForGivenTime(givenDate: DateTime): Option[VatThreshold] = {
+  def getThresholdForGivenDate(givenDate: DateTime): Option[VatThreshold] = {
     thresholds
-      .sortWith(descendingDates)
+      .sortWith(_.date isAfter _.date)
       .find(model => givenDate.isAfter(model.date) || givenDate.isEqual(model.date))
-  }
-
-  private def descendingDates(vt1: VatThreshold, vt2: VatThreshold) = {
-    vt1.date isAfter vt2.date
   }
 }
