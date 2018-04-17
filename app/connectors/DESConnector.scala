@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 
 import config.{MicroserviceAuditConnector, WSHttp}
 import models.submission.{DESSubmission, TopUpSubmission}
+import play.api.Logger
 import play.api.libs.json.Writes
 import uk.gov.hmrc.play.config.ServicesConfig
 
@@ -29,7 +30,7 @@ import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging.Authorization
 
 @Singleton
-class DESConnector @Inject()() extends DESConnect with ServicesConfig {
+class DESConnectorImpl @Inject()() extends DESConnector with ServicesConfig {
   lazy val desStubUrl: String = baseUrl("des-stub")
   lazy val desStubURI: String = getConfString("des-stub.uri", "")
   lazy val desStubTopUpUrl: String = baseUrl("des-stub")
@@ -43,7 +44,7 @@ class DESConnector @Inject()() extends DESConnect with ServicesConfig {
   val auditConnector = MicroserviceAuditConnector
 }
 
-trait DESConnect extends HttpErrorFunctions {
+trait DESConnector extends HttpErrorFunctions {
 
   val desStubUrl: String
   val desStubURI: String
@@ -55,23 +56,41 @@ trait DESConnect extends HttpErrorFunctions {
 
   val http: CorePost
 
+  private[connectors] def customDESRead(http: String, url: String, response: HttpResponse): HttpResponse = {
+    response.status match {
+      case 409 =>
+        Logger.warn("[DesConnector] [customDESRead] Received 409 from DES - converting to 202")
+        HttpResponse(202, Option(response.json), response.allHeaders, Option(response.body))
+      case 499 =>
+        Logger.warn("[DesConnector] [customDESRead] Received 499 from DES - converting to 502")
+        throw Upstream5xxResponse("Timeout received from DES submission", 499, 502)
+      case status if is4xx(status) =>
+        throw Upstream4xxResponse(upstreamResponseMessage(http, url, status, response.body), status, reportAs = 400, response.allHeaders)
+      case _ => handleResponse(http, url)(response)
+    }
+  }
+
+  implicit val httpRds = new HttpReads[HttpResponse] {
+    def read(http: String, url: String, res: HttpResponse) = customDESRead(http, url, res)
+  }
+
   def submitToDES(submission: DESSubmission, regId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val url = s"$desStubUrl/$desStubURI"
-    vatPOST[DESSubmission, HttpResponse](url, submission) map { resp =>
+    vatPOST[DESSubmission](url, submission) map { resp =>
       resp
     }
   }
 
   def submitTopUpToDES(submission: TopUpSubmission, regId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val url = s"$desStubTopUpUrl/$desStubTopUpURI"
-    vatPOST[TopUpSubmission, HttpResponse](url, submission) map { resp =>
+    vatPOST[TopUpSubmission](url, submission) map { resp =>
       resp
     }
   }
 
-  private def vatPOST[I, O](url: String, body: I, headers: Seq[(String, String)] = Seq.empty)
-                           (implicit wts: Writes[I], rds: HttpReads[O], hc: HeaderCarrier, ec: ExecutionContext) =
-    http.POST[I, O](url, body, headers)(wts = wts, rds = rds, hc = createHeaderCarrier(hc), ec = ec)
+  private def vatPOST[I](url: String, body: I, headers: Seq[(String, String)] = Seq.empty)
+                           (implicit wts: Writes[I], rds: HttpReads[HttpResponse], hc: HeaderCarrier, ec: ExecutionContext) =
+    http.POST[I, HttpResponse](url, body, headers)(wts = wts, rds = rds, hc = createHeaderCarrier(hc), ec = ec)
 
   private def createHeaderCarrier(headerCarrier: HeaderCarrier): HeaderCarrier = {
     headerCarrier.

@@ -22,7 +22,7 @@ import cats.instances.FutureInstances
 import cats.syntax.ApplicativeSyntax
 import common.{RegistrationId, TransactionId}
 import common.exceptions._
-import connectors.{CompanyRegistrationConnector, DESConnector, IncorporationInformationConnector}
+import connectors.{CompanyRegistrationConnector, DESConnectorImpl, IncorporationInformationConnector}
 import enums.VatRegStatus
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
@@ -47,10 +47,8 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
     val service = new SubmissionSrv {
       override val vatRegistrationService: VatRegistrationService = mockVatRegistrationService
       override val companyRegistrationConnector: CompanyRegistrationConnector = mockCompanyRegConnector
-      override val desConnector: DESConnector = mockDesConnector
+      override val desConnector: DESConnectorImpl = mockDesConnector
       override val incorporationInformationConnector: IncorporationInformationConnector = mockIIConnector
-      override val auditConnector: AuditConnector = mock[AuditConnector]
-
       override val sequenceRepository: SequenceRepository = mockSequenceRepository
       override val registrationRepository: RegistrationRepository = mockRegistrationRepository
     }

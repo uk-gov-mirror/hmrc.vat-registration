@@ -18,6 +18,7 @@ package config
 
 import auth.{Crypto, CryptoImpl}
 import com.google.inject.AbstractModule
+import connectors.{DESConnector, DESConnectorImpl}
 import controllers._
 import services.{TradingDetailsService, TradingDetailsSrv, VatThresholdService, VatThresholdServiceImpl}
 
@@ -29,6 +30,7 @@ class Module extends AbstractModule {
     bind(classOf[VatRegistrationController]).to(classOf[VatRegistrationControllerImpl]).asEagerSingleton()
     bind(classOf[connectors.BusinessRegistrationConnector]).to(classOf[connectors.VatRegBusinessRegistrationConnector]).asEagerSingleton()
     bind(classOf[connectors.IncorporationInformationConnector]).to(classOf[connectors.VatRegIncorporationInformationConnector ]).asEagerSingleton()
+    bind(classOf[DESConnector]).to(classOf[DESConnectorImpl]).asEagerSingleton()
     bind(classOf[services.RegistrationService]).to(classOf[services.VatRegistrationService]).asEagerSingleton()
     bind(classOf[EligibilityController]).to(classOf[EligibilityControllerImpl]).asEagerSingleton()
     bind(classOf[ThresholdController]).to(classOf[ThresholdControllerImpl]).asEagerSingleton()

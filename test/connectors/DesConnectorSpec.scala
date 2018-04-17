@@ -18,26 +18,26 @@ package connectors
 
 import java.time.LocalDate
 
-import helpers.VatRegSpec
 import models.submission.{DESSubmission, TopUpSubmission}
 import org.joda.time.DateTime
-import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.{any, anyString, contains}
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
-import org.scalatest.BeforeAndAfter
+import org.scalatest.mockito.MockitoSugar
 import play.api.libs.json.Writes
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, Upstream4xxResponse}
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.http.ws.WSHttp
+import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future
 
-class DesConnectorSpec extends VatRegSpec {
+class DesConnectorSpec extends UnitSpec with MockitoSugar {
 
   implicit val hc = HeaderCarrier()
   val realmockHttp = mock[WSHttp]
 
   class SetupWithProxy {
-    val connector = new DESConnect {
+    val connector = new DESConnector {
       override val http = realmockHttp
       override val desStubURI      = "testStubURI"
       override val desStubUrl      = "desStubURL"
@@ -54,13 +54,14 @@ class DesConnectorSpec extends VatRegSpec {
   val upstream4xx = Upstream4xxResponse("400", 400, 400)
 
   def mockHttpPOST[I, O](url: String, thenReturn: O): OngoingStubbing[Future[O]] = {
-    when(realmockHttp.POST[I, O](ArgumentMatchers.contains(url), ArgumentMatchers.any[I](), ArgumentMatchers.any())
-      (ArgumentMatchers.any[Writes[I]](), ArgumentMatchers.any[HttpReads[O]](), ArgumentMatchers.any[HeaderCarrier](), ArgumentMatchers.any()))
+    when(realmockHttp.POST[I, O](contains(url), any[I](), any())
+      (any[Writes[I]](), any[HttpReads[O]](), any[HeaderCarrier](), any()))
       .thenReturn(Future.successful(thenReturn))
   }
 
   def mockHttpFailedPOST[I, O](url: String, exception: Exception): OngoingStubbing[Future[O]] = {
-    when(realmockHttp.POST[I, O](ArgumentMatchers.anyString(), ArgumentMatchers.any[I](), ArgumentMatchers.any())(ArgumentMatchers.any[Writes[I]](), ArgumentMatchers.any[HttpReads[O]](), ArgumentMatchers.any[HeaderCarrier](), ArgumentMatchers.any()))
+    when(realmockHttp.POST[I, O](anyString(), any[I](), any())
+      (any[Writes[I]](), any[HttpReads[O]](), any[HeaderCarrier](), any()))
       .thenReturn(Future.failed(exception))
   }
 
@@ -69,7 +70,7 @@ class DesConnectorSpec extends VatRegSpec {
     "successfully POST" in new SetupWithProxy {
       mockHttpPOST[DESSubmission, HttpResponse](s"${connector.desStubUrl}/${connector.desStubURI}", HttpResponse(202))
 
-      await(connector.submitToDES(validDesSubmission, "regId").status) shouldBe 202
+      connector.submitToDES(validDesSubmission, "regId").status shouldBe 202
     }
 
     "handle a failed POST" in new SetupWithProxy {

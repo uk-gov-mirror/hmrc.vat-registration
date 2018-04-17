@@ -21,16 +21,16 @@ import javax.inject.Inject
 import auth.Authorisation
 import cats.instances.FutureInstances
 import common.RegistrationId
-import common.exceptions.{InvalidSubmissionStatus, LeftState, MissingRegDocument}
+import common.exceptions.{InvalidSubmissionStatus, LeftState}
 import config.AuthClientConnector
 import enums.VatRegStatus
 import models.api._
-import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
 import repositories.{RegistrationMongo, RegistrationMongoRepository}
 import services._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.http.{Upstream4xxResponse, Upstream5xxResponse}
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.play.microservice.controller.BaseController
 import utils.VATFeatureSwitches
@@ -109,6 +109,7 @@ trait VatRegistrationController extends BaseController with Authorisation with F
             submissionService.submitVatRegistration(id).map { ackRefs =>
               Ok(Json.toJson(ackRefs))
             } recover {
+              case ex: Upstream5xxResponse => BadGateway(s"Timeout received when attempting to submit: ${ex.getMessage}")
               case ex => BadRequest(s"Registration was submitted without full data: ${ex.getMessage}")
             }
           } else {

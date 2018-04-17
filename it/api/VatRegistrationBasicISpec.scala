@@ -227,7 +227,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
       System.setProperty("feature.mockSubmission", "false")
 
       mockGetTransID()
-      mockIncorpUpdate()
+      mockNoIncorpUpdate()
       mockGetCompanyProfile()
 
       stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
@@ -248,6 +248,57 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
       reg.get.status shouldBe VatRegStatus.draft
 
       await(repo.remove("registrationId" -> registrationID))
+    }
+
+    "return a 2xx status when DES returns a 409" in new Setup() {
+      given
+        .user.isAuthorised
+
+      System.setProperty("feature.mockSubmission", "false")
+
+      mockGetTransID()
+      mockNoIncorpUpdate()
+      mockGetCompanyProfile()
+
+      stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
+        .willReturn(
+          aResponse()
+            .withStatus(409)
+            .withBody("""{"foo":"bar"}""")
+        )
+      )
+
+      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), tradingDetails))
+
+      val result = await(client(
+        controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
+      )
+      result.status shouldBe 200
+    }
+
+    "return a 5xx status when DES returns a 499" in new Setup() {
+      given
+        .user.isAuthorised
+
+      System.setProperty("feature.mockSubmission", "false")
+
+      mockGetTransID()
+      mockNoIncorpUpdate()
+      mockGetCompanyProfile()
+
+      stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
+        .willReturn(
+          aResponse()
+            .withStatus(499)
+        )
+      )
+
+      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), tradingDetails))
+
+      val result = await(client(
+        controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
+      )
+      result.status shouldBe 502
     }
 
     "mock the return if the mock submission flag is on" in new Setup{
