@@ -22,7 +22,6 @@ import javax.inject.{Inject, Singleton}
 import cats.instances.FutureInstances
 import common.exceptions._
 import common.{RegistrationId, TransactionId}
-import config.MicroserviceAuditConnector
 import connectors.{CompanyRegistrationConnector, DESConnector, IncorporationInformationConnector}
 import enums.VatRegStatus
 import models.api.VatScheme
@@ -31,7 +30,6 @@ import models.submission.{DESSubmission, TopUpSubmission}
 import org.joda.time.DateTime
 import repositories._
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,7 +42,6 @@ class SubmissionService @Inject()(val sequenceMongo: SequenceMongo,
                                   val companyRegistrationConnector: CompanyRegistrationConnector,
                                   val desConnector: DESConnector,
                                   val incorporationInformationConnector : IncorporationInformationConnector) extends SubmissionSrv {
-  val auditConnector = MicroserviceAuditConnector
   val registrationRepository = registrationMongo.store
   val sequenceRepository = sequenceMongo.store
 }
@@ -57,7 +54,6 @@ trait SubmissionSrv extends FutureInstances {
   val companyRegistrationConnector : CompanyRegistrationConnector
   val desConnector: DESConnector
   val incorporationInformationConnector: IncorporationInformationConnector
-  val auditConnector: AuditConnector
 
   private val REGIME = "vat"
   private val SUBSCRIBER = "scrs"
