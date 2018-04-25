@@ -40,13 +40,13 @@ class ThresholdServiceSpec extends VatRegSpec with VatRegistrationFixture {
     }
 
     def upsertToMongo(): OngoingStubbing[Future[Threshold]] = when(mockRegistrationMongoRepository.updateThreshold(any(),any())(any()))
-      .thenReturn(Future.successful(upsertThreshold))
+      .thenReturn(Future.successful(mandatoryThreshold))
 
     def upsertToMongoFail(): OngoingStubbing[Future[Threshold]] = when(mockRegistrationMongoRepository.updateThreshold(any(),any())(any()))
       .thenReturn(Future.failed(new Exception("")))
 
     def getsFromMongo(): OngoingStubbing[Future[Option[Threshold]]] = when(mockRegistrationMongoRepository.getThreshold(any())(any()))
-      .thenReturn(Future.successful(Some(validThreshold)))
+      .thenReturn(Future.successful(Some(voluntaryThreshold)))
 
     def getsNothingFromMongo(): OngoingStubbing[Future[Option[Threshold]]] = when(mockRegistrationMongoRepository.getThreshold(any())(any()))
       .thenReturn(Future.successful(None))
@@ -57,8 +57,9 @@ class ThresholdServiceSpec extends VatRegSpec with VatRegistrationFixture {
        |{
        | "mandatoryRegistration": false,
        | "voluntaryReason": "voluntaryReason",
-       | "overThresholdDate": "${LocalDate.now()}",
-       | "expectedOverThresholdDate": "${LocalDate.now()}"
+       | "overThresholdDateThirtyDays": "${LocalDate.now()}",
+       | "pastOverThresholdDateThirtyDays": "${LocalDate.now()}",
+       | "overThresholdOccuredTwelveMonth": "${LocalDate.now()}"
        |}
     """.stripMargin).as[Threshold]
 
@@ -66,8 +67,9 @@ class ThresholdServiceSpec extends VatRegSpec with VatRegistrationFixture {
     s"""
        |{
        | "mandatoryRegistration": true,
-       | "overThresholdDate": "${LocalDate.now()}",
-       | "expectedOverThresholdDate": "${LocalDate.now()}"
+       | "overThresholdDateThirtyDays": "${LocalDate.now()}",
+       | "pastOverThresholdDateThirtyDays": "${LocalDate.now()}",
+       | "overThresholdOccuredTwelveMonth": "${LocalDate.now()}"
        |}
     """.stripMargin).as[Threshold]
 

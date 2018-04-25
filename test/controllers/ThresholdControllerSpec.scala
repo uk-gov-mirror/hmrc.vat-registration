@@ -44,7 +44,7 @@ class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
     }
 
     def getThresholdData(): OngoingStubbing[Future[Option[Threshold]]] = when(mockThresholdService.getThreshold(any())(any()))
-      .thenReturn(Future.successful(Some(validThreshold)))
+      .thenReturn(Future.successful(Some(voluntaryThreshold)))
 
     def getThresholdDataNotFound(): OngoingStubbing[Future[Option[Threshold]]] = when(mockThresholdService.getThreshold(any())(any()))
       .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
@@ -53,7 +53,7 @@ class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
       .thenReturn(Future.successful(None))
 
     def updateThreshold(): OngoingStubbing[Future[Threshold]] = when(mockThresholdService.upsertThreshold(any(), any())(any()))
-      .thenReturn(Future.successful(upsertThreshold))
+      .thenReturn(Future.successful(mandatoryThreshold))
 
     def updateThresholdFails(): OngoingStubbing[Future[Threshold]] = when(mockThresholdService.upsertThreshold(any(), any())(any()))
       .thenReturn(Future.failed(new Exception))
@@ -67,8 +67,9 @@ class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
       |{
       | "mandatoryRegistration": false,
       | "voluntaryReason": "voluntaryReason",
-      | "overThresholdDate": "${LocalDate.now()}",
-      | "expectedOverThresholdDate": "${LocalDate.now()}"
+      | "overThresholdDateThirtyDays": "${LocalDate.now()}",
+      | "pastOverThresholdDateThirtyDays": "${LocalDate.now()}",
+      | "overThresholdOccuredTwelveMonth": "${LocalDate.now()}"
       |}
     """.stripMargin).as[JsObject]
 
@@ -76,8 +77,9 @@ class ThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture {
     s"""
       |{
       | "mandatoryRegistration": true,
-      | "overThresholdDate": "${LocalDate.now()}",
-      | "expectedOverThresholdDate": "${LocalDate.now()}"
+      | "overThresholdDateThirtyDays": "${LocalDate.now()}",
+      | "pastOverThresholdDateThirtyDays": "${LocalDate.now()}",
+      | "overThresholdOccuredTwelveMonth": "${LocalDate.now()}"
       |}
     """.stripMargin).as[JsObject]
 

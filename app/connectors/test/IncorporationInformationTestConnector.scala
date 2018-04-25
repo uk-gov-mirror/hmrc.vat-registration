@@ -28,7 +28,7 @@ import scala.concurrent.Future
 
 @ImplementedBy(classOf[VatRegIncorporationInformationTestConnector])
 trait IncorporationInformationTestConnector {
-  def incorpCompany(transactionId: TransactionId)(implicit hc: HeaderCarrier): Future[Result]
+  def incorpCompany(transactionId: TransactionId, incorpDate: String)(implicit hc: HeaderCarrier): Future[Result]
 }
 
 class VatRegIncorporationInformationTestConnector extends IncorporationInformationTestConnector with ServicesConfig {
@@ -37,9 +37,9 @@ class VatRegIncorporationInformationTestConnector extends IncorporationInformati
   val iiUrl = baseUrl("incorporation-information")
   val http: CoreGet = WSHttp
 
-  def incorpCompany(transactionId: TransactionId)(implicit hc: HeaderCarrier): Future[Result] = {
+  def incorpCompany(transactionId: TransactionId, incorpDate: String)(implicit hc: HeaderCarrier): Future[Result] = {
     http.GET(s"$iiUrl/incorporation-information/test-only/add-incorp-update?txId=" +
-      s"$transactionId&date=2016-08-05&success=true&crn=12345").map(_ => Results.Ok)
+      s"$transactionId&date=$incorpDate&success=true&crn=12345").map(_ => Results.Ok)
   }
   //$COVERAGE-ON$
 }

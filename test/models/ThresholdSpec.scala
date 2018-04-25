@@ -35,8 +35,9 @@ class ThresholdSpec extends JsonFormatValidation {
       val expectedResult = Threshold(
         mandatoryRegistration = true,
         voluntaryReason = None,
-        overThresholdDate = None,
-        expectedOverThresholdDate = None
+        overThresholdDateThirtyDays = None,
+        pastOverThresholdDateThirtyDays = None,
+        overThresholdOccuredTwelveMonth = None
       )
 
       Json.fromJson[Threshold](json)(Threshold.format) shouldBe JsSuccess(expectedResult)
@@ -48,16 +49,18 @@ class ThresholdSpec extends JsonFormatValidation {
            |{
            |  "mandatoryRegistration": false,
            |  "voluntaryReason": "test reason",
-           |  "overThresholdDate": "2017-12-30",
-           |  "expectedOverThresholdDate": "2017-01-21"
+           |  "overThresholdDateThirtyDays": "2017-12-30",
+           |  "pastOverThresholdDateThirtyDays": "2017-06-15",
+           |  "overThresholdOccuredTwelveMonth": "2017-01-21"
            |}
          """.stripMargin)
 
       val expectedResult = Threshold(
         mandatoryRegistration = false,
         voluntaryReason = Some("test reason"),
-        overThresholdDate = Some(LocalDate.of(2017, 12, 30)),
-        expectedOverThresholdDate = Some(LocalDate.of(2017, 1, 21))
+        overThresholdDateThirtyDays = Some(LocalDate.of(2017, 12, 30)),
+        pastOverThresholdDateThirtyDays = Some(LocalDate.of(2017, 6, 15)),
+        overThresholdOccuredTwelveMonth = Some(LocalDate.of(2017, 1, 21))
       )
 
       Json.fromJson[Threshold](json)(Threshold.format) shouldBe JsSuccess(expectedResult)

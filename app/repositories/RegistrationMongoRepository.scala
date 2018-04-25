@@ -306,8 +306,8 @@ class RegistrationMongoRepository (mongo: () => DB, crypto: Crypto)
   def updateThreshold(regId: String, threshold: Threshold)(implicit ec: ExecutionContext): Future[Threshold] = {
     //TODO - Need to maintain old model VatServiceEligibility to not break frontend service - TO BE REMOVE once frontend service use Eligibility model
     val necessity = if (threshold.mandatoryRegistration) "obligatory" else "voluntary"
-    val overThreshold = threshold.overThresholdDate.fold(VatThresholdPostIncorp(false, None))(date => VatThresholdPostIncorp(true, Some(date)))
-    val expectedOverThreshold = threshold.expectedOverThresholdDate.fold(VatExpectedThresholdPostIncorp(false, None))(date => VatExpectedThresholdPostIncorp(true, Some(date)))
+    val overThreshold = threshold.overThresholdDateThirtyDays.fold(VatThresholdPostIncorp(false, None))(date => VatThresholdPostIncorp(true, Some(date)))
+    val expectedOverThreshold = threshold.overThresholdOccuredTwelveMonth.fold(VatExpectedThresholdPostIncorp(false, None))(date => VatExpectedThresholdPostIncorp(true, Some(date)))
     val eligibilityChoice = VatEligibilityChoice(necessity = necessity, vatThresholdPostIncorp = Some(overThreshold), vatExpectedThresholdPostIncorp = Some(expectedOverThreshold))
     updateLogicalGroup(RegistrationId(regId), VatServiceEligibility(vatEligibilityChoice = Some(eligibilityChoice)))
 
