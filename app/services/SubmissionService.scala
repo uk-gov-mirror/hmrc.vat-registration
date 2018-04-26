@@ -60,8 +60,8 @@ trait SubmissionSrv extends FutureInstances {
 
   def submitVatRegistration(regId : RegistrationId)(implicit hc : HeaderCarrier) : Future[String] = {
     for {
-      _             <- getValidDocumentStatus(regId)
-      ackRefs       <- ensureAcknowledgementReference(regId)
+      status        <- getValidDocumentStatus(regId)
+      ackRefs       <- ensureAcknowledgementReference(regId, status)
       transID       <- fetchCompanyRegistrationTransactionID(regId)
       incorpStatus  <- registerForInterest(transID)
       incorpDate    =  incorpStatus.map(status => getIncorpDate(status))
@@ -77,7 +77,8 @@ trait SubmissionSrv extends FutureInstances {
   def submitTopUpVatRegistration(incorpUpdate: IncorpStatus)(implicit hc : HeaderCarrier): Future[Boolean] = {
     for {
       regId         <- getRegistrationIDByTxId(incorpUpdate.transactionId)
-      ackRefs       <- ensureAcknowledgementReference(regId)
+      status        <- getValidDocumentTopupStatus(regId)
+      ackRefs       <- ensureAcknowledgementReference(regId, status)
       submission    <- buildTopUpSubmission(regId, ackRefs, incorpUpdate.status, incorpUpdate.incorporationDate)
       _             <- desConnector.submitTopUpToDES(submission, regId.toString)
       _             <- updateTopUpSubmissionStatus(regId, incorpUpdate.status)
@@ -97,12 +98,12 @@ trait SubmissionSrv extends FutureInstances {
   private[services] def generateAcknowledgementReference(implicit hc: HeaderCarrier): Future[String] =
     sequenceRepository.getNext("AcknowledgementID").map(ref => f"BRVT$ref%011d")
 
-  private[services] def ensureAcknowledgementReference(regId: RegistrationId)(implicit hc : HeaderCarrier, ec: ExecutionContext): Future[String] = {
+  private[services] def ensureAcknowledgementReference(regId: RegistrationId, status : VatRegStatus.Value)(implicit hc : HeaderCarrier, ec: ExecutionContext): Future[String] = {
     registrationRepository.retrieveVatScheme(regId) flatMap {
       case Some(vs) => vs.acknowledgementReference.fold(
         for {
           newAckref   <- generateAcknowledgementReference
-          _           <- registrationRepository.prepareRegistrationSubmission(regId, newAckref)
+          _           <- registrationRepository.prepareRegistrationSubmission(regId, newAckref, status)
         } yield newAckref
       )(ar => Future.successful(ar))
       case _ => throw new MissingRegDocument(regId)
@@ -145,11 +146,21 @@ trait SubmissionSrv extends FutureInstances {
 
   }
 
-  private[services] def getValidDocumentStatus(regID : RegistrationId)(implicit hc : HeaderCarrier) : Future[String] = {
+  private[services] def getValidDocumentStatus(regID : RegistrationId)(implicit hc : HeaderCarrier): Future[VatRegStatus.Value] = {
     registrationRepository.retrieveVatScheme(regID) map {
       case Some(registration) => registration.status match {
-        case VatRegStatus.draft => registration.status.toString
-        case _                  => throw new InvalidSubmissionStatus(s"VAT submission status was in a ${registration.status} state")
+        case VatRegStatus.draft | VatRegStatus.locked  => registration.status
+        case _                                         => throw InvalidSubmissionStatus(s"VAT submission status was in a ${registration.status} state")
+      }
+      case None => throw new MissingRegDocument(regID)
+    }
+  }
+
+  private[services] def getValidDocumentTopupStatus(regID : RegistrationId)(implicit hc : HeaderCarrier): Future[VatRegStatus.Value] = {
+    registrationRepository.retrieveVatScheme(regID) map {
+      case Some(registration) => registration.status match {
+        case VatRegStatus.held  => registration.status
+        case _                  => throw InvalidSubmissionStatus(s"VAT topup submission status was in a ${registration.status} state")
       }
       case None => throw new MissingRegDocument(regID)
     }
