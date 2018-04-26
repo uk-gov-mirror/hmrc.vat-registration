@@ -245,7 +245,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
       result.status shouldBe 400
 
       val reg = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
-      reg.get.status shouldBe VatRegStatus.draft
+      reg.get.status shouldBe VatRegStatus.locked
 
       await(repo.remove("registrationId" -> registrationID))
     }

@@ -21,6 +21,7 @@ import play.api.libs.json._
 object VatRegStatus extends Enumeration {
   val invalid      = Value
   val draft        = Value
+  val locked       = Value
   val held         = Value
   val submitted    = Value
   val acknowledged = Value

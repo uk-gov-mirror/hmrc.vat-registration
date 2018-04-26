@@ -213,11 +213,21 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     "update the vat scheme with the provided ackref" in new Setup {
       val result = for {
         insert                <- repository.insert(vatScheme)
-        update                <- repository.prepareRegistrationSubmission(vatScheme.id, testAckRef)
+        update                <- repository.prepareRegistrationSubmission(vatScheme.id, testAckRef, VatRegStatus.draft)
         Some(updatedScheme)   <- repository.retrieveVatScheme(vatScheme.id)
-      } yield updatedScheme.acknowledgementReference
+      } yield (updatedScheme.status, updatedScheme.acknowledgementReference)
 
-      await(result).get shouldBe testAckRef
+      await(result) shouldBe (VatRegStatus.locked, Some(testAckRef))
+    }
+
+    "update the vat scheme with the provided ackref on a topup" in new Setup {
+      val result = for {
+        insert                <- repository.insert(vatScheme)
+        update                <- repository.prepareRegistrationSubmission(vatScheme.id, testAckRef, VatRegStatus.held)
+        Some(updatedScheme)   <- repository.retrieveVatScheme(vatScheme.id)
+      } yield (updatedScheme.status, updatedScheme.acknowledgementReference)
+
+      await(result) shouldBe (VatRegStatus.held, Some(testAckRef))
     }
   }
 

@@ -50,7 +50,7 @@ trait RegistrationRepository {
   def updateLogicalGroup[G](id: RegistrationId, group: G)(implicit w: Writes[G], logicalGroup: LogicalGroup[G], ec: ExecutionContext): Future[G]
   def deleteVatScheme(regId: String)(implicit hc: HeaderCarrier): Future[Boolean]
   def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String]
-  def prepareRegistrationSubmission(id: RegistrationId, ackRef : String)(implicit hc: HeaderCarrier): Future[Boolean]
+  def prepareRegistrationSubmission(id: RegistrationId, ackRef : String, status : VatRegStatus.Value)(implicit hc: HeaderCarrier): Future[Boolean]
   def finishRegistrationSubmission(id : RegistrationId, status : VatRegStatus.Value)(implicit hc : HeaderCarrier) : Future[VatRegStatus.Value]
   def updateIVStatus(regId: String, ivStatus: Boolean)(implicit ex: ExecutionContext): Future[Boolean]
   def saveTransId(transId: String, regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String]
@@ -149,9 +149,10 @@ class RegistrationMongoRepository (mongo: () => DB, crypto: Crypto)
   override def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String] =
     setElement(id, elementPath.path, value)
 
-  override def prepareRegistrationSubmission(id : RegistrationId, ackRef : String)(implicit hc: HeaderCarrier) : Future[Boolean] = {
+  override def prepareRegistrationSubmission(id : RegistrationId, ackRef : String, status : VatRegStatus.Value)(implicit hc: HeaderCarrier) : Future[Boolean] = {
     val modifier = BSONFormats.toBSON(Json.obj(
-      AcknowledgementReferencePath.path -> ackRef
+      AcknowledgementReferencePath.path -> ackRef,
+      VatStatusPath.path                -> (if (status == VatRegStatus.draft) VatRegStatus.locked else status)
     )).get
 
     collection.update(ridSelector(id), BSONDocument("$set" -> modifier)).map(_.ok)

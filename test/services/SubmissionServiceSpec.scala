@@ -112,24 +112,24 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
         .thenReturn(None)
 
-      intercept[MissingRegDocument](await(service.ensureAcknowledgementReference(regId)))
+      intercept[MissingRegDocument](await(service.ensureAcknowledgementReference(regId, VatRegStatus.draft)))
     }
 
     "get the acknowledgement references if they are available" in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
         .thenReturn(Some(vatScheme))
 
-      await(service.ensureAcknowledgementReference(regId)) shouldBe "testref"
+      await(service.ensureAcknowledgementReference(regId, VatRegStatus.draft)) shouldBe "testref"
     }
 
     "generate acknowledgment reference if it does not exist" in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
         .thenReturn(Some(vatScheme.copy(status = VatRegStatus.draft, acknowledgementReference = None)))
       when(mockSequenceRepository.getNext(ArgumentMatchers.eq("AcknowledgementID"))(ArgumentMatchers.any())).thenReturn(sequenceNo.pure)
-      when(mockRegistrationRepository.prepareRegistrationSubmission(RegistrationId(anyString()), ArgumentMatchers.any())(ArgumentMatchers.any()))
+      when(mockRegistrationRepository.prepareRegistrationSubmission(RegistrationId(anyString()), ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
         .thenReturn(Future.successful(true))
 
-      await(service.ensureAcknowledgementReference(regId)) shouldBe formatedRefNumber
+      await(service.ensureAcknowledgementReference(regId, VatRegStatus.draft)) shouldBe formatedRefNumber
     }
   }
 
@@ -154,7 +154,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
         .thenReturn(Some(vatScheme))
 
-      await(service.getValidDocumentStatus(regId)) shouldBe "draft"
+      await(service.getValidDocumentStatus(regId)) shouldBe VatRegStatus.draft
     }
   }
 
