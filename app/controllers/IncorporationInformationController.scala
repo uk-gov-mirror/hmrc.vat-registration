@@ -41,7 +41,7 @@ class IncorporationInformationController @Inject()(val iiConnector: Incorporatio
   def getIncorporationInformation(transactionId: TransactionId): Action[AnyContent] = Action.async {
     implicit request =>
       isAuthenticated { user =>
-        iiConnector.retrieveIncorporationStatus(transactionId, REGIME, SUBSCRIBER).map {status =>
+        iiConnector.retrieveIncorporationStatus(None, transactionId, REGIME, SUBSCRIBER).map {status =>
           status.fold(Ok(""))(incorpstatus => Ok(Json.toJson(incorpstatus)))
         }
       }

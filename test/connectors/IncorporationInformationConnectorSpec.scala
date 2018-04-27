@@ -65,12 +65,12 @@ class IncorporationInformationConnectorSpec extends VatRegSpec with VatRegistrat
         """.stripMargin)
       val expectedIIStatus = incorporationStatus(incorpDate = LocalDate.of(2016, 8, 5))
       mockHttpPOST("anyUrl", HttpResponse(200, responseJson = Some(returnedFromII)))
-      await(connector.retrieveIncorporationStatus(TransactionId("any"), regime, subscriber)) shouldBe Some(expectedIIStatus)
+      await(connector.retrieveIncorporationStatus(Some("any"),TransactionId("any"), regime, subscriber)) shouldBe Some(expectedIIStatus)
     }
 
     "returns None if incorporation status not found in II and a new subscription has been setup" in new Setup {
       mockHttpPOST("anyUrl", HttpResponse(202))
-      await(connector.retrieveIncorporationStatus(TransactionId("any"), regime, subscriber)) shouldBe None
+      await(connector.retrieveIncorporationStatus(Some("any"),TransactionId("any"), regime, subscriber)) shouldBe None
     }
 
     "returns an exception when failed to get incorporation status or setup a subscription" in new Setup {
@@ -78,7 +78,7 @@ class IncorporationInformationConnectorSpec extends VatRegSpec with VatRegistrat
       mockHttpPOST("anyUrl", HttpResponse(400))
 
       intercept[IncorporationInformationResponseException](await(
-        connector.retrieveIncorporationStatus(TransactionId("any"), regime, subscriber)
+        connector.retrieveIncorporationStatus(Some("any"),TransactionId("any"), regime, subscriber)
       ))
     }
   }
