@@ -63,7 +63,7 @@ trait SubmissionSrv extends FutureInstances {
       status        <- getValidDocumentStatus(regId)
       ackRefs       <- ensureAcknowledgementReference(regId, status)
       transID       <- fetchCompanyRegistrationTransactionID(regId)
-      incorpStatus  <- registerForInterest(transID)
+      incorpStatus  <- registerForInterest(transID,regId.toString)
       incorpDate    =  incorpStatus.map(status => getIncorpDate(status))
       companyName   <- getCompanyName(regId, TransactionId(transID))
       submission    <- buildDesSubmission(regId, ackRefs, companyName, incorpDate)
@@ -179,8 +179,8 @@ trait SubmissionSrv extends FutureInstances {
     registrationRepository.saveTransId(transId, regId)
   }
 
-  private[services] def registerForInterest(transID: String)(implicit hc: HeaderCarrier): Future[Option[IncorporationStatus]] = {
-    incorporationInformationConnector.retrieveIncorporationStatus(TransactionId(transID), REGIME, SUBSCRIBER)
+  private[services] def registerForInterest(transID: String, regId: String)(implicit hc: HeaderCarrier): Future[Option[IncorporationStatus]] = {
+    incorporationInformationConnector.retrieveIncorporationStatus(Option(regId), TransactionId(transID), REGIME, SUBSCRIBER)
   }
 
   private[services] def getIncorpDate(incorpStatus: IncorporationStatus): LocalDate = {

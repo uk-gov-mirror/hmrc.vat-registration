@@ -19,6 +19,8 @@ package connectors
 import common.{RegistrationId, TransactionId}
 import config.WSHttp
 import models.external.IncorporationStatus
+import org.joda.time.{LocalDate, LocalDateTime}
+import org.joda.time.format.DateTimeFormat
 import play.api.Logger
 import play.api.http.Status.{ACCEPTED, OK}
 import play.api.libs.json._
@@ -55,27 +57,39 @@ object IncorpStatusRequest {
 }
 
 trait IncorporationInformationConnector {
-  val iiUrl : String
-  val iiUri : String
+  val iiUrl: String
+  val iiUri: String
   val http: CoreGet with CorePost
-  val vatRegUri : String
+  val vatRegUri: String
 
   private[connectors] def constructIncorporationInfoUri(transactionId: TransactionId, regime: String, subscriber: String): String = {
     s"$iiUri/subscribe/$transactionId/regime/$regime/subscriber/$subscriber"
   }
 
-  def retrieveIncorporationStatus(transactionId: TransactionId, regime : String, subscriber : String)
+  def retrieveIncorporationStatus(regId: Option[String], transactionId: TransactionId, regime: String, subscriber: String)
                                  (implicit hc: HeaderCarrier, rds: HttpReads[IncorporationStatus]): Future[Option[IncorporationStatus]] = {
+    val dtNow = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss").print(LocalDateTime.now)
+    val registrationId = regId.fold("")(reg => s" registration Id: $regId")
+
     http.POST[IncorpStatusRequest, HttpResponse](s"$iiUrl${constructIncorporationInfoUri(transactionId, regime, subscriber)}",
-      IncorpStatusRequest(vatRegUri)) map { resp => {
-        resp.status match {
-          case OK         => Some(resp.json.as[IncorporationStatus](IncorporationStatus.iiReads))
-          case ACCEPTED   => None
-          case _          =>
-            Logger.error(s"[IncorporationInformationConnector] - [getIncorporationUpdate] returned a ${resp.status} response code for txId: $transactionId")
-            throw new IncorporationInformationResponseException(s"Calling II on ${constructIncorporationInfoUri(transactionId, regime, subscriber)} returned a ${resp.status}")
-        }
+      IncorpStatusRequest(vatRegUri)) map { resp =>
+      resp.status match {
+        case OK =>         Some(resp.json.as[IncorporationStatus](IncorporationStatus.iiReads))
+        case ACCEPTED =>   None
+        case _ =>
+           Logger.info(s"[IncorporationInformationConnector] - [getIncorporationUpdate]" +
+           s" returned a ${resp.status} response code for txId: $transactionId")
+           Logger.error(s"FAILED_VAT_SUBSCRIPTION_TO_II : Time occurred was $dtNow$registrationId")
+           throw new IncorporationInformationResponseException(
+             s"Calling II on ${constructIncorporationInfoUri(transactionId, regime, subscriber)} returned a ${resp.status}"
+           )
       }
+    } recover {
+      case e => Logger.info(s"[IncorporationInformationConnector] - [getIncorporationUpdate] returned a ${e} exception for txId: $transactionId")
+        Logger.error(s"FAILED_VAT_SUBSCRIPTION_TO_II : Time occurred was $dtNow$registrationId")
+        throw new IncorporationInformationResponseException(
+          s"Calling II on ${constructIncorporationInfoUri(transactionId, regime, subscriber)} returned a ${e} exception"
+        )
     }
   }
 

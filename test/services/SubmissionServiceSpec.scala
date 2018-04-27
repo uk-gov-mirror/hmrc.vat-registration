@@ -20,8 +20,8 @@ import java.time.LocalDate
 
 import cats.instances.FutureInstances
 import cats.syntax.ApplicativeSyntax
-import common.{RegistrationId, TransactionId}
 import common.exceptions._
+import common.{RegistrationId, TransactionId}
 import connectors.{CompanyRegistrationConnector, DESConnectorImpl, IncorporationInformationConnector}
 import enums.VatRegStatus
 import fixtures.VatRegistrationFixture
@@ -31,13 +31,12 @@ import models.external.IncorporationStatus
 import models.submission.{DESSubmission, TopUpSubmission}
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers
-import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.OK
 import repositories.{RegistrationRepository, SequenceRepository}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -256,23 +255,24 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
     }
   }
 
-  "getIncorporationUpdate" should {
+  "registerForInterest" should {
     "return the incorporation status if a transaction ID is provided" in new Setup {
       val incorpstatus: IncorporationStatus = incorporationStatus()
 
-      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()), ArgumentMatchers.any(), ArgumentMatchers.any())
-        (ArgumentMatchers.any(), ArgumentMatchers.any()))
-        .thenReturn(Future.successful(Some(incorpstatus)))
+      IIMocks.mockIncorporationStatus(incorpstatus)
 
-      await(service.registerForInterest("transID")) shouldBe Some(incorpstatus)
+//      when(mockIIConnector.retrieveIncorporationStatus(any(), any(), anyString(), anyString())(any(), any()))
+//        .thenReturn(Future.successful(Option(incorpstatus)))
+
+      await(service.registerForInterest("transID", "any")) shouldBe Some(incorpstatus)
     }
 
     "return no incorporation status on a 202 from II" in new Setup {
-      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()), ArgumentMatchers.any(), ArgumentMatchers.any())
-      (ArgumentMatchers.any(), ArgumentMatchers.any()))
-        .thenReturn(None)
+      IIMocks.mockIncorporationStatusNone()
+//      when(mockIIConnector.retrieveIncorporationStatus(any() , any(), anyString(), anyString())(any(), any()))
+//        .thenReturn(None)
 
-      await(service.registerForInterest("transID")) shouldBe None
+      await(service.registerForInterest("transID", "any")) shouldBe None
     }
   }
 

@@ -123,15 +123,15 @@ trait VatMocks extends WSHTTPMock {
   object IIMocks extends FutureInstances with ApplicativeSyntax with EitherSyntax {
 
     def mockIncorporationStatus(incorporationStatus: IncorporationStatus): Unit =
-      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()), any(), any())(any(), any()))
+      when(mockIIConnector.retrieveIncorporationStatus(any(),TransactionId(anyString()), any(), any())(any(), any()))
         .thenReturn(Future.successful(Some(incorporationStatus)))
 
     def mockIncorporationStatusNone(): Unit =
-      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()), any(), any())(any(), any()))
+      when(mockIIConnector.retrieveIncorporationStatus(any(),TransactionId(anyString()), any(), any())(any(), any()))
         .thenReturn(Future.successful(None))
 
     def mockIncorporationStatusLeft(message : String): Unit =
-      when(mockIIConnector.retrieveIncorporationStatus(TransactionId(anyString()), any(), any())(any(), any()))
+      when(mockIIConnector.retrieveIncorporationStatus(any(),TransactionId(anyString()), any(), any())(any(), any()))
         .thenReturn(Future.failed(new IncorporationInformationResponseException(message)))
 
   }
