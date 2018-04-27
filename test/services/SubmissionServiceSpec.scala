@@ -260,18 +260,11 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
       val incorpstatus: IncorporationStatus = incorporationStatus()
 
       IIMocks.mockIncorporationStatus(incorpstatus)
-
-//      when(mockIIConnector.retrieveIncorporationStatus(any(), any(), anyString(), anyString())(any(), any()))
-//        .thenReturn(Future.successful(Option(incorpstatus)))
-
       await(service.registerForInterest("transID", "any")) shouldBe Some(incorpstatus)
     }
 
     "return no incorporation status on a 202 from II" in new Setup {
       IIMocks.mockIncorporationStatusNone()
-//      when(mockIIConnector.retrieveIncorporationStatus(any() , any(), anyString(), anyString())(any(), any()))
-//        .thenReturn(None)
-
       await(service.registerForInterest("transID", "any")) shouldBe None
     }
   }
