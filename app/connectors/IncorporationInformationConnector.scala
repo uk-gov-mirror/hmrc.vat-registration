@@ -69,7 +69,7 @@ trait IncorporationInformationConnector {
   def retrieveIncorporationStatus(regId: Option[String], transactionId: TransactionId, regime: String, subscriber: String)
                                  (implicit hc: HeaderCarrier, rds: HttpReads[IncorporationStatus]): Future[Option[IncorporationStatus]] = {
     val dtNow = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss").print(LocalDateTime.now)
-    val registrationId = regId.fold("")(reg => s" registration Id: $regId")
+    val registrationId = regId.fold("")(reg => s" registration Id: $reg")
 
     http.POST[IncorpStatusRequest, HttpResponse](s"$iiUrl${constructIncorporationInfoUri(transactionId, regime, subscriber)}",
       IncorpStatusRequest(vatRegUri)) map { resp =>
