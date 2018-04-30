@@ -21,14 +21,15 @@ import java.time.LocalDate
 import helpers.BaseSpec
 import models.api.{Returns, StartDate}
 import models.submission.DESSubmission
-import play.api.libs.json.{JsSuccess, JsValue, Json}
+import play.api.data.validation.ValidationError
+import play.api.libs.json._
 
 class ReturnsSpec extends BaseSpec with JsonFormatValidation {
 
   val dateValue: LocalDate = LocalDate.of(2017, 1, 1)
   val date = StartDate(Some(dateValue))
 
-  val fullJson: JsValue = Json.parse(
+  val fullJson: JsObject = Json.parse(
     s"""
        |{
        |  "reclaimVatOnMostReturns" : true,
@@ -38,7 +39,32 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
        |    "date" : "$dateValue"
        |  }
        |}
-        """.stripMargin
+        """.stripMargin).as[JsObject]
+
+  val invalidValidationJson: JsObject = Json.parse(
+    s"""
+       |{
+       |  "reclaimVatOnMostReturns" : true,
+       |  "frequency" : "whatever",
+       |  "staggerStart" : "month",
+       |  "start" : {
+       |    "date" : "$dateValue"
+       |  }
+       |}
+        """.stripMargin).as[JsObject]
+
+  val invalidStaggerStartReturns = Returns(
+    reclaimVatOnMostReturns = true,
+    "quarterly",
+    Some("month"),
+    date
+  )
+
+  val invalidFrequencyReturns = Returns(
+    reclaimVatOnMostReturns = true,
+    "whatever",
+    Some("jan"),
+    date
   )
 
   val fullReturns = Returns(
@@ -48,17 +74,96 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
     date
   )
 
-  "Converting a Returns model into JSON" should {
-    "complete successfully from a model" in {
-      Json.toJson[Returns](fullReturns) shouldBe fullJson
+  val missingOptionsReturns = Returns(
+    reclaimVatOnMostReturns = true,
+    "quarterly",
+    None,
+    date
+  )
+
+  val invalidValidationReturns = Returns(
+    reclaimVatOnMostReturns = true,
+    "whatever",
+    Some("month"),
+    date
+  )
+
+  "Parsing Returns" should {
+    "succeed" when {
+      "full json is present" in {
+        Json.fromJson[Returns](fullJson) shouldBe JsSuccess(fullReturns)
+      }
+      "frequency and staggerStart are present but invalid" in {
+        Json.fromJson[Returns](invalidValidationJson) shouldBe JsSuccess(invalidValidationReturns)
+      }
+      "staggeredStart is missing" in {
+        val json = Json.parse(
+        s"""
+             |{
+             |  "reclaimVatOnMostReturns" : true,
+             |  "frequency" : "quarterly",
+             |  "start" : {
+             |    "date" : "$dateValue"
+             |  }
+             |}
+        """.stripMargin)
+        Json.fromJson[Returns](json) shouldBe JsSuccess(fullReturns.copy(staggerStart = None))
+      }
+    }
+    "fails" when {
+      "reclaimVatOnMostReturns is missing" in {
+        val json = Json.parse(
+        s"""
+             |{
+             |  "frequency" : "quarterly",
+             |  "staggerStart" : "jan",
+             |  "start" : {
+             |    "date" : "$dateValue"
+             |  }
+             |}
+        """.stripMargin)
+        val result = Json.fromJson[Returns](json)
+        result shouldHaveErrors (__ \ "reclaimVatOnMostReturns" -> ValidationError("error.path.missing"))
+      }
+
+      "frequency is missing" in {
+        val json = Json.parse(
+        s"""
+             |{
+             |  "reclaimVatOnMostReturns" : true,
+             |  "staggerStart" : "jan",
+             |  "start" : {
+             |    "date" : "$dateValue"
+             |  }
+             |}
+        """.stripMargin)
+        val result = Json.fromJson[Returns](json)
+        result shouldHaveErrors (__ \ "frequency" -> ValidationError("error.path.missing"))
+      }
+
+      "start is missing" in {
+        val json = Json.parse(
+        s"""
+             |{
+             |  "reclaimVatOnMostReturns" : true,
+             |  "frequency" : "quarterly",
+             |  "staggerStart" : "jan"
+             |}
+        """.stripMargin)
+        val result = Json.fromJson[Returns](json)
+        result shouldHaveErrors (__  \ "start" -> ValidationError("error.path.missing"))
+      }
     }
   }
 
-  "Parsing Json to a Returns model" should {
-    "complete successfully from JSON" in {
-      Json.fromJson[Returns](fullJson) shouldBe JsSuccess(fullReturns)
+  "Returns model to json" should {
+    "succeed" when {
+      "everything is present" in {
+        Json.toJson[Returns](fullReturns) shouldBe fullJson
+      }
+      "staggerStart is missing" in {
+        Json.toJson[Returns](missingOptionsReturns) shouldBe (fullJson - "staggerStart")
+      }
     }
   }
-
-
 }

@@ -170,10 +170,6 @@ trait VatRegistrationFixture {
 
   val validFullFRSDetails: FRSDetails =
     FRSDetails(
-      overBusinessGoods = None,
-      overBusinessGoodsPercent = None,
-      vatInclusiveTurnover = None,
-      start = None,
       businessGoods = Some(BusinessGoods(1234567891011L, true)),
       startDate = Some(date),
       categoryOfBusiness = "testCategory",
@@ -181,6 +177,7 @@ trait VatRegistrationFixture {
     )
   val validFullFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = true, Some(validFullFRSDetails))
   val validEmptyFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = false, None)
+  val invalidEmptyFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = true, None)
 
   val validFullFRSDetailsJsonWithBusinessGoods: JsObject = Json.parse(
     s"""
@@ -203,6 +200,28 @@ trait VatRegistrationFixture {
        |  "percent":15.00
        |}
      """.stripMargin).as[JsObject]
+
+  val validFullFRSDetailsJsonWithOptionals: JsObject = Json.parse(
+    s"""
+       |{
+       |  "businessGoods" : {
+       |    "overTurnover": true,
+       |    "estimatedTotalSales": 1234567891011
+       |  },
+       |  "startDate": "$date",
+       |  "categoryOfBusiness":"testCategory",
+       |  "percent":15.00
+       |}
+     """.stripMargin).as[JsObject]
+
+  val validFRSDetailsJsonWithoutOptionals: JsObject = Json.parse(
+    s"""
+       |{
+       |  "categoryOfBusiness":"testCategory",
+       |  "percent":15.00
+       |}
+     """.stripMargin).as[JsObject]
+
 
   val validFullFlatRateSchemeJson: JsObject = Json.parse(
     s"""

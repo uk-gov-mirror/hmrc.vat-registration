@@ -28,76 +28,78 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
 
     implicit val format = DigitalContact.format
 
-    "complete successfully from full Json" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "email":"test@test.com",
-           |  "tel":"12345678910",
-           |  "mobile":"12345678910"
-           |}
+    "complete successfully" when {
+      "from full Json" in {
+        val json = Json.parse(
+          s"""
+             |{
+             |  "email":"test@test.com",
+             |  "tel":"12345678910",
+             |  "mobile":"12345678910"
+             |}
         """.stripMargin)
-      val tstVatDigitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
+        val tstVatDigitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
 
-      Json.fromJson[DigitalContact](json) shouldBe JsSuccess(tstVatDigitalContact)
+        Json.fromJson[DigitalContact](json) shouldBe JsSuccess(tstVatDigitalContact)
+      }
     }
 
-    "fail from Json with invalid char email" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "email":"test%£@test.com",
-           |  "tel":"12345678910",
-           |  "mobile":"12345678910"
-           |}
+    "fail to read" when {
+      "Json with invalid char email" in {
+        val json = Json.parse(
+          s"""
+             |{
+             |  "email":"test%£@test.com",
+             |  "tel":"12345678910",
+             |  "mobile":"12345678910"
+             |}
         """.stripMargin)
 
-      val result = Json.fromJson[DigitalContact](json)
-      result shouldHaveErrors (JsPath() \ "email" -> ValidationError("error.email"))
-    }
+        val result = Json.fromJson[DigitalContact](json)
+        result shouldHaveErrors (JsPath() \ "email" -> ValidationError("error.email"))
+      }
 
-    "fail from Json with invalid email length" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "email":"testtesttesttesttesttestesttesttesttestteyyyysttettesttesttesttesttesttestteuutttttt@test.com",
-           |  "tel":"12345678910",
-           |  "mobile":"12345678910"
-           |}
+      "Json with invalid email length" in {
+        val json = Json.parse(
+          s"""
+             |{
+             |  "email":"testtesttesttesttesttestesttesttesttestteyyyysttettesttesttesttesttesttestteuutttttt@test.com",
+             |  "tel":"12345678910",
+             |  "mobile":"12345678910"
+             |}
         """.stripMargin)
 
-      val result = Json.fromJson[DigitalContact](json)
-      result shouldHaveErrors (JsPath() \ "email" -> ValidationError("error.maxLength", 70))
-    }
+        val result = Json.fromJson[DigitalContact](json)
+        result shouldHaveErrors (JsPath() \ "email" -> ValidationError("error.maxLength", 70))
+      }
 
-    "fail from Json with invalid Telephone" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "email":"test@test.com",
-           |  "tel":"ABC_12345678910",
-           |  "mobile":"12345678910"
-           |}
+      "Json with invalid Telephone" in {
+        val json = Json.parse(
+          s"""
+             |{
+             |  "email":"test@test.com",
+             |  "tel":"ABC_12345678910",
+             |  "mobile":"12345678910"
+             |}
         """.stripMargin)
 
-      val result = Json.fromJson[DigitalContact](json)
-      result shouldHaveErrors (JsPath() \ "tel" -> ValidationError("error.pattern"))
-    }
+        val result = Json.fromJson[DigitalContact](json)
+        result shouldHaveErrors (JsPath() \ "tel" -> ValidationError("error.pattern"))
+      }
 
-    "fail from Json with invalid Mobile" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "email":"test@test.com",
-           |  "tel":"12345678910",
-           |  "mobile":"ABC_12345678910"
-           |}
+      "Json with invalid Mobile" in {
+        val json = Json.parse(
+          s"""
+             |{
+             |  "email":"test@test.com",
+             |  "tel":"12345678910",
+             |  "mobile":"ABC_12345678910"
+             |}
         """.stripMargin)
 
-      val result = Json.fromJson[DigitalContact](json)
-      result shouldHaveErrors (JsPath() \ "mobile" -> ValidationError("error.pattern"))
+        val result = Json.fromJson[DigitalContact](json)
+        result shouldHaveErrors (JsPath() \ "mobile" -> ValidationError("error.pattern"))
+      }
     }
-
   }
-
 }

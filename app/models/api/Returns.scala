@@ -33,12 +33,7 @@ case class Returns(reclaimVatOnMostReturns: Boolean,
                    start: StartDate)
 
 object Returns extends VatAccountingPeriodValidator {
-  implicit val format: OFormat[Returns] = (
-    (__ \ "reclaimVatOnMostReturns").format[Boolean] and
-    (__ \ "frequency").format[String](frequencyValidator) and
-    (__ \ "staggerStart").formatNullable[String](staggerStartValidator) and
-    (__ \ "start").format[StartDate]
-  )(Returns.apply, unlift(Returns.unapply))
+  implicit val format: Format[Returns] = Json.format[Returns]
 }
 
 case class TurnoverEstimates(vatTaxable: Long)

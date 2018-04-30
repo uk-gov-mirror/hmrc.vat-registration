@@ -23,45 +23,49 @@ import play.api.libs.json.{JsPath, JsSuccess, Json}
 
 class EligibilitySpec extends BaseSpec with JsonFormatValidation {
   "Eligibility model" should {
-    "successfully read from valid json" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "version": 1,
-           |  "result": "test result"
-           |}
+    "successfully read" when {
+      "from valid json" in {
+        val json = Json.parse(
+          s"""
+             |{
+             |  "version": 1,
+             |  "result": "test result"
+             |}
          """.stripMargin)
 
-      val expectedResult = Eligibility(
-        version = 1,
-        result = "test result"
-      )
+        val expectedResult = Eligibility(
+          version = 1,
+          result = "test result"
+        )
 
-      Json.fromJson[Eligibility](json)(Eligibility.format) shouldBe JsSuccess(expectedResult)
+        Json.fromJson[Eligibility](json)(Eligibility.format) shouldBe JsSuccess(expectedResult)
+      }
     }
 
-    "fail read from json if version is missing" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "result": "test result"
-           |}
+    "should fail to" when {
+      "read from json if version is missing" in {
+        val json = Json.parse(
+          s"""
+             |{
+             |  "result": "test result"
+             |}
          """.stripMargin)
 
-      val result = Json.fromJson[Eligibility](json)(Eligibility.format)
-      result shouldHaveErrors (JsPath() \ "version" -> ValidationError("error.path.missing"))
-    }
+        val result = Json.fromJson[Eligibility](json)(Eligibility.format)
+        result shouldHaveErrors (JsPath() \ "version" -> ValidationError("error.path.missing"))
+      }
 
-    "fail read from json if result is missing" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "version": 1
-           |}
+      "read from json if result is missing" in {
+        val json = Json.parse(
+          s"""
+             |{
+             |  "version": 1
+             |}
          """.stripMargin)
 
-      val result = Json.fromJson[Eligibility](json)(Eligibility.format)
-      result shouldHaveErrors (JsPath() \ "result" -> ValidationError("error.path.missing"))
+        val result = Json.fromJson[Eligibility](json)(Eligibility.format)
+        result shouldHaveErrors (JsPath() \ "result" -> ValidationError("error.path.missing"))
+      }
     }
   }
 }

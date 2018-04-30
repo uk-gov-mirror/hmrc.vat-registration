@@ -25,12 +25,7 @@ case class FlatRateScheme(joinFrs: Boolean,
                           frsDetails: Option[FRSDetails])
 
 object FlatRateScheme {
-  implicit val read: Reads[FlatRateScheme] = Json.reads[FlatRateScheme]
-    .filter(ValidationError(Seq("Mismatch between frsDetails presence and joinFrs"))) { frs =>
-      if (frs.joinFrs) frs.frsDetails.isDefined else true
-    }
-
-  implicit val writes: OWrites[FlatRateScheme] = Json.writes[FlatRateScheme]
+  implicit val format: Format[FlatRateScheme] = Json.format[FlatRateScheme]
 }
 
 case class BusinessGoods(estimatedTotalSales: Long, overTurnover: Boolean)
@@ -39,23 +34,11 @@ object BusinessGoods {
   implicit val format = Json.format[BusinessGoods]
 }
 
-case class FRSDetails(@deprecated("use businessGoods instead", "SCRS-10738") overBusinessGoods: Option[Boolean],
-                      @deprecated("use businessGoods instead", "SCRS-10738") overBusinessGoodsPercent: Option[Boolean],
-                      @deprecated("use businessGoods instead", "SCRS-10738") vatInclusiveTurnover: Option[Long],
-                      @deprecated("use startDate instead", "SCRS-10738") start: Option[StartDate],
-                      businessGoods: Option[BusinessGoods],
+case class FRSDetails(businessGoods: Option[BusinessGoods],
                       startDate: Option[LocalDate],
                       categoryOfBusiness: String,
                       percent: BigDecimal)
 
 object FRSDetails {
-  implicit val reads: Reads[FRSDetails] = Json.reads[FRSDetails]
-    .filter(ValidationError(Seq("Mismatch between vatInclusiveTurnover presence and overBusinessGoods"))) { details =>
-      details.vatInclusiveTurnover match {
-        case Some(_) => details.overBusinessGoods.contains(false)
-        case None    => details.overBusinessGoods.fold(true)(identity)
-      }
-    }
-
-  implicit val writes: Writes[FRSDetails] = Json.writes[FRSDetails]
+  implicit val format: Format[FRSDetails] = Json.format[FRSDetails]
 }
