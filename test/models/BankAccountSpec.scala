@@ -18,7 +18,7 @@ package models
 
 import auth.CryptoImpl
 import helpers.VatRegSpec
-import models.api.{BankAccount, BankAccountDetails, BankAccountMongoFormat}
+import models.api.{BankAccount, BankAccountDetails, BankAccountDetailsMongoFormat, BankAccountMongoFormat}
 import play.api.Configuration
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
@@ -27,115 +27,123 @@ import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 
 class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
 
+  val fullBankAccountModel = BankAccount(
+    isProvided = true,
+    details = Some(BankAccountDetails(
+      name = "Test Account name",
+      sortCode = "00-99-22",
+      number = "12345678"
+    ))
+  )
+  val fullBankAccountJson = Json.parse(
+    s"""
+       |{
+       |  "isProvided":true,
+       |  "details":{
+       |    "name":"Test Account name",
+       |    "sortCode":"00-99-22",
+       |    "number":"12345678"
+       |  }
+       |}
+        """.stripMargin)
+
+  val noDetailsBankAccountModel = BankAccount(isProvided = false, None)
+  val noDetailsBankAccountJson = Json.parse(
+    s"""
+       |{
+       |  "isProvided":false
+       |}
+        """.stripMargin)
+
+
   "Creating a BankAccount model from Json" should {
-
-    implicit val format: OFormat[BankAccount] = BankAccount.format
-
-    "complete successfully from full Json" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "isProvided":true,
-           |  "details":{
-           |    "name":"Test Account name",
-           |    "sortCode":"00-99-22",
-           |    "number":"12345678"
-           |  }
-           |}
-        """.stripMargin)
-
-      val bankAccount = BankAccount(
-        isProvided = true,
-        details = Some(BankAccountDetails(
-          name = "Test Account name",
-          sortCode = "00-99-22",
-          number = "12345678"
-        ))
-      )
-
-      Json.fromJson[BankAccount](json) shouldBe JsSuccess(bankAccount)
+    implicit val format: Format[BankAccount] = BankAccount.format
+    "complete successfully" when {
+      "from full Json" in {
+        Json.fromJson[BankAccount](fullBankAccountJson) shouldBe JsSuccess(fullBankAccountModel)
+      }
+      "from full Json without details" in {
+        val bankAccount = BankAccount(isProvided = false, None)
+        Json.fromJson[BankAccount](noDetailsBankAccountJson) shouldBe JsSuccess(noDetailsBankAccountModel)
+      }
     }
 
-    "fail from Json with invalid  number" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "isProvided":true,
-           |  "details":{
-           |    "name":"Test Account name",
-           |    "sortCode":"00-99-22",
-           |    "number":"123456789"
-           |  }
-           |}
+    "fail" when {
+      "from Json with missing isProvided" in {
+        val json = Json.parse(
+          s"""
+             {
+             |  "details":{
+             |    "name":"Test Account name",
+             |    "sortCode":"00-99-22",
+             |    "number":"12345678"
+             |  }
+             |}
+           """.stripMargin
+        )
+        val result = Json.fromJson[BankAccount](json)
+        result shouldHaveErrors (__ \ "isProvided" -> ValidationError("error.path.missing"))
+      }
+
+      "from Json with missing name" in {
+        val json = Json.parse(
+          s"""
+             |{
+             |  "isProvided":true,
+             |  "details":{
+             |    "sortCode":"00-99-22",
+             |    "number":"12345678"
+             |  }
+             |}
         """.stripMargin)
 
-      val result = Json.fromJson[BankAccount](json)
-      result shouldHaveErrors (__ \ "details" \ "number" -> ValidationError("error.pattern"))
+        val result = Json.fromJson[BankAccount](json)
+        result shouldHaveErrors (__ \ "details" \ "name" -> ValidationError("error.path.missing"))
+      }
+
+      "from Json with missing number" in {
+        val json = Json.parse(
+          s"""
+             |{
+             |  "isProvided":true,
+             |  "details":{
+             |    "name":"Test Account name",
+             |    "sortCode":"00-99-22"
+             |  }
+             |}
+        """.stripMargin)
+
+        val result = Json.fromJson[BankAccount](json)
+        result shouldHaveErrors (__ \ "details" \ "number" -> ValidationError("error.path.missing"))
+      }
+
+      "from Json with missing sort code" in {
+        val json = Json.parse(
+          s"""
+             |{
+             |  "isProvided":true,
+             |  "details":{
+             |    "name":"Test Account name",
+             |    "number":"12345678"
+             |  }
+             |}
+        """.stripMargin)
+
+        val result = Json.fromJson[BankAccount](json)
+        result shouldHaveErrors (__ \ "details" \ "sortCode" -> ValidationError("error.path.missing"))
+      }
     }
+  }
 
-    "fail from Json with invalid sort code" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "isProvided":true,
-           |  "details":{
-           |    "name":"Test Account name",
-           |    "sortCode":"00-993-22",
-           |    "number":"12345678"
-           |  }
-           |}
-        """.stripMargin)
+  "Creating Json from a BankAccount model" should {
+    "succeed" when {
+      "full model is given" in {
+        Json.toJson[BankAccount](fullBankAccountModel) shouldBe fullBankAccountJson
+      }
 
-      val result = Json.fromJson[BankAccount](json)
-      result shouldHaveErrors (__ \ "details" \ "sortCode" -> ValidationError("error.pattern"))
-    }
-
-    "fail from Json with missing  name" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "isProvided":true,
-           |  "details":{
-           |    "sortCode":"00-99-22",
-           |    "number":"12345678"
-           |  }
-           |}
-        """.stripMargin)
-
-      val result = Json.fromJson[BankAccount](json)
-      result shouldHaveErrors (__ \ "details" \ "name" -> ValidationError("error.path.missing"))
-    }
-
-    "fail from Json with missing  number" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "isProvided":true,
-           |  "details":{
-           |    "name":"Test Account name",
-           |    "sortCode":"00-99-22"
-           |  }
-           |}
-        """.stripMargin)
-
-      val result = Json.fromJson[BankAccount](json)
-      result shouldHaveErrors (__ \ "details" \ "number" -> ValidationError("error.path.missing"))
-    }
-
-    "fail from Json with missing sort code" in {
-      val json = Json.parse(
-        s"""
-           |{
-           |  "isProvided":true,
-           |  "details":{
-           |    "name":"Test Account name",
-           |    "number":"12345678"
-           |  }
-           |}
-        """.stripMargin)
-
-      val result = Json.fromJson[BankAccount](json)
-      result shouldHaveErrors (__ \ "details" \ "sortCode" -> ValidationError("error.path.missing"))
+      "full model without details is given" in {
+        Json.toJson[BankAccount](noDetailsBankAccountModel) shouldBe noDetailsBankAccountJson
+      }
     }
   }
 
