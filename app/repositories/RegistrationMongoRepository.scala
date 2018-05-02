@@ -67,6 +67,7 @@ trait RegistrationRepository {
   def updateFlatRateScheme(regId: String, flatRateScheme: FlatRateScheme)(implicit ec: ExecutionContext): Future[FlatRateScheme]
   def getInternalId(id: String)(implicit hc : HeaderCarrier) : Future[Option[String]]
   def removeFlatRateScheme(regId: String)(implicit ec: ExecutionContext): Future[Boolean]
+  def clearDownDocument(transId: String)(implicit ec: ExecutionContext): Future[Boolean]
 }
 
 class RegistrationMongoRepository (mongo: () => DB, crypto: Crypto)
@@ -354,6 +355,13 @@ class RegistrationMongoRepository (mongo: () => DB, crypto: Crypto)
       case e =>
         Logger.warn(s"[RegistrationMongoRepository][removeFlatRateScheme] Unable to remove for regId: $regId, Error: ${e.getMessage}")
         throw e
+    }
+  }
+
+  def clearDownDocument(transId: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+    collection.remove(tidSelector(transId)) map { wr =>
+      if(!wr.ok) logger.error(s"[clearDownDocument] - Error deleting vat reg doc for txId $transId - Error: ${wr.message}")
+      wr.ok
     }
   }
 }
