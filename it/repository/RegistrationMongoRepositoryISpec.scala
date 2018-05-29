@@ -775,8 +775,8 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
       currentAddress = scrsAddress,
       changeOfName = None,
       previousAddress = None,
-      contact = DigitalContact(
-        email = "test@t.com",
+      contact = DigitalContactOptional(
+        email = Some("test@t.com"),
         tel = None,
         mobile = None
       )
@@ -873,8 +873,8 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
         currentAddress = scrsAddress,
         changeOfName = None,
         previousAddress = None,
-        contact = DigitalContact(
-          email = "test@t.com",
+        contact = DigitalContactOptional(
+          email = Some("test@t.com"),
           tel = None,
           mobile = None
         )
