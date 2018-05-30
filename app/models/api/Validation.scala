@@ -74,5 +74,5 @@ trait VatLodgingOfficerValidator extends Validation {
 }
 
 trait SicCodeValidator extends Validation {
-  val idValidator: Format[String] = readToFmt(pattern("""^(\d){8}""".r))
+  val idValidator: Format[String] = readToFmt(pattern("""^(\d){5}""".r))
 }

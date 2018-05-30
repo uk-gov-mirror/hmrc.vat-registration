@@ -169,10 +169,6 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
       repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(tradingDetails)) returns tradingDetails
     }
 
-    "should update to VatSicAndCompliance success" in new Setup {
-      repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(compliance)) returns compliance
-    }
-
     "should update to VatContact success" in new Setup {
       repository.insert(vatScheme).flatMap(_ => updateLogicalGroup(vatContact)) returns vatContact
     }
@@ -953,7 +949,8 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     val validSicAndCompliance = Some(SicAndCompliance(
       "this is my business description",
       Some(ComplianceLabour(1000,Some(true),Some(true))),
-      SicCode("11111111","the flu","sic details")
+      SicCode("11111","the flu","sic details"),
+      otherBusinessActivities = Nil
     ))
     "return a SicAndComplianceModel from existing data based on the reg Id" in new Setup {
       val result = for {
@@ -964,6 +961,19 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
       } yield res
 
       await(result).get shouldBe validSicAndCompliance.get
+    }
+    "read data to a SicAndCompliance model regardless of whether apivalidation is valid" in new Setup {
+      val modelThatDoesNotConformToApiValidation = SicAndCompliance(
+        "foo",
+        Some(ComplianceLabour(1,None,None)),
+        SicCode("fooBARFIZZANDBANG1234","bar","wizz"),
+        otherBusinessActivities = List(SicCode("11111 FOO BAR WIZZ AND BANG","barFoo","amended other foo")))
+      val result = for {
+        _ <- repository.insert(vatScheme.copy(sicAndCompliance = Some(modelThatDoesNotConformToApiValidation)))
+        _ = count shouldBe 1
+        res <- repository.getSicAndCompliance(vatScheme.id.value)
+      } yield res
+      await(result).get shouldBe modelThatDoesNotConformToApiValidation
     }
     "return None from an existing registration that exists but SicAndCompliance does not exist" in new Setup {
       val result = for {
@@ -990,7 +1000,8 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     val validSicAndCompliance = Some(SicAndCompliance(
       "this is my business description",
       Some(ComplianceLabour(1000,Some(true),Some(true))),
-      SicCode("12345678","the flu","sic details")
+      SicCode("12345","the flu","sic details"),
+      otherBusinessActivities = List(SicCode("99999","fooBar","other foo"))
     ))
     "return an amended SicAndCompliance Model when an entry already exists in the repo for 1 field" in new Setup {
       val amendedModel = validSicAndCompliance.map(a => a.copy(businessDescription = "fooBarWizz"))
@@ -1006,7 +1017,8 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
       val amendedModel = SicAndCompliance(
         "foo",
         Some(ComplianceLabour(1,None,None)),
-        SicCode("foo","bar","wizz"))
+        SicCode("foo","bar","wizz"),
+        otherBusinessActivities = List(SicCode("11111","barFoo","amended other foo")))
       val result = for{
         _   <- repository.insert(vatScheme.copy(sicAndCompliance = validSicAndCompliance))
         res <- repository.updateSicAndCompliance(vatScheme.id.value, amendedModel)
@@ -1027,7 +1039,6 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
       a[MissingRegDocument] shouldBe thrownBy(await(result))
     }
   }
-  //
   "calling getBusinessContact" should {
 
     "return a BusinessContact Model from existing data based on the reg Id" in new Setup {

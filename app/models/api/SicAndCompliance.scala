@@ -16,19 +16,44 @@
 
 package models.api
 
-import play.api.libs.json.{OFormat, __}
+import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
 case class SicAndCompliance(businessDescription: String,
                             labourCompliance: Option[ComplianceLabour],
-                            mainBusinessActivity: SicCode)
+                            mainBusinessActivity: SicCode,
+                            otherBusinessActivities: List[SicCode])
 
 object SicAndCompliance {
 
-  implicit val formats = (
-        (__ \ "businessDescription").format[String] and
-        (__ \ "labourCompliance").formatNullable[ComplianceLabour] and
-        (__ \ "mainBusinessActivity").format[SicCode]
-  )(SicAndCompliance.apply, unlift(SicAndCompliance.unapply))
+  val mongoReads: Reads[SicAndCompliance] = {
+    implicit val sicCodeMongoFormat = SicCode.mongoFormat
+    ( (__ \ "businessDescription").read[String] and
+      (__ \ "labourCompliance").readNullable[ComplianceLabour] and
+      (__ \ "mainBusinessActivity").read[SicCode] and
+      (__ \ "otherBusinessActivities").read[List[SicCode]]
+      )(SicAndCompliance.apply _)
+  }
+
+  val apiReads: Reads[SicAndCompliance] = {
+    implicit val sicCodeApiFormat = SicCode.apiFormat
+    ( (__ \ "businessDescription").read[String] and
+      (__ \ "labourCompliance").readNullable[ComplianceLabour] and
+      (__ \ "mainBusinessActivity").read[SicCode] and
+      (__ \ "otherBusinessActivities").read[List[SicCode]]
+      )(SicAndCompliance.apply _)
+  }
+
+  val writes: Writes[SicAndCompliance] = {
+    implicit val sicCodeApiFormat = SicCode.mongoFormat
+    ( (__ \ "businessDescription").write[String] and
+      (__ \ "labourCompliance").writeNullable[ComplianceLabour] and
+      (__ \ "mainBusinessActivity").write[SicCode] and
+      (__ \ "otherBusinessActivities").write[List[SicCode]]
+      )(unlift(SicAndCompliance.unapply))
+  }
+
+  implicit val apiFormats: Format[SicAndCompliance] = Format(apiReads,writes)
+  val mongoFormats: Format[SicAndCompliance] = Format(mongoReads,writes)
   }
 

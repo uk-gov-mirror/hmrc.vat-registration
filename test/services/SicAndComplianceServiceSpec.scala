@@ -37,10 +37,12 @@ class SicAndComplianceServiceSpec extends VatRegSpec with VatRegistrationFixture
       override val registrationRepository: RegistrationMongoRepository = mockRegistrationMongoRepository
     }
   }
-  def getFromMongo(res:Future[Option[SicAndCompliance]]): OngoingStubbing[Future[Option[SicAndCompliance]]] = when(mockRegistrationMongoRepository.getSicAndCompliance(any())(any()))
+  def getFromMongo(res:Future[Option[SicAndCompliance]]): OngoingStubbing[Future[Option[SicAndCompliance]]] =
+    when(mockRegistrationMongoRepository.getSicAndCompliance(any())(any()))
     .thenReturn(res)
 
-  def updateMongo(res:Future[SicAndCompliance]) :OngoingStubbing[Future[SicAndCompliance]] = when(mockRegistrationMongoRepository.updateSicAndCompliance(any(),any())(any()))
+  def updateMongo(res:Future[SicAndCompliance]): OngoingStubbing[Future[SicAndCompliance]] =
+    when(mockRegistrationMongoRepository.updateSicAndCompliance(any(),any())(any()))
     .thenReturn(res)
 
   "getSicAndCompliance" should {
@@ -60,7 +62,8 @@ class SicAndComplianceServiceSpec extends VatRegSpec with VatRegistrationFixture
     }
     "return a missingRegDocument when no reg Document exists for the reg id when an update takes place" in new Setup {
       updateMongo(Future.failed(MissingRegDocument(RegistrationId("testId"))))
-      intercept[MissingRegDocument](await(service.updateSicAndCompliance("testId",validSicAndCompliance.get))) shouldBe MissingRegDocument(RegistrationId("testId"))
+      intercept[MissingRegDocument](await(
+        service.updateSicAndCompliance("testId",validSicAndCompliance.get))) shouldBe MissingRegDocument(RegistrationId("testId"))
     }
     "return new Exception when an exception is returned from the repo during an update" in new Setup {
       updateMongo(Future.failed(new Exception("foo Bar Wizz Bang")))
