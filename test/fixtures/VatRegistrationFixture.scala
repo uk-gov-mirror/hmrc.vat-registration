@@ -37,8 +37,7 @@ trait VatRegistrationFixture {
   val ackRefNumber = "BRPY000000000001"
   val date: LocalDate = LocalDate.of(2018, 1, 1)
   val scrsAddress = Address("line1", "line2", None, None, Some("XX XX"), Some("UK"))
-  val sicCode = SicCode("88888888", "description", "displayDetails")
-  val sicAndCompliance: VatSicAndCompliance = VatSicAndCompliance("some-business-description", None, None, mainBusinessActivity = sicCode)
+  val sicCode = SicCode("88888", "description", "displayDetails")
   val digitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
   val vatContact = VatContact(digitalContact = digitalContact, website = None, ppob = scrsAddress)
   val vatEligibility = VatServiceEligibility(
@@ -104,10 +103,14 @@ trait VatRegistrationFixture {
   )
   val validLodgingOfficerPostIv = validLodgingOfficerPreIV.copy(ivPassed = Some(true), details = Some(lodgingOfficerDetails))
 
+   val otherBusinessActivitiesSicAndCompiliance =
+     SicCode("00998","otherBusiness desc 1","fooBar 1") :: SicCode("00889","otherBusiness desc 2", "fooBar 2") :: Nil
+
   val validSicAndCompliance = Some(SicAndCompliance(
     "this is my business description",
     Some(ComplianceLabour(1000,Some(true),Some(true))),
-    SicCode("12345678","the flu","sic details")
+    SicCode("12345","the flu","sic details"),
+    otherBusinessActivitiesSicAndCompiliance
   ))
 
   val validBusinessContact  = Some(BusinessContact(
@@ -144,10 +147,18 @@ trait VatRegistrationFixture {
        | "skilledWorkers":true
            },
        "mainBusinessActivity": {
-       "id": "12345678",
-       "description": "the flu",
-       "displayDetails": "sic details"
-           }
+       "code": "12345",
+       "desc": "the flu",
+       "indexes": "sic details"
+           },
+       "otherBusinessActivities": [
+       |    {  "code": "00998",
+       |       "desc": "otherBusiness desc 1",
+       |       "indexes": "fooBar 1" },
+       |     {  "code": "00889",
+       |       "desc": "otherBusiness desc 2",
+       |       "indexes": "fooBar 2" }
+       ]
        |}
     """.stripMargin).as[JsObject]
 

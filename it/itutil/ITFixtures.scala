@@ -54,18 +54,6 @@ trait ITFixtures {
     joinFrs = true,
     Some(frsDetails)
   )
-  val compliance =
-    VatSicAndCompliance(
-      businessDescription = "some-business-description",
-      culturalCompliance = Some(VatComplianceCultural(true)),
-      labourCompliance = Some(VatComplianceLabour(
-        labour = true,
-        workers = Some(10),
-        temporaryContracts = Some(true),
-        skilledWorkers = Some(true))),
-      financialCompliance = Some(VatComplianceFinancial(adviceOrConsultancyOnly = true, actAsIntermediary = true)),
-      mainBusinessActivity = SicCode("88888888", "description", "displayDetails")
-    )
 
   val EstimateValue: Long = 1000L
   val zeroRatedTurnoverEstimate: Long = 1000L
@@ -97,13 +85,7 @@ trait ITFixtures {
     details                   = None
   )
   val businessContact         = BusinessContact(digitalContact = digitalContact, website = None, ppob = scrsAddress)
-  val sicAndCompliance        = SicAndCompliance("businessDesc", Some(ComplianceLabour(1, Some(true), Some(true))), SicCode("12345678","sicDesc","sicDetail"))
-
-  val vatComplicanceLabour    = VatComplianceLabour(true, Some(5), Some(true), Some(true))
-
-  val vatComplianceFinancial  = VatComplianceFinancial(true, true, Some(true), Some(true), Some(true), Some(true), Some(true), Some(true))
-
-  val vatSicAndCompliance     = VatSicAndCompliance("businessDesc", Some(VatComplianceCultural(true)), Some(vatComplicanceLabour), Some(vatComplianceFinancial), SicCode("12345678", "sic", "sic"))
+  val sicAndCompliance        = SicAndCompliance("businessDesc", Some(ComplianceLabour(1, Some(true), Some(true))), SicCode("12345678","sicDesc","sicDetail"), List(SicCode("12345678","sicDesc","sicDetail")))
 
   val vatServiceEligibility   = VatServiceEligibility(Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(VatEligibilityChoice("voluntary", None, None, None)))
 
@@ -123,7 +105,6 @@ trait ITFixtures {
       Some(tradingDetails),
       Some(vatLodgingOfficer),
       Some(returns),
-      Some(vatSicAndCompliance),
       Some(sicAndCompliance),
       Some(vatContact),
       Some(businessContact),

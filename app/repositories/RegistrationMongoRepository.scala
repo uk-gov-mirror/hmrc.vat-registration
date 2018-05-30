@@ -323,10 +323,10 @@ class RegistrationMongoRepository (mongo: () => DB, crypto: Crypto)
     updateBlock(regId, lodgingOfficer)
 
   def updateSicAndCompliance(regId:String, sicAndCompliance:SicAndCompliance)(implicit ec:ExecutionContext): Future[SicAndCompliance] =
-    updateBlock(regId,sicAndCompliance)
+    updateBlock(regId,sicAndCompliance)(ec,SicAndCompliance.mongoFormats)
 
   def getSicAndCompliance(regId:String)(implicit ec:ExecutionContext):Future[Option[SicAndCompliance]] =
-    fetchBlock[SicAndCompliance](regId,"sicAndCompliance")
+    fetchBlock[SicAndCompliance](regId,"sicAndCompliance")(ec,SicAndCompliance.mongoFormats)
 
   def updateBusinessContact(regId:String, businessCont:BusinessContact)(implicit ec:ExecutionContext): Future[BusinessContact] =
     updateBlock(regId,businessCont)

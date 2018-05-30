@@ -25,10 +25,24 @@ case class SicCode(id: String,
 
 object SicCode extends SicCodeValidator {
 
-  implicit val format: Format[SicCode] = (
-    (__ \ "id").format[String](idValidator) and
-    (__ \ "description").format[String] and
-    (__ \ "displayDetails").format[String]
-  )(SicCode.apply, unlift(SicCode.unapply))
+  val writes: Writes[SicCode] = (
+    (__ \ "code").write[String] and
+    (__ \ "desc").write[String] and
+    (__ \ "indexes").write[String]
+  )(unlift(SicCode.unapply))
 
+  val mongoReads: Reads[SicCode] = (
+      (__ \ "code").read[String] and
+      (__ \ "desc").read[String] and
+      (__ \ "indexes").read[String]
+    )(SicCode.apply _)
+
+  val apiReads: Reads[SicCode] = (
+      (__ \ "code").read[String](idValidator) and
+      (__ \ "desc").read[String] and
+      (__ \ "indexes").read[String]
+    )(SicCode.apply _)
+
+  val apiFormat = Format(apiReads,writes)
+  val mongoFormat = Format(mongoReads,writes)
 }

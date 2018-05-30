@@ -30,7 +30,6 @@ case class VatScheme(id: RegistrationId,
                      tradingDetails: Option[TradingDetails] = None,
                      lodgingOfficer: Option[LodgingOfficer] = None,
                      returns: Option[Returns] = None,
-                     vatSicAndCompliance: Option[VatSicAndCompliance] = None,
                      sicAndCompliance: Option[SicAndCompliance] = None,
                      vatContact: Option[VatContact] = None,
                      businessContact: Option[BusinessContact] = None,
@@ -52,7 +51,6 @@ object VatScheme {
     (__ \ "tradingDetails").writeNullable[TradingDetails] and
     (__ \ "lodgingOfficer").writeNullable[LodgingOfficer] and
     (__ \ "returns").writeNullable[Returns] and
-    (__ \ "vatSicAndCompliance").writeNullable[VatSicAndCompliance] and
     (__ \ "sicAndCompliance").writeNullable[SicAndCompliance] and
     (__ \ "vatContact").writeNullable[VatContact] and
     (__ \ "businessContact").writeNullable[BusinessContact] and
@@ -73,7 +71,6 @@ object VatScheme {
       (__ \ "tradingDetails").formatNullable[TradingDetails] and
       (__ \ "lodgingOfficer").formatNullable[LodgingOfficer] and
       (__ \ "returns").formatNullable[Returns] and
-      (__ \ "vatSicAndCompliance").formatNullable[VatSicAndCompliance] and
       (__ \ "sicAndCompliance").formatNullable[SicAndCompliance] and
       (__ \ "vatContact").formatNullable[VatContact] and
       (__ \ "businessContact").formatNullable[BusinessContact] and

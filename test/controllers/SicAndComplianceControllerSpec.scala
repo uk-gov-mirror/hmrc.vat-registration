@@ -24,7 +24,7 @@ import models.api.SicAndCompliance
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json}
 import play.api.test.FakeRequest
 import repositories.RegistrationMongoRepository
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -82,7 +82,6 @@ class SicAndComplianceControllerSpec extends VatRegSpec with VatRegistrationFixt
       mockUpdateSicAndComplianceFromService(Future.successful(validSicAndCompliance.get))
 
       val result = controller.updateSicAndCompliance(regId.value)(FakeRequest().withBody[JsObject](validSicAndComplianceJson))
-      status(result) shouldBe 200
       await(contentAsJson(result)) shouldBe validSicAndComplianceJson
     }
     "returns 404 if regId not found" in new Setup {
