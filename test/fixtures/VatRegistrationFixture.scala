@@ -162,7 +162,7 @@ trait VatRegistrationFixture {
        |}
     """.stripMargin).as[JsObject]
 
-  val validFullTradingDetails: TradingDetails = TradingDetails(Some("trading-name"), Some(true))
+  val validFullTradingDetails: TradingDetails = TradingDetails(Some("trading-name"), true)
   val validFullTradingDetailsJson: JsObject = Json.parse(
     s"""
        |{

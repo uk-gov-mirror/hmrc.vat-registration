@@ -18,7 +18,8 @@ package models
 
 import helpers.BaseSpec
 import models.api.TradingDetails
-import play.api.libs.json.{JsSuccess, JsValue, Json}
+import play.api.data.validation.ValidationError
+import play.api.libs.json.{JsError, JsPath, JsSuccess, JsValue, Json}
 
 class TradingDetailsSpec extends BaseSpec with JsonFormatValidation {
 
@@ -30,7 +31,7 @@ class TradingDetailsSpec extends BaseSpec with JsonFormatValidation {
        |}
          """.stripMargin
   )
-  val fullModel = TradingDetails(Some("test-name"), Some(true))
+  val fullModel = TradingDetails(Some("test-name"), true)
 
   val noNameJson: JsValue = Json.parse(
     """
@@ -39,7 +40,7 @@ class TradingDetailsSpec extends BaseSpec with JsonFormatValidation {
       |}
     """.stripMargin
   )
-  val noNameModel = TradingDetails(None, Some(true))
+  val noNameModel = TradingDetails(None, true)
 
   val noEoriJson: JsValue = Json.parse(
     """
@@ -48,7 +49,6 @@ class TradingDetailsSpec extends BaseSpec with JsonFormatValidation {
       |}
     """.stripMargin
   )
-  val noEoriModel = TradingDetails(Some("test-name"), None)
 
   val emptyJson: JsValue = Json.parse(
     """
@@ -57,7 +57,6 @@ class TradingDetailsSpec extends BaseSpec with JsonFormatValidation {
       |}
     """.stripMargin
   )
-  val emptyModel = TradingDetails(None, None)
 
   "Creating a TradingDetails model from Json" should {
     "complete successfully from full Json" in {
@@ -66,11 +65,13 @@ class TradingDetailsSpec extends BaseSpec with JsonFormatValidation {
     "complete successfully without a trading name" in {
       Json.fromJson[TradingDetails](noNameJson) shouldBe JsSuccess(noNameModel)
     }
-    "complete successfully without eori-requested" in {
-      Json.fromJson[TradingDetails](noEoriJson) shouldBe JsSuccess(noEoriModel)
-    }
-    "complete successfully without any details" in {
-      Json.fromJson[TradingDetails](emptyJson) shouldBe JsSuccess(emptyModel)
+    "be unsuccessful" when {
+      "json is without eori-requested" in {
+        Json.fromJson[TradingDetails](noEoriJson) shouldHaveErrors (JsPath() \ "eoriRequested" -> ValidationError("error.path.missing"))
+      }
+      "json is without any details" in {
+        Json.fromJson[TradingDetails](emptyJson) shouldHaveErrors (JsPath() \ "eoriRequested" -> ValidationError("error.path.missing"))
+      }
     }
   }
 
@@ -80,12 +81,6 @@ class TradingDetailsSpec extends BaseSpec with JsonFormatValidation {
     }
     "complete successfully without a trading name" in {
       Json.toJson[TradingDetails](noNameModel) shouldBe noNameJson
-    }
-    "complete successfully without a eoriRequired" in {
-      Json.toJson[TradingDetails](noEoriModel) shouldBe noEoriJson
-    }
-    "complete successfully without any details" in {
-      Json.toJson[TradingDetails](emptyModel) shouldBe emptyJson
     }
   }
 
