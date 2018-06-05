@@ -295,7 +295,7 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
 
   "updateTradingDetails" should {
 
-    val tradingDetails = TradingDetails(Some("trading-name"), Some(true))
+    val tradingDetails = TradingDetails(Some("trading-name"), true)
 
     "update tradingDetails block in registration when there is no tradingDetails data" in new Setup {
       val result = for {
@@ -308,7 +308,7 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
     }
 
     "update tradingDetails block in registration when there is already tradingDetails data" in new Setup {
-      val otherTradingDetails = TradingDetails(Some("other-trading-name"), Some(true))
+      val otherTradingDetails = TradingDetails(Some("other-trading-name"), true)
       val result = for {
         _                   <- repository.insert(vatScheme.copy(tradingDetails = Some(tradingDetails)))
         _                   <- repository.updateTradingDetails(vatScheme.id.value, tradingDetails)
@@ -330,7 +330,7 @@ class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with 
 
   "Calling retrieveTradingDetails" should {
 
-    val tradingDetails = TradingDetails(Some("trading-name"), Some(true))
+    val tradingDetails = TradingDetails(Some("trading-name"), true)
 
     "return trading details data from an existing registration containing data" in new Setup {
       val result = for {

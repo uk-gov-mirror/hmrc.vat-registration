@@ -124,7 +124,7 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
 
   "call to updateLogicalGroup" should {
 
-    val tradingDetails = TradingDetails(Some("test-name"), Some(false))
+    val tradingDetails = TradingDetails(Some("test-name"), false)
 
     "return Success response " in new Setup {
       when(mockRegistrationRepository.updateLogicalGroup(RegistrationId("1"), tradingDetails)).thenReturn(tradingDetails)
