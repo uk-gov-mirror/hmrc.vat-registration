@@ -22,15 +22,15 @@ import common.RegistrationId
 import common.exceptions.MissingRegDocument
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import models.api.LodgingOfficer
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import play.api.libs.json.{JsBoolean, JsObject, Json}
 import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import repositories.RegistrationMongoRepository
 import uk.gov.hmrc.auth.core.AuthConnector
-import play.api.test.Helpers._
+
 import scala.concurrent.Future
 
 class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixture {
@@ -40,24 +40,6 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
       override lazy val authConnector: AuthConnector = mockAuthConnector
     }
-
-    def getLodgingOfficerData(): OngoingStubbing[Future[Option[LodgingOfficer]]] = when(mockLodgingOfficerService.getLodgingOfficer(any())(any()))
-      .thenReturn(Future.successful(Some(validLodgingOfficerPreIV)))
-
-    def getLodgingOfficerNotFound(): OngoingStubbing[Future[Option[LodgingOfficer]]] = when(mockLodgingOfficerService.getLodgingOfficer(any())(any()))
-      .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
-
-    def getNoLodgingOfficerData(): OngoingStubbing[Future[Option[LodgingOfficer]]] = when(mockLodgingOfficerService.getLodgingOfficer(any())(any()))
-      .thenReturn(Future.successful(None))
-
-    def updateLodgingOfficerSuccess(): OngoingStubbing[Future[LodgingOfficer]] = when(mockLodgingOfficerService.updateLodgingOfficer(any(), any())(any()))
-      .thenReturn(Future.successful(validLodgingOfficerPostIv))
-
-    def updateLodgingOfficerFails(): OngoingStubbing[Future[LodgingOfficer]] = when(mockLodgingOfficerService.updateLodgingOfficer(any(), any())(any()))
-      .thenReturn(Future.failed(new Exception))
-
-    def updateLodgingOfficerNotFound(): OngoingStubbing[Future[LodgingOfficer]] = when(mockLodgingOfficerService.updateLodgingOfficer(any(), any())(any()))
-      .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
 
     def updateIVStatusSuccess(): OngoingStubbing[Future[Boolean]] = when(mockLodgingOfficerService.updateIVStatus(any(), any())(any()))
       .thenReturn(Future.successful(true))
@@ -88,7 +70,8 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
        |   "contact" : {
        |     "email" : "skylake@vilikariet.com"
        |   }
-       | }
+       | },
+       | "isOfficerApplying": true
        |}
     """.stripMargin).as[JsObject]
 
@@ -101,7 +84,8 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
        | },
        | "dob" : "${LocalDate.now()}",
        | "nino" : "AB123456A",
-       | "role" : "secretary"
+       | "role" : "secretary",
+       | "isOfficerApplying": true
        |}
     """.stripMargin).as[JsObject]
 
@@ -113,84 +97,6 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
        | "role" : "secretary"
        |}
     """.stripMargin).as[JsObject]
-
-  "get Lodging Officer" should {
-    "returns a valid json if found for id" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      getLodgingOfficerData()
-
-      val result = controller.getLodgingOfficer("testId")(FakeRequest())
-      status(result) shouldBe 200
-      await(contentAsJson(result)) shouldBe validLodgingOfficerJson
-    }
-
-    "returns 204 if none found" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      getNoLodgingOfficerData()
-
-      val result = controller.getLodgingOfficer("testId")(FakeRequest())
-
-      status(result) shouldBe 204
-    }
-
-    "returns 404 if none found" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      getLodgingOfficerNotFound()
-
-      val result = controller.getLodgingOfficer("testId")(FakeRequest())
-      status(result) shouldBe 404
-    }
-
-    "returns 403 if user is not authorised" in new Setup {
-      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
-
-      val result = controller.getLodgingOfficer("testId")(FakeRequest())
-      status(result) shouldBe 403
-    }
-  }
-
-  "Update Lodging Officer" should {
-
-    "returns 403 if user is not authorised" in new Setup {
-      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
-
-      val result = controller.updateLodgingOfficer("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
-      status(result) shouldBe 403
-    }
-
-    "returns 200 if successful" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      updateLodgingOfficerSuccess()
-
-      val result = controller.updateLodgingOfficer("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
-      status(result) shouldBe 200
-      await(contentAsJson(result)) shouldBe upsertLodgingOfficerJson
-    }
-
-    "returns 400 if json received is invalid" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      updateLodgingOfficerFails()
-
-      val result = controller.updateLodgingOfficer("testId")(FakeRequest().withBody[JsObject](invalidLodgingOfficerJson))
-      status(result) shouldBe 400
-    }
-
-    "returns 404 if the registration is not found" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      updateLodgingOfficerNotFound()
-
-      val result = controller.updateLodgingOfficer("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
-      status(result) shouldBe 404
-    }
-
-    "returns 500 if an error occurs" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      updateLodgingOfficerFails()
-
-      val result = controller.updateLodgingOfficer("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
-      status(result) shouldBe 500
-    }
-  }
 
   "updateIVStatus" should {
     "returns 403 if user is not authorised" in new Setup {
@@ -224,6 +130,97 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
       updateIVStatusFails()
 
       val result = controller.updateIVStatus("testId", true)(FakeRequest())
+      status(result) shouldBe 500
+    }
+  }
+
+  "getLodgingOfficerData" should {
+    "returns a valid json if found for id" in new Setup {
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      when(mockLodgingOfficerService.getLodgingOfficerData(any())(any()))
+        .thenReturn(Future.successful(Some(validLodgingOfficerPreIV)))
+
+      val result = controller.getLodgingOfficerData("testId")(FakeRequest())
+      status(result) shouldBe 200
+      await(contentAsJson(result)) shouldBe validLodgingOfficerJson
+    }
+
+    "returns 204 if none found" in new Setup {
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      when(mockLodgingOfficerService.getLodgingOfficerData(any())(any()))
+        .thenReturn(Future.successful(None))
+
+      val result = controller.getLodgingOfficerData("testId")(FakeRequest())
+
+      status(result) shouldBe 204
+    }
+
+    "returns 404 if none found" in new Setup {
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      when(mockLodgingOfficerService.getLodgingOfficerData(any())(any()))
+        .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
+
+      val result = controller.getLodgingOfficerData("testId")(FakeRequest())
+      status(result) shouldBe 404
+    }
+
+    "returns 403 if user is not authorised" in new Setup {
+      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
+
+      val result = controller.getLodgingOfficerData("testId")(FakeRequest())
+      status(result) shouldBe 403
+    }
+  }
+
+  "updateLodgingOfficerData" should {
+
+    "returns 403 if user is not authorised" in new Setup {
+      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
+
+      val result = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
+      status(result) shouldBe 403
+    }
+
+    "returns 200 if successful" in new Setup {
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      when(mockLodgingOfficerService.updateLodgingOfficerData(any(), any())(any()))
+        .thenReturn(Future.successful(upsertLodgingOfficerJson))
+
+      val result = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
+      status(result) shouldBe 200
+      await(contentAsJson(result)) shouldBe upsertLodgingOfficerJson
+    }
+
+    "returns 400 if json received is invalid" in new Setup {
+      val invalidPatchLodgingOfficerJson = Json.parse(
+        s"""
+           |{
+           | "nino" : "AB123456A",
+           | "role" : "secretary"
+           |}
+    """.stripMargin).as[JsObject]
+
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+
+      val result = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](invalidPatchLodgingOfficerJson))
+      status(result) shouldBe 400
+    }
+
+    "returns 404 if the registration is not found" in new Setup {
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      when(mockLodgingOfficerService.updateLodgingOfficerData(any(), any())(any()))
+        .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
+
+      val result = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
+      status(result) shouldBe 404
+    }
+
+    "returns 500 if an error occurs" in new Setup {
+      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      when(mockLodgingOfficerService.updateLodgingOfficerData(any(), any())(any()))
+        .thenReturn(Future.failed(new Exception))
+
+      val result = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
       status(result) shouldBe 500
     }
   }

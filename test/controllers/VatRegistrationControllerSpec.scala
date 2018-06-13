@@ -40,14 +40,10 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
   import play.api.test.Helpers._
 
   val vatLodgingOfficer       = LodgingOfficer(
-    currentAddress            = Some(scrsAddress),
-    dob                       = LocalDate.of(1980, 1, 1),
+    dob                       = Some(LocalDate.of(1980, 1, 1)),
     nino                      = "NB666666C",
     role                      = "director",
     name                      = name,
-    changeOfName              = Some(changeOfName),
-    currentOrPreviousAddress  = Some(currentOrPreviousAddress),
-    contact                   = Some(contact),
     ivPassed                  = None,
     details                   = None
   )
@@ -208,66 +204,6 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
         val result = controller.fetchReturns(regId.value)(FakeRequest())
         status(result) shouldBe NOT_FOUND
-      }
-    }
-
-    "fetchTurnoverEstimates" should {
-
-      val vatTaxable = 1000L
-      val turnoverEstimates = TurnoverEstimates(vatTaxable)
-
-      "return a 200 and TurnoverEstimates json when it is returned from the repository" in new Setup {
-        AuthorisationMocks.mockAuthorised(regId.value, internalid)
-        when(mockRegistrationMongoRepository.fetchTurnoverEstimates(any())(any()))
-          .thenReturn(Future.successful(Some(turnoverEstimates)))
-
-        val result = await(controller.fetchTurnoverEstimates(regId.value)(FakeRequest()))
-        val expectedJson: JsValue = Json.obj("vatTaxable" -> 1000)
-
-        status(result) shouldBe 200
-        contentAsJson(result) shouldBe expectedJson
-      }
-
-      "return a 204 and no json when a None is returned from the repository" in new Setup {
-        AuthorisationMocks.mockAuthorised(regId.value, internalid)
-        when(mockRegistrationMongoRepository.fetchTurnoverEstimates(any())(any()))
-          .thenReturn(Future.successful(None))
-
-        val result = await(controller.fetchTurnoverEstimates(regId.value)(FakeRequest()))
-        status(result) shouldBe 204
-      }
-
-      "return a 404 when a MissingRegDocument exception is thrown" in new Setup {
-        AuthorisationMocks.mockAuthorised(regId.value, internalid)
-        when(mockRegistrationMongoRepository.fetchTurnoverEstimates(any())(any()))
-          .thenReturn(Future.failed(MissingRegDocument(regId)))
-
-        val result = await(controller.fetchTurnoverEstimates(regId.value)(FakeRequest()))
-        status(result) shouldBe 404
-      }
-    }
-
-    "updateTurnoverEstimates" should {
-
-      val registrationId = "reg-12345"
-      val vatTaxable = 1000L
-      val turnoverEstimates = TurnoverEstimates(vatTaxable)
-
-      when(mockRegistrationMongo.store).thenReturn(mockRegistrationMongoRepository)
-
-      "return a 200 if the update to mongo was successful" in new Setup {
-        AuthorisationMocks.mockAuthorised(regId.value, internalid)
-        when(mockRegistrationMongoRepository.updateTurnoverEstimates(any(), any())(any()))
-          .thenReturn(Future.successful(turnoverEstimates))
-
-        val request = FakeRequest().withBody(
-          Json.obj(
-            "vatTaxable" -> vatTaxable
-          )
-        )
-
-        val result = controller.updateTurnoverEstimates(regId.value)(request)
-        status(result) shouldBe OK
       }
     }
 
@@ -458,6 +394,77 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         val resp = await(controller.saveTransId(regId)(fakeRequest))
         status(resp) shouldBe Status.OK
       }
+    }
+  }
+
+  "call to getTurnoverEstimates" should {
+    "return a 200 and TurnoverEstimates json when it is returned from the repository" in new Setup {
+      AuthorisationMocks.mockAuthorised(regId.value, internalid)
+      when(mockRegistrationService.getBlockFromEligibilityData[TurnoverEstimates](any())(any(), any()))
+        .thenReturn(Future.successful(Some(TurnoverEstimates(None, Some(2024)))))
+
+      val result = await(controller.getTurnoverEstimates(regId.value)(FakeRequest()))
+      val expectedJson: JsValue = Json.obj("turnoverEstimate" -> 2024)
+
+      status(result) shouldBe 200
+      contentAsJson(result) shouldBe expectedJson
+    }
+
+    "return a 204 and no json when a None is returned from the repository" in new Setup {
+      AuthorisationMocks.mockAuthorised(regId.value, internalid)
+      when(mockRegistrationService.getBlockFromEligibilityData[TurnoverEstimates](any())(any(), any()))
+        .thenReturn(Future.successful(None))
+
+      val result = await(controller.getTurnoverEstimates(regId.value)(FakeRequest()))
+      status(result) shouldBe 204
+    }
+
+    "return a 404 when a MissingRegDocument exception is thrown" in new Setup {
+      AuthorisationMocks.mockAuthorised(regId.value, internalid)
+      when(mockRegistrationService.getBlockFromEligibilityData[TurnoverEstimates](any())(any(), any()))
+        .thenReturn(Future.failed(MissingRegDocument(regId)))
+
+      val result = await(controller.getTurnoverEstimates(regId.value)(FakeRequest()))
+      status(result) shouldBe 404
+    }
+  }
+
+  "call to getThreshold" should {
+    "return a 200 and TurnoverEstimates json when it is returned from the repository" in new Setup {
+      val threshold = Threshold(mandatoryRegistration = true,
+        thresholdPreviousThirtyDays = Some(LocalDate.of(2016, 5, 12)),
+        thresholdInTwelveMonths = Some(LocalDate.of(2016, 6, 25))
+      )
+
+      AuthorisationMocks.mockAuthorised(regId.value, internalid)
+      when(mockRegistrationService.getBlockFromEligibilityData[Threshold](any())(any(), any()))
+        .thenReturn(Future.successful(Some(threshold)))
+
+      val result = await(controller.getThreshold(regId.value)(FakeRequest()))
+      val expectedJson: JsValue = Json.obj("mandatoryRegistration" -> true,
+        "thresholdPreviousThirtyDays" -> "2016-05-12",
+        "thresholdInTwelveMonths" -> "2016-06-25")
+
+      status(result) shouldBe 200
+      contentAsJson(result) shouldBe expectedJson
+    }
+
+    "return a 204 and no json when a None is returned from the repository" in new Setup {
+      AuthorisationMocks.mockAuthorised(regId.value, internalid)
+      when(mockRegistrationService.getBlockFromEligibilityData[Threshold](any())(any(), any()))
+        .thenReturn(Future.successful(None))
+
+      val result = await(controller.getThreshold(regId.value)(FakeRequest()))
+      status(result) shouldBe 204
+    }
+
+    "return a 404 when a MissingRegDocument exception is thrown" in new Setup {
+      AuthorisationMocks.mockAuthorised(regId.value, internalid)
+      when(mockRegistrationService.getBlockFromEligibilityData[Threshold](any())(any(), any()))
+        .thenReturn(Future.failed(MissingRegDocument(regId)))
+
+      val result = await(controller.getThreshold(regId.value)(FakeRequest()))
+      status(result) shouldBe 404
     }
   }
 }

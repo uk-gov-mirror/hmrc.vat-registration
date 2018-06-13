@@ -22,7 +22,8 @@ import fixtures.VatRegistrationFixture
 import helpers.BaseSpec
 import models.api._
 import play.api.data.validation.ValidationError
-import play.api.libs.json.{Format, JsPath, Json}
+import play.api.libs.json.{Format, JsArray, JsObject, JsPath, JsSuccess, Json}
+import utils.EligibilityDataJsonUtils
 
 class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegistrationFixture {
 
@@ -31,14 +32,10 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
   implicit val format = LodgingOfficer.format
 
   val vatLodgingOfficer = LodgingOfficer(
-    currentAddress           = Some(scrsAddress),
-    dob                      = LocalDate.of(1990, 1, 1),
+    dob                      = Some(LocalDate.of(1990, 1, 1)),
     nino                     = "NB686868C",
     role                     = "director",
     name                     = name,
-    changeOfName             = Some(changeOfName),
-    currentOrPreviousAddress = Some(currentOrPreviousAddress),
-    contact                  = Some(contact),
     ivPassed                 = None,
     details                  = None
   )
@@ -62,24 +59,251 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
       }
 
       "Name is invalid" in {
-        val name = Name(first = Some("$%@$%^@#%@$^@$^$%@#$%@#$"), middle = None, last = None, forename = Some("$%@$%^@#%@$^@$^$%@#$%@#$"))
+        val name = Name(first = Some("$%@$%^@#%@$^@$^$%@#$%@#$"), middle = None, last = "valid name")
         val lodgingOfficer = vatLodgingOfficer.copy(name = name)
-        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "name" \ "forename" -> ValidationError("error.pattern"))
+        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "name" \ "first" -> ValidationError("error.pattern"))
+      }
+    }
+  }
+
+  "mongoReads" should {
+    "return LodgingOfficer model successfully" when {
+      val lodgingOfficerJson = Json.parse(
+        s"""
+           |{
+           |   "lodgingOfficer" : {
+           |     "dob" : "2017-01-15",
+           |     "details" : ${Json.toJson(lodgingOfficerDetails)}
+           |   }
+           |}
+          """.stripMargin).as[JsObject]
+
+      val officer = Json.obj("role" -> "director", "name" -> Json.obj(
+        "forename" -> "First Name Test",
+        "other_forenames" -> "Middle Name Test",
+        "surname" -> "Last Name Test"
+      ))
+
+      val expectedModel = LodgingOfficer(
+        dob = Some(LocalDate.of(2017,1,15)),
+        nino = "JW778877A",
+        role = "director",
+        name = Name(
+          first = Some("First Name Test"),
+          middle = Some("Middle Name Test"),
+          last = "Last Name Test"
+        ),
+        ivPassed = None,
+        details = Some(lodgingOfficerDetails),
+        isOfficerApplying = true
+      )
+
+      "retrieved from eligiblityData json combined with lodging officer json and officer is applying" in {
+        val questions1 = Seq(
+          Json.obj("questionId" -> "completionCapacity", "question" -> "Some Question 11", "answer" -> "Some Answer 11", "answerValue" -> officer),
+          Json.obj("questionId" -> "foo", "question" -> "Some Question 12", "answer" -> "Some Answer 12", "answerValue" -> "val12")
+        )
+        val questions2 = Seq(
+          Json.obj("questionId" -> "applicantUKNino-optionalData", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "JW778877A"),
+          Json.obj("questionId" -> "wizz", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "val22")
+        )
+        val section1 = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions1))
+        val section2 = Json.obj("title" -> "test TITLE 2", "data" -> JsArray(questions2))
+        val sections = JsArray(Seq(section1, section2))
+        val eligibilityData = Json.obj("eligibilityData" -> Json.obj("sections" -> sections))
+
+        val res = Json.fromJson[LodgingOfficer](EligibilityDataJsonUtils.toJsObject(eligibilityData) ++ lodgingOfficerJson)(LodgingOfficer.mongoReads)
+
+        res shouldBe JsSuccess(expectedModel)
       }
 
-      "Contact email is invalid" in {
-        val lodgingOfficer = vatLodgingOfficer.copy(contact = Some(OfficerContactDetails(Some("£$%^&&*"), None, None)))
-        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "contact" \ "email" -> ValidationError("error.email"))
+      "retrieved from eligiblityData json combined with lodging officer json with completionCapacity = noneofthese" in {
+        val questions1 = Seq(
+          Json.obj("questionId" -> "completionCapacity", "question" -> "Some Question 11", "answer" -> "Some Answer 11", "answerValue" -> "NoNeOfThese"),
+          Json.obj("questionId" -> "foo", "question" -> "Some Question 12", "answer" -> "Some Answer 12", "answerValue" -> "val12")
+        )
+        val questions2 = Seq(
+          Json.obj("questionId" -> "completionCapacityFillingInFor", "question" -> "Some Question 21", "answer" -> "Some Answer 21", "answerValue" -> officer),
+          Json.obj("questionId" -> "applicantUKNino-optionalData", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "JW778877A"),
+          Json.obj("questionId" -> "wizz", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "val22")
+        )
+        val section1 = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions1))
+        val section2 = Json.obj("title" -> "test TITLE 2", "data" -> JsArray(questions2))
+        val sections = JsArray(Seq(section1, section2))
+        val eligibilityData = Json.obj("eligibilityData" -> Json.obj("sections" -> sections))
+
+        val res = Json.fromJson[LodgingOfficer](EligibilityDataJsonUtils.toJsObject(eligibilityData) ++ lodgingOfficerJson)(LodgingOfficer.mongoReads)
+
+        res shouldBe JsSuccess(expectedModel.copy(isOfficerApplying = false))
       }
 
-      "Contact tel is invalid" in {
-        val lodgingOfficer = vatLodgingOfficer.copy(contact = Some(OfficerContactDetails(None, Some("£$%^&&*"), None)))
-        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "contact" \ "tel" -> ValidationError("error.pattern"))
+      "return jsError when CompletionCapacity = nonofthese but there is no CompletionCapacityFillingInFor" in {
+        val questions1 = Seq(
+          Json.obj("questionId" -> "completionCapacity", "question" -> "Some Question 11", "answer" -> "Some Answer 11", "answerValue" -> "noneOFTHESE"),
+          Json.obj("questionId" -> "foo", "question" -> "Some Question 12", "answer" -> "Some Answer 12", "answerValue" -> "val12")
+        )
+        val questions2 = Seq(
+          Json.obj("questionId" -> "applicantUKNino", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "JW778877A"),
+          Json.obj("questionId" -> "wizz", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "val22")
+        )
+        val section1 = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions1))
+        val section2 = Json.obj("title" -> "test TITLE 2", "data" -> JsArray(questions2))
+        val sections = JsArray(Seq(section1, section2))
+        val eligibilityData = Json.obj("eligibilityData" -> Json.obj("sections" -> sections))
+
+        val res = Json.fromJson[LodgingOfficer](EligibilityDataJsonUtils.toJsObject(eligibilityData) ++ lodgingOfficerJson)(LodgingOfficer.mongoReads)
+
+        res.isError shouldBe true
       }
 
-      "Contact mob is invalid" in {
-        val lodgingOfficer = vatLodgingOfficer.copy(contact = Some(OfficerContactDetails(None, None, Some("£$%^&&*"))))
-        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "contact" \ "mobile" -> ValidationError("error.pattern"))
+      "return jsError when CompletionCapacity has an incorrect value" in {
+        val questions1 = Seq(
+          Json.obj("questionId" -> "completionCapacity", "question" -> "Some Question 11", "answer" -> "Some Answer 11", "answerValue" -> 1234),
+          Json.obj("questionId" -> "foo", "question" -> "Some Question 12", "answer" -> "Some Answer 12", "answerValue" -> "val12")
+        )
+        val questions2 = Seq(
+          Json.obj("questionId" -> "applicantUKNino", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "JW778877A"),
+          Json.obj("questionId" -> "wizz", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "val22")
+        )
+        val section1 = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions1))
+        val section2 = Json.obj("title" -> "test TITLE 2", "data" -> JsArray(questions2))
+        val sections = JsArray(Seq(section1, section2))
+        val eligibilityData = Json.obj("eligibilityData" -> Json.obj("sections" -> sections))
+
+        val res = Json.fromJson[LodgingOfficer](EligibilityDataJsonUtils.toJsObject(eligibilityData) ++ lodgingOfficerJson)(LodgingOfficer.mongoReads)
+        res.isError shouldBe true
+      }
+    }
+  }
+
+  "eligibilityDataJsonReads" should {
+    val thresholdPreviousThirtyDays = LocalDate.of(2017, 5, 23)
+    val thresholdInTwelveMonths = LocalDate.of(2017, 7, 16)
+    val officer = Json.obj("role" -> "director", "name" -> Json.obj(
+      "forename" -> "First Name Test",
+      "other_forenames" -> "Middle Name Test",
+      "surname" -> "Last Name Test"
+    ))
+    val json = Json.obj(
+      "thresholdPreviousThirtyDays" -> thresholdPreviousThirtyDays,
+      "thresholdInTwelveMonths" -> thresholdInTwelveMonths,
+      "turnoverEstimate" -> 2024,
+      "applicantUKNino-optionalData" -> "JW778877A",
+      "completionCapacity" -> officer,
+      "fooDirectorDetails3" -> true
+    )
+
+    "return JsSuccess" when {
+      "completionCapacity is defined with a JsObject" in {
+        val res = Json.fromJson(json)(LodgingOfficer.eligibilityDataJsonReads)
+        res shouldBe JsSuccess(("JW778877A", Name(first = Some("First Name Test"), middle = Some("Middle Name Test"), last = "Last Name Test"), "director", true))
+      }
+      "completionCapacity is defined with noneofthese and completionCapacityFillingInFor is defined with a JsObject" in {
+        val rep = Json.obj("role" -> "director", "name" -> Json.obj(
+          "forename" -> "First Name Test 2",
+          "other_forenames" -> "Middle Name Test 2",
+          "surname" -> "Last Name Test 2"
+        ))
+
+        val json2 = json - "completionCapacity" ++ Json.obj("completionCapacity" -> "noneofthese", "completionCapacityFillingInFor" -> rep)
+        val res = Json.fromJson(json2)(LodgingOfficer.eligibilityDataJsonReads)
+        val expected = ("JW778877A", Name(first = Some("First Name Test 2"), middle = Some("Middle Name Test 2"), last = "Last Name Test 2"), "director", false)
+
+        res shouldBe JsSuccess(expected)
+      }
+    }
+
+    "return JsError" when {
+      "completionCapacity is not defined" in {
+        val testJson = json - "completionCapacity"
+        val res = Json.fromJson(testJson)(LodgingOfficer.eligibilityDataJsonReads)
+        res.isError shouldBe true
+      }
+      "completionCapacity is not defined correctly" in {
+        val testJson = json - "completionCapacity" ++ Json.obj("completionCapacity" -> 125454)
+        val res = Json.fromJson(testJson)(LodgingOfficer.eligibilityDataJsonReads)
+        res.isError shouldBe true
+      }
+      "completionCapacity is defined with noneofthese but completionCapacityFillingInFor is missing" in {
+        val testJson = json - "completionCapacity" ++ Json.obj("completionCapacity" -> "noneofthese")
+        val res = Json.fromJson(testJson)(LodgingOfficer.eligibilityDataJsonReads)
+        res.isError shouldBe true
+      }
+      "completionCapacity is defined with noneofthese but completionCapacityFillingInFor is not defined correctly" in {
+        val testJson = json - "completionCapacity" ++ Json.obj("completionCapacity" -> "noneofthese", "completionCapacityFillingInFor" -> 4564654)
+        val res = Json.fromJson(testJson)(LodgingOfficer.eligibilityDataJsonReads)
+        res.isError shouldBe true
+      }
+      "applicantUKNino is not valid" in {
+        val testJson = json - "applicantUKNino" ++ Json.obj("applicantUKNino-optionalData" -> "SF123456E")
+        val res = Json.fromJson(testJson)(LodgingOfficer.eligibilityDataJsonReads)
+        res.isError shouldBe true
+      }
+      "officer role is not valid" in {
+        val invalidOfficer = Json.obj("role" -> "manager", "name" -> Json.obj(
+          "forename" -> "First Name Test",
+          "other_forenames" -> "Middle Name Test",
+          "surname" -> "Last Name Test"
+        ))
+
+        val testJson = json - "completionCapacity" ++ Json.obj("completionCapacity" -> invalidOfficer)
+        val res = Json.fromJson(testJson)(LodgingOfficer.eligibilityDataJsonReads)
+
+        res.isError shouldBe true
+      }
+    }
+  }
+
+  "patchJsonReads" should {
+    "return JsSuccess" when {
+      "full json is defined" in {
+        val json = Json.obj(
+          "dob" -> "2015-05-27",
+          "ivPassed" -> true,
+          "details" -> Json.toJson(lodgingOfficerDetails).as[JsObject]
+        )
+
+        val res = Json.fromJson(json)(LodgingOfficer.patchJsonReads)
+        res shouldBe JsSuccess(json)
+      }
+      "min json is defined" in {
+        val json = Json.obj(
+          "dob" -> "2015-05-27"
+        )
+
+        val res = Json.fromJson(json)(LodgingOfficer.patchJsonReads)
+        res shouldBe JsSuccess(json)
+      }
+    }
+    "return JsError" when {
+      "dob is missing" in {
+        val json = Json.obj(
+          "ivPassed" -> true,
+          "details" -> Json.toJson(lodgingOfficerDetails).as[JsObject]
+        )
+
+        val res = Json.fromJson(json)(LodgingOfficer.patchJsonReads)
+        res.isError shouldBe true
+      }
+      "ivPassed is not correct" in {
+        val json = Json.obj(
+          "dob" -> "2015-05-27",
+          "ivPassed" -> "wrong value",
+          "details" -> Json.toJson(lodgingOfficerDetails).as[JsObject]
+        )
+
+        val res = Json.fromJson(json)(LodgingOfficer.patchJsonReads)
+        res.isError shouldBe true
+      }
+      "details is not correct" in {
+        val json = Json.obj(
+          "dob" -> "2015-05-27",
+          "ivPassed" -> true,
+          "details" -> (Json.toJson(lodgingOfficerDetails).as[JsObject] - "contact")
+        )
+
+        val res = Json.fromJson(json)(LodgingOfficer.patchJsonReads)
+        res.isError shouldBe true
       }
     }
   }

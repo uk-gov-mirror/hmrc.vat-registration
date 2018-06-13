@@ -33,7 +33,6 @@ class Module extends AbstractModule {
     bind(classOf[DESConnector]).to(classOf[DESConnectorImpl]).asEagerSingleton()
     bind(classOf[services.RegistrationService]).to(classOf[services.VatRegistrationService]).asEagerSingleton()
     bind(classOf[EligibilityController]).to(classOf[EligibilityControllerImpl]).asEagerSingleton()
-    bind(classOf[ThresholdController]).to(classOf[ThresholdControllerImpl]).asEagerSingleton()
     bind(classOf[LodgingOfficerController]).to(classOf[LodgingOfficerControllerImpl]).asEagerSingleton()
     bind(classOf[SicAndComplianceController]).to(classOf[SicAndComplianceControllerImpl]).asEagerSingleton()
     bind(classOf[TradingDetailsController]).to(classOf[TradingDetailsControllerImpl]).asEagerSingleton()
@@ -42,9 +41,5 @@ class Module extends AbstractModule {
     bind(classOf[FlatRateSchemeController]).to(classOf[FlatRateSchemeControllerImpl]).asEagerSingleton()
     bind(classOf[VatThresholdController]).to(classOf[VatThresholdControllerImpl]).asEagerSingleton()
     bind(classOf[VatThresholdService]).to(classOf[VatThresholdServiceImpl]).asEagerSingleton()
-    //TODO: Should all services be done this way or is it just the controller.
-//    bind(classOf[services.LodgingOfficerSrv]).to(classOf[services.LodgingOfficerService]).asEagerSingleton()
-//    bind(classOf[services.EligibilitySrv]).to(classOf[services.EligibilityService]).asEagerSingleton()
-//    bind(classOf[services.ThresholdSrv]).to(classOf[services.ThresholdService]).asEagerSingleton()
   }
 }

@@ -18,6 +18,7 @@ package models.api
 
 import play.api.libs.json.{Json, OFormat}
 
+@deprecated("Use eligibilityData in VatScheme instead", "SCRS-11579")
 case class Eligibility(version: Int,
                        result: String)
 

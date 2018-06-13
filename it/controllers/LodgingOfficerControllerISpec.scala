@@ -4,19 +4,12 @@ package controllers
 import java.time.LocalDate
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import common.RegistrationId
-import enums.VatRegStatus
-import itutil.{ITFixtures, IntegrationStubbing, WiremockHelper}
+import itutil.{IntegrationStubbing, WiremockHelper}
 import models.api._
-import play.api.libs.json.{JsBoolean, JsObject, Json}
-import play.api.libs.ws.WSClient
+import play.api.libs.json.{JsArray, JsBoolean, JsObject, Json}
 import play.api.test.FakeApplication
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.WriteResult
-import repositories.{RegistrationMongo, RegistrationMongoRepository, SequenceMongo, SequenceMongoRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class LodgingOfficerControllerISpec extends IntegrationStubbing {
 
@@ -44,11 +37,11 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
   }
 
   val currentAddress            = Address("12 Lukewarm","Oriental lane")
-  val skylakeValiarm            = Name(first = Some("Skylake"), middle = None, last = Some("Valiarm"))
+  val skylakeValiarm            = Name(first = Some("Skylake"), middle = None, last = "Valiarm")
   val skylakeDigitalContact     = DigitalContactOptional(None, Some("123456789012345678"), None)
   val lodgingOfficerDetails     = LodgingOfficerDetails(currentAddress = currentAddress, None, None, contact = skylakeDigitalContact)
   val validLodgingOfficerPreIV  = LodgingOfficer(
-    dob = LocalDate.now(),
+    dob = Some(LocalDate.of(1980, 5, 25)),
     nino = "AB123456A",
     role = "secretary",
     name = skylakeValiarm,
@@ -65,7 +58,7 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
        |   "first" : "Skylake",
        |   "last" : "Valiarm"
        | },
-       | "dob" : "${LocalDate.now()}",
+       | "dob" : "1980-05-25",
        | "nino" : "AB123456A",
        | "role" : "secretary",
        | "ivPassed" : true,
@@ -77,7 +70,8 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
        |   "contact" : {
        |     "email" : "skylake@vilikariet.com"
        |   }
-       | }
+       | },
+       | "isOfficerApplying": true
        |}
     """.stripMargin).as[JsObject]
 
@@ -88,29 +82,47 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
        |   "first" : "Skylake",
        |   "last" : "Valiarm"
        | },
-       | "dob" : "${LocalDate.now()}",
+       | "dob" : "1980-05-25",
        | "nino" : "AB123456A",
-       | "role" : "secretary"
+       | "role" : "secretary",
+       | "isOfficerApplying": true
        |}
     """.stripMargin).as[JsObject]
 
   val invalidLodgingOfficerJson = Json.parse(
     s"""
        |{
-       | "dob" : "${LocalDate.now()}",
        | "nino" : "AB123456A",
        | "role" : "secretary"
        |}
     """.stripMargin).as[JsObject]
 
-  "getLodgingOfficer" should {
+  val completionCapacity = Json.obj("role" -> "secretary", "name" -> Json.obj(
+    "forename" -> "Skylake",
+    "surname" -> "Valiarm"
+  ))
+  val questions1 = Seq(
+    Json.obj("questionId" -> "completionCapacity", "question" -> "Some Question 11", "answer" -> "Some Answer 11", "answerValue" -> completionCapacity),
+    Json.obj("questionId" -> "testQId12", "question" -> "Some Question 12", "answer" -> "Some Answer 12", "answerValue" -> "val12")
+  )
+  val questions2 = Seq(
+    Json.obj("questionId" -> "applicantUKNino-optionalData", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "AB123456A"),
+    Json.obj("questionId" -> "testQId21", "question" -> "Some Question 21", "answer" -> "Some Answer 21", "answerValue" -> "val21"),
+    Json.obj("questionId" -> "testQId22", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "val22")
+  )
+  val section1 = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions1))
+  val section2 = Json.obj("title" -> "test TITLE 2", "data" -> JsArray(questions2))
+  val sections = JsArray(Seq(section1, section2))
+  val eligibilityData = Json.obj("sections" -> sections)
+
+  "getLodgingOfficerData" should {
     "return 200" in new Setup {
       given
         .user.isAuthorised
 
-      insertIntoDb(vatScheme("regId"))
+      insertIntoDb(vatScheme("regId").copy(eligibilityData = Some(eligibilityData)))
 
-      await(client(controllers.routes.LodgingOfficerController.getLodgingOfficer("regId").url).get() map { response =>
+      await(client(controllers.routes.LodgingOfficerController.getLodgingOfficerData("regId").url).get() map { response =>
         response.status shouldBe 200
         response.json shouldBe validLodgingOfficerJson
       })
@@ -122,7 +134,7 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      await(client(controllers.routes.LodgingOfficerController.getLodgingOfficer("regId").url).get() map { response =>
+      await(client(controllers.routes.LodgingOfficerController.getLodgingOfficerData("regId").url).get() map { response =>
         response.status shouldBe 204
       })
     }
@@ -131,7 +143,7 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
       given
         .user.isAuthorised
 
-      await(client(controllers.routes.LodgingOfficerController.getLodgingOfficer("regId").url).get() map { response =>
+      await(client(controllers.routes.LodgingOfficerController.getLodgingOfficerData("regId").url).get() map { response =>
         response.status shouldBe 404
       })
     }
@@ -140,22 +152,22 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
       given
         .user.isNotAuthorised
 
-      await(client(controllers.routes.LodgingOfficerController.getLodgingOfficer("regId").url).get() map { response =>
+      await(client(controllers.routes.LodgingOfficerController.getLodgingOfficerData("regId").url).get() map { response =>
         response.status shouldBe 403
       })
     }
   }
 
-  "updatingLodgingOfficer" should {
-    "return 200 with an lodgingOfficer json body" in new Setup {
+  "updateLodgingOfficerData" should {
+    "return 200 with a lodgingOfficer json body" in new Setup {
       given
         .user.isAuthorised
 
-      insertIntoDb(emptyVatScheme("regId"))
+      insertIntoDb(emptyVatScheme("regId").copy(eligibilityData = Some(eligibilityData)))
 
-      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficer("regId").url).patch(validLodgingOfficerJson) map { response =>
+      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficerData("regId").url).patch(validLodgingOfficerJson) map { response =>
         response.status shouldBe 200
-        response.json shouldBe validLodgingOfficerJson
+        response.json shouldBe Json.parse("""{"dob" : "1980-05-25"}""".stripMargin)
       })
     }
 
@@ -163,11 +175,11 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
       given
         .user.isAuthorised
 
-      insertIntoDb(vatScheme("regId"))
+      insertIntoDb(vatScheme("regId").copy(eligibilityData = Some(eligibilityData)))
 
-      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficer("regId").url).patch(upsertLodgingOfficerJson) map { response =>
+      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficerData("regId").url).patch(upsertLodgingOfficerJson) map { response =>
         response.status shouldBe 200
-        response.json shouldBe upsertLodgingOfficerJson
+        response.json shouldBe upsertLodgingOfficerJson - "name" - "nino" - "role" - "isOfficerApplying"
       })
     }
 
@@ -177,7 +189,7 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficer("regId").url).patch(invalidLodgingOfficerJson) map { response =>
+      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficerData("regId").url).patch(invalidLodgingOfficerJson) map { response =>
         response.status shouldBe 400
       })
     }
@@ -186,7 +198,7 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
       given
         .user.isAuthorised
 
-      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficer("regId").url).patch(validLodgingOfficerJson) map { response =>
+      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficerData("regId").url).patch(validLodgingOfficerJson) map { response =>
         response.status shouldBe 404
       })
     }
@@ -195,9 +207,9 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
       given
         .user.isAuthorised
 
-      insertIntoDb(vatScheme("regId"))
+      insertIntoDb(vatScheme("regId").copy(eligibilityData = Some(eligibilityData)))
 
-      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficer("regId").url).patch(validLodgingOfficerJson) map { response =>
+      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficerData("regId").url).patch(validLodgingOfficerJson) map { response =>
         response.status shouldBe 200
       })
     }
@@ -206,7 +218,7 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
       given
         .user.isNotAuthorised
 
-      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficer("regId").url).patch(validLodgingOfficerJson) map { response =>
+      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficerData("regId").url).patch(validLodgingOfficerJson) map { response =>
         response.status shouldBe 403
       })
     }

@@ -17,12 +17,11 @@
 package controllers
 
 import javax.inject.Inject
-
 import auth.{Authorisation, AuthorisationResource}
 import common.exceptions.MissingRegDocument
 import config.AuthClientConnector
 import models.api.LodgingOfficer
-import play.api.libs.json.{JsBoolean, JsValue, Json}
+import play.api.libs.json.{JsBoolean, JsObject, JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
 import services.LodgingOfficerService
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -38,26 +37,6 @@ trait LodgingOfficerController extends BaseController with Authorisation {
 
   val lodgingOfficerService: LodgingOfficerService
 
-  def getLodgingOfficer(regId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      isAuthorised(regId) { authResult =>
-        authResult.ifAuthorised(regId, "LodgingOfficerController", "getLodgingOfficer") {
-          lodgingOfficerService.getLodgingOfficer(regId) sendResult("getLodgingOfficer", regId)
-        }
-      }
-  }
-
-  def updateLodgingOfficer(regId: String): Action[JsValue] = Action.async[JsValue](parse.json) {
-    implicit request =>
-      isAuthorised(regId) { authResult =>
-        authResult.ifAuthorised(regId, "LodgingOfficerController", "updateLodgingOfficer") {
-          withJsonBody[LodgingOfficer] { officer =>
-            lodgingOfficerService.updateLodgingOfficer(regId, officer) sendResult("updateLodgingOfficer",regId)
-            }
-          }
-        }
-  }
-
   def updateIVStatus(regId: String, ivPassed: Boolean): Action[AnyContent] = Action.async {
     implicit request =>
       isAuthorised(regId) { authResult =>
@@ -67,6 +46,27 @@ trait LodgingOfficerController extends BaseController with Authorisation {
           } recover {
             case _: MissingRegDocument => NotFound(s"Registration not found or the registration does no have lodgingOfficer defined for regId: $regId")
             case e => InternalServerError(s"An error occurred while updating lodging officer - ivPassed: ${e.getMessage}")
+          }
+        }
+      }
+  }
+
+  def getLodgingOfficerData(regId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "LodgingOfficerController", "getLodgingOfficerData") {
+          lodgingOfficerService.getLodgingOfficerData(regId) sendResult("getLodgingOfficerData", regId)
+        }
+      }
+  }
+
+  def updateLodgingOfficerData(regId: String): Action[JsValue] = Action.async[JsValue](parse.json) {
+    implicit request =>
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "LodgingOfficerController", "updateLodgingOfficerData") {
+          implicit val reads = LodgingOfficer.patchJsonReads
+          withJsonBody[JsObject] { officer =>
+            lodgingOfficerService.updateLodgingOfficerData(regId, officer) sendResult("updateLodgingOfficerData",regId)
           }
         }
       }

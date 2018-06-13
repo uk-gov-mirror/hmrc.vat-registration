@@ -21,37 +21,18 @@ import play.api.libs.json._
 
 case class Name(first: Option[String],
                 middle: Option[String],
-                last: Option[String],
-                @deprecated("Use first instead", "SCRS-9379") forename: Option[String] = None,
-                @deprecated("Use middle instead", "SCRS-9379") otherForenames: Option[String] = None,
-                @deprecated("Use last instead", "SCRS-9379") surname: Option[String] = None,
-                @deprecated("No use anymore", "SCRS-9379") title: Option[String] = None)
+                last: String)
 
 object Name extends VatLodgingOfficerValidator {
-
   implicit val format: Format[Name] = (
-    (__ \ "first").formatNullable[String] and
-    (__ \ "middle").formatNullable[String] and
-    (__ \ "last").formatNullable[String] and
-    (__ \ "forename").formatNullable[String](nameValidator) and
-    (__ \ "other_forenames").formatNullable[String](nameValidator) and
-    (__ \ "surname").formatNullable[String](nameValidator) and
-    (__ \ "title").formatNullable[String](titleValidator)
+    (__ \ "first").formatNullable[String](nameValidator) and
+    (__ \ "middle").formatNullable[String](nameValidator) and
+    (__ \ "last").format[String](nameValidator)
   )(Name.apply, unlift(Name.unapply))
 
-  val writesDES: Writes[Name] = new Writes[Name] {
-    override def writes(name: Name): JsValue = {
-      val successWrites = (
-        (__ \ "first").writeNullable[String] and
-        (__ \ "middle").writeNullable[String] and
-        (__ \ "last").writeNullable[String] and
-        (__ \ "firstName").writeNullable[String] and
-        (__ \ "middleName").writeNullable[String] and
-        (__ \ "lastName").writeNullable[String] and
-        (__ \ "title").writeNullable[String]
-      )(unlift(Name.unapply))
-
-      Json.toJson(name)(successWrites).as[JsObject]
-    }
-  }
+  val nameReadsFromElData: Reads[Name] = (
+    (__ \ "forename").readNullable[String](nameValidator) and
+    (__ \ "other_forenames").readNullable[String](nameValidator) and
+    (__ \ "surname").read[String](nameValidator)
+  )(Name.apply _)
 }

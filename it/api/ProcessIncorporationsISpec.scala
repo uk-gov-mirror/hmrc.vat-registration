@@ -63,7 +63,7 @@ class ProcessIncorporationsISpec extends IntegrationStubbing {
     def prepareHeldSubmission(repo : RegistrationMongoRepository): Future[Unit] = {
       for {
         _    <- repo.createNewVatScheme(regIDCase,internalid)
-        _    <- repo.updateLogicalGroup(regIDCase, returns)
+        _    <- repo.updateReturns(registrationID, returns)
         _    <- repo.saveTransId(transactionId, regIDCase)
         _    <- repo.finishRegistrationSubmission(regIDCase, VatRegStatus.held)
       } yield {
