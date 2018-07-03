@@ -39,35 +39,12 @@ trait VatRegistrationFixture {
   val scrsAddress = Address("line1", "line2", None, None, Some("XX XX"), Some("UK"))
   val sicCode = SicCode("88888", "description", "displayDetails")
   val digitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
-  val vatContact = VatContact(digitalContact = digitalContact, website = None, ppob = scrsAddress)
-  val vatEligibility = VatServiceEligibility(
-    haveNino = Some(true),
-    doingBusinessAbroad = Some(true),
-    doAnyApplyToYou = Some(true),
-    applyingForAnyOf = Some(true),
-    companyWillDoAnyOf = Some(true),
-    vatEligibilityChoice = Some(VatEligibilityChoice(
-      necessity = "obligatory",
-      reason = Some("COMPANY_ALREADY_SELLS_TAXABLE_GOODS_OR_SERVICES"),
-      vatThresholdPostIncorp = Some(VatThresholdPostIncorp(
-        overThresholdSelection = true,
-        overThresholdDate = Some(now)
-      )),
-      vatExpectedThresholdPostIncorp = Some(VatExpectedThresholdPostIncorp(
-        expectedOverThresholdSelection = true,
-        expectedOverThresholdDate = Some(now)
-      ))
-    ))
-  )
 
-  val name = Name(first = Some("Forename"), middle = None, last = Some("Surname"), forename = Some("Forename"), surname = Some("Surname"), title = Some("Title"))
-  val oldName = Name(first = Some("Bob Smith"), middle = None, last = None, forename = None, surname = None, title = None, otherForenames = None)
+  val name = Name(first = Some("Forename"), middle = None, last = "Surname")
+  val oldName = Name(first = Some("Bob"), middle = None, last = "Smith")
   val formerName = FormerName(Some("Bob Smith"), Some(date), name = Some(oldName), change = Some(date))
-  val contact = OfficerContactDetails(Some("test@test.com"), None, None)
   val vatScheme: VatScheme = VatScheme(regId, internalId = internalid, status = VatRegStatus.draft)
   val exception = new Exception("Exception")
-  val currentOrPreviousAddress = CurrentOrPreviousAddress(false, Some(scrsAddress))
-  val changeOfName = ChangeOfName(true, Some(FormerName(formerName = None, None, name = Some(oldName), change = Some(LocalDate.now()))))
 
   def incorporationStatus(status: String = "accepted", incorpDate: LocalDate = LocalDate.now()): IncorporationStatus =
     IncorporationStatus(
@@ -90,11 +67,11 @@ trait VatRegistrationFixture {
   val voluntaryThreshold        = Threshold(false, Some("voluntaryReason"), Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
   val mandatoryThreshold        = Threshold(true, None, Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
   val currentAddress            = Address("12 Lukewarm","Oriental lane")
-  val skylakeValiarm            = Name(first = Some("Skylake"), middle = None, last = Some("Valiarm"))
+  val skylakeValiarm            = Name(first = Some("Skylake"), middle = None, last = "Valiarm")
   val skylakeDigitalContact     = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
   val lodgingOfficerDetails     = LodgingOfficerDetails(currentAddress = currentAddress, None, None, contact = skylakeDigitalContact)
   val validLodgingOfficerPreIV  = LodgingOfficer(
-    dob = LocalDate.now(),
+    dob = Some(LocalDate.now()),
     nino = "AB123456A",
     role = "secretary",
     name = skylakeValiarm,

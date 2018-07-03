@@ -59,50 +59,6 @@ class EligibilityControllerISpec extends IntegrationStubbing {
       |}
     """.stripMargin).as[JsObject]
 
-  "getEligibility" should {
-    "return 200" in new Setup {
-      given
-        .user.isAuthorised
-
-      insertIntoDb(vatScheme("regId"))
-
-      await(client(controllers.routes.EligibilityController.getEligibility("regId").url).get() map { response =>
-        response.status shouldBe 200
-        response.json shouldBe Json.parse("""{"version":1,"result":"success"}""")
-      })
-    }
-
-    "return 204" in new Setup {
-      given
-        .user.isAuthorised
-
-      insertIntoDb(emptyVatScheme("regId"))
-
-
-      await(client(controllers.routes.EligibilityController.getEligibility("regId").url).get() map { response =>
-        response.status shouldBe 204
-      })
-    }
-
-    "return 404 if no document found" in new Setup {
-      given
-        .user.isAuthorised
-
-      await(client(controllers.routes.EligibilityController.getEligibility("regId").url).get() map { response =>
-        response.status shouldBe 404
-      })
-    }
-
-    "return 403 if user is not authorised" in new Setup {
-      given
-        .user.isNotAuthorised
-
-      await(client(controllers.routes.EligibilityController.getEligibility("regId").url).get() map { response =>
-        response.status shouldBe 403
-      })
-    }
-  }
-
   "updatingEligibility" should {
     "return 200 with an eligibility json body" in new Setup {
       given

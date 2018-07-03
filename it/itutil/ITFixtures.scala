@@ -33,8 +33,7 @@ trait ITFixtures {
   val transactionId = "transId"
   val vatScheme = VatScheme(regId, internalId = internalid, status = VatRegStatus.draft)
   val tradingName = TradingName(selection = true, Some("some-trading-name"))
-  val oldName = Name(first = Some("Bob Smith"), middle = None, last = None, forename = None, surname = None, title = None, otherForenames = None)
-  val changeOfName = ChangeOfName(true, Some(FormerName(None, None, name = Some(oldName), change = Some(LocalDate.now()))))
+  val oldName = Name(first = Some("Bob"), middle = None, last = "Smith")
   val tradingDetails = TradingDetails(Some("test-name"), true)
   val returns = Returns(
     reclaimVatOnMostReturns = true,
@@ -62,36 +61,22 @@ trait ITFixtures {
   val digitalContact            = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
   val vatContact                = VatContact(digitalContact = digitalContact, website = None, ppob = scrsAddress)
 
-  val name                      = Name(first = Some("Forename"),
-    middle = None,
-    last = Some("Surname"),
-    forename = Some("Forename"),
-    surname = Some("Surname"),
-    title = Some("Title")
-  )
-  val contact                   = OfficerContactDetails(Some("test@test.com"), None, None)
+  val name                      = Name(first = Some("Forename"), middle = None, last = "Surname")
   val formerName                = FormerName(Some("Bob Smith"), Some(date), name = Some(oldName), change = Some(date))
-  val currentOrPreviousAddress  = CurrentOrPreviousAddress(false, Some(scrsAddress))
   val vatLodgingOfficer         = LodgingOfficer(
-    currentAddress            = Some(scrsAddress),
-    dob                       = LocalDate.of(1980, 1, 1),
+    dob                       = Some(LocalDate.of(1980, 1, 1)),
     nino                      = "NB686868C",
     role                      = "director",
     name                      = name,
-    changeOfName              = Some(changeOfName),
-    currentOrPreviousAddress  = Some(currentOrPreviousAddress),
-    contact                   = Some(contact),
     ivPassed                  = None,
     details                   = None
   )
   val businessContact         = BusinessContact(digitalContact = digitalContact, website = None, ppob = scrsAddress)
   val sicAndCompliance        = SicAndCompliance("businessDesc", Some(ComplianceLabour(1, Some(true), Some(true))), SicCode("12345678","sicDesc","sicDetail"), List(SicCode("12345678","sicDesc","sicDetail")))
 
-  val vatServiceEligibility   = VatServiceEligibility(Some(true), Some(true), Some(true), Some(true), Some(true), Some(true), Some(VatEligibilityChoice("voluntary", None, None, None)))
-
   val eligibility             = Eligibility(1, "result")
 
-  val vatTurnoverEstimates       = TurnoverEstimates(12345678L)
+  val vatTurnoverEstimates       = TurnoverEstimates(Some(12345678L))
 
   val vatBankAccount             = BankAccount(true, None)
 
@@ -108,7 +93,6 @@ trait ITFixtures {
       Some(sicAndCompliance),
       Some(vatContact),
       Some(businessContact),
-      Some(vatServiceEligibility),
       Some(eligibility),
       Some(vatTurnoverEstimates),
       Some(vatBankAccount),

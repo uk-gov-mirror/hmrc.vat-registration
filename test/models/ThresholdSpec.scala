@@ -21,6 +21,7 @@ import java.time.LocalDate
 import models.api.Threshold
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsPath, JsSuccess, Json}
+import utils.EligibilityDataJsonUtils
 
 class ThresholdSpec extends JsonFormatValidation {
   "Threshold model" should {
@@ -78,6 +79,74 @@ class ThresholdSpec extends JsonFormatValidation {
 
       val result = Json.fromJson[Threshold](json)(Threshold.format)
       result shouldHaveErrors (JsPath() \ "mandatoryRegistration" -> ValidationError("error.path.missing"))
+    }
+
+    "eligibilityDataJsonReads read successfully from full json" when {
+      "the registration is voluntary" in {
+        val json = Json.parse(
+          s"""{
+             |  "voluntaryRegistration": true,
+             |  "fooDirectorDetails2": true,
+             |  "fooDirectorDetails3": true
+             |}
+        """.stripMargin)
+
+        val expectedResult = Threshold(
+          mandatoryRegistration = false,
+          voluntaryReason = None,
+          overThresholdDateThirtyDays = None,
+          pastOverThresholdDateThirtyDays = None,
+          overThresholdOccuredTwelveMonth = None,
+          thresholdPreviousThirtyDays = None,
+          thresholdInTwelveMonths = None
+        )
+
+        val result = Json.fromJson[Threshold](json)(Threshold.eligibilityDataJsonReads)
+        result shouldBe JsSuccess(expectedResult)
+      }
+
+      "the registration is mandatory" in {
+        val thresholdPreviousThirtyDays = "2017-01-02"
+        val thresholdInTwelveMonths = "2017-01-04"
+        val json = Json.parse(
+          s"""{
+             |  "thresholdPreviousThirtyDays-optionalData": "$thresholdPreviousThirtyDays",
+             |  "thresholdInTwelveMonths-optionalData": "$thresholdInTwelveMonths",
+             |  "fooDirectorDetails2": true,
+             |  "fooDirectorDetails3": true
+             |}
+        """.stripMargin)
+
+        val expectedResult = Threshold(
+          mandatoryRegistration = true,
+          voluntaryReason = None,
+          overThresholdDateThirtyDays = None,
+          pastOverThresholdDateThirtyDays = None,
+          overThresholdOccuredTwelveMonth = None,
+          thresholdPreviousThirtyDays = Some(LocalDate.parse(thresholdPreviousThirtyDays)),
+          thresholdInTwelveMonths = Some(LocalDate.parse(thresholdInTwelveMonths))
+        )
+
+        val result = Json.fromJson[Threshold](json)(Threshold.eligibilityDataJsonReads)
+        result shouldBe JsSuccess(expectedResult)
+      }
+    }
+
+    "eligibilityDataJsonReads fails from incorrect json" in {
+      val thresholdInTwelveMonths = "2017-01-04"
+      val json = Json.parse(
+        s"""
+           |{
+           |  "thresholdNextThirtyDays": false,
+           |  "thresholdPreviousThirtyDays-optionalData": "5345435",
+           |  "thresholdInTwelveMonths-optionalData": "$thresholdInTwelveMonths",
+           |  "fooDirectorDetails2": true,
+           |  "fooDirectorDetails3": true
+           |}
+        """.stripMargin)
+
+      val result = Json.fromJson[Threshold](json)(Threshold.eligibilityDataJsonReads)
+      result.isError shouldBe true
     }
   }
 }

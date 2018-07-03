@@ -8,9 +8,6 @@ GET          /:regId/get-scheme                     controllers.VatRegistrationC
 GET          /:regId/trading-details                controllers.TradingDetailsController.fetchTradingDetails(regId)
 PATCH        /:regId/trading-details                controllers.TradingDetailsController.updateTradingDetails(regId)
 
-GET          /:regId/turnover-estimates             controllers.VatRegistrationController.fetchTurnoverEstimates(regId)
-PATCH        /:regId/turnover-estimates             controllers.VatRegistrationController.updateTurnoverEstimates(regId)
-
 GET          /:regId/flat-rate-scheme               controllers.FlatRateSchemeController.fetchFlatRateScheme(regId)
 PATCH        /:regId/flat-rate-scheme               controllers.FlatRateSchemeController.updateFlatRateScheme(regId)
 DELETE       /:regId/flat-rate-scheme               controllers.FlatRateSchemeController.removeFlatRateScheme(regId)
@@ -37,11 +34,6 @@ PATCH       /:regId/eligibility                     controllers.EligibilityContr
 GET          /:regId/bank-account                   controllers.VatRegistrationController.fetchBankAccountDetails(regId)
 PATCH        /:regId/bank-account                   controllers.VatRegistrationController.updateBankAccountDetails(regId)
 
-GET         /:regId/threshold                       controllers.ThresholdController.getThreshold(regId: String)
-PATCH       /:regId/threshold                       controllers.ThresholdController.updateThreshold(regId: String)
-
-GET         /:regId/officer                         controllers.LodgingOfficerController.getLodgingOfficer(regId: String)
-PATCH       /:regId/officer                         controllers.LodgingOfficerController.updateLodgingOfficer(regId: String)
 PATCH       /:regId/update-iv-status/:ivPassed      controllers.LodgingOfficerController.updateIVStatus(regId, ivPassed: Boolean)
 
 GET         /:regId/sicAndComp                      controllers.SicAndComplianceController.getSicAndCompliance(regId: String)
@@ -51,3 +43,12 @@ GET         /:regId/business-contact                controllers.BusinessContactC
 PATCH       /:regId/business-contact                controllers.BusinessContactController.updateBusinessContact(regId: String)
 
 GET         /threshold/:date                        controllers.VatThresholdController.getThresholdForDate(date: String)
+
+GET         /:regId/eligibility-data                controllers.EligibilityController.getEligibilityData(regId: String)
+PATCH       /:regId/eligibility-data                controllers.EligibilityController.updateEligibilityData(regId: String)
+
+GET         /:regId/threshold-data                  controllers.VatRegistrationController.getThreshold(regId: String)
+GET         /:regId/turnover-estimates-data         controllers.VatRegistrationController.getTurnoverEstimates(regId: String)
+
+GET         /:regId/officer-data                    controllers.LodgingOfficerController.getLodgingOfficerData(regId: String)
+PATCH       /:regId/officer-data                    controllers.LodgingOfficerController.updateLodgingOfficerData(regId: String)

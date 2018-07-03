@@ -132,22 +132,22 @@ trait VatRegistrationController extends BaseController with Authorisation with F
       }
   }
 
-  def fetchTurnoverEstimates(regId: String): Action[AnyContent] = Action.async {
+  def getTurnoverEstimates(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
       isAuthorised(regId) { authResult =>
-        authResult.ifAuthorised(regId, "VatRegistrationController", "fetchTurnoverEstimates") {
-          registrationRepository.fetchTurnoverEstimates(regId) sendResult("fetchTurnoverEstimates", regId)
+        authResult.ifAuthorised(regId, "VatRegistrationController", "getTurnoverEstimate") {
+          implicit val reads = TurnoverEstimates.eligibilityDataJsonReads
+          registrationService.getBlockFromEligibilityData[TurnoverEstimates](regId) sendResult("getTurnoverEstimates", regId)
         }
       }
   }
 
-  def updateTurnoverEstimates(regId: String): Action[JsValue] = Action.async(parse.json) {
+  def getThreshold(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
       isAuthorised(regId) { authResult =>
-        authResult.ifAuthorised(regId, "VatRegistrationController", "updateTurnoverEstimates") {
-          withJsonBody[TurnoverEstimates] { turnoverEstimates =>
-            registrationRepository.updateTurnoverEstimates(regId, turnoverEstimates) map (_ => Ok)
-          }
+        authResult.ifAuthorised(regId, "VatRegistrationController", "getThreshold") {
+          implicit val reads = Threshold.eligibilityDataJsonReads
+          registrationService.getBlockFromEligibilityData[Threshold](regId) sendResult("getThreshold", regId)
         }
       }
   }

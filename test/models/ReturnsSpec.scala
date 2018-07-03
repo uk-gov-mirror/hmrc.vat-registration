@@ -19,10 +19,11 @@ package models
 import java.time.LocalDate
 
 import helpers.BaseSpec
-import models.api.{Returns, StartDate}
+import models.api.{Returns, StartDate, TurnoverEstimates}
 import models.submission.DESSubmission
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
+import utils.EligibilityDataJsonUtils
 
 class ReturnsSpec extends BaseSpec with JsonFormatValidation {
 
@@ -164,6 +165,106 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
       "staggerStart is missing" in {
         Json.toJson[Returns](missingOptionsReturns) shouldBe (fullJson - "staggerStart")
       }
+    }
+  }
+  "TurnoverEstimates mongoReads" must {
+    "return model successfully when turnoverEstimate-value exists and turnoverEstimate-optionalData does not exist with enum of oneandtenthousand" in {
+      val json = Json.parse(
+        s""" {
+           |  "sections": [
+           |   {
+           |     "title": "Foo bar",
+           |     "data": [
+           |       {"questionId":"turnoverEstimate-value","question": "VAT start date", "answer": "The date the company is registered with Companies House" , "answerValue": "oneandtenthousand"}
+           |     ]
+           |   },
+           |   { "title": "Director details",
+           |     "data": [
+           |       {"questionId":"fooDirectorDetails2","question": "Former name", "answer": "Dan Swales", "answerValue": true}
+           |     ]
+           |   }
+           | ]
+           | }""".stripMargin)
+      val expected = TurnoverEstimates(vatTaxable = None, turnoverEstimate = Some(10000))
+
+      val result = Json.fromJson[TurnoverEstimates](EligibilityDataJsonUtils.toJsObject(json))(TurnoverEstimates.eligibilityDataJsonReads)
+      result shouldBe JsSuccess(expected)
+    }
+    "return model successfully when turnoverEstimate-value exists and turnoverEstimate-optionalData does not exist with enum of zeropounds" in {
+      val json = Json.parse(
+        s""" {
+           |  "sections": [
+           |   {
+           |     "title": "Foo bar",
+           |     "data": [
+           |       {"questionId":"turnoverEstimate-value","question": "VAT start date", "answer": "The date the company is registered with Companies House" , "answerValue": "zeropounds"}
+           |     ]
+           |   }
+           | ]
+           | }""".stripMargin)
+      val expected = TurnoverEstimates(vatTaxable = None, turnoverEstimate = Some(0))
+
+      val result = Json.fromJson[TurnoverEstimates](EligibilityDataJsonUtils.toJsObject(json))(TurnoverEstimates.eligibilityDataJsonReads)
+      result shouldBe JsSuccess(expected)
+    }
+    "return model successfully when turnoverEstimate-value exists and turnoverEstimate-optionalData does exist with enum of tenthousand" in {
+      val json = Json.parse(
+        s"""{
+           |  "sections": [
+           |   {
+           |     "title": "Foo bar",
+           |     "data": [
+           |       {"questionId":"turnoverEstimate-optionalData","question": "VAT start date", "answer": "The date the company is registered with Companies House" , "answerValue": 123456},
+           |       {"questionId":"turnoverEstimate-value","question": "VAT start date", "answer": "The date the company is registered with Companies House" , "answerValue": "tenthousand"}
+           |     ]
+           |   }
+           | ]
+           | }""".stripMargin)
+      val expected = TurnoverEstimates(vatTaxable = None, turnoverEstimate = Some(123456))
+
+      val result = Json.fromJson[TurnoverEstimates](EligibilityDataJsonUtils.toJsObject(json))(TurnoverEstimates.eligibilityDataJsonReads)
+      result shouldBe JsSuccess(expected)
+    }
+    "return a JsError when turnoverEstimate-value exists and turnoverEstimate-optionalData does not exist with enum of tenthousand" in {
+      val json = Json.parse(
+        s""" {
+           |  "sections": [
+           |   {
+           |     "title": "Foo bar",
+           |     "data": [
+           |       {"questionId":"turnoverEstimate-value","question": "VAT start date", "answer": "The date the company is registered with Companies House" , "answerValue": "tenthousand"}
+           |     ]
+           |   }
+           | ]
+           | }""".stripMargin)
+      val expected = TurnoverEstimates(vatTaxable = None, turnoverEstimate = Some(123456))
+
+      val result = Json.fromJson[TurnoverEstimates](EligibilityDataJsonUtils.toJsObject(json))(TurnoverEstimates.eligibilityDataJsonReads)
+      result.isError shouldBe true
+    }
+
+    "return empty model successfully" in {
+      val json = Json.parse(
+        s"""
+           |[
+           |   {
+           |     "title": "Foo bar",
+           |     "data": [
+           |       {"questionId":"wrongId","question": "VAT start date", "answer": "The date the company is registered with Companies House" , "answerValue": 10000}
+           |     ]
+           |   },
+           |   {
+           |     "title": "Director details",
+           |     "data": [
+           |       {"questionId":"fooDirectorDetails2","question": "Former name", "answer": "Dan Swales", "answerValue": true},
+           |       {"questionId":"fooDirectorDetails3","question": "Date of birth", "answer": "1 January 2000", "answerValue": true}
+           |     ]
+           |   }
+           |]
+        """.stripMargin)
+
+      val result = Json.fromJson[TurnoverEstimates](EligibilityDataJsonUtils.toJsObject(json))(TurnoverEstimates.eligibilityDataJsonReads)
+      result.isError shouldBe true
     }
   }
 }

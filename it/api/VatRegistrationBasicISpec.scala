@@ -177,7 +177,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
         )
       )
 
-      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), returns))
+      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateReturns(registrationID, returns))
 
       val result: WSResponse = await(client(
         controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
@@ -207,7 +207,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
         )
       )
 
-      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), tradingDetails))
+      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateTradingDetails(registrationID, tradingDetails))
 
       val result = await(client(
         controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
@@ -237,7 +237,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
         )
       )
 
-      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), tradingDetails))
+      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateTradingDetails(registrationID, tradingDetails))
 
       val result = await(client(
         controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
@@ -268,7 +268,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
         )
       )
 
-      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), tradingDetails))
+      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateTradingDetails(registrationID, tradingDetails))
 
       val result = await(client(
         controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
@@ -293,7 +293,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
         )
       )
 
-      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateLogicalGroup(RegistrationId(registrationID), tradingDetails))
+      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateTradingDetails(registrationID, tradingDetails))
 
       val result = await(client(
         controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")

@@ -14,26 +14,43 @@
  * limitations under the License.
  */
 
-package services
+/*
+ * Copyright 2018 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import javax.inject.Inject
+package services
 
 import cats.data.{EitherT, OptionT}
 import cats.instances.FutureInstances
 import cats.syntax.ApplicativeSyntax
+import common.RegistrationId
 import common.exceptions._
-import common.{LogicalGroup, RegistrationId}
 import connectors._
 import enums.VatRegStatus
+import javax.inject.Inject
 import models.AcknowledgementReferencePath
 import models.api.VatScheme
 import models.external.CurrentProfile
 import org.slf4j.LoggerFactory
-import play.api.libs.json.{JsValue, Json, Writes}
+import play.api.data.validation.ValidationError
+import play.api.libs.json._
 import repositories.{RegistrationMongo, RegistrationRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.config.ServicesConfig
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import utils.EligibilityDataJsonUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -122,9 +139,6 @@ trait RegistrationService extends ApplicativeSyntax with FutureInstances {
   def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[VatScheme] =
     OptionT(registrationRepository.retrieveVatScheme(id)).toRight(ResourceNotFound(id.value))
 
-  def updateLogicalGroup[G: LogicalGroup : Writes](id: RegistrationId, group: G)(implicit ec: ExecutionContext): ServiceResult[G] =
-    toEitherT(registrationRepository.updateLogicalGroup(id, group))
-
   def deleteVatScheme(regId: String, validStatuses: VatRegStatus.Value*)(implicit hc: HeaderCarrier): Future[Boolean] = {
     for {
       someDocument <- registrationRepository.retrieveVatScheme(RegistrationId(regId))
@@ -145,4 +159,15 @@ trait RegistrationService extends ApplicativeSyntax with FutureInstances {
     retrieveVatScheme(id).subflatMap(_.acknowledgementReference.toRight(ResourceNotFound("AcknowledgementId")))
   }
 
+  def getBlockFromEligibilityData[T](regId: String)(implicit ex: ExecutionContext, r: Reads[T]): Future[Option[T]] = {
+    registrationRepository.getEligibilityData(regId) map {
+      _.map { js =>
+        Json.fromJson[T](js)(EligibilityDataJsonUtils.mongoReads[T]).fold(invalid => {
+          val errorMsg = s"Error converting EligibilityData to model ${r.asInstanceOf[T].getClass.getSimpleName} for regId: $regId, msg: $invalid"
+          logger.warn(s"[VatRegistrationService] [getBlockFromEligibilityData] $errorMsg")
+          throw new InvalidEligibilityDataToConvertModel(errorMsg)
+        }, identity)
+      }
+    }
+  }
 }

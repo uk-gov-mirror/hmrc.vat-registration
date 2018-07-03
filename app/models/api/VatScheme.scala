@@ -33,14 +33,16 @@ case class VatScheme(id: RegistrationId,
                      sicAndCompliance: Option[SicAndCompliance] = None,
                      vatContact: Option[VatContact] = None,
                      businessContact: Option[BusinessContact] = None,
-                     vatEligibility: Option[VatServiceEligibility] = None,
                      eligibility: Option[Eligibility] = None,
+                     @deprecated("Use eligibilityData instead", "SCRS-11579")
                      turnoverEstimates: Option[TurnoverEstimates] = None,
                      bankAccount: Option[BankAccount] = None,
+                     @deprecated("Use eligibilityData instead", "SCRS-11579")
                      threshold: Option[Threshold] = None,
                      acknowledgementReference: Option[String] = None,
                      flatRateScheme: Option[FlatRateScheme] = None,
-                     status: VatRegStatus.Value)
+                     status: VatRegStatus.Value,
+                     eligibilityData: Option[JsObject] = None)
 
 object VatScheme {
 
@@ -54,14 +56,14 @@ object VatScheme {
     (__ \ "sicAndCompliance").writeNullable[SicAndCompliance] and
     (__ \ "vatContact").writeNullable[VatContact] and
     (__ \ "businessContact").writeNullable[BusinessContact] and
-    (__ \ "vatEligibility").writeNullable[VatServiceEligibility] and
     (__ \ "eligibility").writeNullable[Eligibility] and
     (__ \ "turnoverEstimates").writeNullable[TurnoverEstimates] and
     (__ \ "bankAccount").writeNullable[BankAccount] and
     (__ \ "threshold").writeNullable[Threshold] and
     (__ \ "acknowledgementReference").writeNullable[String] and
     (__ \ "flatRateScheme").writeNullable[FlatRateScheme] and
-    (__ \ "status").write[VatRegStatus.Value]
+    (__ \ "status").write[VatRegStatus.Value] and
+    (__ \ "eligibilityData").writeNullable[JsObject]
   )(unlift(VatScheme.unapply))
 
   def mongoFormat(crypto: Crypto): OFormat[VatScheme] = (
@@ -74,13 +76,13 @@ object VatScheme {
       (__ \ "sicAndCompliance").formatNullable[SicAndCompliance] and
       (__ \ "vatContact").formatNullable[VatContact] and
       (__ \ "businessContact").formatNullable[BusinessContact] and
-      (__ \ "vatEligibility").formatNullable[VatServiceEligibility] and
       (__ \ "eligibility").formatNullable[Eligibility] and
       (__ \ "turnoverEstimates").formatNullable[TurnoverEstimates] and
       (__ \ "bankAccount").formatNullable[BankAccount](BankAccountMongoFormat.encryptedFormat(crypto)) and
       (__ \ "threshold").formatNullable[Threshold] and
       (__ \ "acknowledgementReference").formatNullable[String] and
       (__ \ "flatRateScheme").formatNullable[FlatRateScheme] and
-      (__ \ "status").format[VatRegStatus.Value]
+      (__ \ "status").format[VatRegStatus.Value] and
+      (__ \ "eligibilityData").formatNullable[JsObject]
     )(VatScheme.apply, unlift(VatScheme.unapply))
 }
