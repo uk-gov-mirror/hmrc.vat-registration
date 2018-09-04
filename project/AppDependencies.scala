@@ -22,7 +22,7 @@ object AppDependencies {
 }
 
 object CompileDependencies {
-  val domainVersion                       = "5.1.0"
+  val domainVersion                       = "5.2.0"
   val bootstrapVersion                    = "6.18.0"
   val reactiveMongoVersion                = "5.2.0"
   val urlBindersVersion                   = "2.1.0"
