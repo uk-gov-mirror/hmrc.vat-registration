@@ -18,6 +18,7 @@ import TestPhases.oneForkedJvmPerSuite
 import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
+import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
 
 val appName = "vat-registration"
 val testThreads = 12
@@ -48,7 +49,7 @@ lazy val testSettings = Seq(
 )
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(Seq(PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin): _*)
+  .enablePlugins(Seq(PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtArtifactory): _*)
   .settings(PlayKeys.playDefaultPort := 9896)
   .settings(scalaSettings: _*)
   .settings(scoverageSettings: _*)
@@ -58,6 +59,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(testSettings: _*)
   .settings(aliases: _*)
+  .settings(majorVersion := 0)
   .settings(
     scalaVersion                     := "2.11.11",
     libraryDependencies              ++= AppDependencies(),
