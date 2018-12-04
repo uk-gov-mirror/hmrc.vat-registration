@@ -31,7 +31,7 @@ import play.api.test.FakeRequest
 import repositories.RegistrationMongoRepository
 import services.{RegistrationService, SubmissionService}
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, Upstream5xxResponse}
 
 import scala.concurrent.Future
 
@@ -48,19 +48,15 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
     details                   = None
   )
 
-  class SetupMocks(mockSubmission: Boolean) {
+  class Setup {
     val controller = new VatRegistrationController{
       override val registrationService: RegistrationService = mockRegistrationService
       override val submissionService: SubmissionService = mockSubmissionService
       override val registrationRepository: RegistrationMongoRepository = mockRegistrationMongoRepository
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
       override lazy val authConnector: AuthConnector = mockAuthConnector
-      override private[controllers] def useMockSubmission = mockSubmission
     }
   }
-
-  class Setup extends SetupMocks(false)
-  class SetupWithMockSubmission extends SetupMocks(true)
 
   val registrationId = "reg-12345"
 
@@ -256,14 +252,6 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
         controller.getAcknowledgementReference(regId)(FakeRequest()) returnsStatus CONFLICT
       }
-
-      "return the fake acknowledgement reference for a regID if mock submission is enabled" in new SetupWithMockSubmission {
-        AuthorisationMocks.mockAuthorised(regId.value, internalid)
-        val result = controller.getAcknowledgementReference(regId)(FakeRequest())
-
-        result returnsStatus OK
-        await(contentAsJson(result)) shouldBe Json.toJson("BRVT000000" + regId)
-      }
     }
 
     "Calling getDocumentStatus" should {
@@ -323,20 +311,18 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       status(response) shouldBe Status.FORBIDDEN
     }
 
-    "return a BadRequest response when the Submission Service can't make a DES submission" in new Setup {
+    "return an exception if the Submission Service can't make a DES submission" in new Setup {
       AuthorisationMocks.mockAuthorised(regId.value,internalid)
       ServiceMocks.mockRetrieveVatScheme(regId, vatScheme)
 
       val idMatcher: RegistrationId = RegistrationId(anyString())
-      System.setProperty("feature.mockSubmission", "false")
 
       when(mockSubmissionService.submitVatRegistration(idMatcher)(any[HeaderCarrier]()))
-        .thenReturn(Future.failed(new Exception("missing data")))
+        .thenReturn(Future.failed(Upstream5xxResponse("message", 501, 1)))
 
-      val response = await(controller.submitVATRegistration(regId)(FakeRequest()))
+      val response = intercept[Upstream5xxResponse](await(controller.submitVATRegistration(regId)(FakeRequest())))
 
-      status(response) shouldBe Status.BAD_REQUEST
-      contentAsString(response) shouldBe "Registration was submitted without full data: missing data"
+     response shouldBe Upstream5xxResponse("message", 501, 1)
     }
 
     "return an Ok response with acknowledgement reference for a valid submit" in new Setup {
@@ -344,22 +330,12 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       ServiceMocks.mockRetrieveVatScheme(regId, vatScheme)
       val idMatcher: RegistrationId = RegistrationId(anyString())
 
-      System.setProperty("feature.mockSubmission", "false")
-
       when(mockSubmissionService.submitVatRegistration(idMatcher)(any[HeaderCarrier]()))
         .thenReturn(Future.successful("BRVT00000000001"))
 
       val response = controller.submitVATRegistration(regId)(FakeRequest())
       status(response) shouldBe Status.OK
       await(contentAsJson(response)) shouldBe Json.toJson("BRVT00000000001")
-    }
-
-    "return an Ok response with fake ack ref for a mock submission" in new SetupWithMockSubmission {
-      AuthorisationMocks.mockAuthorised(regId.value, internalid)
-
-      val response = controller.submitVATRegistration(regId)(FakeRequest())
-      status(response) shouldBe Status.OK
-      await(contentAsJson(response)) shouldBe Json.toJson(s"BRVT000000$regId")
     }
   }
 

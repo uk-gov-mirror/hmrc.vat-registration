@@ -301,12 +301,43 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
       result.status shouldBe 502
     }
 
+    "return a 503 status when DES returns a 429" in new Setup() {
+      given
+        .user.isAuthorised
+
+      System.setProperty("feature.mockSubmission", "false")
+
+      mockGetTransID()
+      mockNoIncorpUpdate()
+      mockGetCompanyProfile()
+
+      stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
+        .willReturn(
+          aResponse()
+            .withStatus(429)
+        )
+      )
+
+      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateTradingDetails(registrationID, tradingDetails))
+
+      val result = await(client(
+        controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
+      )
+      result.status shouldBe 503
+    }
+
     "mock the return if the mock submission flag is on" in new Setup{
       given
         .user.isAuthorised
 
       System.setProperty("feature.mockSubmission", "true")
-      await(repo.createNewVatScheme(RegistrationId(registrationID),internalid))
+
+      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateReturns(registrationID, returns))
+      stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
+        .willReturn(
+          aResponse()
+            .withStatus(202)
+        ))
 
       val result = await(client(
         controllers.routes.VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")

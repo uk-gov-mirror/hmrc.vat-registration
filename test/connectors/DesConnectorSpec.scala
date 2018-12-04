@@ -31,7 +31,7 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future
 
-class DesConnectorSpec extends UnitSpec with MockitoSugar {
+class DesConnectorSpec extends UnitSpec with MockitoSugar with HttpErrorFunctions {
 
   implicit val hc = HeaderCarrier()
   val realmockHttp = mock[WSHttp]
@@ -96,4 +96,36 @@ class DesConnectorSpec extends UnitSpec with MockitoSugar {
       intercept[Upstream4xxResponse](await(connector.submitTopUpToDES(validTopUpAcceptedSubmission, "regId")))
     }
   }
+
+
+  "customDesRead" should {
+    "successfully convert 409 from DES to 202" in new SetupWithProxy {
+      val httpResponse = HttpResponse(409)
+      connector.customDESRead("test","testUrl",httpResponse).status shouldBe 202
+    }
+  }
+
+    "successfully convert 499 from DES to 502" in new SetupWithProxy {
+      val httpResponse = HttpResponse(499)
+      val ex = intercept[Upstream5xxResponse](connector.customDESRead("test", "testUrl", httpResponse))
+      ex shouldBe Upstream5xxResponse("Timeout received from DES submission", 499, 502)
+    }
+
+    "successfully convert 429 from DES to 503" in new SetupWithProxy {
+      val httpResponse = HttpResponse(429)
+      val ex = intercept[Upstream5xxResponse](connector.customDESRead("test", "testUrl", httpResponse))
+      ex shouldBe Upstream5xxResponse("429 received fro DES - converted to 503", 429, 503)
+    }
+
+    "successfully convert 480 from DES to 400" in new SetupWithProxy {
+      val httpResponse = HttpResponse(480, responseString = Some("foo"))
+      val ex = intercept[Upstream4xxResponse](connector.customDESRead("test", "testUrl", httpResponse))
+      ex shouldBe Upstream4xxResponse(upstreamResponseMessage("test", "testUrl", 480, "foo"), 480, 400)
+    }
+
+    "successfully convert 500 from DES to 502" in new SetupWithProxy {
+      val httpResponse = HttpResponse(500, responseString = Some("foo"))
+      val ex = intercept[Upstream5xxResponse](connector.customDESRead("test", "testUrl", httpResponse))
+      ex shouldBe Upstream5xxResponse(upstreamResponseMessage("test", "testUrl", 500, "foo"), 500, 502)
+    }
 }

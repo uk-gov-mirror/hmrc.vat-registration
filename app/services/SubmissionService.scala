@@ -17,8 +17,8 @@
 package services
 
 import java.time.LocalDate
-import javax.inject.{Inject, Singleton}
 
+import javax.inject.{Inject, Singleton}
 import cats.instances.FutureInstances
 import common.exceptions._
 import common.{RegistrationId, TransactionId}
@@ -30,6 +30,7 @@ import models.submission.{DESSubmission, TopUpSubmission}
 import org.joda.time.DateTime
 import repositories._
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.VATFeatureSwitches
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,6 +45,7 @@ class SubmissionService @Inject()(val sequenceMongo: SequenceMongo,
                                   val incorporationInformationConnector : IncorporationInformationConnector) extends SubmissionSrv {
   val registrationRepository = registrationMongo.store
   val sequenceRepository = sequenceMongo.store
+  private[services] override def useMockSubmission: Boolean = VATFeatureSwitches.mockSubmission.enabled
 }
 
 trait SubmissionSrv extends FutureInstances {
@@ -54,6 +56,7 @@ trait SubmissionSrv extends FutureInstances {
   val companyRegistrationConnector : CompanyRegistrationConnector
   val desConnector: DESConnector
   val incorporationInformationConnector: IncorporationInformationConnector
+  private[services] def useMockSubmission: Boolean
 
   private val REGIME = "vat"
   private val SUBSCRIBER = "scrs"
@@ -62,10 +65,10 @@ trait SubmissionSrv extends FutureInstances {
     for {
       status        <- getValidDocumentStatus(regId)
       ackRefs       <- ensureAcknowledgementReference(regId, status)
-      transID       <- fetchCompanyRegistrationTransactionID(regId)
-      incorpStatus  <- registerForInterest(transID,regId.toString)
-      incorpDate    =  incorpStatus.map(status => getIncorpDate(status))
-      companyName   <- getCompanyName(regId, TransactionId(transID))
+      transID       <- if(!useMockSubmission) fetchCompanyRegistrationTransactionID(regId) else Future.successful(s"000-434-$regId")
+      incorpStatus  <- if(!useMockSubmission) registerForInterest(transID,regId.toString) else Future.successful(None)
+      incorpDate    =  if(!useMockSubmission) incorpStatus.map(status => getIncorpDate(status)) else Some(LocalDate.now())
+      companyName   <- if(!useMockSubmission) getCompanyName(regId, TransactionId(transID)) else Future.successful("CompName")
       submission    <- buildDesSubmission(regId, ackRefs, companyName, incorpDate)
       _             <- desConnector.submitToDES(submission, regId.toString)
       _             <- updateSubmissionStatus(regId, incorpDate)

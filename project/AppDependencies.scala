@@ -22,10 +22,10 @@ object AppDependencies {
 
 object CompileDependencies {
   val domainVersion                       = "5.2.0"
-  val bootstrapVersion                    = "8.3.0"
+  val bootstrapVersion                    = "8.7.0"
   val reactiveMongoVersion                = "5.2.0"
   val catsVersion                         = "0.9.0"
-  private val authClientVersion           = "2.16.0-play-25"
+  private val authClientVersion           = "2.17.0-play-25"
 
   val compile = Seq(
     "uk.gov.hmrc"   %% "play-reactivemongo"     % reactiveMongoVersion,

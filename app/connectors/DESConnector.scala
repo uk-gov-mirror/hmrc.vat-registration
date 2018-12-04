@@ -64,6 +64,9 @@ trait DESConnector extends HttpErrorFunctions {
       case 499 =>
         Logger.warn("[DesConnector] [customDESRead] Received 499 from DES - converting to 502")
         throw Upstream5xxResponse("Timeout received from DES submission", 499, 502)
+      case 429 =>
+        Logger.warn("[DesConnector] [customDESRead] Received 429 from DES - converting to 503")
+        throw Upstream5xxResponse("429 received fro DES - converted to 503", 429, 503)
       case status if is4xx(status) =>
         throw Upstream4xxResponse(upstreamResponseMessage(http, url, status, response.body), status, reportAs = 400, response.allHeaders)
       case _ => handleResponse(http, url)(response)

@@ -27,7 +27,7 @@ import enums.VatRegStatus
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models.api._
-import models.external.IncorporationStatus
+import models.external.{IncorpStatusEvent, IncorpSubscription, IncorporationStatus}
 import models.submission.{DESSubmission, TopUpSubmission}
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers
@@ -42,7 +42,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with ApplicativeSyntax with FutureInstances {
-  class Setup {
+  class Setup(useMockSub: Boolean = false) {
     val service = new SubmissionSrv {
       override val vatRegistrationService: VatRegistrationService = mockVatRegistrationService
       override val companyRegistrationConnector: CompanyRegistrationConnector = mockCompanyRegConnector
@@ -50,10 +50,48 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
       override val incorporationInformationConnector: IncorporationInformationConnector = mockIIConnector
       override val sequenceRepository: SequenceRepository = mockSequenceRepository
       override val registrationRepository: RegistrationRepository = mockRegistrationRepository
+
+      override private[services] def useMockSubmission: Boolean = useMockSub
     }
   }
 
   implicit val hc = HeaderCarrier()
+
+  "submitVatRegistration" should {
+    val transactionIdJson = Json.obj("confirmationReferences" -> Json.obj("transaction-id" -> "foo"))
+
+    "successfully return a future string when mockSubmission = false" in new Setup {
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
+        .thenReturn(Some(vatScheme.copy(returns = Some(Returns(true,"",Some("foo"),StartDate(Some(LocalDate.now)))))))
+      when(mockSequenceRepository.getNext(any())(any())).thenReturn(Future.successful(100))
+      when(mockRegistrationRepository.prepareRegistrationSubmission(RegistrationId(anyString()), any(), any())(any())).thenReturn(Future.successful(true))
+      when(mockCompanyRegConnector.fetchCompanyRegistrationDocument(RegistrationId(anyString()))(any())).thenReturn(Future.successful(HttpResponse(200, Some(transactionIdJson))))
+      when(mockRegistrationRepository.saveTransId(any(),RegistrationId(anyString()))(any())).thenReturn(Future.successful("transID"))
+      when(mockIIConnector.retrieveIncorporationStatus(any(), TransactionId(anyString()), any(), any())(any(),any[HttpReads[IncorporationStatus]]()))
+        .thenReturn(Future.successful(
+          Some(IncorporationStatus(
+            IncorpSubscription("transID", "regime", "subscriber", "url"),
+            IncorpStatusEvent("status", Some("crn"),Some(LocalDate.now()), Some("description") )))))
+      when(mockIIConnector.getCompanyName(RegistrationId(anyString()),TransactionId(anyString()))(any())).thenReturn(Future.successful(HttpResponse(200, Some(Json.obj("company_name" -> "compName123")))))
+      when(mockDesConnector.submitToDES(any[DESSubmission],any())(any())).thenReturn(Future.successful(HttpResponse(200)))
+      when(mockRegistrationRepository.finishRegistrationSubmission(RegistrationId(anyString()),any())(any())).thenReturn(Future.successful(VatRegStatus.submitted))
+
+      await(service.submitVatRegistration(RegistrationId("foo"))) shouldBe "BRVT00000000100"
+
+    }
+    "successfully submit to des using mockSubmission = true" in new Setup(true) {
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
+        .thenReturn(Some(vatScheme.copy(returns = Some(Returns(true,"",Some("foo"),StartDate(Some(LocalDate.now)))))))
+      when(mockSequenceRepository.getNext(any())(any())).thenReturn(Future.successful(100))
+      when(mockRegistrationRepository.prepareRegistrationSubmission(RegistrationId(anyString()), any(), any())(any())).thenReturn(Future.successful(true))
+      when(mockRegistrationRepository.saveTransId(any(),RegistrationId(anyString()))(any())).thenReturn(Future.successful("transID"))
+      when(mockDesConnector.submitToDES(any[DESSubmission],any())(any())).thenReturn(Future.successful(HttpResponse(200)))
+      when(mockRegistrationRepository.finishRegistrationSubmission(RegistrationId(anyString()),any())(any())).thenReturn(Future.successful(VatRegStatus.submitted))
+
+      await(service.submitVatRegistration(RegistrationId("foo"))) shouldBe "BRVT00000000100"
+    }
+  }
+
 
   "call to getAcknowledgementReference" should {
 
