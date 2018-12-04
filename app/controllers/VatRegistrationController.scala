@@ -17,7 +17,6 @@
 package controllers
 
 import javax.inject.Inject
-
 import auth.Authorisation
 import cats.instances.FutureInstances
 import common.RegistrationId
@@ -25,6 +24,7 @@ import common.exceptions.{InvalidSubmissionStatus, LeftState}
 import config.AuthClientConnector
 import enums.VatRegStatus
 import models.api._
+import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
 import repositories.{RegistrationMongo, RegistrationMongoRepository}
@@ -44,7 +44,7 @@ class VatRegistrationControllerImpl @Inject()(val registrationService: Registrat
   val registrationRepository: RegistrationMongoRepository = registrationMongo.store
   val resourceConn = submissionService.registrationRepository
   override lazy val authConnector:AuthConnector = AuthClientConnector
-  private[controllers] override def useMockSubmission: Boolean = VATFeatureSwitches.mockSubmission.enabled
+
 }
 
 trait VatRegistrationController extends BaseController with Authorisation with FutureInstances {
@@ -53,8 +53,6 @@ trait VatRegistrationController extends BaseController with Authorisation with F
   val registrationService: RegistrationService
   val submissionService: SubmissionService
   val registrationRepository: RegistrationMongoRepository
-
-  private[controllers] def useMockSubmission: Boolean
 
   val errorHandler: (LeftState) => Result = err => err.toResult
 
@@ -105,16 +103,13 @@ trait VatRegistrationController extends BaseController with Authorisation with F
     implicit request =>
       isAuthorised(id.value) { authResult =>
         authResult.ifAuthorised(id.value, "VatRegistrationController", "submitVATRegistration") {
-          if (!useMockSubmission) {
             submissionService.submitVatRegistration(id).map { ackRefs =>
               Ok(Json.toJson(ackRefs))
             } recover {
-              case ex: Upstream5xxResponse => BadGateway(s"Timeout received when attempting to submit: ${ex.getMessage}")
-              case ex => BadRequest(s"Registration was submitted without full data: ${ex.getMessage}")
+              case ex =>
+                Logger.warn(s"Submission failed - ${ex.getMessage}")
+                throw ex
             }
-          } else {
-            Future.successful(Ok(Json.toJson("BRVT000000" + id)))
-          }
         }
       }
   }
@@ -123,11 +118,7 @@ trait VatRegistrationController extends BaseController with Authorisation with F
     implicit request =>
       isAuthorised(id.value) { authResult =>
         authResult.ifAuthorised(id.value, "VatRegistrationController", "getAcknowledgementReference") {
-          if (!useMockSubmission) {
             submissionService.getAcknowledgementReference(id).fold(errorHandler, ackRefNumber => Ok(Json.toJson(ackRefNumber)))
-          } else {
-            Future.successful(Ok(Json.toJson("BRVT000000" + id)))
-          }
         }
       }
   }

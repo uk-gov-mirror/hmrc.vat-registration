@@ -17,8 +17,8 @@
 package controllers
 
 import javax.inject.{Inject, Singleton}
-
 import models.external.IncorpStatus
+import play.api.Logger
 import play.api.libs.json.JsValue
 import play.api.mvc.Action
 import services.SubmissionService
@@ -40,7 +40,9 @@ trait ProcessIncorporationsController extends BaseController {
         submissionService.submitTopUpVatRegistration(incorp) map {
           if (_) Ok else BadRequest
         } recover {
-          case ex => BadRequest(s"Top up submission failed: ${ex.getMessage}")
+          case ex =>
+            Logger.warn(s"TopUp Submission failed - ${ex.getMessage}")
+            throw ex
         }
       }
   }

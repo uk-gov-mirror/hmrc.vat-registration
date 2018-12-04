@@ -194,6 +194,47 @@ class ProcessIncorporationsISpec extends IntegrationStubbing {
 
       await(repo.remove("registrationId" -> registrationID))
     }
+
+    "return a 503 status when DES returns a 429" in new Setup() {
+      stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
+        .willReturn(
+          aResponse()
+            .withStatus(429)
+        )
+      )
+
+      await(prepareHeldSubmission(repo))
+
+      val json = Json.parse(
+        s"""
+           |{
+           |  "SCRSIncorpStatus":{
+           |    "IncorpSubscriptionKey":{
+           |      "subscriber":"scrs",
+           |      "discriminator":"vat",
+           |      "transactionId":"$transactionId"
+           |    },
+           |    "SCRSIncorpSubscription":{
+           |      "callbackUrl":"http://localhost:9896/TODO-CHANGE-THIS"
+           |    },
+           |    "IncorpStatusEvent":{
+           |      "status":"accepted",
+           |      "timestamp":1501061996345
+           |    }
+           |  }
+           |}
+        """.stripMargin)
+
+      val result = await(client(
+        controllers.routes.ProcessIncorporationsController.processIncorp().url).post(json))
+
+      result.status shouldBe 503
+
+      val reg = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
+      reg.get.status shouldBe VatRegStatus.held
+
+      await(repo.remove("registrationId" -> registrationID))
+    }
   }
 
 }

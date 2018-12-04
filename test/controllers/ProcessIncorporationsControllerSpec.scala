@@ -27,6 +27,7 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import services.SubmissionService
+import uk.gov.hmrc.http.{HttpExceptions, Upstream5xxResponse}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future
@@ -115,7 +116,7 @@ class ProcessIncorporationsControllerSpec extends UnitSpec with MockitoSugar  {
 
   "Invalid Data" should {
 
-    "return a 500 response for non admin flow" in new Setup {
+    "return a 500 response for non admin flow (falsee)" in new Setup {
 
       when(mockSubmissionService.submitTopUpVatRegistration(ArgumentMatchers.any[IncorpStatus]())(ArgumentMatchers.any())).thenReturn(Future.successful(false))
 
@@ -124,6 +125,21 @@ class ProcessIncorporationsControllerSpec extends UnitSpec with MockitoSugar  {
       val result = await(call(controller.processIncorp, request))
 
       status(result) shouldBe 400
+
+    }
+  }
+
+  "Invalid Data - exception" should {
+
+    "exception returned for 5xx" in new Setup {
+
+      when(mockSubmissionService.submitTopUpVatRegistration(ArgumentMatchers.any[IncorpStatus]())(ArgumentMatchers.any())).thenReturn(Future.failed(Upstream5xxResponse("message", 501, 1)))
+
+      val request = FakeRequest().withBody[JsObject](rejectedIncorpJson)
+
+      val result = intercept[Upstream5xxResponse](await(call(controller.processIncorp, request)))
+
+      result shouldBe Upstream5xxResponse("message", 501, 1)
 
     }
   }
