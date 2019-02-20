@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,21 @@
 
 package controllers
 
-import javax.inject.Inject
-
 import auth.{Authorisation, AuthorisationResource}
 import common.TransactionId
-import config.AuthClientConnector
 import connectors.IncorporationInformationConnector
+import javax.inject.Inject
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent}
 import services.SubmissionService
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.microservice.controller.BaseController
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 class IncorporationInformationController @Inject()(val iiConnector: IncorporationInformationConnector,
-                                                   val submissionService: SubmissionService) extends BaseController with Authorisation {
-  override lazy val authConnector: AuthConnector = AuthClientConnector
+                                                   val submissionService: SubmissionService,
+                                                   val authConnector: AuthConnector) extends BaseController with Authorisation {
   val resourceConn: AuthorisationResource = submissionService.registrationRepository
 
   private val REGIME = "vat"

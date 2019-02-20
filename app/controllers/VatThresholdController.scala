@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import services.VatThresholdService
-import uk.gov.hmrc.play.microservice.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 class VatThresholdControllerImpl @Inject()(val vatThresholdService: VatThresholdService) extends VatThresholdController
 

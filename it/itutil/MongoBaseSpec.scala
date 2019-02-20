@@ -18,6 +18,7 @@ package itutil
 
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
+import play.api.{Configuration, Environment}
 import play.api.inject.DefaultApplicationLifecycle
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponentImpl
@@ -27,7 +28,7 @@ import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 trait MongoBaseSpec extends UnitSpec with MongoSpecSupport with BeforeAndAfterEach with ScalaFutures with Eventually with WithFakeApplication {
 
   lazy val applicationLifeCycle = new DefaultApplicationLifecycle
-  val reactiveMongoComponent = new ReactiveMongoComponentImpl(fakeApplication, applicationLifeCycle)
+  lazy val reactiveMongoComponent = new ReactiveMongoComponentImpl(fakeApplication.injector.instanceOf[Configuration],fakeApplication.injector.instanceOf[Environment], applicationLifeCycle)
 
   implicit val jsObjWrites: OWrites[JsObject] = new OWrites[JsObject]{
     override def writes(o: JsObject): JsObject = o

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@ package connectors.test
 
 import com.google.inject.ImplementedBy
 import common.TransactionId
-import config.WSHttp
+import config.BackendConfig
+import javax.inject.Inject
 import play.api.mvc.{Result, Results}
-import uk.gov.hmrc.http.{CoreGet, HeaderCarrier}
-import uk.gov.hmrc.play.config.ServicesConfig
-
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[VatRegIncorporationInformationTestConnector])
@@ -31,11 +31,10 @@ trait IncorporationInformationTestConnector {
   def incorpCompany(transactionId: TransactionId, incorpDate: String)(implicit hc: HeaderCarrier): Future[Result]
 }
 
-class VatRegIncorporationInformationTestConnector extends IncorporationInformationTestConnector with ServicesConfig {
+class VatRegIncorporationInformationTestConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) extends IncorporationInformationTestConnector {
 
   //$COVERAGE-OFF$
-  val iiUrl = baseUrl("incorporation-information")
-  val http: CoreGet = WSHttp
+  val iiUrl = backendConfig.baseUrl("incorporation-information")
 
   def incorpCompany(transactionId: TransactionId, incorpDate: String)(implicit hc: HeaderCarrier): Future[Result] = {
     http.GET(s"$iiUrl/incorporation-information/test-only/add-incorp-update?txId=" +

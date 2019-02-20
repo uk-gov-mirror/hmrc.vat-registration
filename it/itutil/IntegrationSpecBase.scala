@@ -15,7 +15,7 @@
  */
 package itutil
 
-import auth.Crypto
+import auth.CryptoSCRS
 import models.api.VatScheme
 import org.scalatest._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
@@ -36,10 +36,10 @@ trait IntegrationSpecBase extends UnitSpec
   with OneServerPerSuite with ScalaFutures with IntegrationPatience with Matchers
   with WiremockHelper with BeforeAndAfterEach with BeforeAndAfterAll {
 
-  val cryptoForTest: Crypto = new Crypto {
-    def crypto: CompositeSymmetricCrypto = CryptoWithKeysFromConfig(
-      baseConfigKey = "mongo-encryption",
-      configuration = app.injector.instanceOf(classOf[Configuration]))
+  val cryptoForTest: CryptoSCRS = new CryptoSCRS {
+    def crypto: CompositeSymmetricCrypto = new CryptoWithKeysFromConfig(
+      baseConfigKey = "json.encryption",
+      config = app.injector.instanceOf(classOf[Configuration]).underlying)
     override val rds: Reads[String] = Reads[String](_.validate[String])
     override val wts: Writes[String] = Writes[String](s => JsString(s))
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,21 @@
 
 package controllers
 
-import javax.inject.Inject
 import auth.Authorisation
-import common.exceptions.MissingRegDocument
-import config.AuthClientConnector
+import javax.inject.Inject
 import models.api.Eligibility
 import org.slf4j.LoggerFactory
-import play.api.libs.json.{JsObject, JsResultException, JsValue, Json}
+import play.api.libs.json.{JsObject, JsValue}
 import play.api.mvc.{Action, AnyContent}
 import services.EligibilityService
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import uk.gov.hmrc.play.microservice.controller.BaseController
-import utils.EligibilityDataJsonUtils
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import scala.concurrent.ExecutionContext.Implicits.global
 
-class EligibilityControllerImpl @Inject()(val eligibilityService: EligibilityService) extends EligibilityController {
+class EligibilityControllerImpl @Inject()(val eligibilityService: EligibilityService,
+                                          val authConnector: AuthConnector) extends EligibilityController {
 
   val resourceConn = eligibilityService.registrationRepository
-  override lazy val authConnector:AuthConnector = AuthClientConnector
 }
 
 trait EligibilityController extends BaseController with Authorisation {

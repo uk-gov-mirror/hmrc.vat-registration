@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,19 @@
 
 package controllers
 
-import javax.inject.Inject
-
 import auth.{Authorisation, AuthorisationResource}
-import common.exceptions.MissingRegDocument
-import config.AuthClientConnector
-
+import javax.inject.Inject
 import models.api.TradingDetails
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent}
 import services.TradingDetailsService
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import uk.gov.hmrc.play.microservice.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import scala.concurrent.ExecutionContext.Implicits.global
 
-class TradingDetailsControllerImpl @Inject()(val tradingDetailsService: TradingDetailsService) extends TradingDetailsController {
+class TradingDetailsControllerImpl @Inject()(val tradingDetailsService: TradingDetailsService,
+                                             val authConnector: AuthConnector) extends TradingDetailsController {
   val resourceConn: AuthorisationResource                              = tradingDetailsService.registrationRepository
-  override lazy val authConnector: AuthConnector                       = AuthClientConnector
 }
 
 trait TradingDetailsController extends BaseController with Authorisation {

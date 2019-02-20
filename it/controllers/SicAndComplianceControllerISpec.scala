@@ -1,14 +1,9 @@
 package controllers
 
-import common.RegistrationId
-import enums.VatRegStatus
-import itutil.{ITFixtures, IntegrationStubbing, WiremockHelper}
+import itutil.{IntegrationStubbing, WiremockHelper}
 import models.api._
 import play.api.libs.json.{JsObject, Json}
-import play.api.libs.ws.WSClient
 import play.api.test.FakeApplication
-import play.modules.reactivemongo.ReactiveMongoComponent
-import repositories.{RegistrationMongo, RegistrationMongoRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -32,9 +27,6 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
     "microservice.services.incorporation-information.uri" -> "/incorporation-information",
     "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
   ))
-
-  class Setup extends SetupHelper
-
   val validSicAndCompliance = Some(SicAndCompliance(
     "this is my business description",
     Some(ComplianceLabour(1000, Some(true), Some(true))),
@@ -43,10 +35,8 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
   ))
   val otherBusinessActivities =
     SicCode("00998", "otherBusiness desc 1", "fooBar 1") :: SicCode("00889", "otherBusiness desc 2", "fooBar 2") :: Nil
-
   val validSicAndComplianceWithOtherBusinessActivities =
     Some(validSicAndCompliance.get.copy(otherBusinessActivities = otherBusinessActivities))
-
   val validSicAndComplianceJson = Json.parse(
     s"""
        |{
@@ -64,7 +54,6 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
         "otherBusinessActivities":[]
        |}
     """.stripMargin).as[JsObject]
-
   val validUpdatedSicAndCompliancejson = Json.parse(
     s"""
        |{
@@ -87,7 +76,6 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
        ]
        |}
     """.stripMargin).as[JsObject]
-
   val validSicAndComplianceJsonWithoutOtherBusinessActivities = Json.parse(
     s"""
        |{
@@ -104,16 +92,15 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
            }
        |}
     """.stripMargin).as[JsObject]
-
-
   val invalidSicAndComplianceJson = Json.parse(
     s"""
        |{"fooBar":"fooWizzBarBang"
        |}
      """.stripMargin).as[JsObject]
 
-
   def vatScheme(regId: String): VatScheme = emptyVatScheme(regId).copy(sicAndCompliance = validSicAndCompliance)
+
+  class Setup extends SetupHelper
 
   "getSicAndCompliance" should {
     "return 200" in new Setup {
@@ -163,52 +150,52 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
         response.json shouldBe validUpdatedSicAndCompliancejson
       }
     }
-      "return 200 during update to existing sicAndComp record whereby otherBusinessActivities existed but now do not and is not provided in the json" in new Setup {
-        given
-          .user.isAuthorised
-          .regRepo.insertIntoDb(vatScheme("fooBar").copy(sicAndCompliance = validSicAndComplianceWithOtherBusinessActivities), repo.insert)
+    "return 200 during update to existing sicAndComp record whereby otherBusinessActivities existed but now do not and is not provided in the json" in new Setup {
+      given
+        .user.isAuthorised
+        .regRepo.insertIntoDb(vatScheme("fooBar").copy(sicAndCompliance = validSicAndComplianceWithOtherBusinessActivities), repo.insert)
 
-        await(client(controllers.routes.SicAndComplianceController.updateSicAndCompliance("fooBar").url).patch(validSicAndComplianceJsonWithoutOtherBusinessActivities)) map { response =>
-          response.status shouldBe 200
-          response.json shouldBe validSicAndComplianceJsonWithoutOtherBusinessActivities
-        }
-
+      await(client(controllers.routes.SicAndComplianceController.updateSicAndCompliance("fooBar").url).patch(validSicAndComplianceJsonWithoutOtherBusinessActivities)) map { response =>
+        response.status shouldBe 200
+        response.json shouldBe validSicAndComplianceJsonWithoutOtherBusinessActivities
       }
-      "return 200 during update to vat doc whereby no sicAndCompliance existed before" in new Setup {
-        given
-          .user.isAuthorised
-          .regRepo.insertIntoDb(emptyVatScheme("fooBar"), repo.insert)
 
-        await(client(controllers.routes.SicAndComplianceController.updateSicAndCompliance("fooBar").url).patch(validSicAndComplianceJson)) map { response =>
-          response.status shouldBe 200
-          response.json shouldBe validSicAndCompliance
-        }
+    }
+    "return 200 during update to vat doc whereby no sicAndCompliance existed before" in new Setup {
+      given
+        .user.isAuthorised
+        .regRepo.insertIntoDb(emptyVatScheme("fooBar"), repo.insert)
+
+      await(client(controllers.routes.SicAndComplianceController.updateSicAndCompliance("fooBar").url).patch(validSicAndComplianceJson)) map { response =>
+        response.status shouldBe 200
+        response.json shouldBe validSicAndCompliance
       }
-      "return 404 during update when no regDoc exists" in new Setup {
-        given
-          .user.isAuthorised
+    }
+    "return 404 during update when no regDoc exists" in new Setup {
+      given
+        .user.isAuthorised
 
-        await(client(controllers.routes.SicAndComplianceController.updateSicAndCompliance("fooBar").url).patch(validSicAndComplianceJson)) map { response =>
-          response.status shouldBe 404
-        }
+      await(client(controllers.routes.SicAndComplianceController.updateSicAndCompliance("fooBar").url).patch(validSicAndComplianceJson)) map { response =>
+        response.status shouldBe 404
       }
-      "return 400 if the json is invalid" in new Setup {
-        given
-          .user.isAuthorised
+    }
+    "return 400 if the json is invalid" in new Setup {
+      given
+        .user.isAuthorised
 
-        await(client(controllers.routes.SicAndComplianceController.updateSicAndCompliance("fooBar").url).patch(invalidSicAndComplianceJson)) map { response =>
-          response.status shouldBe 400
-        }
+      await(client(controllers.routes.SicAndComplianceController.updateSicAndCompliance("fooBar").url).patch(invalidSicAndComplianceJson)) map { response =>
+        response.status shouldBe 400
       }
-      "return 403 when the user is not Authorised" in new Setup {
-        given
-          .user.isNotAuthorised
+    }
+    "return 403 when the user is not Authorised" in new Setup {
+      given
+        .user.isNotAuthorised
 
-        await(client(controllers.routes.SicAndComplianceController.updateSicAndCompliance("fooBar").url).patch(validSicAndComplianceJson)) map { response =>
-          response.status shouldBe 403
-        }
+      await(client(controllers.routes.SicAndComplianceController.updateSicAndCompliance("fooBar").url).patch(validSicAndComplianceJson)) map { response =>
+        response.status shouldBe 403
       }
     }
   }
+}
 
 

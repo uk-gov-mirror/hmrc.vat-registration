@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,12 @@
 
 package controllers
 
-import javax.inject.Inject
 import auth.Authorisation
 import cats.instances.FutureInstances
 import common.RegistrationId
 import common.exceptions.{InvalidSubmissionStatus, LeftState}
-import config.AuthClientConnector
 import enums.VatRegStatus
+import javax.inject.Inject
 import models.api._
 import play.api.Logger
 import play.api.libs.json._
@@ -30,20 +29,17 @@ import play.api.mvc._
 import repositories.{RegistrationMongo, RegistrationMongoRepository}
 import services._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.http.Upstream5xxResponse
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import uk.gov.hmrc.play.microservice.controller.BaseController
-import utils.VATFeatureSwitches
-
-import scala.concurrent.Future
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class VatRegistrationControllerImpl @Inject()(val registrationService: RegistrationService,
                                               val submissionService: SubmissionService,
-                                              val registrationMongo: RegistrationMongo) extends VatRegistrationController {
+                                              val registrationMongo: RegistrationMongo,
+                                              val authConnector: AuthConnector) extends VatRegistrationController {
 
   val registrationRepository: RegistrationMongoRepository = registrationMongo.store
   val resourceConn = submissionService.registrationRepository
-  override lazy val authConnector:AuthConnector = AuthClientConnector
+
 
 }
 
