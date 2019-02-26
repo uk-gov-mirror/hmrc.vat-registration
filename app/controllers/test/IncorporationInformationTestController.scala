@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,22 @@
 
 package controllers.test
 
-import javax.inject.Inject
-
 import auth.{Authorisation, AuthorisationResource}
 import cats.instances.FutureInstances
 import common.TransactionId
-import config.AuthClientConnector
 import connectors.test.IncorporationInformationTestConnector
+import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent}
-import repositories.{RegistrationMongo, RegistrationMongoRepository}
-import services.{LodgingOfficerService, VatRegistrationService}
+import services.LodgingOfficerService
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.microservice.controller.BaseController
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class IncorporationInformationTestController @Inject()(val iiTestConnector: IncorporationInformationTestConnector,
-                                                       lodgingOfficer: LodgingOfficerService) extends IncorpInfoTestCon {
+                                                       lodgingOfficer: LodgingOfficerService,
+                                                       val authConnector: AuthConnector) extends IncorpInfoTestCon {
 
   val resourceConn: AuthorisationResource                              =  lodgingOfficer.registrationRepository
-  override lazy val authConnector: AuthConnector = AuthClientConnector
 }
   trait IncorpInfoTestCon extends BaseController with Authorisation with FutureInstances {
 

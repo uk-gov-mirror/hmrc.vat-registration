@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,15 @@
 package connectors.test
 
 import com.google.inject.ImplementedBy
-import config.WSHttp
+import config.BackendConfig
+import javax.inject.Inject
 import models.external.BusinessRegistrationRequest
 import play.api.libs.json.Json
 import play.api.mvc.{Result, Results}
-import uk.gov.hmrc.http.{CorePost, HeaderCarrier}
-import uk.gov.hmrc.play.config.ServicesConfig
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[VatRegBusinessRegistrationTestConnector])
@@ -32,10 +33,9 @@ trait BusinessRegistrationTestConnector {
   def createCurrentProfileEntry()(implicit hc: HeaderCarrier): Future[Result]
 }
 
-class VatRegBusinessRegistrationTestConnector extends BusinessRegistrationTestConnector with ServicesConfig {
+class VatRegBusinessRegistrationTestConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) extends BusinessRegistrationTestConnector {
   //$COVERAGE-OFF$
-  val businessRegUrl = baseUrl("business-registration")
-  val http: CorePost = WSHttp
+  val businessRegUrl = backendConfig.baseUrl("business-registration")
 
   def createCurrentProfileEntry()(implicit hc: HeaderCarrier): Future[Result] = {
     http.POST(s"$businessRegUrl/business-registration/business-tax-registration", Json.toJson(BusinessRegistrationRequest("ENG"))).map(_ => Results.Ok)

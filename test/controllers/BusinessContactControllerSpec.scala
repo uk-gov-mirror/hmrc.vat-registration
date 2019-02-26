@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.mockito.stubbing.OngoingStubbing
 import play.api.libs.json.JsObject
 import play.api.test.FakeRequest
 import repositories.RegistrationMongoRepository
+import services.BusinessContactService
 import uk.gov.hmrc.auth.core.AuthConnector
 
 import scala.concurrent.Future
@@ -36,9 +37,10 @@ class BusinessContactControllerSpec extends VatRegSpec with VatRegistrationFixtu
   import play.api.test.Helpers._
 
   class Setup {
-    val controller = new BusinessContactControllerImpl(mockBusinessContactService) {
+    val controller = new BusinessContactController {
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
       override lazy val authConnector: AuthConnector = mockAuthConnector
+      override val businessContactService: BusinessContactService = mockBusinessContactService
     }
   }
     def mockGetBusinessContactFromService(res:Future[Option[BusinessContact]]):OngoingStubbing[Future[Option[BusinessContact]]] = when(mockBusinessContactService.getBusinessContact(any())(any())).thenReturn(res)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,15 +23,13 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.RegistrationMongoRepository
-import uk.gov.hmrc.auth.core.AuthConnector
 
 class IncorporationInformationControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
 
   class Setup {
-    val controller = new IncorporationInformationController(mockIIConnector,mockSubmissionService) {
+    val controller = new IncorporationInformationController(mockIIConnector,mockSubmissionService, authConnector = mockAuthConnector) {
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
-      override lazy val authConnector: AuthConnector = mockAuthConnector
     }
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package models.api
 
-import auth.Crypto
+import auth.CryptoSCRS
 import common.{RegistrationId, TransactionId}
 import enums.VatRegStatus
 import play.api.libs.functional.syntax._
@@ -66,7 +66,7 @@ object VatScheme {
     (__ \ "eligibilityData").writeNullable[JsObject]
   )(unlift(VatScheme.unapply))
 
-  def mongoFormat(crypto: Crypto): OFormat[VatScheme] = (
+  def mongoFormat(crypto: CryptoSCRS): OFormat[VatScheme] = (
       (__ \ "registrationId").format[RegistrationId] and
       (__ \ "internalId").format[String] and
       (__ \ "transactionId").formatNullable[TransactionId] and

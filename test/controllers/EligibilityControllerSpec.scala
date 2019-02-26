@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import org.mockito.stubbing.OngoingStubbing
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.test.FakeRequest
 import repositories.RegistrationMongoRepository
-import uk.gov.hmrc.auth.core.AuthConnector
 
 import scala.concurrent.Future
 
@@ -38,9 +37,8 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
   import play.api.test.Helpers._
 
   class Setup {
-    val controller = new EligibilityControllerImpl (eligibilityService = mockEligibilityService){
+    val controller = new EligibilityControllerImpl (eligibilityService = mockEligibilityService, authConnector = mockAuthConnector){
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
-      override lazy val authConnector: AuthConnector = mockAuthConnector
     }
 
     def getEligibilityData(): OngoingStubbing[Future[Option[Eligibility]]] = when(mockEligibilityService.getEligibility(any())(any()))

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,19 @@
 
 package controllers
 
-import javax.inject.Inject
-
 import auth.{Authorisation, AuthorisationResource}
-import common.exceptions.MissingRegDocument
-import config.AuthClientConnector
+import javax.inject.Inject
+import models.api.SicAndCompliance
+import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent}
 import services.SicAndComplianceService
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import models.api.SicAndCompliance
-import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.microservice.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import scala.concurrent.ExecutionContext.Implicits.global
 
-class SicAndComplianceControllerImpl @Inject()(val sicAndComplianceService: SicAndComplianceService) extends SicAndComplianceController {
+class SicAndComplianceControllerImpl @Inject()(val sicAndComplianceService: SicAndComplianceService,
+                                               val authConnector: AuthConnector) extends SicAndComplianceController {
   val resourceConn: AuthorisationResource                              = sicAndComplianceService.registrationRepository
-  override lazy val authConnector: AuthConnector                       = AuthClientConnector
 }
 
 trait SicAndComplianceController extends BaseController with Authorisation {

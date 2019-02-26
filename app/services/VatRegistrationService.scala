@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import cats.instances.FutureInstances
 import cats.syntax.ApplicativeSyntax
 import common.RegistrationId
 import common.exceptions._
+import config.BackendConfig
 import connectors._
 import enums.VatRegStatus
 import javax.inject.Inject
@@ -44,22 +45,23 @@ import models.AcknowledgementReferencePath
 import models.api.VatScheme
 import models.external.CurrentProfile
 import org.slf4j.LoggerFactory
-import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import repositories.{RegistrationMongo, RegistrationRepository}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import scala.concurrent.ExecutionContext.Implicits.global
 import utils.EligibilityDataJsonUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class VatRegistrationService @Inject()(val brConnector: BusinessRegistrationConnector,
-                                       regMongo: RegistrationMongo) extends RegistrationService with ServicesConfig {
+                                       regMongo: RegistrationMongo,
+                                       val backendConfig: BackendConfig,
+                                       val http: HttpClient) extends RegistrationService {
 
   val registrationRepository: RegistrationRepository = regMongo.store
-  override lazy val vatRestartUrl = getString("api.vatRestartURL")
-  override lazy val vatCancelUrl  = getString("api.vatCancelURL")
+  override lazy val vatRestartUrl = backendConfig.getString("api.vatRestartURL")
+  override lazy val vatCancelUrl  = backendConfig.getString("api.vatCancelURL")
 }
 
 trait RegistrationService extends ApplicativeSyntax with FutureInstances {

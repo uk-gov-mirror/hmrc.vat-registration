@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package models.api
+package config
 
-import java.time.LocalDate
+import javax.inject.Inject
+import play.api.Mode.Mode
+import play.api.{Configuration, Environment}
+import uk.gov.hmrc.play.config.ServicesConfig
 
-import play.api.libs.json.Json
+class BackendConfigImpl @Inject()(val environment:Environment, val runModeConfiguration: Configuration) extends BackendConfig {
+  override protected def mode: Mode = environment.mode
+}
 
-@deprecated("Use Option[LocalDate] instead", "12/12/2017")
-case class VatExpectedThresholdPostIncorp(expectedOverThresholdSelection: Boolean, expectedOverThresholdDate: Option[LocalDate])
+trait BackendConfig extends ServicesConfig {
 
-@deprecated("Use Option[LocalDate] instead", "12/12/2017")
-object VatExpectedThresholdPostIncorp {
-  implicit val format = Json.format[VatExpectedThresholdPostIncorp]
 }

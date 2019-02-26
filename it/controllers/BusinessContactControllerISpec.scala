@@ -1,6 +1,6 @@
 package controllers
 
-import auth.Crypto
+import auth.CryptoSCRS
 import itutil.{IntegrationStubbing, WiremockHelper}
 import models.api.{Address, BusinessContact, DigitalContact, VatScheme}
 import play.api.libs.json.{JsObject, Json}
@@ -30,7 +30,7 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
     "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
   ))
 
-  lazy val crypto: Crypto = app.injector.instanceOf(classOf[Crypto])
+  lazy val crypto: CryptoSCRS = app.injector.instanceOf(classOf[CryptoSCRS])
 
   class Setup extends SetupHelper
 

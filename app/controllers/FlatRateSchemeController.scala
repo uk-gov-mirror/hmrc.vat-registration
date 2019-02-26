@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,22 @@
 
 package controllers
 
-import javax.inject.Inject
-
 import auth.Authorisation
 import common.exceptions.MissingRegDocument
-import config.AuthClientConnector
+import javax.inject.Inject
 import models.api.FlatRateScheme
 import play.api.Logger
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent}
 import services.FlatRateSchemeService
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import uk.gov.hmrc.play.microservice.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import scala.concurrent.ExecutionContext.Implicits.global
 
-class FlatRateSchemeControllerImpl @Inject()(val flatRateSchemeService: FlatRateSchemeService) extends FlatRateSchemeController {
+class FlatRateSchemeControllerImpl @Inject()(val flatRateSchemeService: FlatRateSchemeService,
+                                             val authConnector: AuthConnector) extends FlatRateSchemeController {
 
   val resourceConn = flatRateSchemeService.registrationRepository
-  override lazy val authConnector:AuthConnector = AuthClientConnector
-
 }
 
 trait FlatRateSchemeController extends BaseController with Authorisation {

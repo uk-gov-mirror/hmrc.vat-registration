@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,16 +29,14 @@ import play.api.libs.json.{JsBoolean, JsObject, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.RegistrationMongoRepository
-import uk.gov.hmrc.auth.core.AuthConnector
 
 import scala.concurrent.Future
 
 class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
   class Setup {
-    val controller = new LodgingOfficerControllerImpl(lodgingOfficerService = mockLodgingOfficerService){
+    val controller = new LodgingOfficerControllerImpl(lodgingOfficerService = mockLodgingOfficerService, authConnector = mockAuthConnector){
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
-      override lazy val authConnector: AuthConnector = mockAuthConnector
     }
 
     def updateIVStatusSuccess(): OngoingStubbing[Future[Boolean]] = when(mockLodgingOfficerService.updateIVStatus(any(), any())(any()))

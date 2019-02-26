@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package config
 
-import auth.{Crypto, CryptoImpl}
+import auth.{CryptoSCRS, CryptoSCRSImpl}
 import com.google.inject.AbstractModule
 import connectors.{DESConnector, DESConnectorImpl}
 import controllers._
@@ -25,7 +25,7 @@ import services.{TradingDetailsService, TradingDetailsSrv, VatThresholdService, 
 class Module extends AbstractModule {
 
   override def configure(): Unit = {
-    bind(classOf[Crypto]).to(classOf[CryptoImpl]).asEagerSingleton()
+    bind(classOf[BackendConfig]).to(classOf[BackendConfigImpl]).asEagerSingleton()
     bind(classOf[ProcessIncorporationsController]).to(classOf[ProcessIncorporationsControllerImpl]).asEagerSingleton()
     bind(classOf[VatRegistrationController]).to(classOf[VatRegistrationControllerImpl]).asEagerSingleton()
     bind(classOf[connectors.BusinessRegistrationConnector]).to(classOf[connectors.VatRegBusinessRegistrationConnector]).asEagerSingleton()
@@ -41,5 +41,6 @@ class Module extends AbstractModule {
     bind(classOf[FlatRateSchemeController]).to(classOf[FlatRateSchemeControllerImpl]).asEagerSingleton()
     bind(classOf[VatThresholdController]).to(classOf[VatThresholdControllerImpl]).asEagerSingleton()
     bind(classOf[VatThresholdService]).to(classOf[VatThresholdServiceImpl]).asEagerSingleton()
+    bind(classOf[CryptoSCRS]).to(classOf[CryptoSCRSImpl]).asEagerSingleton()
   }
 }

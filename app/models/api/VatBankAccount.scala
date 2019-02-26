@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package models.api
 
-import auth.Crypto
+import auth.CryptoSCRS
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -36,7 +36,7 @@ object BankAccountDetails extends VatBankAccountValidator {
 }
 
 object BankAccountDetailsMongoFormat extends VatBankAccountValidator {
-  def format(crypto: Crypto): Format[BankAccountDetails] = (
+  def format(crypto: CryptoSCRS): Format[BankAccountDetails] = (
     (__ \ "name").format[String] and
     (__ \ "sortCode").format[String] and
     (__ \ "number").format[String](crypto.rds)(crypto.wts)
@@ -45,7 +45,7 @@ object BankAccountDetailsMongoFormat extends VatBankAccountValidator {
 
 
 object BankAccountMongoFormat extends VatBankAccountValidator {
-  def encryptedFormat(crypto: Crypto): OFormat[BankAccount] = (
+  def encryptedFormat(crypto: CryptoSCRS): OFormat[BankAccount] = (
     (__ \ "isProvided").format[Boolean] and
       (__ \ "details").formatNullable[BankAccountDetails](BankAccountDetailsMongoFormat.format(crypto))
     ) (BankAccount.apply, unlift(BankAccount.unapply))

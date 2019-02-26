@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,28 @@
 
 package connectors
 
+import config.BackendConfig
 import javax.inject.{Inject, Singleton}
-
-import config.{MicroserviceAuditConnector, WSHttp}
 import models.submission.{DESSubmission, TopUpSubmission}
 import play.api.Logger
 import play.api.libs.json.Writes
-import uk.gov.hmrc.play.config.ServicesConfig
-
-import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging.Authorization
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import scala.concurrent.ExecutionContext.Implicits.global
+
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class DESConnectorImpl @Inject()() extends DESConnector with ServicesConfig {
-  lazy val desStubUrl: String = baseUrl("des-stub")
-  lazy val desStubURI: String = getConfString("des-stub.uri", "")
-  lazy val desStubTopUpUrl: String = baseUrl("des-stub")
-  lazy val desStubTopUpURI: String = getConfString("des-stub.uri", "")
+class DESConnectorImpl @Inject()(val backendConfig: BackendConfig, val http: HttpClient) extends DESConnector {
+  lazy val desStubUrl: String = backendConfig.baseUrl("des-stub")
+  lazy val desStubURI: String = backendConfig.getConfString("des-stub.uri", "")
+  lazy val desStubTopUpUrl: String = backendConfig.baseUrl("des-stub")
+  lazy val desStubTopUpURI: String = backendConfig.getConfString("des-stub.uri", "")
 
-  lazy val urlHeaderEnvironment: String = getConfString("des-service.environment", throw new Exception("could not find config value for des-service.environment"))
-  lazy val urlHeaderAuthorization: String = s"Bearer ${getConfString("des-service.authorization-token",
+  lazy val urlHeaderEnvironment: String = backendConfig.getConfString("des-service.environment", throw new Exception("could not find config value for des-service.environment"))
+  lazy val urlHeaderAuthorization: String = s"Bearer ${backendConfig.getConfString("des-service.authorization-token",
     throw new Exception("could not find config value for des-service.authorization-token"))}"
-
-  val http : CorePost = WSHttp
-  val auditConnector = MicroserviceAuditConnector
 }
 
 trait DESConnector extends HttpErrorFunctions {

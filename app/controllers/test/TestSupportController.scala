@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,25 @@
 
 package controllers.test
 
-import javax.inject.Inject
-
 import auth.{Authorisation, AuthorisationResource}
-import config.AuthClientConnector
-import connectors.test.BusinessRegistrationTestConnector
 import connectors.BusinessRegistrationConnector
+import connectors.test.BusinessRegistrationTestConnector
+import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent}
-import repositories.{RegistrationMongo, RegistrationMongoRepository}
-import services.{LodgingOfficerService, RegistrationService, VatRegistrationService}
+import services.LodgingOfficerService
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.microservice.controller.BaseController
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 import scala.util.{Left, Right}
 
 class TestSupportController @Inject()(val brConnector: BusinessRegistrationConnector,
                                       val brTestConnector: BusinessRegistrationTestConnector,
-                                      lodgingOfficerService: LodgingOfficerService) extends TestSupportCon {
+                                      lodgingOfficerService: LodgingOfficerService,
+                                      val authConnector: AuthConnector) extends TestSupportCon {
 
   val resourceConn: AuthorisationResource                              =  lodgingOfficerService.registrationRepository
-  override lazy val authConnector: AuthConnector = AuthClientConnector
 }
 
   trait TestSupportCon extends BaseController with Authorisation{

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,17 @@
 package connectors
 
 import common.{RegistrationId, TransactionId}
-import config.WSHttp
+import config.BackendConfig
+import javax.inject.Inject
 import models.external.IncorporationStatus
-import org.joda.time.{LocalDate, LocalDateTime}
+import org.joda.time.LocalDateTime
 import org.joda.time.format.DateTimeFormat
 import play.api.Logger
 import play.api.http.Status.{ACCEPTED, OK}
 import play.api.libs.json._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.config.ServicesConfig
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 import scala.util.control.NoStackTrace
@@ -35,12 +36,11 @@ class IncorporationInformationResponseException(msg: String) extends NoStackTrac
   override def getMessage: String = msg
 }
 
-class VatRegIncorporationInformationConnector extends IncorporationInformationConnector with ServicesConfig {
+class VatRegIncorporationInformationConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) extends IncorporationInformationConnector {
   //$COVERAGE-OFF$
-  lazy val iiUrl                  = baseUrl("incorporation-information")
-  lazy val iiUri                  = getConfString("incorporation-information.uri", "")
-  lazy val vatRegUri: String      = baseUrl("vat-registration")
-  val http: CoreGet with CorePost = WSHttp
+  lazy val iiUrl                  = backendConfig.baseUrl("incorporation-information")
+  lazy val iiUri                  = backendConfig.getConfString("incorporation-information.uri", "")
+  lazy val vatRegUri: String      = backendConfig.baseUrl("vat-registration")
   //$COVERAGE-ON$
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,14 @@
 package services
 
 import javax.inject.Inject
-
 import com.typesafe.config.ConfigRenderOptions
 import models.VatThreshold
 import org.joda.time.DateTime
+import play.api.Configuration
 import play.api.libs.json._
 
-class VatThresholdServiceImpl @Inject()(app : play.api.Application) extends VatThresholdService {
-  lazy val thresholdString = app.configuration.underlying.getList("thresholds").render(ConfigRenderOptions.concise())
+class VatThresholdServiceImpl @Inject()(config: Configuration) extends VatThresholdService {
+  lazy val thresholdString = config.underlying.getList("thresholds").render(ConfigRenderOptions.concise())
   lazy val thresholds = Json.parse(thresholdString).as[List[VatThreshold]]
 }
 

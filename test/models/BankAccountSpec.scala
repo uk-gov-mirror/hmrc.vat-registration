@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,10 @@
 
 package models
 
-import auth.CryptoImpl
+import java.util
+
+import auth.CryptoSCRSImpl
+import com.typesafe.config.{Config, ConfigFactory}
 import helpers.VatRegSpec
 import models.api.{BankAccount, BankAccountDetails, BankAccountDetailsMongoFormat, BankAccountMongoFormat}
 import play.api.Configuration
@@ -152,10 +155,13 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
     val testEncryptionKey = "ABCDEFGHIJKLMNOPQRSTUV=="
 
     val mockConfig = mock[Configuration]
-    val crypto = new CryptoImpl(mockConfig)
-
-    when(mockConfig.getString(eqTo("mongo-encryption.key"), any())).thenReturn(Some(testEncryptionKey))
-    when(mockConfig.getStringSeq(any())).thenReturn(None)
+    val crypto = new CryptoSCRSImpl(mockConfig)
+    when(mockConfig.underlying).thenReturn(ConfigFactory.parseString(
+      s"""
+         |json {
+         |  encryption.key:"ABCDEFGHIJKLMNOPQRSTUV=="
+          }
+        """.stripMargin))
 
     val encryptionFormat: OFormat[BankAccount] = BankAccountMongoFormat.encryptedFormat(crypto)
 

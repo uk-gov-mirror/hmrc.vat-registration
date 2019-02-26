@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 HM Revenue & Customs
+ * Copyright 2019 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,14 +26,15 @@ import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.mongo.{ReactiveRepository, Repository}
-import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
+import scala.concurrent.ExecutionContext.Implicits.global
+import reactivemongo.play.json.ImplicitBSONHandlers._
 
 import scala.concurrent.Future
 import scala.util.control.NoStackTrace
 
 @Singleton
 class SequenceMongo @Inject()(mongo: ReactiveMongoComponent) extends ReactiveMongoFormats {
-  val store = new SequenceMongoRepository(mongo.mongoConnector.db)
+  lazy val store = new SequenceMongoRepository(mongo.mongoConnector.db)
 }
 
 trait SequenceRepository extends Repository[Sequence, BSONObjectID]{
