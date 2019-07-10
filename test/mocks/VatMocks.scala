@@ -38,6 +38,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, InvalidBearerToken}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost}
 import utils.VATFeatureSwitches
 
+
 import scala.concurrent.Future
 
 trait VatMocks extends WSHTTPMock {

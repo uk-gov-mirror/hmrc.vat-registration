@@ -17,7 +17,6 @@
 package repositories
 
 import javax.inject.{Inject, Singleton}
-
 import models.api.Sequence
 import play.api.libs.json.JsValue
 import play.modules.reactivemongo.ReactiveMongoComponent
@@ -25,7 +24,8 @@ import reactivemongo.api.DB
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
-import uk.gov.hmrc.mongo.{ReactiveRepository, Repository}
+import uk.gov.hmrc.mongo.ReactiveRepository
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import reactivemongo.play.json.ImplicitBSONHandlers._
 
@@ -37,7 +37,7 @@ class SequenceMongo @Inject()(mongo: ReactiveMongoComponent) extends ReactiveMon
   lazy val store = new SequenceMongoRepository(mongo.mongoConnector.db)
 }
 
-trait SequenceRepository extends Repository[Sequence, BSONObjectID]{
+trait SequenceRepository extends ReactiveRepository[Sequence, BSONObjectID]{
   def getNext(sequenceID: String)(implicit hc : HeaderCarrier): Future[Int]
 }
 
