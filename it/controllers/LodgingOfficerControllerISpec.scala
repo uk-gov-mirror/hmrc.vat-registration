@@ -4,33 +4,15 @@ package controllers
 import java.time.LocalDate
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import itutil.{IntegrationStubbing, WiremockHelper}
+import itutil.IntegrationStubbing
 import models.api._
 import play.api.libs.json.{JsArray, JsBoolean, JsObject, Json}
-import play.api.test.FakeApplication
+import play.api.test.Helpers._
+import controllers.routes.LodgingOfficerController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class LodgingOfficerControllerISpec extends IntegrationStubbing {
-
-  val mockHost = WiremockHelper.wiremockHost
-  val mockPort = WiremockHelper.wiremockPort
-  val mockUrl  = s"http://$mockHost:$mockPort"
-
-  override implicit lazy val app = FakeApplication(additionalConfiguration = Map(
-    "auditing.consumer.baseUri.host" -> s"$mockHost",
-    "auditing.consumer.baseUri.port" -> s"$mockPort",
-    "microservice.services.auth.host" -> s"$mockHost",
-    "microservice.services.auth.port" -> s"$mockPort",
-    "microservice.services.des-stub.host" -> s"$mockHost",
-    "microservice.services.des-stub.port" -> s"$mockPort",
-    "microservice.services.company-registration.host" -> s"$mockHost",
-    "microservice.services.company-registration.port" -> s"$mockPort",
-    "microservice.services.incorporation-information.host" -> s"$mockHost",
-    "microservice.services.incorporation-information.port" -> s"$mockPort",
-    "microservice.services.incorporation-information.uri" -> "/incorporation-information",
-    "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
-  ))
 
   class Setup extends SetupHelper {
     def writeAudit: StubMapping = stubPost("/write/audit/merged",200,"")
@@ -116,165 +98,159 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
   val eligibilityData = Json.obj("sections" -> sections)
 
   "getLodgingOfficerData" should {
-    "return 200" in new Setup {
-      given
-        .user.isAuthorised
+    "return OK" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(vatScheme("regId").copy(eligibilityData = Some(eligibilityData)))
 
-      await(client(controllers.routes.LodgingOfficerController.getLodgingOfficerData("regId").url).get() map { response =>
-        response.status shouldBe 200
-        response.json shouldBe validLodgingOfficerJson
-      })
+      val response = await(client(LodgingOfficerController.getLodgingOfficerData("regId").url).get())
+
+      response.status shouldBe OK
+      response.json shouldBe validLodgingOfficerJson
     }
 
-    "return 204" in new Setup {
-      given
-        .user.isAuthorised
+    "return NO_CONTENT" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      await(client(controllers.routes.LodgingOfficerController.getLodgingOfficerData("regId").url).get() map { response =>
-        response.status shouldBe 204
-      })
+      val response = await(client(LodgingOfficerController.getLodgingOfficerData("regId").url).get())
+
+      response.status shouldBe NO_CONTENT
     }
 
-    "return 404 if no document found" in new Setup {
-      given
-        .user.isAuthorised
+    "return NOT_FOUND if no document found" in new Setup {
+      given.user.isAuthorised
 
-      await(client(controllers.routes.LodgingOfficerController.getLodgingOfficerData("regId").url).get() map { response =>
-        response.status shouldBe 404
-      })
+      val response = await(client(LodgingOfficerController.getLodgingOfficerData("regId").url).get())
+
+      response.status shouldBe NOT_FOUND
     }
 
-    "return 403 if user is not authorised" in new Setup {
-      given
-        .user.isNotAuthorised
+    "return FORBIDDEN if user is not authorised" in new Setup {
+      given.user.isNotAuthorised
 
-      await(client(controllers.routes.LodgingOfficerController.getLodgingOfficerData("regId").url).get() map { response =>
-        response.status shouldBe 403
-      })
+      val response = await(client(LodgingOfficerController.getLodgingOfficerData("regId").url).get())
+
+      response.status shouldBe FORBIDDEN
     }
   }
 
   "updateLodgingOfficerData" should {
-    "return 200 with a lodgingOfficer json body" in new Setup {
-      given
-        .user.isAuthorised
+    "return OK with a lodgingOfficer json body" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(emptyVatScheme("regId").copy(eligibilityData = Some(eligibilityData)))
 
-      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficerData("regId").url).patch(validLodgingOfficerJson) map { response =>
-        response.status shouldBe 200
-        response.json shouldBe Json.parse("""{"dob" : "1980-05-25"}""".stripMargin)
-      })
+      val response = await(client(LodgingOfficerController.updateLodgingOfficerData("regId").url)
+        .patch(validLodgingOfficerJson))
+
+      response.status shouldBe OK
+      response.json shouldBe Json.parse("""{"dob" : "1980-05-25"}""".stripMargin)
     }
 
-    "return 200 with when updating the lodging officer post IV" in new Setup {
-      given
-        .user.isAuthorised
+    "return OK with when updating the lodging officer post IV" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(vatScheme("regId").copy(eligibilityData = Some(eligibilityData)))
 
-      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficerData("regId").url).patch(upsertLodgingOfficerJson) map { response =>
-        response.status shouldBe 200
-        response.json shouldBe upsertLodgingOfficerJson - "name" - "nino" - "role" - "isOfficerApplying"
-      })
+      val response = await(client(LodgingOfficerController.updateLodgingOfficerData("regId").url)
+        .patch(upsertLodgingOfficerJson))
+
+      response.status shouldBe OK
+      response.json shouldBe upsertLodgingOfficerJson - "name" - "nino" - "role" - "isOfficerApplying"
     }
 
-    "return 400 if an invalid json body is posted" in new Setup {
-      given
-        .user.isAuthorised
+    "return BAD_REQUEST if an invalid json body is posted" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficerData("regId").url).patch(invalidLodgingOfficerJson) map { response =>
-        response.status shouldBe 400
-      })
+      val response = await(client(LodgingOfficerController.updateLodgingOfficerData("regId").url)
+        .patch(invalidLodgingOfficerJson))
+
+      response.status shouldBe BAD_REQUEST
     }
 
-    "return 404 if no reg document is found" in new Setup {
-      given
-        .user.isAuthorised
+    "return NOT_FOUND if no reg document is found" in new Setup {
+      given.user.isAuthorised
 
-      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficerData("regId").url).patch(validLodgingOfficerJson) map { response =>
-        response.status shouldBe 404
-      })
+      val response = await(client(LodgingOfficerController.updateLodgingOfficerData("regId").url)
+        .patch(validLodgingOfficerJson))
+
+      response.status shouldBe NOT_FOUND
     }
 
-    "return 200 if no data updated because data is same" in new Setup {
-      given
-        .user.isAuthorised
+    "return OK if no data updated because data is same" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(vatScheme("regId").copy(eligibilityData = Some(eligibilityData)))
 
-      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficerData("regId").url).patch(validLodgingOfficerJson) map { response =>
-        response.status shouldBe 200
-      })
+      val response = await(client(LodgingOfficerController.updateLodgingOfficerData("regId").url)
+        .patch(validLodgingOfficerJson))
+
+      response.status shouldBe OK
     }
 
-    "return 403 if user is not authorised obtained" in new Setup {
-      given
-        .user.isNotAuthorised
+    "return FORBIDDEN if user is not authorised obtained" in new Setup {
+      given.user.isNotAuthorised
 
-      await(client(controllers.routes.LodgingOfficerController.updateLodgingOfficerData("regId").url).patch(validLodgingOfficerJson) map { response =>
-        response.status shouldBe 403
-      })
+      val response = await(client(LodgingOfficerController.updateLodgingOfficerData("regId").url)
+        .patch(validLodgingOfficerJson))
+
+      response.status shouldBe FORBIDDEN
     }
   }
 
   "updateIVStatus" should {
-    "return 200" in new Setup {
-      given
-        .user.isAuthorised
+    "return OK" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(vatScheme("regId"))
 
-      await(client(controllers.routes.LodgingOfficerController.updateIVStatus("regId", true).url).patch("") map { response =>
-        response.status shouldBe 200
-        response.json shouldBe JsBoolean(true)
-      })
+      val response = await(client(LodgingOfficerController.updateIVStatus("regId", true).url)
+        .patch(""))
+
+      response.status shouldBe OK
+      response.json shouldBe JsBoolean(true)
     }
 
-    "return 404 if a none boolean is provided in the query parameter" in new Setup {
-      given
-        .user.isAuthorised
+    "return NOT_FOUND if a none boolean is provided in the query parameter" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      await(client("/regId/update-iv-status/test").patch("") map { response =>
-        response.status shouldBe 404
-      })
+      val response = await(client("/regId/update-iv-status/test").patch(""))
+
+      response.status shouldBe NOT_FOUND
     }
 
-    "return 404 if no reg document is found" in new Setup {
-      given
-        .user.isAuthorised
+    "return NOT_FOUND if no reg document is found" in new Setup {
+      given.user.isAuthorised
 
-      await(client(controllers.routes.LodgingOfficerController.updateIVStatus("regId", true).url).patch("") map { response =>
-        response.status shouldBe 404
-      })
+      val response = await(client(LodgingOfficerController.updateIVStatus("regId", true).url).patch(""))
+
+      response.status shouldBe NOT_FOUND
     }
 
-    "return 404 if the reg document has no lodgingOfficer block" in new Setup {
-      given
-        .user.isAuthorised
+    "return NOT_FOUND if the reg document has no lodgingOfficer block" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      await(client(controllers.routes.LodgingOfficerController.updateIVStatus("regId", true).url).patch("") map { response =>
-        response.status shouldBe 404
-      })
+      val response = await(client(LodgingOfficerController.updateIVStatus("regId", true).url)
+        .patch(""))
+
+      response.status shouldBe NOT_FOUND
     }
 
-    "return 403 if user is not authorised obtained" in new Setup {
-      given
-        .user.isNotAuthorised
+    "return FORBIDDEN if user is not authorised obtained" in new Setup {
+      given.user.isNotAuthorised
 
-      await(client(controllers.routes.LodgingOfficerController.updateIVStatus("regId", true).url).patch("") map { response =>
-        response.status shouldBe 403
-      })
+      val response = await(client(LodgingOfficerController.updateIVStatus("regId", true).url)
+        .patch(""))
+
+      response.status shouldBe FORBIDDEN
     }
   }
 }

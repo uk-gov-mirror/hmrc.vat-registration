@@ -2,44 +2,18 @@
 package controllers
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import common.RegistrationId
-import enums.VatRegStatus
-import itutil.{ITFixtures, IntegrationStubbing, WiremockHelper}
+import itutil.IntegrationStubbing
 import models.api.{Eligibility, VatScheme}
-import play.api.Configuration
 import play.api.libs.json.{JsObject, Json}
-import play.api.libs.ws.WSClient
-import play.api.test.FakeApplication
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.WriteResult
-import repositories.{RegistrationMongo, RegistrationMongoRepository, SequenceMongo, SequenceMongoRepository}
+import play.api.test.Helpers._
+import controllers.routes.EligibilityController
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class EligibilityControllerISpec extends IntegrationStubbing {
 
-  val mockHost = WiremockHelper.wiremockHost
-  val mockPort = WiremockHelper.wiremockPort
-  val mockUrl  = s"http://$mockHost:$mockPort"
-
-  override implicit lazy val app = FakeApplication(additionalConfiguration = Map(
-    "auditing.consumer.baseUri.host" -> s"$mockHost",
-    "auditing.consumer.baseUri.port" -> s"$mockPort",
-    "microservice.services.auth.host" -> s"$mockHost",
-    "microservice.services.auth.port" -> s"$mockPort",
-    "microservice.services.des-stub.host" -> s"$mockHost",
-    "microservice.services.des-stub.port" -> s"$mockPort",
-    "microservice.services.company-registration.host" -> s"$mockHost",
-    "microservice.services.company-registration.port" -> s"$mockPort",
-    "microservice.services.incorporation-information.host" -> s"$mockHost",
-    "microservice.services.incorporation-information.port" -> s"$mockPort",
-    "microservice.services.incorporation-information.uri" -> "/incorporation-information",
-    "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
-  ))
-
   class Setup extends SetupHelper {
-    def writeAudit: StubMapping = stubPost("/write/audit/merged",200,"")
+    def writeAudit: StubMapping = stubPost("/write/audit/merged",OK,"")
   }
 
   def vatScheme(regId: String): VatScheme = emptyVatScheme(regId).copy(eligibility = Some(Eligibility(1,"success")))
@@ -60,56 +34,56 @@ class EligibilityControllerISpec extends IntegrationStubbing {
     """.stripMargin).as[JsObject]
 
   "updatingEligibility" should {
-    "return 200 with an eligibility json body" in new Setup {
-      given
-        .user.isAuthorised
+    "return OK with an eligibility json body" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      await(client(controllers.routes.EligibilityController.updateEligibility("regId").url).patch(validEligibilityJson) map { response =>
-        response.status shouldBe 200
-        response.json shouldBe validEligibilityJson
-      })
+      val response = await(client(EligibilityController.updateEligibility("regId").url)
+        .patch(validEligibilityJson))
+
+      response.status shouldBe OK
+      response.json shouldBe validEligibilityJson
     }
 
-    "return 400 if an invalid json body is posted" in new Setup {
-      given
-        .user.isAuthorised
+    "return BAD_REQUEST if an invalid json body is posted" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      await(client(controllers.routes.EligibilityController.updateEligibility("regId").url).patch(invalidEligibilityJson) map { response =>
-        response.status shouldBe 400
-      })
+      val response = await(client(EligibilityController.updateEligibility("regId").url)
+        .patch(invalidEligibilityJson))
+
+      response.status shouldBe BAD_REQUEST
     }
 
-    "return 404 if no reg document is found" in new Setup {
-      given
-        .user.isAuthorised
+    "return NOT_FOUND if no reg document is found" in new Setup {
+      given.user.isAuthorised
 
-      await(client(controllers.routes.EligibilityController.updateEligibility("regId").url).patch(validEligibilityJson) map { response =>
-        response.status shouldBe 404
-      })
+      val response = await(client(EligibilityController.updateEligibility("regId").url)
+        .patch(validEligibilityJson))
+
+      response.status shouldBe NOT_FOUND
     }
 
-    "return 200 if no data updated because data is same" in new Setup {
-      given
-        .user.isAuthorised
+    "return OK if no data updated because data is same" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(vatScheme("regId"))
 
-      await(client(controllers.routes.EligibilityController.updateEligibility("regId").url).patch(validEligibilityJson) map { response =>
-        response.status shouldBe 200
-      })
+      val response = await(client(EligibilityController.updateEligibility("regId").url)
+        .patch(validEligibilityJson))
+
+      response.status shouldBe OK
     }
 
-    "return 403 if user is not authorised obtained" in new Setup {
-      given
-        .user.isNotAuthorised
+    "return FORBIDDEN if user is not authorised obtained" in new Setup {
+      given.user.isNotAuthorised
 
-      await(client(controllers.routes.EligibilityController.updateEligibility("regId").url).patch(validEligibilityJson) map { response =>
-        response.status shouldBe 403
-      })
+      val response = await(client(EligibilityController.updateEligibility("regId").url)
+        .patch(validEligibilityJson))
+
+      response.status shouldBe FORBIDDEN
     }
   }
 }

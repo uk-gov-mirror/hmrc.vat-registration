@@ -36,8 +36,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class RegistrationMongoRepositoryISpec extends UnitSpec with MongoBaseSpec with MongoSpecSupport
   with FutureAssertions with BeforeAndAfterEach with WithFakeApplication with ITFixtures {
 
-
-
   class Setup {
     val mongo: RegistrationMongo = fakeApplication.injector.instanceOf[RegistrationMongo]
     val repository: RegistrationMongoRepository = mongo.store

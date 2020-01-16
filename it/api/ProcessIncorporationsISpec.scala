@@ -16,41 +16,21 @@
 
 package api
 
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor, urlMatching}
 import common.RegistrationId
+import connectors.stubs.AuditStub._
+import connectors.stubs.BusinessRegConnectorStub._
+import controllers.routes.ProcessIncorporationsController
 import enums.VatRegStatus
-import itutil.{ITFixtures, IntegrationStubbing, WiremockHelper}
+import itutil.IntegrationStubbing
 import org.joda.time.DateTime
-import play.api.libs.json.Json
-import play.api.libs.ws.WSClient
-import play.api.test.FakeApplication
+import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
-import play.modules.reactivemongo.ReactiveMongoComponent
-import repositories.{RegistrationMongo, RegistrationMongoRepository, SequenceMongo, SequenceMongoRepository}
+import repositories.RegistrationMongoRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ProcessIncorporationsISpec extends IntegrationStubbing {
-
-  val mockHost = WiremockHelper.wiremockHost
-  val mockPort = WiremockHelper.wiremockPort
-  val mockUrl  = s"http://$mockHost:$mockPort"
-
-  override implicit lazy val app = FakeApplication(additionalConfiguration = Map(
-    "auditing.consumer.baseUri.host" -> s"$mockHost",
-    "auditing.consumer.baseUri.port" -> s"$mockPort",
-    "microservice.services.auth.host" -> s"$mockHost",
-    "microservice.services.auth.port" -> s"$mockPort",
-    "microservice.services.company-registration.host" -> s"$mockHost",
-    "microservice.services.company-registration.port" -> s"$mockPort",
-    "microservice.services.des-stub.host" -> s"$mockHost",
-    "microservice.services.des-stub.port" -> s"$mockPort",
-    "microservice.services.incorporation-information.host" -> s"$mockHost",
-    "microservice.services.incorporation-information.port" -> s"$mockPort",
-    "microservice.services.incorporation-information.uri" -> "/incorporation-information",
-    "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
-  ))
 
   class Setup extends SetupHelper
 
@@ -71,38 +51,32 @@ class ProcessIncorporationsISpec extends IntegrationStubbing {
       }
     }
 
-    "return an Ok if the accepted top up succeeds" in new Setup() {
-      stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
-        .willReturn(
-          aResponse()
-            .withStatus(202)
+    def topUpJson(status: String): JsObject = Json.obj(
+      "SCRSIncorpStatus" -> Json.obj(
+        "IncorpSubscriptionKey" -> Json.obj(
+          "subscriber" -> "scrs",
+          "discriminator" -> "vat",
+          "transactionId" -> "transId"
+        ),
+        "SCRSIncorpSubscription" -> Json.obj(
+          "callbackUrl" -> "http://localhost:9896/TODO-CHANGE-THIS"
+        ),
+        "IncorpStatusEvent" -> Json.obj(
+          "status" -> status,
+          "timestamp" -> 1501061996345L
         )
       )
+    )
+
+    "return an Ok if the accepted top up succeeds" in new Setup() {
+      stubBusinessRegVat(ACCEPTED)()
+      stubMergedAudit(OK)
+      stubAudit(OK)
 
       await(prepareHeldSubmission(repo))
 
-      val json = Json.parse(
-        s"""
-           |{
-           |  "SCRSIncorpStatus":{
-           |    "IncorpSubscriptionKey":{
-           |      "subscriber":"scrs",
-           |      "discriminator":"vat",
-           |      "transactionId":"$transactionId"
-           |    },
-           |    "SCRSIncorpSubscription":{
-           |      "callbackUrl":"http://localhost:9896/TODO-CHANGE-THIS"
-           |    },
-           |    "IncorpStatusEvent":{
-           |      "status":"accepted",
-           |      "timestamp":1501061996345
-           |    }
-           |  }
-           |}
-        """.stripMargin)
-
-      val result = await(client(
-        controllers.routes.ProcessIncorporationsController.processIncorp().url).post(json))
+      val result = await(client(ProcessIncorporationsController.processIncorp().url)
+        .post(topUpJson("accepted")))
 
       result.status shouldBe OK
 
@@ -110,41 +84,17 @@ class ProcessIncorporationsISpec extends IntegrationStubbing {
       reg.get.status shouldBe VatRegStatus.submitted
 
       await(repo.remove("registrationId" -> registrationID))
-
     }
 
     "return an Ok if the rejected top up succeeds" in new Setup() {
-      stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
-        .willReturn(
-          aResponse()
-            .withStatus(202)
-        )
-      )
+      stubBusinessRegVat(ACCEPTED)()
+      stubMergedAudit(OK)
+      stubAudit(OK)
 
       await(prepareHeldSubmission(repo))
 
-      val json = Json.parse(
-        s"""
-           |{
-           |  "SCRSIncorpStatus":{
-           |    "IncorpSubscriptionKey":{
-           |      "subscriber":"scrs",
-           |      "discriminator":"vat",
-           |      "transactionId":"$transactionId"
-           |    },
-           |    "SCRSIncorpSubscription":{
-           |      "callbackUrl":"http://localhost:9896/TODO-CHANGE-THIS"
-           |    },
-           |    "IncorpStatusEvent":{
-           |      "status":"rejected",
-           |      "timestamp":1501061996345
-           |    }
-           |  }
-           |}
-        """.stripMargin)
-
-      val result = await(client(
-        controllers.routes.ProcessIncorporationsController.processIncorp().url).post(json))
+      val result = await(client(ProcessIncorporationsController.processIncorp().url)
+        .post(topUpJson("rejected")))
 
       result.status shouldBe OK
 
@@ -155,39 +105,16 @@ class ProcessIncorporationsISpec extends IntegrationStubbing {
     }
 
     "return a 400 status when DES returns a 4xx" in new Setup() {
-      stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
-        .willReturn(
-          aResponse()
-            .withStatus(433)
-        )
-      )
+      stubBusinessRegVat(EXPECTATION_FAILED)()
+      stubMergedAudit(OK)
+      stubAudit(OK)
 
       await(prepareHeldSubmission(repo))
 
-      val json = Json.parse(
-        s"""
-           |{
-           |  "SCRSIncorpStatus":{
-           |    "IncorpSubscriptionKey":{
-           |      "subscriber":"scrs",
-           |      "discriminator":"vat",
-           |      "transactionId":"$transactionId"
-           |    },
-           |    "SCRSIncorpSubscription":{
-           |      "callbackUrl":"http://localhost:9896/TODO-CHANGE-THIS"
-           |    },
-           |    "IncorpStatusEvent":{
-           |      "status":"accepted",
-           |      "timestamp":1501061996345
-           |    }
-           |  }
-           |}
-        """.stripMargin)
+      val result = await(client(ProcessIncorporationsController.processIncorp().url)
+        .post(topUpJson("accepted")))
 
-      val result = await(client(
-        controllers.routes.ProcessIncorporationsController.processIncorp().url).post(json))
-
-      result.status shouldBe 400
+      result.status shouldBe BAD_REQUEST
 
       val reg = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
       reg.get.status shouldBe VatRegStatus.held
@@ -195,40 +122,17 @@ class ProcessIncorporationsISpec extends IntegrationStubbing {
       await(repo.remove("registrationId" -> registrationID))
     }
 
-    "return a 503 status when DES returns a 429" in new Setup() {
-      stubFor(post(urlMatching(s"/business-registration/value-added-tax"))
-        .willReturn(
-          aResponse()
-            .withStatus(429)
-        )
-      )
+    "return a SERVICE_UNAVAILABLE status when DES returns TOO_MANY_REQUESTS" in new Setup() {
+      stubBusinessRegVat(TOO_MANY_REQUESTS)()
+      stubMergedAudit(OK)
+      stubAudit(OK)
 
       await(prepareHeldSubmission(repo))
 
-      val json = Json.parse(
-        s"""
-           |{
-           |  "SCRSIncorpStatus":{
-           |    "IncorpSubscriptionKey":{
-           |      "subscriber":"scrs",
-           |      "discriminator":"vat",
-           |      "transactionId":"$transactionId"
-           |    },
-           |    "SCRSIncorpSubscription":{
-           |      "callbackUrl":"http://localhost:9896/TODO-CHANGE-THIS"
-           |    },
-           |    "IncorpStatusEvent":{
-           |      "status":"accepted",
-           |      "timestamp":1501061996345
-           |    }
-           |  }
-           |}
-        """.stripMargin)
+      val result = await(client(ProcessIncorporationsController.processIncorp().url)
+        .post(topUpJson("accepted")))
 
-      val result = await(client(
-        controllers.routes.ProcessIncorporationsController.processIncorp().url).post(json))
-
-      result.status shouldBe 503
+      result.status shouldBe SERVICE_UNAVAILABLE
 
       val reg = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
       reg.get.status shouldBe VatRegStatus.held
