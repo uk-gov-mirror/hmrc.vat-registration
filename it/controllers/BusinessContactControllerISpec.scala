@@ -1,34 +1,16 @@
+
 package controllers
 
 import auth.CryptoSCRS
-import itutil.{IntegrationStubbing, WiremockHelper}
+import itutil.IntegrationStubbing
 import models.api.{Address, BusinessContact, DigitalContact, VatScheme}
 import play.api.libs.json.{JsObject, Json}
-import play.api.libs.ws.WSClient
-import play.api.test.FakeApplication
-import play.modules.reactivemongo.ReactiveMongoComponent
-import repositories.{RegistrationMongo, RegistrationMongoRepository}
+import play.api.test.Helpers._
+import controllers.routes.BusinessContactController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class BusinessContactControllerISpec extends IntegrationStubbing {
-
-  val mockHost = WiremockHelper.wiremockHost
-  val mockPort = WiremockHelper.wiremockPort
-  val mockUrl  = s"http://$mockHost:$mockPort"
-
-  override implicit lazy val app = FakeApplication(additionalConfiguration = Map(
-    "auditing.consumer.baseUri.host" -> s"$mockHost",
-    "auditing.consumer.baseUri.port" -> s"$mockPort",
-    "microservice.services.auth.host" -> s"$mockHost",
-    "microservice.services.auth.port" -> s"$mockPort",
-    "microservice.services.company-registration.host" -> s"$mockHost",
-    "microservice.services.company-registration.port" -> s"$mockPort",
-    "microservice.services.incorporation-information.host" -> s"$mockHost",
-    "microservice.services.incorporation-information.port" -> s"$mockPort",
-    "microservice.services.incorporation-information.uri" -> "/incorporation-information",
-    "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
-  ))
 
   lazy val crypto: CryptoSCRS = app.injector.instanceOf(classOf[CryptoSCRS])
 
@@ -80,86 +62,74 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
   def vatScheme(regId: String): VatScheme = emptyVatScheme(regId).copy(businessContact = validBusinessContact)
 
   "getBusinessContact" should {
-    "return 200" in new Setup {
-      given
-        .user.isAuthorised
+    "return OK" in new Setup {
+      given.user.isAuthorised
         .regRepo.insertIntoDb(vatScheme("foo"), repo.insert)
 
-      await(client(controllers.routes.BusinessContactController.getBusinessContact("foo").url).get() map { response =>
-        response.status shouldBe 200
-        response.json shouldBe validBusinessContactJson
-      })
+      val response = await(client(BusinessContactController.getBusinessContact("foo").url).get())
+
+      response.status shouldBe OK
+      response.json shouldBe validBusinessContactJson
     }
-    "return 204 when no BusinessContact Record is found but reg doc exists" in new Setup {
-      given
-        .user.isAuthorised
+    "return NO_CONTENT when no BusinessContact Record is found but reg doc exists" in new Setup {
+      given.user.isAuthorised
         .regRepo.insertIntoDb(emptyVatScheme("foo"), repo.insert)
 
-      await(client(controllers.routes.BusinessContactController.getBusinessContact("foo").url).get() map { response =>
-        response.status shouldBe 204
-      })
-    }
-    "return 404 when no reg doc is found" in new Setup {
-      given
-        .user.isAuthorised
+      val response = await(client(BusinessContactController.getBusinessContact("foo").url).get())
 
-      await(client(controllers.routes.BusinessContactController.getBusinessContact("fooBar").url).get() map { response =>
-        response.status shouldBe 404
-      })
+      response.status shouldBe NO_CONTENT
     }
-    "return 403 when user is not authorised" in new Setup {
-      given
-        .user.isNotAuthorised
+    "return NOT_FOUND when no reg doc is found" in new Setup {
+      given.user.isAuthorised
 
-      await(client(controllers.routes.BusinessContactController.getBusinessContact("fooBar").url).get() map { response =>
-        response.status shouldBe 403
-      })
+      val response = await(client(BusinessContactController.getBusinessContact("fooBar").url).get())
+
+      response.status shouldBe NOT_FOUND
+    }
+    "return FORBIDDEN when user is not authorised" in new Setup {
+      given.user.isNotAuthorised
+
+      val response = await(client(BusinessContactController.getBusinessContact("fooBar").url).get())
+
+      response.status shouldBe FORBIDDEN
     }
   }
   "updateBusinessConact" should {
-    "return 200 during update to existing BusinessContact record" in new Setup {
-      given
-        .user.isAuthorised
+    "return OK during update to existing BusinessContact record" in new Setup {
+      given.user.isAuthorised
         .regRepo.insertIntoDb(vatScheme("fooBar"),repo.insert)
-      await(client(controllers.routes.BusinessContactController.updateBusinessContact("fooBar").url).patch(validUpdatedBusinessContactJson)) map { response =>
-        response.status shouldBe 200
-        response.json shouldBe validUpdatedBusinessContactJson
 
-      }
+      val response = await(client(BusinessContactController.updateBusinessContact("fooBar").url)
+          .patch(validUpdatedBusinessContactJson))
+
+      response.status shouldBe OK
+      response.json shouldBe validUpdatedBusinessContactJson
     }
-    "return 200 during update to vat doc whereby no BusinessContact existed before" in new Setup {
-      given
-        .user.isAuthorised
+    "return OK during update to vat doc whereby no BusinessContact existed before" in new Setup {
+      given.user.isAuthorised
         .regRepo.insertIntoDb(emptyVatScheme("fooBar"),repo.insert)
 
-      await(client(controllers.routes.BusinessContactController.updateBusinessContact("fooBar").url).patch(validBusinessContactJson)) map { response =>
-        response.status shouldBe 200
-        response.json shouldBe validBusinessContactJson
-      }
-    }
-    "return 404 during update when no regDoc exists" in new Setup {
-      given
-        .user.isAuthorised
+      val response = await(client(BusinessContactController.updateBusinessContact("fooBar").url)
+        .patch(validBusinessContactJson))
 
-      await(client(controllers.routes.BusinessContactController.updateBusinessContact("fooBar").url).patch(validBusinessContactJson)) map { response =>
-        response.status shouldBe 404
-      }
+      response.status shouldBe OK
+      response.json shouldBe validBusinessContactJson
     }
-    "return 400 if the json is invalid" in new Setup {
-      given
-        .user.isAuthorised
+    "return NOT_FOUND during update when no regDoc exists" in new Setup {
+      given.user.isAuthorised
 
-      await(client(controllers.routes.BusinessContactController.updateBusinessContact("fooBar").url).patch(Json.obj("foo" -> Json.toJson("bar")))) map { response =>
-        response.status shouldBe 400
-      }
+      val response = await(client(BusinessContactController.updateBusinessContact("fooBar").url)
+        .patch(validBusinessContactJson))
+
+      response.status shouldBe NOT_FOUND
     }
-    "return 403 when the user is not Authorised" in new Setup {
-      given
-        .user.isNotAuthorised
+    "return FORBIDDEN when the user is not Authorised" in new Setup {
+      given.user.isNotAuthorised
 
-      await(client(controllers.routes.BusinessContactController.updateBusinessContact("fooBar").url).patch(validBusinessContactJson)) map { response =>
-        response.status shouldBe 403
-      }
+      val response = await(client(BusinessContactController.updateBusinessContact("fooBar").url)
+        .patch(validBusinessContactJson))
+
+      response.status shouldBe FORBIDDEN
     }
   }
 }

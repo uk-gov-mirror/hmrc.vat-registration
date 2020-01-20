@@ -23,6 +23,7 @@ import org.scalatestplus.play.OneServerPerSuite
 import play.api.Configuration
 import play.api.libs.json.{JsString, Reads, Writes}
 import play.api.libs.ws.WSClient
+import play.api.test.FakeApplication
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.WriteResult
 import repositories.{RegistrationMongo, RegistrationMongoRepository, SequenceMongo, SequenceMongoRepository}
@@ -43,6 +44,33 @@ trait IntegrationSpecBase extends UnitSpec
     override val rds: Reads[String] = Reads[String](_.validate[String])
     override val wts: Writes[String] = Writes[String](s => JsString(s))
   }
+
+  val mockHost: String = WiremockHelper.wiremockHost
+  val mockPort: String = WiremockHelper.wiremockPort.toString
+
+  val config: Map[String, String] = Map(
+    "auditing.consumer.baseUri.host" -> mockHost,
+    "auditing.consumer.baseUri.port" -> mockPort,
+    "microservice.services.auth.host" -> mockHost,
+    "microservice.services.auth.port" -> mockPort,
+    "microservice.services.business-registration.host" -> mockHost,
+    "microservice.services.business-registration.port" -> mockPort,
+    "microservice.services.des-stub.host" -> mockHost,
+    "microservice.services.des-stub.port" -> mockPort,
+    "microservice.services.des-service.host" -> mockHost,
+    "microservice.services.des-service.port" -> mockPort,
+    "microservice.services.company-registration.host" -> mockHost,
+    "microservice.services.company-registration.port" -> mockPort,
+    "microservice.services.incorporation-information.host" -> mockHost,
+    "microservice.services.incorporation-information.port" -> mockPort,
+    "microservice.services.incorporation-information.uri" -> "/incorporation-information",
+    "microservice.services.ThresholdsJsonLocation" -> "conf/thresholds.json",
+    "microservice.services.vat-registration.host" -> mockHost,
+    "microservice.services.vat-registration.port" -> mockPort,
+    "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
+  )
+
+  override implicit lazy val app = FakeApplication(additionalConfiguration = config)
 
   trait SetupHelper {
 

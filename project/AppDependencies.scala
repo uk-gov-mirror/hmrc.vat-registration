@@ -22,8 +22,8 @@ object AppDependencies {
 
 object CompileDependencies {
   val domainVersion                       = "5.6.0-play-25"
-  val bootstrapVersion                    = "4.13.0"
-  val reactiveMongoVersion                = "7.20.0-play-25"
+  val bootstrapVersion                    = "5.1.0"
+  val reactiveMongoVersion                = "7.22.0-play-25"
   val catsVersion                         = "0.9.0"
   private val authClientVersion           = "2.22.0-play-25"
 
@@ -33,7 +33,6 @@ object CompileDependencies {
     "uk.gov.hmrc"   %% "domain"                 % domainVersion,
     "org.typelevel" %% "cats"                   % catsVersion,
     "uk.gov.hmrc" %% "auth-client"              % authClientVersion
-
   )
 
   def apply(): Seq[ModuleID] = compile
@@ -75,7 +74,7 @@ trait CommonTestDependencies {
   val hmrcTestVersion          = "3.9.0-play-25"
   val scalaTestPlusVersion     = "2.0.1"
   val scoverageVersion         = "1.3.1"
-  val reactiveMongoTestVersion = "4.15.0-play-25"
+  val reactiveMongoTestVersion = "4.16.0-play-25"
   val scope: Configuration
   val testDependencies: Seq[ModuleID]
 }

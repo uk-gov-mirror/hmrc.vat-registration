@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,13 @@ package models
 import java.util
 
 import auth.CryptoSCRSImpl
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.ConfigFactory
 import helpers.VatRegSpec
-import models.api.{BankAccount, BankAccountDetails, BankAccountDetailsMongoFormat, BankAccountMongoFormat}
+import models.api.{BankAccount, BankAccountDetails, BankAccountMongoFormat}
 import play.api.Configuration
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import org.mockito.Mockito._
-import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 
 class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
 
@@ -152,14 +151,14 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
 
   "The BankAccount encryption formatter" should {
 
-    val testEncryptionKey = "ABCDEFGHIJKLMNOPQRSTUV=="
+    val testEncryptionKey = "YWJjZGVmZ2hpamtsbW5vcA=="
 
     val mockConfig = mock[Configuration]
     val crypto = new CryptoSCRSImpl(mockConfig)
     when(mockConfig.underlying).thenReturn(ConfigFactory.parseString(
       s"""
          |json {
-         |  encryption.key:"ABCDEFGHIJKLMNOPQRSTUV=="
+         |  encryption.key:"$testEncryptionKey"
           }
         """.stripMargin))
 
@@ -181,7 +180,7 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
         | "details":{
         |   "name":"Test Account name",
         |   "sortCode":"00-99-22",
-        |   "number":"bzVwZ3hOcjhreHVFby9ZYk5RYUllUT09"
+        |   "number":"V3BrR3VxdHB2YzBYb1BrbHk3UGJzdz09"
         | }
         |}
       """.stripMargin)

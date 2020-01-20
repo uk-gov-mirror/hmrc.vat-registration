@@ -3,41 +3,15 @@ package controllers
 
 import java.time.LocalDate
 
-import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import common.RegistrationId
-import enums.VatRegStatus
-import itutil.{ITFixtures, IntegrationStubbing, WiremockHelper}
-import models.api.{FRSDetails, FlatRateScheme, StartDate, VatScheme}
+import itutil.IntegrationStubbing
+import models.api.{FlatRateScheme, VatScheme}
 import play.api.libs.json.{JsObject, Json}
-import play.api.libs.ws.WSClient
-import play.api.test.FakeApplication
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.WriteResult
-import repositories.{RegistrationMongo, RegistrationMongoRepository, SequenceMongo, SequenceMongoRepository}
+import play.api.test.Helpers._
+import controllers.routes.FlatRateSchemeController
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class FlatRateSchemeControllerISpec extends IntegrationStubbing {
-
-  val mockHost = WiremockHelper.wiremockHost
-  val mockPort = WiremockHelper.wiremockPort
-  val mockUrl  = s"http://$mockHost:$mockPort"
-
-  override implicit lazy val app = FakeApplication(additionalConfiguration = Map(
-    "auditing.consumer.baseUri.host" -> s"$mockHost",
-    "auditing.consumer.baseUri.port" -> s"$mockPort",
-    "microservice.services.auth.host" -> s"$mockHost",
-    "microservice.services.auth.port" -> s"$mockPort",
-    "microservice.services.des-stub.host" -> s"$mockHost",
-    "microservice.services.des-stub.port" -> s"$mockPort",
-    "microservice.services.company-registration.host" -> s"$mockHost",
-    "microservice.services.company-registration.port" -> s"$mockPort",
-    "microservice.services.incorporation-information.host" -> s"$mockHost",
-    "microservice.services.incorporation-information.port" -> s"$mockPort",
-    "microservice.services.incorporation-information.uri" -> "/incorporation-information",
-    "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
-  ))
 
   class Setup extends SetupHelper
 
@@ -72,130 +46,122 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing {
 
 
   "fetchFlatRateScheme" should {
-    "return 200 if successfully obtained" in new Setup {
-      given
-        .user.isAuthorised
+    "return OK if successfully obtained" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(vatScheme("regId"))
 
-      await(client(controllers.routes.FlatRateSchemeController.fetchFlatRateScheme("regId").url).get() map { response =>
-        response.status shouldBe 200
-        response.json shouldBe validFullFlatRateSchemeJson
-      })
+      val response = await(client(FlatRateSchemeController.fetchFlatRateScheme("regId").url).get())
+
+      response.status shouldBe OK
+      response.json shouldBe validFullFlatRateSchemeJson
     }
 
-    "return 204 if successfully obtained" in new Setup {
-      given
-        .user.isAuthorised
+    "return NO_CONTENT if successfully obtained" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      await(client(controllers.routes.FlatRateSchemeController.fetchFlatRateScheme("regId").url).get() map { response =>
-        response.status shouldBe 204
-      })
+      val response = await(client(FlatRateSchemeController.fetchFlatRateScheme("regId").url).get())
+
+      response.status shouldBe NO_CONTENT
     }
 
-    "return 404 if no document found" in new Setup {
-      given
-        .user.isAuthorised
+    "return NOT_FOUND if no document found" in new Setup {
+      given.user.isAuthorised
 
-      await(client(controllers.routes.FlatRateSchemeController.fetchFlatRateScheme("regId").url).get() map { response =>
-        response.status shouldBe 404
-      })
+      val response = await(client(FlatRateSchemeController.fetchFlatRateScheme("regId").url).get())
+
+      response.status shouldBe NOT_FOUND
     }
 
-    "return 403 if user is not authorised" in new Setup {
-      given
-        .user.isNotAuthorised
+    "return FORBIDDEN if user is not authorised" in new Setup {
+      given.user.isNotAuthorised
 
-      await(client(controllers.routes.FlatRateSchemeController.fetchFlatRateScheme("regId").url).get() map { response =>
-        response.status shouldBe 403
-      })
+      val response = await(client(FlatRateSchemeController.fetchFlatRateScheme("regId").url).get())
+
+      response.status shouldBe FORBIDDEN
     }
   }
 
   "updatingFlatRateScheme" should {
-    "return 200 with a valid threshold json body" in new Setup {
-      given
-        .user.isAuthorised
+    "return OK with a valid threshold json body" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      await(client(controllers.routes.FlatRateSchemeController.updateFlatRateScheme("regId").url).patch(validFullFlatRateSchemeJson) map { response =>
-        response.status shouldBe 200
-        response.json shouldBe validFullFlatRateSchemeJson
-      })
+      val response = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url)
+        .patch(validFullFlatRateSchemeJson))
+
+      response.status shouldBe OK
+      response.json shouldBe validFullFlatRateSchemeJson
     }
 
-    "return 400 if an invalid json body is posted" in new Setup {
-      given
-        .user.isAuthorised
+    "return BAD_REQUEST if an invalid json body is posted" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      await(client(controllers.routes.FlatRateSchemeController.updateFlatRateScheme("regId").url).patch(invalidFlatRateSchemeJson) map { response =>
-        response.status shouldBe 400
-      })
+      val response = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url)
+        .patch(invalidFlatRateSchemeJson))
+
+      response.status shouldBe BAD_REQUEST
     }
 
-    "return 404 if no reg document is found" in new Setup {
-      given
-        .user.isAuthorised
+    "return NOT_FOUND if no reg document is found" in new Setup {
+      given.user.isAuthorised
 
-      await(client(controllers.routes.FlatRateSchemeController.updateFlatRateScheme("regId").url).patch(validFullFlatRateSchemeJson) map { response =>
-        response.status shouldBe 404
-      })
+      val response = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url)
+        .patch(validFullFlatRateSchemeJson))
+
+      response.status shouldBe NOT_FOUND
     }
 
-    "return 200 if no data updated because data to be updated already exists" in new Setup {
-      given
-        .user.isAuthorised
+    "return OK if no data updated because data to be updated already exists" in new Setup {
+      given.user.isAuthorised
 
       await(repo.insert(vatScheme))
 
-      await(client(controllers.routes.FlatRateSchemeController.updateFlatRateScheme("regId").url).patch(validFullFlatRateSchemeJson) map { response =>
-        response.status shouldBe 200
-      })
+      val response = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url)
+        .patch(validFullFlatRateSchemeJson))
+
+      response.status shouldBe OK
     }
 
-    "return 403 if user is not authorised" in new Setup {
-      given
-        .user.isNotAuthorised
+    "return FORBIDDEN if user is not authorised" in new Setup {
+      given.user.isNotAuthorised
 
-      await(client(controllers.routes.FlatRateSchemeController.updateFlatRateScheme("regId").url).patch(validFullFlatRateSchemeJson) map { response =>
-        response.status shouldBe 403
-      })
+      val response = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url).patch(validFullFlatRateSchemeJson))
+
+      response.status shouldBe FORBIDDEN
     }
   }
 
   "removeFlatRateScheme" should {
-    "return 200 if successful" in new Setup {
-      given
-        .user.isAuthorised
+    "return OK if successful" in new Setup {
+      given.user.isAuthorised
 
       insertIntoDb(vatScheme("regId"))
 
-      await(client(controllers.routes.FlatRateSchemeController.removeFlatRateScheme("regId").url).delete() map { response =>
-        response.status shouldBe 200
-      })
+      val response = await(client(FlatRateSchemeController.removeFlatRateScheme("regId").url).delete())
+
+      response.status shouldBe OK
     }
 
-    "return 404 if no reg document is found" in new Setup {
-      given
-        .user.isAuthorised
+    "return NOT_FOUND if no reg document is found" in new Setup {
+      given.user.isAuthorised
 
-      await(client(controllers.routes.FlatRateSchemeController.removeFlatRateScheme("regId").url).delete() map { response =>
-        response.status shouldBe 404
-      })
+      val response = await(client(FlatRateSchemeController.removeFlatRateScheme("regId").url).delete())
+
+      response.status shouldBe NOT_FOUND
     }
 
-    "return 403 if user is not authorised" in new Setup {
-      given
-        .user.isNotAuthorised
+    "return FORBIDDEN if user is not authorised" in new Setup {
+      given.user.isNotAuthorised
 
-      await(client(controllers.routes.FlatRateSchemeController.removeFlatRateScheme("regId").url).delete() map { response =>
-        response.status shouldBe 403
-      })
+      val response = await(client(FlatRateSchemeController.removeFlatRateScheme("regId").url).delete())
+
+      response.status shouldBe FORBIDDEN
     }
   }
 }
