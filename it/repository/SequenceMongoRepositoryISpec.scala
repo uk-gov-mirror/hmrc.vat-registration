@@ -17,16 +17,17 @@
 package repository
 
 import itutil.{ITFixtures, MongoBaseSpec}
-import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.test.Helpers._
 import repositories.SequenceMongo
 import uk.gov.hmrc.mongo.MongoSpecSupport
-import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SequenceMongoRepositoryISpec
-  extends UnitSpec with MongoBaseSpec with MongoSpecSupport with BeforeAndAfterEach with ScalaFutures with Eventually with WithFakeApplication with ITFixtures {
+class SequenceMongoRepositoryISpec extends WordSpec with Matchers with MongoBaseSpec with MongoSpecSupport with BeforeAndAfterAll
+  with ScalaFutures with Eventually with GuiceOneAppPerSuite with ITFixtures {
 
   class Setup {
     val mongo = new SequenceMongo(reactiveMongoComponent)

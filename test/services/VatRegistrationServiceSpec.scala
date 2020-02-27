@@ -29,7 +29,8 @@ import models.external.CurrentProfile
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
-import play.api.libs.json.{JsArray, JsResultException, Json}
+import play.api.libs.json.{JsArray, Json}
+import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -55,8 +56,8 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
     "return a existing VatScheme response " in new Setup {
       val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
 
-      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
-      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Some(vatScheme))
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Future.successful(businessRegistrationSuccessResponse))
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(Some(vatScheme)))
 
       service.createNewRegistration(internalid) returnsRight vatScheme
     }
@@ -74,9 +75,9 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
     "return a new VatScheme response " in new Setup {
       val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
 
-      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
-      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(None)
-      when(mockRegistrationRepository.createNewVatScheme(RegistrationId("1"),internalid)).thenReturn(vatScheme)
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Future.successful(businessRegistrationSuccessResponse))
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(None))
+      when(mockRegistrationRepository.createNewVatScheme(RegistrationId("1"),internalid)).thenReturn(Future.successful(vatScheme))
 
       await(service.createNewRegistration(internalid).value) shouldBe Right(vatScheme)
     }
@@ -85,8 +86,8 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
       val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
       val t = new Exception("Exception")
 
-      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
-      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(None)
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Future.successful(businessRegistrationSuccessResponse))
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(None))
       when(mockRegistrationRepository.createNewVatScheme(RegistrationId("1"),internalid)).thenReturn(Future.failed(t))
 
       service.createNewRegistration(internalid) returnsLeft GenericError(t)
@@ -96,28 +97,28 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
       val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
       val t = InsertFailed(RegistrationId("regId"), "VatScheme")
 
-      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(businessRegistrationSuccessResponse)
-      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(None)
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Future.successful(businessRegistrationSuccessResponse))
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(None))
       when(mockRegistrationRepository.createNewVatScheme(RegistrationId("1"),internalid)).thenReturn(Future.failed(t))
 
       service.createNewRegistration(internalid) returnsLeft GenericDatabaseError(t, Some("regId"))
     }
 
     "call to business service return ForbiddenException response " in new Setup {
-      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(ForbiddenAccess("forbidden")))
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Future.successful(Left(ForbiddenAccess("forbidden"))))
 
       service.createNewRegistration(internalid) returnsLeft ForbiddenAccess("forbidden")
     }
 
     "call to business service return NotFoundException response " in new Setup {
-      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(ResourceNotFound("notfound")))
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Future.successful(Left(ResourceNotFound("notfound"))))
 
       service.createNewRegistration(internalid) returnsLeft ResourceNotFound("notfound")
     }
 
     "call to business service return ErrorResponse response " in new Setup {
       val t = new RuntimeException("Exception")
-      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Left(GenericError(t)))
+      when(mockBusRegConnector.retrieveCurrentProfile(any(), any())).thenReturn(Future.successful(Left(GenericError(t))))
 
       service.createNewRegistration(internalid) returnsLeft GenericError(t)
     }
@@ -165,15 +166,15 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
     val vatScheme = VatScheme(RegistrationId("1"),internalid, None, None, None, status = VatRegStatus.draft)
 
     "return Success response " in new Setup {
-      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Some(vatScheme))
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(Some(vatScheme)))
       when(mockRegistrationRepository.updateByElement(RegistrationId("1"), AcknowledgementReferencePath, ackRefNumber))
-        .thenReturn(ackRefNumber)
+        .thenReturn(Future.successful(ackRefNumber))
       service.saveAcknowledgementReference(RegistrationId("1"), ackRefNumber) returnsRight ackRefNumber
     }
 
     val vatSchemeWithAckRefNum = vatScheme.copy(acknowledgementReference = Some(ackRefNumber))
     "return Error response " in new Setup {
-      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Some(vatSchemeWithAckRefNum))
+      when(mockRegistrationRepository.retrieveVatScheme(RegistrationId("1"))).thenReturn(Future.successful(Some(vatSchemeWithAckRefNum)))
       service.saveAcknowledgementReference(RegistrationId("1"), ackRefNumber) returnsLeft
         AcknowledgementReferenceExists(s"""Registration ID 1 already has an acknowledgement reference of: $ackRefNumber""")
     }

@@ -23,9 +23,10 @@ import helpers.VatRegSpec
 import models.api.TradingDetails
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
+import play.api.test.Helpers._
 import repositories.RegistrationMongoRepository
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class TradingDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {

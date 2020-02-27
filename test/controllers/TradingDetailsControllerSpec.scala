@@ -46,7 +46,7 @@ class TradingDetailsControllerSpec extends VatRegSpec with VatRegistrationFixtur
 
       val result = controller.fetchTradingDetails("testId")(FakeRequest())
       status(result) shouldBe 200
-      await(contentAsJson(result)) shouldBe validFullTradingDetailsJson
+      contentAsJson(result) shouldBe validFullTradingDetailsJson
     }
 
     "return a NoContent if the trading details block is not present in the document" in new Setup {
@@ -86,7 +86,7 @@ class TradingDetailsControllerSpec extends VatRegSpec with VatRegistrationFixtur
       val result = controller.updateTradingDetails("testId")(FakeRequest().withBody[JsObject](validFullTradingDetailsJson))
 
       status(result) shouldBe 200
-      await(contentAsJson(result)) shouldBe validFullTradingDetailsJson
+      contentAsJson(result) shouldBe validFullTradingDetailsJson
     }
 
     "returns NotFound if the registration is not found" in new Setup {

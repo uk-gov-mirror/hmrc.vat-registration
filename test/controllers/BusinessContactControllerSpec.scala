@@ -55,7 +55,7 @@ class BusinessContactControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
       val result = controller.getBusinessContact(regId.value)(FakeRequest())
       status(result) shouldBe 200
-      await(contentAsJson(result)) shouldBe validBusinessContactJson
+      contentAsJson(result) shouldBe validBusinessContactJson
 
     }
     "return 204 when nothing is returned but document exists" in new Setup {
@@ -86,7 +86,7 @@ class BusinessContactControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
       val result = controller.updateBusinessContact(regId.value)(FakeRequest().withBody[JsObject](validBusinessContactJson))
       status(result) shouldBe 200
-      await(contentAsJson(result)) shouldBe validBusinessContactJson
+      contentAsJson(result) shouldBe validBusinessContactJson
     }
     "returns 404 if regId not found" in new Setup {
       AuthorisationMocks.mockAuthorised(regId.value,internalid)

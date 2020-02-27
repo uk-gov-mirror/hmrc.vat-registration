@@ -16,12 +16,11 @@
 
 package models
 
-import org.scalatest.Assertion
+import org.scalatest.{Assertion, Matchers, WordSpec}
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsError, JsPath, JsResult, JsSuccess}
-import uk.gov.hmrc.play.test.UnitSpec
 
-trait JsonFormatValidation extends UnitSpec {
+trait JsonFormatValidation extends WordSpec with Matchers {
 
   implicit class JsResultOps[T](res: JsResult[T]) {
 

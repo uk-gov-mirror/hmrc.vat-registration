@@ -17,7 +17,7 @@
 package controllers
 
 import itutil.IntegrationStubbing
-import play.api.test.Helpers.OK
+import play.api.test.Helpers._
 import controllers.routes.VatThresholdController
 
 class VatThresholdControllerISpec extends IntegrationStubbing {
@@ -25,7 +25,7 @@ class VatThresholdControllerISpec extends IntegrationStubbing {
   class Setup extends SetupHelper()
 
   "VatThresholds" should {
-    "return valid threhold amount and change date for given date" in new Setup {
+    "return valid threshold amount and change date for given date" in new Setup {
       val response = await(client(VatThresholdController.getThresholdForDate("2001-06-04").url).get())
 
       response.status shouldBe OK

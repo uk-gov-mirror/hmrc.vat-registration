@@ -16,17 +16,10 @@
 
 package services
 
-import java.io.FileInputStream
-
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models.VatThreshold
-import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import play.api.libs.json.{JsValue, Json}
-
-import scala.collection.immutable.Map
-import scala.util.parsing.json.JSON
 
 class VatThresholdServiceSpec extends VatRegSpec with VatRegistrationFixture {
 

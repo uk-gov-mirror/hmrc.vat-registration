@@ -34,7 +34,7 @@ import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
 import play.api.libs.json.{JsValue, Json}
-import play.api.test.Helpers.OK
+import play.api.test.Helpers._
 import repositories.{RegistrationRepository, SequenceRepository}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
 
@@ -62,7 +62,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
 
     "successfully return a future string when mockSubmission = false" in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
-        .thenReturn(Some(vatScheme.copy(returns = Some(Returns(true,"",Some("foo"),StartDate(Some(LocalDate.now)))))))
+        .thenReturn(Future.successful(Some(vatScheme.copy(returns = Some(Returns(true,"",Some("foo"),StartDate(Some(LocalDate.now))))))))
       when(mockSequenceRepository.getNext(any())(any())).thenReturn(Future.successful(100))
       when(mockRegistrationRepository.prepareRegistrationSubmission(RegistrationId(anyString()), any(), any())(any())).thenReturn(Future.successful(true))
       when(mockCompanyRegConnector.fetchCompanyRegistrationDocument(RegistrationId(anyString()))(any())).thenReturn(Future.successful(HttpResponse(200, Some(transactionIdJson))))
@@ -81,7 +81,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
     }
     "successfully submit to des using mockSubmission = true" in new Setup(true) {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
-        .thenReturn(Some(vatScheme.copy(returns = Some(Returns(true,"",Some("foo"),StartDate(Some(LocalDate.now)))))))
+        .thenReturn(Future.successful(Some(vatScheme.copy(returns = Some(Returns(true,"",Some("foo"),StartDate(Some(LocalDate.now))))))))
       when(mockSequenceRepository.getNext(any())(any())).thenReturn(Future.successful(100))
       when(mockRegistrationRepository.prepareRegistrationSubmission(RegistrationId(anyString()), any(), any())(any())).thenReturn(Future.successful(true))
       when(mockRegistrationRepository.saveTransId(any(),RegistrationId(anyString()))(any())).thenReturn(Future.successful("transID"))
@@ -133,7 +133,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
 
     "throw a NoVatSchemeWithTransId exception if the vat scheme was not found for the provided transaction id" in new Setup {
       when(mockRegistrationRepository.fetchRegByTxId(ArgumentMatchers.any())(ArgumentMatchers.any()))
-        .thenReturn(None)
+        .thenReturn(Future.successful(None))
 
       intercept[NoVatSchemeWithTransId](await(service.getRegistrationIDByTxId("testRegId")))
     }
@@ -147,21 +147,21 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
 
     "throw an exception if the document is not available" in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
-        .thenReturn(None)
+        .thenReturn(Future.successful(None))
 
       intercept[MissingRegDocument](await(service.ensureAcknowledgementReference(regId, VatRegStatus.draft)))
     }
 
     "get the acknowledgement references if they are available" in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
-        .thenReturn(Some(vatScheme))
+        .thenReturn(Future.successful(Some(vatScheme)))
 
       await(service.ensureAcknowledgementReference(regId, VatRegStatus.draft)) shouldBe "testref"
     }
 
     "generate acknowledgment reference if it does not exist" in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
-        .thenReturn(Some(vatScheme.copy(status = VatRegStatus.draft, acknowledgementReference = None)))
+        .thenReturn(Future.successful(Some(vatScheme.copy(status = VatRegStatus.draft, acknowledgementReference = None))))
       when(mockSequenceRepository.getNext(ArgumentMatchers.eq("AcknowledgementID"))(ArgumentMatchers.any())).thenReturn(sequenceNo.pure)
       when(mockRegistrationRepository.prepareRegistrationSubmission(RegistrationId(anyString()), ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
         .thenReturn(Future.successful(true))
@@ -175,21 +175,21 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
 
     "throw an exception if the document is not available" in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
-        .thenReturn(None)
+        .thenReturn(Future.successful(None))
 
       intercept[MissingRegDocument](await(service.getValidDocumentStatus(regId)))
     }
 
     "throw an exception if the document is not locked or draft" in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
-        .thenReturn(Some(vatScheme.copy(status = VatRegStatus.cancelled)))
+        .thenReturn(Future.successful(Some(vatScheme.copy(status = VatRegStatus.cancelled))))
 
       intercept[InvalidSubmissionStatus](await(service.getValidDocumentStatus(regId)))
     }
 
     "return the status as being draft" in new Setup {
       when(mockRegistrationRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
-        .thenReturn(Some(vatScheme))
+        .thenReturn(Future.successful(Some(vatScheme)))
 
       await(service.getValidDocumentStatus(regId)) shouldBe VatRegStatus.draft
     }

@@ -63,7 +63,7 @@ class IncorporationInformationControllerSpec extends VatRegSpec with VatRegistra
 
       val res = controller.getIncorporationInformation(txId)(FakeRequest())
       status(res) shouldBe OK
-      await(contentAsJson(res)) shouldBe Json.toJson(iiStatus)
+      contentAsJson(res) shouldBe Json.toJson(iiStatus)
     }
   }
 }

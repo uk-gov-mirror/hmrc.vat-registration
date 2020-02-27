@@ -20,14 +20,10 @@ import cats.instances.FutureInstances
 import mocks.VatMocks
 import org.mockito.Mockito.reset
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, Inside, ParallelTestExecution}
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.{BeforeAndAfterEach, Inside, Matchers, ParallelTestExecution, WordSpec}
 
-trait VatRegSpec extends UnitSpec
-  with Inside with MockitoSugar with VatMocks with FutureAssertions
-  with BeforeAndAfterEach with FutureInstances  with ParallelTestExecution {
-
-
+trait VatRegSpec extends WordSpec with Matchers with Inside with MockitoSugar with VatMocks with FutureAssertions
+  with BeforeAndAfterEach with FutureInstances with ParallelTestExecution {
 
   override def beforeEach() {
     reset(mockRegistrationService)

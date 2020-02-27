@@ -62,7 +62,7 @@ class VatThresholdControllerSpec extends VatRegSpec with VatRegistrationFixture 
       when(mockVatThresholdService.getThresholdForGivenDate(any())).thenReturn(Some(VatThreshold(date("2011-04-01"), "73000")))
       val result = controller.getThresholdForDate("2012-03-20")(FakeRequest())
       status(result) shouldBe OK
-      await(contentAsJson(result)) shouldBe returnObj
+      contentAsJson(result) shouldBe returnObj
     }
 
     "return 404 if requested date is before any known thresholds" in new Setup {

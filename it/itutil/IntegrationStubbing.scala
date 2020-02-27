@@ -17,7 +17,7 @@ package itutil
 
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor, urlMatching}
 import models.api.VatScheme
-import play.api.test.Helpers.OK
+import play.api.test.Helpers._
 import reactivemongo.api.commands.WriteResult
 import uk.gov.hmrc.auth.core.AuthenticateHeaderParser
 

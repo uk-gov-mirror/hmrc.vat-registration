@@ -24,7 +24,9 @@ import models.api.SicAndCompliance
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
+import play.api.test.Helpers._
 import repositories.RegistrationMongoRepository
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

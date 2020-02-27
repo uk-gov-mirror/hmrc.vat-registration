@@ -23,16 +23,16 @@ import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{Matchers, WordSpec}
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import services.SubmissionService
-import uk.gov.hmrc.http.{HttpExceptions, Upstream5xxResponse}
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.http.Upstream5xxResponse
 
 import scala.concurrent.Future
 
-class ProcessIncorporationsControllerSpec extends UnitSpec with MockitoSugar  {
+class ProcessIncorporationsControllerSpec extends WordSpec with Matchers with MockitoSugar  {
 
   implicit val as = ActorSystem()
   implicit val mat = ActorMaterializer()
@@ -107,7 +107,7 @@ class ProcessIncorporationsControllerSpec extends UnitSpec with MockitoSugar  {
 
       val request = FakeRequest().withBody[JsObject](rejectedIncorpJson)
 
-      val result = await(call(controller.processIncorp, request))
+      val result = call(controller.processIncorp, request)
 
       status(result) shouldBe 200
 
@@ -122,7 +122,7 @@ class ProcessIncorporationsControllerSpec extends UnitSpec with MockitoSugar  {
 
       val request = FakeRequest().withBody[JsObject](rejectedIncorpJson)
 
-      val result = await(call(controller.processIncorp, request))
+      val result = call(controller.processIncorp, request)
 
       status(result) shouldBe 400
 

@@ -24,17 +24,16 @@ import play.api.Configuration
 import play.api.libs.json.{JsString, Reads, Writes}
 import play.api.libs.ws.WSClient
 import play.api.test.FakeApplication
+import play.api.test.Helpers._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.WriteResult
 import repositories.{RegistrationMongo, RegistrationMongoRepository, SequenceMongo, SequenceMongoRepository}
 import uk.gov.hmrc.crypto.{CompositeSymmetricCrypto, CryptoWithKeysFromConfig}
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait IntegrationSpecBase extends UnitSpec
-  with OneServerPerSuite with ScalaFutures with IntegrationPatience with Matchers
+trait IntegrationSpecBase extends WordSpec with OneServerPerSuite with ScalaFutures with IntegrationPatience with Matchers
   with WiremockHelper with BeforeAndAfterEach with BeforeAndAfterAll {
 
   val cryptoForTest: CryptoSCRS = new CryptoSCRS {
@@ -85,7 +84,7 @@ trait IntegrationSpecBase extends UnitSpec
     await(sequenceRepository.drop)
     await(sequenceRepository.ensureIndexes)
 
-    def insertIntoDb(vatScheme: VatScheme): Future[WriteResult] = {
+    def insertIntoDb(vatScheme: VatScheme): WriteResult = {
       val count =  await(repo.count)
       val res = await(repo.insert(vatScheme))
       await(repo.count) shouldBe count + 1

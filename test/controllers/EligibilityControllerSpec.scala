@@ -90,7 +90,7 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
       val result = controller.getEligibility("testId")(FakeRequest())
       status(result) shouldBe 200
-      await(contentAsJson(result)) shouldBe validEligibilityJson
+      contentAsJson(result) shouldBe validEligibilityJson
     }
 
     "returns 204 if none found" in new Setup {
@@ -132,7 +132,7 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
       val result = controller.updateEligibility("testId")(FakeRequest().withBody[JsObject](upsertEligibilityJson))
       status(result) shouldBe 200
-      await(contentAsJson(result)) shouldBe upsertEligibilityJson
+      contentAsJson(result) shouldBe upsertEligibilityJson
     }
 
     "returns 400 if json received is invalid" in new Setup {
@@ -167,7 +167,7 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
       val res = controller.getEligibilityData(regId.value)(FakeRequest())
       status(res) shouldBe 200
-      await(contentAsJson(res)) shouldBe json
+      contentAsJson(res) shouldBe json
     }
     "return 204 when nothing exists" in new Setup {
       AuthorisationMocks.mockAuthorised(regId.value, internalid)

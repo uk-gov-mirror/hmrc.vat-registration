@@ -39,17 +39,17 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
   import play.api.test.Helpers._
 
-  val vatLodgingOfficer       = LodgingOfficer(
-    dob                       = Some(LocalDate.of(1980, 1, 1)),
-    nino                      = "NB666666C",
-    role                      = "director",
-    name                      = name,
-    ivPassed                  = None,
-    details                   = None
+  val vatLodgingOfficer = LodgingOfficer(
+    dob = Some(LocalDate.of(1980, 1, 1)),
+    nino = "NB666666C",
+    role = "director",
+    name = name,
+    ivPassed = None,
+    details = None
   )
 
   class Setup {
-    val controller = new VatRegistrationController{
+    val controller = new VatRegistrationController {
       override val registrationService: RegistrationService = mockRegistrationService
       override val submissionService: SubmissionService = mockSubmissionService
       override val registrationRepository: RegistrationMongoRepository = mockRegistrationMongoRepository
@@ -71,34 +71,34 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
     "return 201 if a new VAT scheme is successfully created" in new Setup {
       AuthorisationMocks.mockAuthenticated(internalid)
 
-      ServiceMocks.mockSuccessfulCreateNewRegistration(regId,internalid)
+      ServiceMocks.mockSuccessfulCreateNewRegistration(regId, internalid)
       controller.newVatRegistration()(FakeRequest()) returnsStatus CREATED
     }
 
     "call to retrieveVatScheme return Ok with VatScheme" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      AuthorisationMocks.mockAuthorised(regId.value, internalid)
       ServiceMocks.mockRetrieveVatScheme(regId, vatScheme)
 
       controller.retrieveVatScheme(regId)(FakeRequest()) returnsStatus OK
     }
 
     "call to retrieveVatScheme return ServiceUnavailable" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      AuthorisationMocks.mockAuthorised(regId.value, internalid)
       ServiceMocks.mockRetrieveVatSchemeThrowsException(regId)
 
       controller.retrieveVatScheme(regId)(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
     }
 
     "return 503 if RegistrationService encounters any problems" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      ServiceMocks.mockFailedCreateNewRegistration(regId,internalid)
+      AuthorisationMocks.mockAuthorised(regId.value, internalid)
+      ServiceMocks.mockFailedCreateNewRegistration(regId, internalid)
 
       controller.newVatRegistration()(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
     }
 
     "return 503 if RegistrationService encounters any problems with the DB" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      ServiceMocks.mockFailedCreateNewRegistrationWithDbError(regId,internalid)
+      AuthorisationMocks.mockAuthorised(regId.value, internalid)
+      ServiceMocks.mockFailedCreateNewRegistrationWithDbError(regId, internalid)
 
       controller.newVatRegistration()(FakeRequest()) returnsStatus SERVICE_UNAVAILABLE
     }
@@ -109,12 +109,12 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       val accountNumber = "12345678"
       val sortCode = "12-34-56"
       val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
-      val bankAccount = BankAccount(true,Some(bankAccountDetails))
+      val bankAccount = BankAccount(true, Some(bankAccountDetails))
 
       when(mockRegistrationMongo.store).thenReturn(mockRegistrationMongoRepository)
 
       "return a 200 if the update to mongo was successful" in new Setup {
-        AuthorisationMocks.mockAuthorised(regId.value,internalid)
+        AuthorisationMocks.mockAuthorised(regId.value, internalid)
         when(mockRegistrationMongoRepository.updateBankAccount(any(), any())(any()))
           .thenReturn(Future.successful(bankAccount))
 
@@ -122,9 +122,9 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
           Json.obj(
             "isProvided" -> true,
             "details" -> Json.obj(
-              "name"     -> "testAccountName",
+              "name" -> "testAccountName",
               "sortCode" -> sortCode,
-              "number"   -> accountNumber
+              "number" -> accountNumber
             )
           )
         )
@@ -141,35 +141,35 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
       val bankAccount = BankAccount(true, Some(bankAccountDetails))
 
-        "return a 200 if the fetch from mongo was successful" in new Setup {
-          AuthorisationMocks.mockAuthorised(regId.value, internalid)
-          when(mockRegistrationMongoRepository.fetchBankAccount(any())(any()))
-            .thenReturn(Future.successful(Some(bankAccount)))
+      "return a 200 if the fetch from mongo was successful" in new Setup {
+        AuthorisationMocks.mockAuthorised(regId.value, internalid)
+        when(mockRegistrationMongoRepository.fetchBankAccount(any())(any()))
+          .thenReturn(Future.successful(Some(bankAccount)))
 
-          val expected = Json.obj(
-            "isProvided" -> true,
-            "details" -> Json.obj(
-              "name" -> "testAccountName",
-              "sortCode" -> sortCode,
-              "number" -> accountNumber
-            )
+        val expected = Json.obj(
+          "isProvided" -> true,
+          "details" -> Json.obj(
+            "name" -> "testAccountName",
+            "sortCode" -> sortCode,
+            "number" -> accountNumber
           )
+        )
 
-          val result = controller.fetchBankAccountDetails(regId.value)(FakeRequest())
-          status(result) shouldBe OK
-          await(contentAsJson(result)) shouldBe expected
-        }
-
-        "return a 404 if the fetch from mongo returned nothing" in new Setup {
-          AuthorisationMocks.mockAuthorised(regId.value, internalid)
-          when(mockRegistrationMongoRepository.fetchBankAccount(any())(any()))
-            .thenReturn(Future.successful(None))
-
-          val result = controller.fetchBankAccountDetails(regId.value)(FakeRequest())
-          status(result) shouldBe NOT_FOUND
-
-        }
+        val result = controller.fetchBankAccountDetails(regId.value)(FakeRequest())
+        status(result) shouldBe OK
+        contentAsJson(result) shouldBe expected
       }
+
+      "return a 404 if the fetch from mongo returned nothing" in new Setup {
+        AuthorisationMocks.mockAuthorised(regId.value, internalid)
+        when(mockRegistrationMongoRepository.fetchBankAccount(any())(any()))
+          .thenReturn(Future.successful(None))
+
+        val result = controller.fetchBankAccountDetails(regId.value)(FakeRequest())
+        status(result) shouldBe NOT_FOUND
+
+      }
+    }
 
     "fetchReturns" should {
       val registrationId = "reg-12345"
@@ -190,7 +190,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
         val result = controller.fetchReturns(regId.value)(FakeRequest())
         status(result) shouldBe OK
-        await(contentAsJson(result)) shouldBe expected
+        contentAsJson(result) shouldBe expected
       }
 
       "return a NOT_FOUND if the returns is not present" in new Setup {
@@ -208,7 +208,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       import Returns._
 
       val registrationId = "reg-12345"
-      val startDate = StartDate(Some(LocalDate of (1990, 10, 10)))
+      val startDate = StartDate(Some(LocalDate of(1990, 10, 10)))
       val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN), startDate)
 
       when(mockRegistrationMongo.store).thenReturn(mockRegistrationMongoRepository)
@@ -269,11 +269,11 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
         val result = controller.getDocumentStatus(regId)(FakeRequest())
         result returnsStatus OK
-        await(contentAsJson(result)) shouldBe json
+        contentAsJson(result) shouldBe json
       }
 
       "return a Not Found response if there is no VAT Registration for the user's ID" in new Setup {
-        AuthorisationMocks.mockAuthMongoResourceNotFound(regId.value,internalid)
+        AuthorisationMocks.mockAuthMongoResourceNotFound(regId.value, internalid)
 
         status(controller.getDocumentStatus(regId)(FakeRequest())) shouldBe NOT_FOUND
       }
@@ -312,7 +312,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
     }
 
     "return an exception if the Submission Service can't make a DES submission" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      AuthorisationMocks.mockAuthorised(regId.value, internalid)
       ServiceMocks.mockRetrieveVatScheme(regId, vatScheme)
 
       val idMatcher: RegistrationId = RegistrationId(anyString())
@@ -322,7 +322,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
       val response = intercept[Upstream5xxResponse](await(controller.submitVATRegistration(regId)(FakeRequest())))
 
-     response shouldBe Upstream5xxResponse("message", 501, 1)
+      response shouldBe Upstream5xxResponse("message", 501, 1)
     }
 
     "return an Ok response with acknowledgement reference for a valid submit" in new Setup {
@@ -335,7 +335,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
 
       val response = controller.submitVATRegistration(regId)(FakeRequest())
       status(response) shouldBe Status.OK
-      await(contentAsJson(response)) shouldBe Json.toJson("BRVT00000000001")
+      contentAsJson(response) shouldBe Json.toJson("BRVT00000000001")
     }
   }
 
@@ -343,14 +343,14 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
     "pass" when {
       "given a transactionid" in new Setup {
         when(mockRegistrationService.clearDownDocument(any())(any())).thenReturn(Future.successful(true))
-        val resp = await(controller.clearDownDocument("TransID")(FakeRequest()))
+        val resp = controller.clearDownDocument("TransID")(FakeRequest())
         status(resp) shouldBe Status.OK
       }
     }
     "fail" when {
       "given a transactionid that isn't found in mongo" in new Setup {
         when(mockRegistrationService.clearDownDocument(any())(any())).thenReturn(Future.successful(false))
-        val resp = await(controller.clearDownDocument("TransID")(FakeRequest()))
+        val resp = controller.clearDownDocument("TransID")(FakeRequest())
         status(resp) shouldBe Status.INTERNAL_SERVER_ERROR
       }
     }
@@ -367,7 +367,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
         lazy val fakeRequest: FakeRequest[JsValue] =
           FakeRequest().withBody[JsValue](Json.parse("""{"transactionID":"transId"}"""))
 
-        val resp = await(controller.saveTransId(regId)(fakeRequest))
+        val resp = controller.saveTransId(regId)(fakeRequest)
         status(resp) shouldBe Status.OK
       }
     }
@@ -379,7 +379,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       when(mockRegistrationService.getBlockFromEligibilityData[TurnoverEstimates](any())(any(), any()))
         .thenReturn(Future.successful(Some(TurnoverEstimates(None, Some(2024)))))
 
-      val result = await(controller.getTurnoverEstimates(regId.value)(FakeRequest()))
+      val result = controller.getTurnoverEstimates(regId.value)(FakeRequest())
       val expectedJson: JsValue = Json.obj("turnoverEstimate" -> 2024)
 
       status(result) shouldBe 200
@@ -391,7 +391,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       when(mockRegistrationService.getBlockFromEligibilityData[TurnoverEstimates](any())(any(), any()))
         .thenReturn(Future.successful(None))
 
-      val result = await(controller.getTurnoverEstimates(regId.value)(FakeRequest()))
+      val result = controller.getTurnoverEstimates(regId.value)(FakeRequest())
       status(result) shouldBe 204
     }
 
@@ -400,7 +400,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       when(mockRegistrationService.getBlockFromEligibilityData[TurnoverEstimates](any())(any(), any()))
         .thenReturn(Future.failed(MissingRegDocument(regId)))
 
-      val result = await(controller.getTurnoverEstimates(regId.value)(FakeRequest()))
+      val result = controller.getTurnoverEstimates(regId.value)(FakeRequest())
       status(result) shouldBe 404
     }
   }
@@ -416,7 +416,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       when(mockRegistrationService.getBlockFromEligibilityData[Threshold](any())(any(), any()))
         .thenReturn(Future.successful(Some(threshold)))
 
-      val result = await(controller.getThreshold(regId.value)(FakeRequest()))
+      val result = controller.getThreshold(regId.value)(FakeRequest())
       val expectedJson: JsValue = Json.obj("mandatoryRegistration" -> true,
         "thresholdPreviousThirtyDays" -> "2016-05-12",
         "thresholdInTwelveMonths" -> "2016-06-25")
@@ -430,7 +430,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       when(mockRegistrationService.getBlockFromEligibilityData[Threshold](any())(any(), any()))
         .thenReturn(Future.successful(None))
 
-      val result = await(controller.getThreshold(regId.value)(FakeRequest()))
+      val result = controller.getThreshold(regId.value)(FakeRequest())
       status(result) shouldBe 204
     }
 
@@ -439,7 +439,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
       when(mockRegistrationService.getBlockFromEligibilityData[Threshold](any())(any(), any()))
         .thenReturn(Future.failed(MissingRegDocument(regId)))
 
-      val result = await(controller.getThreshold(regId.value)(FakeRequest()))
+      val result = controller.getThreshold(regId.value)(FakeRequest())
       status(result) shouldBe 404
     }
   }

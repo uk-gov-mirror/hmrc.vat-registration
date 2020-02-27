@@ -17,14 +17,15 @@
 package itutil
 
 import cats.data.{EitherT, OptionT}
+import org.scalatest.{Matchers, WordSpec}
 import org.scalatest.concurrent.ScalaFutures
 import play.api.mvc.Result
-import uk.gov.hmrc.play.test.UnitSpec
+import play.api.test.Helpers._
 
 import scala.concurrent.Future
 
 trait FutureAssertions extends ScalaFutures {
-  self: UnitSpec =>
+  self: WordSpec with Matchers =>
 
   implicit class PlayFutureResultReturns(f: Future[Result]) {
 
