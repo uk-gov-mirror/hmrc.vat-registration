@@ -111,7 +111,7 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
 
         val result = controller.updateIVStatus("testId", true)(FakeRequest())
         status(result) shouldBe 200
-        await(contentAsJson(result)) shouldBe JsBoolean(true)
+        contentAsJson(result) shouldBe JsBoolean(true)
       }
     }
 
@@ -140,7 +140,7 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
 
       val result = controller.getLodgingOfficerData("testId")(FakeRequest())
       status(result) shouldBe 200
-      await(contentAsJson(result)) shouldBe validLodgingOfficerJson
+      contentAsJson(result) shouldBe validLodgingOfficerJson
     }
 
     "returns 204 if none found" in new Setup {
@@ -186,7 +186,7 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
 
       val result = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
       status(result) shouldBe 200
-      await(contentAsJson(result)) shouldBe upsertLodgingOfficerJson
+      contentAsJson(result) shouldBe upsertLodgingOfficerJson
     }
 
     "returns 400 if json received is invalid" in new Setup {

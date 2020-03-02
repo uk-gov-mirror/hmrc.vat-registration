@@ -18,13 +18,12 @@ package connectors
 
 import java.time.LocalDate
 
-import common.{RegistrationId, TransactionId}
-import common.exceptions.{GenericError, ResourceNotFound}
+import common.TransactionId
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import play.api.libs.json.{JsValue, Json}
-import play.api.test.Helpers.OK
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException, Upstream4xxResponse}
+import play.api.libs.json.Json
+import play.api.test.Helpers._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
 
 class IncorporationInformationConnectorSpec extends VatRegSpec with VatRegistrationFixture {
 
@@ -102,9 +101,9 @@ class IncorporationInformationConnectorSpec extends VatRegSpec with VatRegistrat
       val upstream4xx = new NotFoundException("Bad request")
       mockHttpFailedGET("anyUrl", upstream4xx)
 
-      intercept[NotFoundException](await(
+      intercept[NotFoundException](
         await(connector.getCompanyName(regId, TransactionId("any")))
-      ))
+      )
     }
   }
 

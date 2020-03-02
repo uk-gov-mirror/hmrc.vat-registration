@@ -16,12 +16,11 @@
 
 package controllers.test
 
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.play.test.UnitSpec
 
-class FeatureSwitchControllerSpec extends UnitSpec with BeforeAndAfterEach {
+class FeatureSwitchControllerSpec extends WordSpec with Matchers with BeforeAndAfterEach {
 
   override def beforeEach() {
     System.clearProperty("feature.mockSubmission")
@@ -36,7 +35,7 @@ class FeatureSwitchControllerSpec extends UnitSpec with BeforeAndAfterEach {
     "return a 200 and display all feature flags and their " in new Setup {
       val result = controller.show(FakeRequest())
       status(result) shouldBe 200
-      contentAsString(await(result)) shouldBe "mockSubmission false\n"
+      contentAsString(result) shouldBe "mockSubmission false\n"
     }
   }
 
@@ -48,7 +47,7 @@ class FeatureSwitchControllerSpec extends UnitSpec with BeforeAndAfterEach {
 
       val result = controller.switch(featureName, featureState)(FakeRequest())
       status(result) shouldBe OK
-      contentAsString(await(result)) shouldBe "BooleanFeatureSwitch(mockSubmission,false)"
+      contentAsString(result) shouldBe "BooleanFeatureSwitch(mockSubmission,false)"
     }
 
     "return a mockSubmission feature state set to true when we specify on" in new Setup {
@@ -57,7 +56,7 @@ class FeatureSwitchControllerSpec extends UnitSpec with BeforeAndAfterEach {
 
       val result = controller.switch(featureName, featureState)(FakeRequest())
       status(result) shouldBe OK
-      contentAsString(await(result)) shouldBe "BooleanFeatureSwitch(mockSubmission,true)"
+      contentAsString(result) shouldBe "BooleanFeatureSwitch(mockSubmission,true)"
     }
 
     "return a submissionCheck feature state set to false as a default when we specify xxxx" in new Setup {
@@ -66,7 +65,7 @@ class FeatureSwitchControllerSpec extends UnitSpec with BeforeAndAfterEach {
 
       val result = controller.switch(featureName, featureState)(FakeRequest())
       status(result) shouldBe OK
-      contentAsString(await(result)) shouldBe "BooleanFeatureSwitch(mockSubmission,false)"
+      contentAsString(result) shouldBe "BooleanFeatureSwitch(mockSubmission,false)"
     }
 
     "return a bad request when we specify a non implemented feature name" in new Setup {

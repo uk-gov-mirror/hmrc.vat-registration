@@ -18,30 +18,29 @@ package auth
 
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
+import org.scalatest.{Matchers, WordSpec}
 import org.scalatest.mockito.MockitoSugar
 import play.api.http.Status
 import play.api.libs.json.Json
-import play.api.mvc.Action
+import play.api.mvc.{Action, AnyContent}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.retrieve.Retrievals._
-
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AuthClient101Spec extends UnitSpec with MockitoSugar {
+class AuthClient101Spec extends WordSpec with Matchers with MockitoSugar {
   val mockAuthConnector = mock[AuthConnector]
 
   object TestController extends BaseController with AuthorisedFunctions {
     override val authConnector = mockAuthConnector
 
-    def isAuthorised = Action.async { implicit request =>
+    def isAuthorised: Action[AnyContent] = Action.async { implicit request =>
       authorised() {
         Future.successful(Ok("fjndgjfn"))
       } recover {
@@ -49,7 +48,7 @@ class AuthClient101Spec extends UnitSpec with MockitoSugar {
       }
     }
 
-    def isAuthorisedWithData = Action.async { implicit request =>
+    def isAuthorisedWithData: Action[AnyContent] = Action.async { implicit request =>
       authorised().retrieve(internalId) {
         id => Future.successful(id.fold(NoContent)(s => Ok(s)))
       } recover {
@@ -57,7 +56,7 @@ class AuthClient101Spec extends UnitSpec with MockitoSugar {
       }
     }
 
-    def isAuthorisedWithCredId = Action.async { implicit request =>
+    def isAuthorisedWithCredId: Action[AnyContent] = Action.async { implicit request =>
       authorised().retrieve(credentials) {
         cred => Future.successful(Ok(cred.providerId))
       } recover {
@@ -65,7 +64,7 @@ class AuthClient101Spec extends UnitSpec with MockitoSugar {
       }
     }
 
-    def isAuthorisedWithExternalIdAndCredId = Action.async { implicit request =>
+    def isAuthorisedWithExternalIdAndCredId: Action[AnyContent] = Action.async { implicit request =>
       authorised().retrieve(externalId and credentials) {
         case Some(id) ~ cred =>
           val json = Json.obj("externalId" -> id, "providerId" -> cred.providerId)

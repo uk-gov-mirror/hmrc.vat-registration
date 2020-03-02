@@ -50,7 +50,7 @@ class SicAndComplianceControllerSpec extends VatRegSpec with VatRegistrationFixt
 
       val result = controller.getSicAndCompliance(regId.value)(FakeRequest())
       status(result) shouldBe 200
-      await(contentAsJson(result)) shouldBe validSicAndComplianceJson
+      contentAsJson(result) shouldBe validSicAndComplianceJson
 
     }
     "return 204 when nothing is returned but document exists" in new Setup {
@@ -80,7 +80,7 @@ class SicAndComplianceControllerSpec extends VatRegSpec with VatRegistrationFixt
       mockUpdateSicAndComplianceFromService(Future.successful(validSicAndCompliance.get))
 
       val result = controller.updateSicAndCompliance(regId.value)(FakeRequest().withBody[JsObject](validSicAndComplianceJson))
-      await(contentAsJson(result)) shouldBe validSicAndComplianceJson
+      contentAsJson(result) shouldBe validSicAndComplianceJson
     }
     "returns 404 if regId not found" in new Setup {
       AuthorisationMocks.mockAuthorised(regId.value,internalid)

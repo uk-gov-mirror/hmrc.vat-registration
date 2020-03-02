@@ -22,10 +22,10 @@ import helpers.VatRegSpec
 import models.external.CurrentProfile
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
-import org.scalatest.BeforeAndAfterEach
+import play.api.test.Helpers._
+import uk.gov.hmrc.http.{ForbiddenException, HeaderCarrier, NotFoundException}
 
 import scala.concurrent.Future
-import uk.gov.hmrc.http.{ ForbiddenException, HeaderCarrier, NotFoundException }
 
 class BusinessRegistrationConnectorSpec extends VatRegSpec with BusinessRegistrationFixture {
 

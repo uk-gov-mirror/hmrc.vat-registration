@@ -16,8 +16,7 @@
 
 package helpers
 
-import org.scalatest.{BeforeAndAfterEach, ParallelTestExecution}
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.play.test.UnitSpec
+import org.scalatest.{BeforeAndAfterEach, Matchers, ParallelTestExecution, WordSpec}
 
-trait BaseSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach with ParallelTestExecution
+trait BaseSpec extends WordSpec with Matchers with MockitoSugar with BeforeAndAfterEach with ParallelTestExecution

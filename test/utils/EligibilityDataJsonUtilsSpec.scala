@@ -19,8 +19,7 @@ package utils
 import java.time.LocalDate
 
 import models.JsonFormatValidation
-import play.api.data.validation.ValidationError
-import play.api.libs.json.{JsObject, JsPath, Json}
+import play.api.libs.json.{JsObject, Json}
 
 class EligibilityDataJsonUtilsSpec extends JsonFormatValidation {
   "toJsObject" must {

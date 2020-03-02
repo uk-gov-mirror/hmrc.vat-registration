@@ -23,15 +23,16 @@ import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.{any, anyString, contains}
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
+import org.scalatest.{Matchers, WordSpec}
 import org.scalatest.mockito.MockitoSugar
 import play.api.libs.json.Writes
+import play.api.test.Helpers._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.http.ws.WSHttp
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future
 
-class DesConnectorSpec extends UnitSpec with MockitoSugar with HttpErrorFunctions {
+class DesConnectorSpec extends WordSpec with Matchers with MockitoSugar with HttpErrorFunctions {
 
   implicit val hc = HeaderCarrier()
   val realmockHttp = mock[WSHttp]
@@ -70,7 +71,7 @@ class DesConnectorSpec extends UnitSpec with MockitoSugar with HttpErrorFunction
     "successfully POST" in new SetupWithProxy {
       mockHttpPOST[DESSubmission, HttpResponse](s"${connector.desStubUrl}/${connector.desStubURI}", HttpResponse(202))
 
-      connector.submitToDES(validDesSubmission, "regId").status shouldBe 202
+      await(connector.submitToDES(validDesSubmission, "regId")).status shouldBe 202
     }
 
     "handle a failed POST" in new SetupWithProxy {
