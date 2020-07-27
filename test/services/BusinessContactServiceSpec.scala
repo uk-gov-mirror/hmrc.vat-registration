@@ -33,37 +33,35 @@ import scala.concurrent.Future
 class BusinessContactServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   class Setup {
-    val service = new BusinessContactService(
-      registrationMongo = mockRegistrationMongo
-    ) {
-      override val registrationRepository: RegistrationMongoRepository = mockRegistrationMongoRepository
-    }
+    val service: BusinessContactService = new BusinessContactService(
+      registrationRepository = mockRegistrationMongoRepository
+    )
   }
 
-  def getFromMongo(res: Future[Option[BusinessContact]]): OngoingStubbing[Future[Option[BusinessContact]]] = when(mockRegistrationMongoRepository.getBusinessContact(any())(any()))
-    .thenReturn(res)
+  def getFromMongo(res: Future[Option[BusinessContact]]): OngoingStubbing[Future[Option[BusinessContact]]] =
+    when(mockRegistrationMongoRepository.getBusinessContact(any())(any())).thenReturn(res)
 
-  def updateMongo(res: Future[BusinessContact]): OngoingStubbing[Future[BusinessContact]] = when(mockRegistrationMongoRepository.updateBusinessContact(any(), any())(any()))
-    .thenReturn(res)
+  def updateMongo(res: Future[BusinessContact]): OngoingStubbing[Future[BusinessContact]] =
+    when(mockRegistrationMongoRepository.updateBusinessContact(any(), any())(any())).thenReturn(res)
 
   "getBusinessContact" should {
     "return a BusinessContact Model when an entry exists in mongo for the specified regId" in new Setup {
       getFromMongo(Future.successful(validBusinessContact))
-      await(service.getBusinessContact("fooBarAndWizz")) shouldBe validBusinessContact
+      await(service.getBusinessContact("fooBarAndWizz")) mustBe validBusinessContact
     }
     "return None when no entry exists in the dataBase for the specified regId" in new Setup {
       getFromMongo(Future.successful(None))
-      await(service.getBusinessContact("bangBuzzFang")) shouldBe None
+      await(service.getBusinessContact("bangBuzzFang")) mustBe None
     }
   }
   "updateBusinessContact" should {
     "return an updated BusinessContact Model when an update successfully takes place in mongo" in new Setup {
       updateMongo(Future.successful(validBusinessContact.get))
-      await(service.updateBusinessContact("ImARegId",validBusinessContact.get)) shouldBe validBusinessContact.get
+      await(service.updateBusinessContact("ImARegId",validBusinessContact.get)) mustBe validBusinessContact.get
     }
     "return a missingRegDocument when no reg Document exists for the reg id when an update takes place" in new Setup {
       updateMongo(Future.failed(MissingRegDocument(RegistrationId("testId"))))
-      intercept[MissingRegDocument](await(service.updateBusinessContact("testId",validBusinessContact.get))) shouldBe MissingRegDocument(RegistrationId("testId"))
+      intercept[MissingRegDocument](await(service.updateBusinessContact("testId",validBusinessContact.get))) mustBe MissingRegDocument(RegistrationId("testId"))
     }
     "return new Exception when an exception is returned from the repo during an update" in new Setup {
       updateMongo(Future.failed(new Exception("foo Bar Wizz Bang")))

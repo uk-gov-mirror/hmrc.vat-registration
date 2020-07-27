@@ -19,16 +19,23 @@ package controllers
 import connectors.IncorporationInformationResponseException
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
+import models.external.IncorporationStatus
 import play.api.libs.json.Json
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.RegistrationMongoRepository
+
+import scala.concurrent.Future
 
 class IncorporationInformationControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
 
   class Setup {
-    val controller = new IncorporationInformationController(mockIIConnector,mockSubmissionService, authConnector = mockAuthConnector) {
+    val controller: IncorporationInformationController = new IncorporationInformationController(mockIIConnector,
+                                                                                                mockSubmissionService,
+                                                                                                mockAuthConnector,
+                                                                                                stubControllerComponents()) {
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
     }
   }
@@ -52,18 +59,18 @@ class IncorporationInformationControllerSpec extends VatRegSpec with VatRegistra
       AuthorisationMocks.mockAuthorised(regId.value,internalid)
       IIMocks.mockIncorporationStatusNone()
 
-      val res = controller.getIncorporationInformation(txId)(FakeRequest())
-      status(res) shouldBe OK
+      val res: Future[Result] = controller.getIncorporationInformation(txId)(FakeRequest())
+      status(res) mustBe OK
     }
 
     "return incorporation status object if found" in new Setup {
       AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      val iiStatus = incorporationStatus()
+      val iiStatus: IncorporationStatus = incorporationStatus()
       IIMocks.mockIncorporationStatus(iiStatus)
 
-      val res = controller.getIncorporationInformation(txId)(FakeRequest())
-      status(res) shouldBe OK
-      contentAsJson(res) shouldBe Json.toJson(iiStatus)
+      val res: Future[Result] = controller.getIncorporationInformation(txId)(FakeRequest())
+      status(res) mustBe OK
+      contentAsJson(res) mustBe Json.toJson(iiStatus)
     }
   }
 }

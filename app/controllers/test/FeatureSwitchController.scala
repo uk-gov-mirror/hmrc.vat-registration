@@ -17,16 +17,15 @@
 package controllers.test
 
 import javax.inject.Inject
-
-import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.{BooleanFeatureSwitch, FeatureSwitch, VATFeatureSwitches}
 
 import scala.concurrent.Future
 
-class FeatureSwitchController @Inject()() extends BaseController {
+class FeatureSwitchController @Inject()(controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
 
-  val fs =  FeatureSwitch
+  val fs: FeatureSwitch.type =  FeatureSwitch
 
   def switch(featureName: String, featureState: String): Action[AnyContent] = Action.async {
     implicit request =>

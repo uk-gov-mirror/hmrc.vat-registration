@@ -18,18 +18,17 @@ package models
 
 import java.util
 
-import auth.CryptoSCRSImpl
+import auth.CryptoSCRS
 import com.typesafe.config.ConfigFactory
 import helpers.VatRegSpec
 import models.api.{BankAccount, BankAccountDetails, BankAccountMongoFormat}
 import play.api.Configuration
-import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import org.mockito.Mockito._
 
 class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
 
-  val fullBankAccountModel = BankAccount(
+  val fullBankAccountModel: BankAccount = BankAccount(
     isProvided = true,
     details = Some(BankAccountDetails(
       name = "Test Account name",
@@ -37,7 +36,7 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
       number = "12345678"
     ))
   )
-  val fullBankAccountJson = Json.parse(
+  val fullBankAccountJson: JsValue = Json.parse(
     s"""
        |{
        |  "isProvided":true,
@@ -49,8 +48,8 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
        |}
         """.stripMargin)
 
-  val noDetailsBankAccountModel = BankAccount(isProvided = false, None)
-  val noDetailsBankAccountJson = Json.parse(
+  val noDetailsBankAccountModel: BankAccount = BankAccount(isProvided = false, None)
+  val noDetailsBankAccountJson: JsValue = Json.parse(
     s"""
        |{
        |  "isProvided":false
@@ -62,11 +61,11 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
     implicit val format: Format[BankAccount] = BankAccount.format
     "complete successfully" when {
       "from full Json" in {
-        Json.fromJson[BankAccount](fullBankAccountJson) shouldBe JsSuccess(fullBankAccountModel)
+        Json.fromJson[BankAccount](fullBankAccountJson) mustBe JsSuccess(fullBankAccountModel)
       }
       "from full Json without details" in {
         val bankAccount = BankAccount(isProvided = false, None)
-        Json.fromJson[BankAccount](noDetailsBankAccountJson) shouldBe JsSuccess(noDetailsBankAccountModel)
+        Json.fromJson[BankAccount](noDetailsBankAccountJson) mustBe JsSuccess(noDetailsBankAccountModel)
       }
     }
 
@@ -84,7 +83,7 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
            """.stripMargin
         )
         val result = Json.fromJson[BankAccount](json)
-        result shouldHaveErrors (__ \ "isProvided" -> ValidationError("error.path.missing"))
+        result shouldHaveErrors (__ \ "isProvided" -> JsonValidationError("error.path.missing"))
       }
 
       "from Json with missing name" in {
@@ -100,7 +99,7 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
         """.stripMargin)
 
         val result = Json.fromJson[BankAccount](json)
-        result shouldHaveErrors (__ \ "details" \ "name" -> ValidationError("error.path.missing"))
+        result shouldHaveErrors (__ \ "details" \ "name" -> JsonValidationError("error.path.missing"))
       }
 
       "from Json with missing number" in {
@@ -116,7 +115,7 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
         """.stripMargin)
 
         val result = Json.fromJson[BankAccount](json)
-        result shouldHaveErrors (__ \ "details" \ "number" -> ValidationError("error.path.missing"))
+        result shouldHaveErrors (__ \ "details" \ "number" -> JsonValidationError("error.path.missing"))
       }
 
       "from Json with missing sort code" in {
@@ -132,7 +131,7 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
         """.stripMargin)
 
         val result = Json.fromJson[BankAccount](json)
-        result shouldHaveErrors (__ \ "details" \ "sortCode" -> ValidationError("error.path.missing"))
+        result shouldHaveErrors (__ \ "details" \ "sortCode" -> JsonValidationError("error.path.missing"))
       }
     }
   }
@@ -140,11 +139,11 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
   "Creating Json from a BankAccount model" should {
     "succeed" when {
       "full model is given" in {
-        Json.toJson[BankAccount](fullBankAccountModel) shouldBe fullBankAccountJson
+        Json.toJson[BankAccount](fullBankAccountModel) mustBe fullBankAccountJson
       }
 
       "full model without details is given" in {
-        Json.toJson[BankAccount](noDetailsBankAccountModel) shouldBe noDetailsBankAccountJson
+        Json.toJson[BankAccount](noDetailsBankAccountModel) mustBe noDetailsBankAccountJson
       }
     }
   }
@@ -154,7 +153,7 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
     val testEncryptionKey = "YWJjZGVmZ2hpamtsbW5vcA=="
 
     val mockConfig = mock[Configuration]
-    val crypto = new CryptoSCRSImpl(mockConfig)
+    val crypto = new CryptoSCRS(mockConfig)
     when(mockConfig.underlying).thenReturn(ConfigFactory.parseString(
       s"""
          |json {
@@ -187,12 +186,12 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
 
     "write from a BankAccount case class to a correct Json representation with an encrypted account number" in {
       val writeResult = Json.toJson(bankAccount)(encryptionFormat)
-      writeResult shouldBe encryptedJson
+      writeResult mustBe encryptedJson
     }
 
     "read from a Json object with an encrypted account number to a correct BankAccount case class" in {
       val readResult = Json.fromJson(encryptedJson)(encryptionFormat).get
-      readResult shouldBe bankAccount
+      readResult mustBe bankAccount
     }
   }
 }

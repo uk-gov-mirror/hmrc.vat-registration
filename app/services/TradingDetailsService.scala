@@ -16,18 +16,13 @@
 
 package services
 
-import javax.inject.Inject
-
+import javax.inject.{Inject, Singleton}
 import models.api.TradingDetails
-import repositories.{RegistrationMongo, RegistrationMongoRepository}
+import repositories.RegistrationMongoRepository
 import scala.concurrent.{ExecutionContext, Future}
 
-class TradingDetailsService @Inject()(registrationMongo: RegistrationMongo) extends TradingDetailsSrv {
-  val registrationRepository: RegistrationMongoRepository = registrationMongo.store
-}
-
-trait TradingDetailsSrv {
-  val registrationRepository: RegistrationMongoRepository
+@Singleton
+class TradingDetailsService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
   def retrieveTradingDetails(regId: String)(implicit ec: ExecutionContext): Future[Option[TradingDetails]] = {
     registrationRepository.retrieveTradingDetails(regId)

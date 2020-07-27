@@ -16,28 +16,28 @@
 
 package models
 
-import org.scalatest.{Assertion, Matchers, WordSpec}
-import play.api.data.validation.ValidationError
-import play.api.libs.json.{JsError, JsPath, JsResult, JsSuccess}
+import org.scalatest.Assertion
+import org.scalatestplus.play.PlaySpec
+import play.api.libs.json.{JsError, JsPath, JsResult, JsSuccess, JsonValidationError}
 
-trait JsonFormatValidation extends WordSpec with Matchers {
+trait JsonFormatValidation extends PlaySpec {
 
   implicit class JsResultOps[T](res: JsResult[T]) {
 
     def resultsIn(t: T): Assertion = res match {
-      case JsSuccess(deserialisedT, path) => deserialisedT shouldBe t
+      case JsSuccess(deserialisedT, _) => deserialisedT mustBe t
       case JsError(errors) => fail(s"found errors: $errors when expected: $t")
     }
 
-    def shouldHaveErrors(expectedErrors: (JsPath, ValidationError)*): Unit = {
+    def shouldHaveErrors(expectedErrors: (JsPath, JsonValidationError)*): Unit = {
       val errorMap = Map(expectedErrors: _*)
       res match {
         case JsSuccess(t, _) => fail(s"read should have failed and didn't - produced $t")
         case JsError(errors) =>
-          errors.size shouldBe errorMap.size
+          errors.size mustBe errorMap.size
           for ((path, validationErrors) <- errors) {
-            errorMap.keySet should contain(path)
-            validationErrors should contain(errorMap(path))
+            errorMap.keySet must contain(path)
+            validationErrors must contain(errorMap(path))
           }
       }
     }

@@ -22,7 +22,7 @@ alias precommit="sbt clean coverage test it:test scalastyle coverageReport"
 User service manager to run all services required by VAT Registration backend:
 
 ```bash
-sm --start VAT_REG_DEP -f
+sm --start VAT_REG_ALL -f
 ```
 Note this will start the VAT registration backend itself too, as it's included in the profile.
 

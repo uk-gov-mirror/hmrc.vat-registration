@@ -27,15 +27,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 
-class VatRegBusinessRegistrationConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) extends BusinessRegistrationConnector {
-  //$COVERAGE-OFF$
-  lazy val businessRegUrl = backendConfig.baseUrl("business-registration")
-  //$COVERAGE-ON$
-}
-
-trait BusinessRegistrationConnector {
-  val businessRegUrl: String
-  val http: CoreGet
+class BusinessRegistrationConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient){
+  lazy val businessRegUrl: String = backendConfig.servicesConfig.baseUrl("business-registration")
 
   private val logger: Logger = LoggerFactory.getLogger(getClass)
 

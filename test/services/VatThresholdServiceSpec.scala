@@ -26,8 +26,8 @@ class VatThresholdServiceSpec extends VatRegSpec with VatRegistrationFixture {
   def date(s: String) = DateTimeFormat.forPattern("yyyy-MM-dd").parseDateTime(s)
 
   class Setup {
-    val service = new VatThresholdService {
-      val thresholds: List[VatThreshold] =
+    val service: VatThresholdService = new VatThresholdService(backendConfig) {
+      override lazy val thresholds: List[VatThreshold] =
         List[VatThreshold](
           VatThreshold(date("2001-01-01"), "1"),
           VatThreshold(date("2002-02-02"), "2"),
@@ -38,22 +38,22 @@ class VatThresholdServiceSpec extends VatRegSpec with VatRegistrationFixture {
   }
 
   "return most recent threshold for given date" in new Setup {
-    val result = service.getThresholdForGivenDate(date("2001-05-15"))
-    result shouldBe Some(VatThreshold(date("2001-01-01"), "1"))
+    val result: Option[VatThreshold] = service.getThresholdForGivenDate(date("2001-05-15"))
+    result mustBe Some(VatThreshold(date("2001-01-01"), "1"))
   }
 
   "return most updated threshold for same date edge case" in new Setup {
-    val result = service.getThresholdForGivenDate(date("2002-02-02"))
-    result shouldBe Some(VatThreshold(date("2002-02-02"), "2"))
+    val result: Option[VatThreshold] = service.getThresholdForGivenDate(date("2002-02-02"))
+    result mustBe Some(VatThreshold(date("2002-02-02"), "2"))
   }
 
   "return most recent threshold for future dates" in new Setup {
-    val result = service.getThresholdForGivenDate(date("2010-01-01"))
-    result shouldBe Some(VatThreshold(date("2004-04-04"), "4"))
+    val result: Option[VatThreshold] = service.getThresholdForGivenDate(date("2010-01-01"))
+    result mustBe Some(VatThreshold(date("2004-04-04"), "4"))
   }
 
   "return none for date before known thresholds" in new Setup {
-    val result = service.getThresholdForGivenDate(date("2000-01-01"))
-    result shouldBe None
+    val result: Option[VatThreshold] = service.getThresholdForGivenDate(date("2000-01-01"))
+    result mustBe None
   }
 }

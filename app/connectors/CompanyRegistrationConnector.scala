@@ -26,13 +26,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class CompanyRegistrationConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) extends CompanyRegistrationConnect {
-  lazy val compRegUrl = backendConfig.baseUrl("company-registration")
-}
-
-trait CompanyRegistrationConnect {
-  val compRegUrl: String
-  val http: CoreGet
+class CompanyRegistrationConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) {
+  lazy val compRegUrl: String = backendConfig.servicesConfig.baseUrl("company-registration")
 
   def fetchCompanyRegistrationDocument(regId: RegistrationId)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val prefix = "[CompanyRegistrationConnector] - [fetchCompanyRegistrationDocument] :"

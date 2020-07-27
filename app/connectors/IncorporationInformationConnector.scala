@@ -36,31 +36,11 @@ class IncorporationInformationResponseException(msg: String) extends NoStackTrac
   override def getMessage: String = msg
 }
 
-class VatRegIncorporationInformationConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) extends IncorporationInformationConnector {
-  //$COVERAGE-OFF$
-  lazy val iiUrl                  = backendConfig.baseUrl("incorporation-information")
-  lazy val iiUri                  = backendConfig.getConfString("incorporation-information.uri", "")
-  lazy val vatRegUri: String      = backendConfig.baseUrl("vat-registration")
-  //$COVERAGE-ON$
-}
+class IncorporationInformationConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) {
 
-case class IncorpStatusRequest(callbackUrl: String)
-
-object IncorpStatusRequest {
-  implicit val writes: Writes[IncorpStatusRequest] = Writes(
-    isr => Json.obj(
-      "SCRSIncorpSubscription" -> Json.obj(
-        "callbackUrl" -> s"${isr.callbackUrl}/vatreg/incorporation-data"
-      )
-    )
-  )
-}
-
-trait IncorporationInformationConnector {
-  val iiUrl: String
-  val iiUri: String
-  val http: CoreGet with CorePost
-  val vatRegUri: String
+  lazy val iiUrl: String     = backendConfig.servicesConfig.baseUrl("incorporation-information")
+  lazy val iiUri: String     = backendConfig.servicesConfig.getConfString("incorporation-information.uri", "")
+  lazy val vatRegUri: String = backendConfig.servicesConfig.baseUrl("vat-registration")
 
   private[connectors] def constructIncorporationInfoUri(transactionId: TransactionId, regime: String, subscriber: String): String = {
     s"$iiUri/subscribe/$transactionId/regime/$regime/subscriber/$subscriber"
@@ -77,12 +57,12 @@ trait IncorporationInformationConnector {
         case OK =>         Some(resp.json.as[IncorporationStatus](IncorporationStatus.iiReads))
         case ACCEPTED =>   None
         case _ =>
-           Logger.info(s"[IncorporationInformationConnector] - [getIncorporationUpdate]" +
-           s" returned a ${resp.status} response code for txId: $transactionId")
-           Logger.error(s"FAILED_VAT_SUBSCRIPTION_TO_II : Time occurred was $dtNow$registrationId")
-           throw new IncorporationInformationResponseException(
-             s"Calling II on ${constructIncorporationInfoUri(transactionId, regime, subscriber)} returned a ${resp.status}"
-           )
+          Logger.info(s"[IncorporationInformationConnector] - [getIncorporationUpdate]" +
+            s" returned a ${resp.status} response code for txId: $transactionId")
+          Logger.error(s"FAILED_VAT_SUBSCRIPTION_TO_II : Time occurred was $dtNow$registrationId")
+          throw new IncorporationInformationResponseException(
+            s"Calling II on ${constructIncorporationInfoUri(transactionId, regime, subscriber)} returned a ${resp.status}"
+          )
       }
     } recover {
       case e => Logger.info(s"[IncorporationInformationConnector] - [getIncorporationUpdate] returned a ${e} exception for txId: $transactionId")
@@ -104,3 +84,16 @@ trait IncorporationInformationConnector {
     }
   }
 }
+
+case class IncorpStatusRequest(callbackUrl: String)
+
+object IncorpStatusRequest {
+  implicit val writes: Writes[IncorpStatusRequest] = Writes(
+    isr => Json.obj(
+      "SCRSIncorpSubscription" -> Json.obj(
+        "callbackUrl" -> s"${isr.callbackUrl}/vatreg/incorporation-data"
+      )
+    )
+  )
+}
+

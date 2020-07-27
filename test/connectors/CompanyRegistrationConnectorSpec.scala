@@ -18,7 +18,7 @@ package connectors
 
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import mocks.WSHTTPMock
+import mocks.HttpClientMock
 import models.external.CurrentProfile
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
@@ -29,9 +29,9 @@ import uk.gov.hmrc.play.http.ws.WSHttp
 
 import scala.concurrent.Future
 
-class CompanyRegistrationConnectorSpec extends VatRegSpec with WSHTTPMock with VatRegistrationFixture {
+class CompanyRegistrationConnectorSpec extends VatRegSpec with HttpClientMock with VatRegistrationFixture {
 
-  val testJson = Json.parse(
+  val testJson: JsValue = Json.parse(
     """
       |{
       | "testKey" : "testValue"
@@ -39,33 +39,32 @@ class CompanyRegistrationConnectorSpec extends VatRegSpec with WSHTTPMock with V
     """.stripMargin
   )
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   class Setup {
-    val connector = new CompanyRegistrationConnect {
-      override val compRegUrl: String = "/testUrl"
-      override val http: WSHttp = mockWSHttp
+    val connector: CompanyRegistrationConnector = new CompanyRegistrationConnector(backendConfig, mockHttpClient) {
+      override lazy val compRegUrl: String = "/testUrl"
     }
   }
 
   "fetchCompanyRegistrationDocument" should {
     "return an OK with JSON body" when {
       "given a valid regId" in new Setup {
-        val okResponse = new HttpResponse {
+        val okResponse: HttpResponse = new HttpResponse {
           override def status: Int = OK
           override def json: JsValue = testJson
         }
 
         mockHttpGet[HttpResponse]("testUrl", okResponse)
 
-        val result = await(connector.fetchCompanyRegistrationDocument(regId))
-        result shouldBe okResponse
+        val result: HttpResponse = await(connector.fetchCompanyRegistrationDocument(regId))
+        result mustBe okResponse
       }
     }
 
     "throw a not found exception" when {
       "the reg document cant be found" in new Setup {
-        when(mockWSHttp.GET[CurrentProfile](ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
+        when(mockHttpClient.GET[CurrentProfile](ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
           .thenReturn(Future.failed(new NotFoundException("Bad request")))
 
         intercept[NotFoundException](await(connector.fetchCompanyRegistrationDocument(regId)))
@@ -74,7 +73,7 @@ class CompanyRegistrationConnectorSpec extends VatRegSpec with WSHTTPMock with V
 
     "throw a forbidden exception" when {
       "the request is not authorised" in new Setup {
-        when(mockWSHttp.GET[CurrentProfile](ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
+        when(mockHttpClient.GET[CurrentProfile](ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
           .thenReturn(Future.failed(new ForbiddenException("Forbidden")))
 
         intercept[ForbiddenException](await(connector.fetchCompanyRegistrationDocument(regId)))
@@ -83,7 +82,7 @@ class CompanyRegistrationConnectorSpec extends VatRegSpec with WSHTTPMock with V
 
     "throw an unchecked exception" when {
       "an unexpected response code was returned" in new Setup {
-        when(mockWSHttp.GET[CurrentProfile](ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
+        when(mockHttpClient.GET[CurrentProfile](ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
           .thenReturn(Future.failed(new RuntimeException("Runtime Exception")))
 
         intercept[Throwable](await(connector.fetchCompanyRegistrationDocument(regId)))

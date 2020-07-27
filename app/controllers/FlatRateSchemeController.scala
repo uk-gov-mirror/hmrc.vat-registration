@@ -18,25 +18,25 @@ package controllers
 
 import auth.Authorisation
 import common.exceptions.MissingRegDocument
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import models.api.FlatRateScheme
 import play.api.Logger
 import play.api.libs.json.JsValue
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import repositories.RegistrationMongoRepository
 import services.FlatRateSchemeService
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class FlatRateSchemeControllerImpl @Inject()(val flatRateSchemeService: FlatRateSchemeService,
-                                             val authConnector: AuthConnector) extends FlatRateSchemeController {
+@Singleton
+class FlatRateSchemeController @Inject()(val flatRateSchemeService: FlatRateSchemeService,
+                                             val authConnector: AuthConnector,
+                                             controllerComponents: ControllerComponents) extends BackendController(controllerComponents) with Authorisation {
 
-  val resourceConn = flatRateSchemeService.registrationRepository
-}
+  val resourceConn: RegistrationMongoRepository = flatRateSchemeService.registrationRepository
 
-trait FlatRateSchemeController extends BaseController with Authorisation {
-
-  val flatRateSchemeService: FlatRateSchemeService
 
   def fetchFlatRateScheme(regId: String): Action[AnyContent] = Action.async {
     implicit request =>

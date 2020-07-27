@@ -19,55 +19,58 @@ package mocks
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import org.mockito.{ArgumentMatchers => AM}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.Writes
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.http.ws.WSHttp
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait WSHTTPMock {
+trait HttpClientMock {
   this: MockitoSugar =>
 
-  lazy val mockWSHttp = mock[WSHttp]
+  lazy val mockHttpClient: HttpClient = mock[HttpClient]
 
   def mockHttpGet[T](url: String, thenReturn: T): OngoingStubbing[Future[T]] = {
-    when(mockWSHttp.GET[T](AM.anyString())(AM.any[HttpReads[T]](), AM.any[HeaderCarrier](), AM.any[ExecutionContext]()))
+    when(mockHttpClient.GET[T](AM.anyString())(AM.any[HttpReads[T]](), AM.any[HeaderCarrier](), AM.any[ExecutionContext]()))
       .thenReturn(Future.successful(thenReturn))
   }
 
   def mockHttpGet[T](url: String, thenReturn: Future[T]): OngoingStubbing[Future[T]] = {
-    when(mockWSHttp.GET[T](AM.anyString())(AM.any[HttpReads[T]](), AM.any[HeaderCarrier](), AM.any[ExecutionContext]()))
+    when(mockHttpClient.GET[T](AM.anyString())(AM.any[HttpReads[T]](), AM.any[HeaderCarrier](), AM.any[ExecutionContext]()))
       .thenReturn(thenReturn)
   }
 
-  def mockHttpPOST[I, O](url: String, thenReturn: O, mockWSHttp: WSHttp = mockWSHttp): OngoingStubbing[Future[O]] = {
-    when(mockWSHttp.POST[I, O](AM.anyString(), AM.any[I](), AM.any())(AM.any[Writes[I]](), AM.any[HttpReads[O]](), AM.any[HeaderCarrier](), AM.any[ExecutionContext]()))
+  def mockHttpPOST[I, O](url: String, thenReturn: O, mockWSHttp: HttpClient = mockHttpClient): OngoingStubbing[Future[O]] = {
+    when(mockWSHttp.POST[I, O](AM.anyString(), AM.any[I](), AM.any())(AM.any[Writes[I]](), AM.any[HttpReads[O]](),
+      AM.any[HeaderCarrier](), AM.any[ExecutionContext]()))
       .thenReturn(Future.successful(thenReturn))
   }
 
-  def mockHttpPUT[I, O](url: String, thenReturn: O, mockWSHttp: WSHttp = mockWSHttp): OngoingStubbing[Future[O]] = {
+  def mockHttpPUT[I, O](url: String, thenReturn: O, mockWSHttp: HttpClient = mockHttpClient): OngoingStubbing[Future[O]] = {
     when(mockWSHttp.PUT[I, O](AM.anyString(), AM.any[I]())(AM.any[Writes[I]](), AM.any[HttpReads[O]](), AM.any[HeaderCarrier](), AM.any[ExecutionContext]()))
       .thenReturn(Future.successful(thenReturn))
   }
 
-  def mockHttpPATCH[I, O](url: String, thenReturn: O, mockWSHttp: WSHttp = mockWSHttp): OngoingStubbing[Future[O]] = {
+  def mockHttpPATCH[I, O](url: String, thenReturn: O, mockWSHttp: HttpClient = mockHttpClient): OngoingStubbing[Future[O]] = {
     when(mockWSHttp.PATCH[I, O](AM.anyString(), AM.any[I]())(AM.any[Writes[I]](), AM.any[HttpReads[O]](), AM.any[HeaderCarrier](), AM.any[ExecutionContext]()))
       .thenReturn(Future.successful(thenReturn))
   }
 
 
   def mockHttpFailedGET[T](url: String, exception: Exception): OngoingStubbing[Future[T]] = {
-    when(mockWSHttp.GET[T](AM.anyString())(AM.any[HttpReads[T]](), AM.any[HeaderCarrier](), AM.any[ExecutionContext]()))
+    when(mockHttpClient.GET[T](AM.anyString())(AM.any[HttpReads[T]](), AM.any[HeaderCarrier](), AM.any[ExecutionContext]()))
       .thenReturn(Future.failed(exception))
   }
 
-  def mockHttpFailedPOST[I, O](url: String, exception: Exception, mockWSHttp: WSHttp = mockWSHttp): OngoingStubbing[Future[O]] = {
-    when(mockWSHttp.POST[I, O](AM.anyString(), AM.any[I](), AM.any())(AM.any[Writes[I]](), AM.any[HttpReads[O]](), AM.any[HeaderCarrier](), AM.any[ExecutionContext]()))
+  def mockHttpFailedPOST[I, O](url: String, exception: Exception, mockWSHttp: HttpClient = mockHttpClient): OngoingStubbing[Future[O]] = {
+    when(mockWSHttp.POST[I, O](AM.anyString(), AM.any[I](), AM.any())(AM.any[Writes[I]](), AM.any[HttpReads[O]](),
+      AM.any[HeaderCarrier](), AM.any[ExecutionContext]()))
       .thenReturn(Future.failed(exception))
   }
 
-  def mockHttpFailedPATCH[I, O](url: String, exception: Exception, mockWSHttp: WSHttp = mockWSHttp): OngoingStubbing[Future[O]] = {
+  def mockHttpFailedPATCH[I, O](url: String, exception: Exception, mockWSHttp: HttpClient = mockHttpClient): OngoingStubbing[Future[O]] = {
     when(mockWSHttp.PATCH[I, O](AM.anyString(), AM.any[I]())(AM.any[Writes[I]](), AM.any[HttpReads[O]](), AM.any[HeaderCarrier](), AM.any[ExecutionContext]()))
       .thenReturn(Future.failed(exception))
   }

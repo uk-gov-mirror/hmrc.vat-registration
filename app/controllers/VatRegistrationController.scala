@@ -16,40 +16,33 @@
 
 package controllers
 
-import auth.Authorisation
+import auth.{Authorisation, AuthorisationResource}
 import cats.instances.FutureInstances
 import common.RegistrationId
 import common.exceptions.{InvalidSubmissionStatus, LeftState}
 import enums.VatRegStatus
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import models.api._
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
-import repositories.{RegistrationMongo, RegistrationMongoRepository}
+import repositories.RegistrationMongoRepository
 import services._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class VatRegistrationControllerImpl @Inject()(val registrationService: RegistrationService,
-                                              val submissionService: SubmissionService,
-                                              val registrationMongo: RegistrationMongo,
-                                              val authConnector: AuthConnector) extends VatRegistrationController {
+@Singleton
+class VatRegistrationController @Inject()(val registrationService: VatRegistrationService,
+                                          val submissionService: SubmissionService,
+                                          val registrationRepository: RegistrationMongoRepository,
+                                          val authConnector: AuthConnector,
+                                          controllerComponents: ControllerComponents
+                                         ) extends BackendController(controllerComponents) with Authorisation with FutureInstances {
 
-  val registrationRepository: RegistrationMongoRepository = registrationMongo.store
-  val resourceConn = submissionService.registrationRepository
 
-
-}
-
-trait VatRegistrationController extends BaseController with Authorisation with FutureInstances {
-
-  val authConnector: AuthConnector
-  val registrationService: RegistrationService
-  val submissionService: SubmissionService
-  val registrationRepository: RegistrationMongoRepository
-
+  override val resourceConn: AuthorisationResource = submissionService.registrationRepository
   val errorHandler: (LeftState) => Result = err => err.toResult
 
   def newVatRegistration: Action[AnyContent] = Action.async {
@@ -95,7 +88,7 @@ trait VatRegistrationController extends BaseController with Authorisation with F
       }
   }
 
-  def submitVATRegistration(id: RegistrationId) : Action[AnyContent] = Action.async {
+  def submitVATRegistration(id: RegistrationId): Action[AnyContent] = Action.async {
     implicit request =>
       isAuthorised(id.value) { authResult =>
         authResult.ifAuthorised(id.value, "VatRegistrationController", "submitVATRegistration") {
@@ -203,4 +196,5 @@ trait VatRegistrationController extends BaseController with Authorisation with F
         }
       }
   }
+
 }

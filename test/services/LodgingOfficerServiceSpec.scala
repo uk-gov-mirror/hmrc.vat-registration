@@ -36,11 +36,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   class Setup {
-    val service = new LodgingOfficerService(
-      registrationMongo = mockRegistrationMongo
-    ) {
-      override val registrationRepository: RegistrationMongoRepository = mockRegistrationMongoRepository
-    }
+    val service: LodgingOfficerService = new LodgingOfficerService(
+      registrationRepository = mockRegistrationMongoRepository
+    )
 
     def updateIVPassedToMongo(): OngoingStubbing[Future[Boolean]] = when(mockRegistrationMongoRepository.updateIVStatus(any(),any())(any()))
       .thenReturn(Future.successful(true))
@@ -52,7 +50,7 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
       .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
   }
 
-  val upsertLodgingOfficerModel = Json.parse(
+  val upsertLodgingOfficerModel: LodgingOfficer = Json.parse(
     s"""
       |{
       | "name": {
@@ -76,7 +74,7 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
       |}
     """.stripMargin).as[LodgingOfficer]
 
-  val validLodgingOfficerModel = Json.parse(
+  val validLodgingOfficerModel: LodgingOfficer = Json.parse(
     s"""
        |{
        | "name": {
@@ -93,8 +91,8 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
   "updateIVStatus" should {
     "return a boolean" in new Setup {
       updateIVPassedToMongo()
-      val result = await(service.updateIVStatus("regId", true))
-      result shouldBe true
+      val result: Boolean = await(service.updateIVStatus("regId", true))
+      result mustBe true
     }
 
     "encounter an exception if an error occurs" in new Setup {
@@ -102,7 +100,7 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
       intercept[Exception](await(service.updateIVStatus("regId", true)))
     }
 
-    "encounter an MissingRegDocument Exception if no docuemnt is found" in new Setup {
+    "encounter an MissingRegDocument Exception if no document is found" in new Setup {
       updateIVPassedToMongoNoRegDoc()
       intercept[MissingRegDocument](await(service.updateIVStatus("regId", true)))
     }
@@ -113,16 +111,16 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
       when(mockRegistrationMongoRepository.getCombinedLodgingOfficer(any())(any()))
         .thenReturn(Future.successful(Some(validLodgingOfficerPreIV)))
 
-      val result = await(service.getLodgingOfficerData("regId"))
-      result shouldBe Some(validLodgingOfficerModel)
+      val result: Option[LodgingOfficer] = await(service.getLodgingOfficerData("regId"))
+      result mustBe Some(validLodgingOfficerModel)
     }
 
     "return None if none found matching regId" in new Setup {
       when(mockRegistrationMongoRepository.getCombinedLodgingOfficer(any())(any()))
         .thenReturn(Future.successful(None))
 
-      val result = await(service.getLodgingOfficerData("regId"))
-      result shouldBe None
+      val result: Option[LodgingOfficer] = await(service.getLodgingOfficerData("regId"))
+      result mustBe None
     }
   }
 
@@ -145,12 +143,12 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
          |}
         """.stripMargin).as[JsObject]
 
-    "return the data that is being inputed" in new Setup {
+    "return the data that is being inputted" in new Setup {
       when(mockRegistrationMongoRepository.patchLodgingOfficer(any(),any())(any()))
         .thenReturn(Future.successful(lodgeOfficerJson))
 
-      val result = await(service.updateLodgingOfficerData("regId", lodgeOfficerJson))
-      result shouldBe lodgeOfficerJson
+      val result: JsObject = await(service.updateLodgingOfficerData("regId", lodgeOfficerJson))
+      result mustBe lodgeOfficerJson
     }
 
     "encounter an exception if an error occurs" in new Setup {
@@ -160,7 +158,7 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
       intercept[Exception](await(service.updateLodgingOfficerData("regId", lodgeOfficerJson)))
     }
 
-    "encounter an MissingRegDocument Exception if no docuemnt is found" in new Setup {
+    "encounter an MissingRegDocument Exception if no document is found" in new Setup {
       when(mockRegistrationMongoRepository.patchLodgingOfficer(any(),any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
 

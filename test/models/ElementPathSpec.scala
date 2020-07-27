@@ -21,22 +21,22 @@ import play.api.libs.json._
 
 class ElementPathSpec extends BaseSpec  {
 
-  val format  = ElementPath.ElementPathFormatter
+  val format: ElementPath.ElementPathFormatter.type = ElementPath.ElementPathFormatter
 
   "ElementPathFormatter" should {
 
     "writes should return name" in {
-      format.writes(VatBankAccountPath) shouldBe JsString(VatBankAccountPath.name)
-      format.writes(AccountingPeriodStartPath) shouldBe JsString(AccountingPeriodStartPath.name)
+      format.writes(VatBankAccountPath) mustBe JsString(VatBankAccountPath.name)
+      format.writes(AccountingPeriodStartPath) mustBe JsString(AccountingPeriodStartPath.name)
     }
 
     "reads should return elementPath" in {
-      format.reads(JsString(VatBankAccountPath.name)) shouldBe JsSuccess(VatBankAccountPath)
-      format.reads(JsString(AccountingPeriodStartPath.name)) shouldBe JsSuccess(AccountingPeriodStartPath)
+      format.reads(JsString(VatBankAccountPath.name)) mustBe JsSuccess(VatBankAccountPath)
+      format.reads(JsString(AccountingPeriodStartPath.name)) mustBe JsSuccess(AccountingPeriodStartPath)
     }
 
     "reads should return error for unknown name" in {
-      format.reads(JsString("Junk")) shouldBe JsError("unrecognised element name")
+      format.reads(JsString("Junk")) mustBe JsError("unrecognised element name")
     }
   }
 }

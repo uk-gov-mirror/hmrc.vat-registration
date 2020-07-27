@@ -17,24 +17,25 @@
 package controllers
 
 import auth.Authorisation
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import models.api.BusinessContact
 import play.api.libs.json.JsValue
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import repositories.RegistrationMongoRepository
 import services.BusinessContactService
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
+@Singleton
+class BusinessContactController @Inject()(val businessContactService: BusinessContactService,
+                                              val authConnector: AuthConnector,
+                                              controllerComponents: ControllerComponents
+                                         ) extends BackendController(controllerComponents) with Authorisation {
 
-class BusinessContactControllerImpl @Inject()(val businessContactService: BusinessContactService, val authConnector: AuthConnector) extends BusinessContactController {
+  val resourceConn: RegistrationMongoRepository = businessContactService.registrationRepository
 
-  val resourceConn = businessContactService.registrationRepository
-}
-
-trait BusinessContactController extends BaseController with Authorisation{
-
-val businessContactService:BusinessContactService
 
   def getBusinessContact(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
@@ -50,9 +51,9 @@ val businessContactService:BusinessContactService
       isAuthorised(regId) { authResult =>
         authResult.ifAuthorised(regId, "BusinessContactController", "updateBusinessContact") {
           withJsonBody[BusinessContact] { businessCont =>
-            businessContactService.updateBusinessContact(regId, businessCont) sendResult("updateBusinessContact",regId)
-            }
+            businessContactService.updateBusinessContact(regId, businessCont) sendResult("updateBusinessContact", regId)
           }
         }
       }
+  }
 }

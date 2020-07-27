@@ -20,7 +20,7 @@ import models.external.CurrentProfile
 
 trait BusinessRegistrationFixture {
 
-  lazy val validBusinessRegistrationResponse = CurrentProfile(
+  lazy val validBusinessRegistrationResponse: CurrentProfile = CurrentProfile(
     "12345",
     Some("director"),
     "ENG"

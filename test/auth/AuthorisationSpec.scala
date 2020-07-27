@@ -22,17 +22,19 @@ import org.mockito.Mockito._
 import org.scalatest._
 import play.api.mvc.Results
 import play.api.test.Helpers._
+import repositories.RegistrationMongoRepository
+import uk.gov.hmrc.auth.core.AuthConnector
 
 import scala.concurrent.Future
 import uk.gov.hmrc.http.HeaderCarrier
 
 class AuthorisationSpec extends VatRegSpec {
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val authorisation = new Authorisation {
-    val resourceConn = mockRegistrationMongoRepository
-    val authConnector = mockAuthConnector
+  val authorisation: Authorisation = new Authorisation {
+    val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
+    val authConnector: AuthConnector = mockAuthConnector
   }
 
   val regId = "xxx"
@@ -46,7 +48,7 @@ class AuthorisationSpec extends VatRegSpec {
         _ => Future.successful(Results.Ok)
       }
       val response = await(result)
-      response.header.status shouldBe OK
+      response.header.status mustBe OK
     }
 
     "indicate there's no logged in user where there isn't a valid bearer token" in {
@@ -57,15 +59,16 @@ class AuthorisationSpec extends VatRegSpec {
       }
 
       val response = await(result)
-      response.header.status shouldBe FORBIDDEN
+      response.header.status mustBe FORBIDDEN
     }
     "throw an exception if an exception occurs whilst calling auth" in {
-      when(mockAuthConnector.authorise[Option[String]](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(Future.failed(new Exception))
+      when(mockAuthConnector.authorise[Option[String]](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(),
+        ArgumentMatchers.any())).thenReturn(Future.failed(new Exception))
 
       val result = authorisation.isAuthenticated {
         _ => Future.successful(Results.Ok)
       }
-      an[Exception] shouldBe thrownBy(await(result))
+      an[Exception] mustBe thrownBy(await(result))
     }
   }
 
@@ -75,24 +78,24 @@ class AuthorisationSpec extends VatRegSpec {
 
       val result = authorisation.isAuthorised(regId) {
         authResult => {
-          authResult shouldBe Authorised(testInternalId)
+          authResult mustBe Authorised(testInternalId)
           Future.failed(new Exception("Something wrong"))
         }
       }
 
-      an[Exception] shouldBe thrownBy(await(result))
+      an[Exception] mustBe thrownBy(await(result))
     }
 
     "indicate there's no logged in user where there isn't a valid bearer token" in {
       AuthorisationMocks.mockNotLoggedInOrAuthenticated()
 
       val result = authorisation.isAuthorised("xxx") { authResult => {
-        authResult shouldBe NotLoggedInOrAuthorised
+        authResult mustBe NotLoggedInOrAuthorised
         Future.successful(Results.Forbidden)
       }
       }
       val response = await(result)
-      response.header.status shouldBe FORBIDDEN
+      response.header.status mustBe FORBIDDEN
     }
 
     "provided an authorised result when logged in and a consistent resource" in {
@@ -103,12 +106,12 @@ class AuthorisationSpec extends VatRegSpec {
 
       val result = authorisation.isAuthorised(regId) {
         authResult => {
-          authResult shouldBe Authorised(testInternalId)
+          authResult mustBe Authorised(testInternalId)
           Future.successful(Results.Ok)
         }
       }
       val response = await(result)
-      response.header.status shouldBe OK
+      response.header.status mustBe OK
     }
 
     "provided a not-authorised result when logged in and an inconsistent resource" in {
@@ -117,16 +120,17 @@ class AuthorisationSpec extends VatRegSpec {
 
       AuthorisationMocks.mockNotAuthorised(regId, testInternalId)
 
-      when(mockRegistrationMongoRepository.getInternalId(ArgumentMatchers.any())(ArgumentMatchers.any())).thenReturn(Future.successful(Some("fooBarFudgeWizzBang")))
+      when(mockRegistrationMongoRepository.getInternalId(ArgumentMatchers.any())(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(Some("fooBarFudgeWizzBang")))
 
       val result = authorisation.isAuthorised(regId) {
         authResult => {
-          authResult shouldBe NotAuthorised(testInternalId)
+          authResult mustBe NotAuthorised(testInternalId)
           Future.successful(Results.Ok)
         }
       }
       val response = await(result)
-      response.header.status shouldBe OK
+      response.header.status mustBe OK
     }
 
     "provide a not-found result when logged in and no resource for the identifier" in {
@@ -138,12 +142,12 @@ class AuthorisationSpec extends VatRegSpec {
       when(mockRegistrationMongoRepository.getInternalId(ArgumentMatchers.any())(ArgumentMatchers.any())).thenReturn(Future.successful(None))
 
       val result = authorisation.isAuthorised("xxx"){ authResult => {
-        authResult shouldBe AuthResourceNotFound(testInternalId)
+        authResult mustBe AuthResourceNotFound(testInternalId)
         Future.successful(Results.Ok)
       }
       }
       val response = await(result)
-      response.header.status shouldBe OK
+      response.header.status mustBe OK
     }
   }
 }

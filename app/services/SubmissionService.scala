@@ -17,7 +17,6 @@
 package services
 
 import java.time.LocalDate
-
 import javax.inject.{Inject, Singleton}
 import cats.instances.FutureInstances
 import common.exceptions._
@@ -31,32 +30,19 @@ import org.joda.time.DateTime
 import repositories._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.VATFeatureSwitches
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 @Singleton
-class SubmissionService @Inject()(val sequenceMongo: SequenceMongo,
+class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepository,
                                   val vatRegistrationService: VatRegistrationService,
-                                  val registrationMongo: RegistrationMongo,
+                                  val registrationRepository: RegistrationMongoRepository,
                                   val companyRegistrationConnector: CompanyRegistrationConnector,
                                   val desConnector: DESConnector,
-                                  val incorporationInformationConnector : IncorporationInformationConnector) extends SubmissionSrv {
-  val registrationRepository = registrationMongo.store
-  val sequenceRepository = sequenceMongo.store
-  private[services] override def useMockSubmission: Boolean = VATFeatureSwitches.mockSubmission.enabled
-}
+                                  val incorporationInformationConnector : IncorporationInformationConnector) extends FutureInstances {
 
-trait SubmissionSrv extends FutureInstances {
-
-  val sequenceRepository: SequenceRepository
-  val vatRegistrationService: VatRegistrationService
-  val registrationRepository : RegistrationRepository
-  val companyRegistrationConnector : CompanyRegistrationConnector
-  val desConnector: DESConnector
-  val incorporationInformationConnector: IncorporationInformationConnector
-  private[services] def useMockSubmission: Boolean
+  private[services] def useMockSubmission: Boolean = VATFeatureSwitches.mockSubmission.enabled
 
   private val REGIME = "vat"
   private val SUBSCRIBER = "scrs"
@@ -99,9 +85,9 @@ trait SubmissionSrv extends FutureInstances {
     vatRegistrationService.retrieveAcknowledgementReference(id)
 
   private[services] def generateAcknowledgementReference(implicit hc: HeaderCarrier): Future[String] =
-    sequenceRepository.getNext("AcknowledgementID").map(ref => f"BRVT$ref%011d")
+    sequenceMongoRepository.getNext("AcknowledgementID").map(ref => f"BRVT$ref%011d")
 
-  private[services] def ensureAcknowledgementReference(regId: RegistrationId, status : VatRegStatus.Value)(implicit hc : HeaderCarrier, ec: ExecutionContext): Future[String] = {
+  private[services] def ensureAcknowledgementReference(regId: RegistrationId, status: VatRegStatus.Value)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[String] = {
     registrationRepository.retrieveVatScheme(regId) flatMap {
       case Some(vs) => vs.acknowledgementReference.fold(
         for {

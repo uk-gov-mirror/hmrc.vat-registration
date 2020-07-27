@@ -29,28 +29,16 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class DESConnectorImpl @Inject()(val backendConfig: BackendConfig, val http: HttpClient) extends DESConnector {
-  lazy val desStubUrl: String = backendConfig.baseUrl("des-stub")
-  lazy val desStubURI: String = backendConfig.getConfString("des-stub.uri", "")
-  lazy val desStubTopUpUrl: String = backendConfig.baseUrl("des-stub")
-  lazy val desStubTopUpURI: String = backendConfig.getConfString("des-stub.uri", "")
+class DESConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) extends HttpErrorFunctions {
 
-  lazy val urlHeaderEnvironment: String = backendConfig.getConfString("des-service.environment", throw new Exception("could not find config value for des-service.environment"))
-  lazy val urlHeaderAuthorization: String = s"Bearer ${backendConfig.getConfString("des-service.authorization-token",
+  lazy val desStubUrl: String = backendConfig.servicesConfig.baseUrl("des-stub")
+  lazy val desStubURI: String = backendConfig.servicesConfig.getConfString("des-stub.uri", "")
+  lazy val desStubTopUpUrl: String = backendConfig.servicesConfig.baseUrl("des-stub")
+  lazy val desStubTopUpURI: String = backendConfig.servicesConfig.getConfString("des-stub.uri", "")
+
+  lazy val urlHeaderEnvironment: String = backendConfig.servicesConfig.getConfString("des-service.environment", throw new Exception("could not find config value for des-service.environment"))
+  lazy val urlHeaderAuthorization: String = s"Bearer ${backendConfig.servicesConfig.getConfString("des-service.authorization-token",
     throw new Exception("could not find config value for des-service.authorization-token"))}"
-}
-
-trait DESConnector extends HttpErrorFunctions {
-
-  val desStubUrl: String
-  val desStubURI: String
-  val desStubTopUpUrl: String
-  val desStubTopUpURI: String
-
-  val urlHeaderEnvironment: String
-  val urlHeaderAuthorization: String
-
-  val http: CorePost
 
   private[connectors] def customDESRead(http: String, url: String, response: HttpResponse): HttpResponse = {
     response.status match {

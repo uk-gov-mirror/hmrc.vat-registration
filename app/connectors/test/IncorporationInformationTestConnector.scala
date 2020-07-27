@@ -34,7 +34,7 @@ trait IncorporationInformationTestConnector {
 class VatRegIncorporationInformationTestConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) extends IncorporationInformationTestConnector {
 
   //$COVERAGE-OFF$
-  val iiUrl = backendConfig.baseUrl("incorporation-information")
+  val iiUrl = backendConfig.servicesConfig.baseUrl("incorporation-information")
 
   def incorpCompany(transactionId: TransactionId, incorpDate: String)(implicit hc: HeaderCarrier): Future[Result] = {
     http.GET(s"$iiUrl/incorporation-information/test-only/add-incorp-update?txId=" +

@@ -19,6 +19,7 @@ package controllers
 import itutil.IntegrationStubbing
 import play.api.test.Helpers._
 import controllers.routes.VatThresholdController
+import play.api.libs.ws.WSResponse
 
 class VatThresholdControllerISpec extends IntegrationStubbing {
 
@@ -26,10 +27,10 @@ class VatThresholdControllerISpec extends IntegrationStubbing {
 
   "VatThresholds" should {
     "return valid threshold amount and change date for given date" in new Setup {
-      val response = await(client(VatThresholdController.getThresholdForDate("2001-06-04").url).get())
+      val response: WSResponse = await(client(VatThresholdController.getThresholdForDate("2001-06-04").url).get())
 
-      response.status shouldBe OK
-      response.body shouldBe """{"since":"2001-04-01","taxable-threshold":"54000"}"""
+      response.status mustBe OK
+      response.body mustBe """{"since":"2001-04-01","taxable-threshold":"54000"}"""
     }
   }
 }

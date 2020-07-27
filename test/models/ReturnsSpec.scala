@@ -21,14 +21,13 @@ import java.time.LocalDate
 import helpers.BaseSpec
 import models.api.{Returns, StartDate, TurnoverEstimates}
 import models.submission.DESSubmission
-import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import utils.EligibilityDataJsonUtils
 
 class ReturnsSpec extends BaseSpec with JsonFormatValidation {
 
   val dateValue: LocalDate = LocalDate.of(2017, 1, 1)
-  val date = StartDate(Some(dateValue))
+  val date: StartDate = StartDate(Some(dateValue))
 
   val fullJson: JsObject = Json.parse(
     s"""
@@ -54,35 +53,35 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
        |}
         """.stripMargin).as[JsObject]
 
-  val invalidStaggerStartReturns = Returns(
+  val invalidStaggerStartReturns: Returns = Returns(
     reclaimVatOnMostReturns = true,
     "quarterly",
     Some("month"),
     date
   )
 
-  val invalidFrequencyReturns = Returns(
+  val invalidFrequencyReturns: Returns = Returns(
     reclaimVatOnMostReturns = true,
     "whatever",
     Some("jan"),
     date
   )
 
-  val fullReturns = Returns(
+  val fullReturns: Returns = Returns(
     reclaimVatOnMostReturns = true,
     "quarterly",
     Some("jan"),
     date
   )
 
-  val missingOptionsReturns = Returns(
+  val missingOptionsReturns: Returns = Returns(
     reclaimVatOnMostReturns = true,
     "quarterly",
     None,
     date
   )
 
-  val invalidValidationReturns = Returns(
+  val invalidValidationReturns: Returns = Returns(
     reclaimVatOnMostReturns = true,
     "whatever",
     Some("month"),
@@ -92,10 +91,10 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
   "Parsing Returns" should {
     "succeed" when {
       "full json is present" in {
-        Json.fromJson[Returns](fullJson) shouldBe JsSuccess(fullReturns)
+        Json.fromJson[Returns](fullJson) mustBe JsSuccess(fullReturns)
       }
       "frequency and staggerStart are present but invalid" in {
-        Json.fromJson[Returns](invalidValidationJson) shouldBe JsSuccess(invalidValidationReturns)
+        Json.fromJson[Returns](invalidValidationJson) mustBe JsSuccess(invalidValidationReturns)
       }
       "staggeredStart is missing" in {
         val json = Json.parse(
@@ -108,7 +107,7 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
              |  }
              |}
         """.stripMargin)
-        Json.fromJson[Returns](json) shouldBe JsSuccess(fullReturns.copy(staggerStart = None))
+        Json.fromJson[Returns](json) mustBe JsSuccess(fullReturns.copy(staggerStart = None))
       }
     }
     "fails" when {
@@ -124,7 +123,7 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
              |}
         """.stripMargin)
         val result = Json.fromJson[Returns](json)
-        result shouldHaveErrors (__ \ "reclaimVatOnMostReturns" -> ValidationError("error.path.missing"))
+        result shouldHaveErrors (__ \ "reclaimVatOnMostReturns" -> JsonValidationError("error.path.missing"))
       }
 
       "frequency is missing" in {
@@ -139,7 +138,7 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
              |}
         """.stripMargin)
         val result = Json.fromJson[Returns](json)
-        result shouldHaveErrors (__ \ "frequency" -> ValidationError("error.path.missing"))
+        result shouldHaveErrors (__ \ "frequency" -> JsonValidationError("error.path.missing"))
       }
 
       "start is missing" in {
@@ -152,7 +151,7 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
              |}
         """.stripMargin)
         val result = Json.fromJson[Returns](json)
-        result shouldHaveErrors (__  \ "start" -> ValidationError("error.path.missing"))
+        result shouldHaveErrors (__  \ "start" -> JsonValidationError("error.path.missing"))
       }
     }
   }
@@ -160,10 +159,10 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
   "Returns model to json" should {
     "succeed" when {
       "everything is present" in {
-        Json.toJson[Returns](fullReturns) shouldBe fullJson
+        Json.toJson[Returns](fullReturns) mustBe fullJson
       }
       "staggerStart is missing" in {
-        Json.toJson[Returns](missingOptionsReturns) shouldBe (fullJson - "staggerStart")
+        Json.toJson[Returns](missingOptionsReturns) mustBe (fullJson - "staggerStart")
       }
     }
   }
@@ -188,7 +187,7 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
       val expected = TurnoverEstimates(vatTaxable = None, turnoverEstimate = Some(10000))
 
       val result = Json.fromJson[TurnoverEstimates](EligibilityDataJsonUtils.toJsObject(json))(TurnoverEstimates.eligibilityDataJsonReads)
-      result shouldBe JsSuccess(expected)
+      result mustBe JsSuccess(expected)
     }
     "return model successfully when turnoverEstimate-value exists and turnoverEstimate-optionalData does not exist with enum of zeropounds" in {
       val json = Json.parse(
@@ -205,7 +204,7 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
       val expected = TurnoverEstimates(vatTaxable = None, turnoverEstimate = Some(0))
 
       val result = Json.fromJson[TurnoverEstimates](EligibilityDataJsonUtils.toJsObject(json))(TurnoverEstimates.eligibilityDataJsonReads)
-      result shouldBe JsSuccess(expected)
+      result mustBe JsSuccess(expected)
     }
     "return model successfully when turnoverEstimate-value exists and turnoverEstimate-optionalData does exist with enum of tenthousand" in {
       val json = Json.parse(
@@ -223,7 +222,7 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
       val expected = TurnoverEstimates(vatTaxable = None, turnoverEstimate = Some(123456))
 
       val result = Json.fromJson[TurnoverEstimates](EligibilityDataJsonUtils.toJsObject(json))(TurnoverEstimates.eligibilityDataJsonReads)
-      result shouldBe JsSuccess(expected)
+      result mustBe JsSuccess(expected)
     }
     "return a JsError when turnoverEstimate-value exists and turnoverEstimate-optionalData does not exist with enum of tenthousand" in {
       val json = Json.parse(
@@ -240,7 +239,7 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
       val expected = TurnoverEstimates(vatTaxable = None, turnoverEstimate = Some(123456))
 
       val result = Json.fromJson[TurnoverEstimates](EligibilityDataJsonUtils.toJsObject(json))(TurnoverEstimates.eligibilityDataJsonReads)
-      result.isError shouldBe true
+      result.isError mustBe true
     }
 
     "return empty model successfully" in {
@@ -264,7 +263,7 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[TurnoverEstimates](EligibilityDataJsonUtils.toJsObject(json))(TurnoverEstimates.eligibilityDataJsonReads)
-      result.isError shouldBe true
+      result.isError mustBe true
     }
   }
 }

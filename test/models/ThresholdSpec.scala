@@ -19,8 +19,7 @@ package models
 import java.time.LocalDate
 
 import models.api.Threshold
-import play.api.data.validation.ValidationError
-import play.api.libs.json.{JsPath, JsSuccess, Json}
+import play.api.libs.json.{JsPath, JsSuccess, Json, JsonValidationError}
 import utils.EligibilityDataJsonUtils
 
 class ThresholdSpec extends JsonFormatValidation {
@@ -41,7 +40,7 @@ class ThresholdSpec extends JsonFormatValidation {
         overThresholdOccuredTwelveMonth = None
       )
 
-      Json.fromJson[Threshold](json)(Threshold.format) shouldBe JsSuccess(expectedResult)
+      Json.fromJson[Threshold](json)(Threshold.format) mustBe JsSuccess(expectedResult)
     }
 
     "successfully read from full valid json" in {
@@ -64,7 +63,7 @@ class ThresholdSpec extends JsonFormatValidation {
         overThresholdOccuredTwelveMonth = Some(LocalDate.of(2017, 1, 21))
       )
 
-      Json.fromJson[Threshold](json)(Threshold.format) shouldBe JsSuccess(expectedResult)
+      Json.fromJson[Threshold](json)(Threshold.format) mustBe JsSuccess(expectedResult)
     }
 
     "fail read from json if mandatoryRegistration is missing" in {
@@ -78,7 +77,7 @@ class ThresholdSpec extends JsonFormatValidation {
          """.stripMargin)
 
       val result = Json.fromJson[Threshold](json)(Threshold.format)
-      result shouldHaveErrors (JsPath() \ "mandatoryRegistration" -> ValidationError("error.path.missing"))
+      result shouldHaveErrors (JsPath() \ "mandatoryRegistration" -> JsonValidationError("error.path.missing"))
     }
 
     "eligibilityDataJsonReads read successfully from full json" when {
@@ -102,7 +101,7 @@ class ThresholdSpec extends JsonFormatValidation {
         )
 
         val result = Json.fromJson[Threshold](json)(Threshold.eligibilityDataJsonReads)
-        result shouldBe JsSuccess(expectedResult)
+        result mustBe JsSuccess(expectedResult)
       }
 
       "the registration is mandatory" in {
@@ -128,7 +127,7 @@ class ThresholdSpec extends JsonFormatValidation {
         )
 
         val result = Json.fromJson[Threshold](json)(Threshold.eligibilityDataJsonReads)
-        result shouldBe JsSuccess(expectedResult)
+        result mustBe JsSuccess(expectedResult)
       }
     }
 
@@ -146,7 +145,7 @@ class ThresholdSpec extends JsonFormatValidation {
         """.stripMargin)
 
       val result = Json.fromJson[Threshold](json)(Threshold.eligibilityDataJsonReads)
-      result.isError shouldBe true
+      result.isError mustBe true
     }
   }
 }

@@ -32,8 +32,8 @@ import scala.concurrent.Future
 class TradingDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   class Setup {
-    val service = new TradingDetailsService(
-      registrationMongo = mockRegistrationMongo
+    val service: TradingDetailsService = new TradingDetailsService(
+      registrationRepository = mockRegistrationMongoRepository
     ) {
       override val registrationRepository: RegistrationMongoRepository = mockRegistrationMongoRepository
     }
@@ -46,7 +46,7 @@ class TradingDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
       val result: Option[TradingDetails] = await(service.retrieveTradingDetails("testId"))
 
-      result shouldBe Some(validFullTradingDetails)
+      result mustBe Some(validFullTradingDetails)
     }
 
     "return None if none found matching regId" in new Setup {
@@ -55,7 +55,7 @@ class TradingDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
       val result: Option[TradingDetails] = await(service.retrieveTradingDetails("testId"))
 
-      result shouldBe None
+      result mustBe None
     }
   }
 
@@ -66,7 +66,7 @@ class TradingDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
       val result: TradingDetails = await(service.updateTradingDetails("testId", validFullTradingDetails))
 
-      result shouldBe validFullTradingDetails
+      result mustBe validFullTradingDetails
     }
 
     "encounter an exception if an error occurs" in new Setup {

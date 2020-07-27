@@ -22,7 +22,7 @@ import models.api.Eligibility
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
-import play.api.libs.json.{JsArray, JsResultException, Json}
+import play.api.libs.json.{JsArray, JsObject, JsResultException, Json}
 import play.api.test.Helpers._
 import repositories.RegistrationMongoRepository
 
@@ -32,11 +32,9 @@ import scala.concurrent.Future
 class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   class Setup {
-    val service = new EligibilityService(
-      registrationMongo = mockRegistrationMongo
-    ) {
-      override val registrationRepository: RegistrationMongoRepository = mockRegistrationMongoRepository
-    }
+    val service: EligibilityService = new EligibilityService(
+      registrationRepository = mockRegistrationMongoRepository
+    )
 
     def upsertToMongo(): OngoingStubbing[Future[Eligibility]] = when(mockRegistrationMongoRepository.updateEligibility(any(), any())(any()))
       .thenReturn(Future.successful(upsertEligibility))
@@ -51,7 +49,7 @@ class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
       .thenReturn(Future.successful(None))
   }
 
-  val upsertEligibilityModel = Json.parse(
+  val upsertEligibilityModel: Eligibility = Json.parse(
     """
       |{
       | "version": 1,
@@ -59,7 +57,7 @@ class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
       |}
     """.stripMargin).as[Eligibility]
 
-  val validEligibilityModel = Json.parse(
+  val validEligibilityModel: Eligibility = Json.parse(
     """
       |{
       | "version": 1,
@@ -71,7 +69,7 @@ class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
     "return the data that is being inputted" in new Setup {
       upsertToMongo()
       val result = await(service.upsertEligibility("regId", upsertEligibilityModel))
-      result shouldBe upsertEligibilityModel
+      result mustBe upsertEligibilityModel
     }
 
     "encounter an exception if an error occurs" in new Setup {
@@ -82,35 +80,35 @@ class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
   "getEligibility" should {
     "return an eligibility if found" in new Setup {
       getsFromMongo()
-      val result = await(service.getEligibility("regId"))
-      result shouldBe Some(validEligibilityModel)
+      val result: Option[Eligibility] = await(service.getEligibility("regId"))
+      result mustBe Some(validEligibilityModel)
     }
 
     "return None if none found matching regId" in new Setup {
       getsNothingFromMongo()
-      val result = await(service.getEligibility("regId"))
-      result shouldBe None
+      val result: Option[Eligibility] = await(service.getEligibility("regId"))
+      result mustBe None
     }
   }
 
 
-  val json = Json.obj("test" -> "value test")
+  val json: JsObject = Json.obj("test" -> "value test")
 
   "getEligibilityData" should {
     "return an eligibility data json if found" in new Setup {
       when(mockRegistrationMongoRepository.getEligibilityData(any())(any()))
         .thenReturn(Future.successful(Some(json)))
 
-      val result = await(service.getEligibilityData("regId"))
-      result shouldBe Some(json)
+      val result: Option[JsObject] = await(service.getEligibilityData("regId"))
+      result mustBe Some(json)
     }
 
     "return None if none found matching regId" in new Setup {
       when(mockRegistrationMongoRepository.getEligibilityData(any())(any()))
         .thenReturn(Future.successful(None))
 
-      val result = await(service.getEligibilityData("regId"))
-      result shouldBe None
+      val result: Option[JsObject] = await(service.getEligibilityData("regId"))
+      result mustBe None
     }
   }
 
@@ -138,15 +136,15 @@ class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
       when(mockRegistrationMongoRepository.updateEligibilityData(any(), any())(any()))
         .thenReturn(Future.successful(eligibilityData))
 
-      val result = await(service.updateEligibilityData("regId", eligibilityData))
-      result shouldBe eligibilityData
+      val result: JsObject = await(service.updateEligibilityData("regId", eligibilityData))
+      result mustBe eligibilityData
     }
 
     "encounter a JsResultException if json provided is incorrect" in new Setup {
-      val incorrectQuestionValue = Json.obj("sections" -> JsArray(Seq(Json.obj("title" -> "test TITLE 1", "data" -> JsArray(Seq(Json.obj(
+      val incorrectQuestionValue: JsObject = Json.obj("sections" -> JsArray(Seq(Json.obj("title" -> "test TITLE 1", "data" -> JsArray(Seq(Json.obj(
         "questionId" -> "thresholdPreviousThirtyDays-optionalData", "question" -> "Some Question 12", "answer" -> "Some Answer 12", "answerValue" -> "234324"
       )))))))
-      val incorrectEligibilityData = eligibilityData.deepMerge(incorrectQuestionValue)
+      val incorrectEligibilityData: JsObject = eligibilityData.deepMerge(incorrectQuestionValue)
       intercept[JsResultException](await(service.updateEligibilityData("regId", incorrectEligibilityData)))
     }
 

@@ -27,16 +27,16 @@ import models.api._
 import play.api.libs.json._
 import play.api.test.Helpers._
 import reactivemongo.api.commands.WriteResult
-import repositories.{RegistrationMongo, RegistrationMongoRepository}
+import repositories.RegistrationMongoRepository
 import uk.gov.hmrc.mongo.MongoSpecSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSupport with FutureAssertions with ITFixtures {
 
   class Setup {
-    val mongo: RegistrationMongo = fakeApplication.injector.instanceOf[RegistrationMongo]
-    val repository: RegistrationMongoRepository = mongo.store
+    val repository: RegistrationMongoRepository = fakeApplication.injector.instanceOf[RegistrationMongoRepository]
 
     def insert(json: JsObject): WriteResult = await(repository.collection.insert(json))
 
@@ -64,8 +64,8 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
   val accountNumber = "12345678"
   val encryptedAccountNumber = "V0g2RXVUcUZpSUk4STgvbGNFdlAydz09"
   val sortCode = "12-34-56"
-  val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
-  val bankAccount = BankAccount(isProvided = true, Some(bankAccountDetails))
+  val bankAccountDetails: BankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
+  val bankAccount: BankAccount = BankAccount(isProvided = true, Some(bankAccountDetails))
   val vatSchemeWithBankAccount: JsObject = Json.parse(
     s"""
        |{
@@ -134,7 +134,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
   "Calling createNewVatScheme" should {
 
     "create a new, blank VatScheme with the correct ID" in new Setup {
-      await(repository.createNewVatScheme(regId, internalid)) shouldBe vatScheme
+      await(repository.createNewVatScheme(regId, internalid)) mustBe vatScheme
     }
     "throw an InsertFailed exception when creating a new VAT scheme when one already exists with the same int Id and reg id" in new Setup {
       await(repository.createNewVatScheme(vatScheme.id, internalid))
@@ -168,15 +168,15 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
   "Calling clearDownScheme" should {
     "clear any optional data from the vat scheme object" in new Setup {
       await(repository.insert(fullVatScheme))
-      await(repository.clearDownDocument(transactionId)) shouldBe true
-      await(repository.retrieveVatScheme(regId)) shouldBe None
+      await(repository.clearDownDocument(transactionId)) mustBe true
+      await(repository.retrieveVatScheme(regId)) mustBe None
     }
     "fail when a already cleared document is cleared" in new Setup {
       await(repository.insert(fullVatScheme))
-      await(repository.clearDownDocument(transactionId)) shouldBe true
-      await(repository.retrieveVatScheme(regId)) shouldBe None
-      await(repository.clearDownDocument(transactionId)) shouldBe true
-      await(repository.retrieveVatScheme(regId)) shouldBe None
+      await(repository.clearDownDocument(transactionId)) mustBe true
+      await(repository.retrieveVatScheme(regId)) mustBe None
+      await(repository.clearDownDocument(transactionId)) mustBe true
+      await(repository.retrieveVatScheme(regId)) mustBe None
     }
   }
 
@@ -185,57 +185,59 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
   "Calling updateByElement" should {
 
     "update Element object when one exists" in new Setup {
-      val schemeWithAckRefNumber = vatScheme.copy(acknowledgementReference = Some(ACK_REF_NUM))
-      repository.insert(schemeWithAckRefNumber).flatMap(_ => repository.updateByElement(vatScheme.id, AcknowledgementReferencePath, ACK_REF_NUM)) returns ACK_REF_NUM
+      val schemeWithAckRefNumber: VatScheme = vatScheme.copy(acknowledgementReference = Some(ACK_REF_NUM))
+      repository.insert(schemeWithAckRefNumber).flatMap(_ => repository.updateByElement(vatScheme.id,
+                                                             AcknowledgementReferencePath, ACK_REF_NUM)) returns ACK_REF_NUM
     }
 
     "return a None when there is no corresponding VatScheme object" in new Setup {
-      repository.insert(vatScheme).flatMap(_ => repository.updateByElement(RegistrationId("0"), AcknowledgementReferencePath, ACK_REF_NUM)) failedWith classOf[UpdateFailed]
+      repository.insert(vatScheme).flatMap(_ => repository.updateByElement(RegistrationId("0"),
+                                                AcknowledgementReferencePath, ACK_REF_NUM)) failedWith classOf[UpdateFailed]
     }
   }
 
   "Calling prepareRegistrationSubmission" should {
     val testAckRef = "testAckRef"
     "update the vat scheme with the provided ackref" in new Setup {
-      val result = for {
+      val result: Future[(VatRegStatus.Value, Option[String])] = for {
         insert <- repository.insert(vatScheme)
         update <- repository.prepareRegistrationSubmission(vatScheme.id, testAckRef, VatRegStatus.draft)
         Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
       } yield (updatedScheme.status, updatedScheme.acknowledgementReference)
 
-      await(result) shouldBe(VatRegStatus.locked, Some(testAckRef))
+      await(result) mustBe (VatRegStatus.locked, Some(testAckRef))
     }
 
     "update the vat scheme with the provided ackref on a topup" in new Setup {
-      val result = for {
+      val result: Future[(VatRegStatus.Value, Option[String])] = for {
         insert <- repository.insert(vatScheme)
         update <- repository.prepareRegistrationSubmission(vatScheme.id, testAckRef, VatRegStatus.held)
         Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
       } yield (updatedScheme.status, updatedScheme.acknowledgementReference)
 
-      await(result) shouldBe(VatRegStatus.held, Some(testAckRef))
+      await(result) mustBe (VatRegStatus.held, Some(testAckRef))
     }
   }
 
   "Calling finishRegistrationSubmission" should {
     "update the vat scheme to submitted with the provided ackref" in new Setup {
-      val result = for {
+      val result: Future[VatRegStatus.Value] = for {
         insert <- repository.insert(vatScheme)
         update <- repository.finishRegistrationSubmission(vatScheme.id, VatRegStatus.submitted)
         Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
       } yield updatedScheme.status
 
-      await(result) shouldBe VatRegStatus.submitted
+      await(result) mustBe VatRegStatus.submitted
     }
 
     "update the vat scheme to held with the provided ackref" in new Setup {
-      val result = for {
+      val result: Future[VatRegStatus.Value] = for {
         insert <- repository.insert(vatScheme)
         update <- repository.finishRegistrationSubmission(vatScheme.id, VatRegStatus.held)
         Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
       } yield updatedScheme.status
 
-      await(result) shouldBe VatRegStatus.held
+      await(result) mustBe VatRegStatus.held
     }
   }
 
@@ -243,13 +245,13 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
     "store the transaction id provided into the specified vat scheme document" in new Setup {
       val testTransId = "testTransId"
 
-      val result = for {
+      val result: Future[Option[TransactionId]] = for {
         insert <- repository.insert(vatScheme)
         update <- repository.saveTransId(testTransId, vatScheme.id)
         Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
       } yield updatedScheme.transactionId
 
-      await(result).get shouldBe TransactionId(testTransId)
+      await(result).get mustBe TransactionId(testTransId)
     }
   }
 
@@ -257,13 +259,13 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
     "retrieve the vat scheme by transactionid" in new Setup {
       val testTransId = "testTransId"
 
-      val result = for {
+      val result: Future[VatScheme] = for {
         insert <- repository.insert(vatScheme)
         update <- repository.saveTransId(testTransId, vatScheme.id)
         Some(updatedScheme) <- repository.fetchRegByTxId(testTransId)
       } yield updatedScheme
 
-      await(result) shouldBe vatScheme.copy(transactionId = Some(TransactionId(testTransId)))
+      await(result) mustBe vatScheme.copy(transactionId = Some(TransactionId(testTransId)))
     }
   }
 
@@ -272,33 +274,33 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
     val tradingDetails = TradingDetails(Some("trading-name"), true)
 
     "update tradingDetails block in registration when there is no tradingDetails data" in new Setup {
-      val result = for {
+      val result: Future[Option[TradingDetails]] = for {
         _ <- repository.insert(vatScheme)
         _ <- repository.updateTradingDetails(vatScheme.id.value, tradingDetails)
         Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
       } yield updatedScheme.tradingDetails
 
-      await(result) shouldBe Some(tradingDetails)
+      await(result) mustBe Some(tradingDetails)
     }
 
     "update tradingDetails block in registration when there is already tradingDetails data" in new Setup {
       val otherTradingDetails = TradingDetails(Some("other-trading-name"), true)
-      val result = for {
+      val result: Future[Option[TradingDetails]] = for {
         _ <- repository.insert(vatScheme.copy(tradingDetails = Some(tradingDetails)))
         _ <- repository.updateTradingDetails(vatScheme.id.value, tradingDetails)
         Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
       } yield updatedScheme.tradingDetails
 
-      await(result) shouldBe Some(tradingDetails)
+      await(result) mustBe Some(tradingDetails)
     }
 
     "not update or insert tradingDetails if registration does not exist" in new Setup {
       await(repository.insert(vatScheme))
 
-      count shouldBe 1
-      await(repository.findAll()).head shouldBe vatScheme
+      count mustBe 1
+      await(repository.findAll()).head mustBe vatScheme
 
-      a[MissingRegDocument] shouldBe thrownBy(await(repository.updateTradingDetails("wrongRegId", tradingDetails)))
+      a[MissingRegDocument] mustBe thrownBy(await(repository.updateTradingDetails("wrongRegId", tradingDetails)))
     }
   }
 
@@ -307,30 +309,30 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
     val tradingDetails = TradingDetails(Some("trading-name"), true)
 
     "return trading details data from an existing registration containing data" in new Setup {
-      val result = for {
+      val result: Future[Option[TradingDetails]] = for {
         _ <- repository.insert(vatScheme.copy(tradingDetails = Some(tradingDetails)))
         res <- repository.retrieveTradingDetails(vatScheme.id.value)
       } yield res
 
-      await(result) shouldBe Some(tradingDetails)
+      await(result) mustBe Some(tradingDetails)
     }
 
     "return None from an existing registration containing no data" in new Setup {
-      val result = for {
+      val result: Future[Option[TradingDetails]] = for {
         _ <- repository.insert(vatScheme)
         res <- repository.retrieveTradingDetails(vatScheme.id.value)
       } yield res
 
-      await(result) shouldBe None
+      await(result) mustBe None
     }
 
     "throw a MissingRegDocument for a none existing registration" in new Setup {
-      val result = for {
+      val result: Future[Option[TradingDetails]] = for {
         _ <- repository.insert(vatScheme.copy(tradingDetails = Some(tradingDetails)))
         res <- repository.retrieveTradingDetails("wrongRegId")
       } yield res
 
-      a[MissingRegDocument] shouldBe thrownBy(await(result))
+      a[MissingRegDocument] mustBe thrownBy(await(result))
     }
   }
 
@@ -341,21 +343,21 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
 
       val fetchedBankAccount: Option[BankAccount] = await(repository.fetchBankAccount(registrationId))
 
-      fetchedBankAccount shouldBe Some(bankAccount)
+      fetchedBankAccount mustBe Some(bankAccount)
     }
 
     "return a None if a VatScheme already exists but a bank account block does not" in new Setup {
       insert(vatSchemeJson(registrationId))
       val fetchedBankAccount: Option[BankAccount] = await(repository.fetchBankAccount(registrationId))
-      fetchedBankAccount shouldBe None
+      fetchedBankAccount mustBe None
     }
 
     "return None if no BankAccount is found in mongo for the supplied regId" in new Setup {
-      count shouldBe 0
+      count mustBe 0
 
       val fetchedBankAccount: Option[BankAccount] = await(repository.fetchBankAccount(registrationId))
 
-      fetchedBankAccount shouldBe None
+      fetchedBankAccount mustBe None
     }
 
     "return None if other users' data exists but no BankAccount is found in mongo for the supplied regId" in new Setup {
@@ -363,7 +365,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
 
       val fetchedBankAccount: Option[BankAccount] = await(repository.fetchBankAccount(registrationId))
 
-      fetchedBankAccount shouldBe None
+      fetchedBankAccount mustBe None
     }
   }
 
@@ -374,7 +376,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
 
       await(repository.updateBankAccount(registrationId, bankAccount))
 
-      fetchAll without _id shouldBe Some(vatSchemeWithBankAccount)
+      fetchAll without _id mustBe Some(vatSchemeWithBankAccount)
     }
 
     "not update or insert new data into the registration doc if the supplied bank account details already exist on the doc" in new Setup {
@@ -382,25 +384,25 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
 
       await(repository.updateBankAccount(registrationId, bankAccount))
 
-      fetchAll without _id shouldBe Some(vatSchemeWithBankAccount)
+      fetchAll without _id mustBe Some(vatSchemeWithBankAccount)
     }
 
     "not update or insert returns if a registration doc doesn't already exist" in new Setup {
-      count shouldBe 0
+      count mustBe 0
 
       await(repository.updateBankAccount(registrationId, bankAccount))
 
-      fetchAll without _id shouldBe None
+      fetchAll without _id mustBe None
     }
 
     "not update or insert returns if a registration doc associated with the given reg id doesn't already exist" in new Setup {
       insert(otherUsersVatScheme)
 
-      fetchAll without _id shouldBe Some(otherUsersVatScheme)
+      fetchAll without _id mustBe Some(otherUsersVatScheme)
 
       await(repository.updateBankAccount(registrationId, bankAccount))
 
-      fetchAll without _id shouldBe Some(otherUsersVatScheme)
+      fetchAll without _id mustBe Some(otherUsersVatScheme)
     }
   }
 
@@ -410,15 +412,15 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
 
       val fetchedReturns: Option[Returns] = await(repository.fetchReturns(registrationId))
 
-      fetchedReturns shouldBe Some(returns)
+      fetchedReturns mustBe Some(returns)
     }
 
     "return None if no BankAccount is found in mongo for the supplied regId" in new Setup {
-      count shouldBe 0
+      count mustBe 0
 
       val fetchedReturns: Option[Returns] = await(repository.fetchReturns(registrationId))
 
-      fetchedReturns shouldBe None
+      fetchedReturns mustBe None
     }
   }
 
@@ -458,7 +460,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
 
       await(repository.updateReturns(registrationId, returns))
 
-      fetchAll without _id shouldBe Some(vatSchemeWithReturns)
+      fetchAll without _id mustBe Some(vatSchemeWithReturns)
     }
 
     "not update or insert new data into the registration doc if the supplied returns already exist on the doc" in new Setup {
@@ -466,25 +468,25 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
 
       await(repository.updateReturns(registrationId, returns))
 
-      fetchAll without _id shouldBe Some(vatSchemeWithReturns)
+      fetchAll without _id mustBe Some(vatSchemeWithReturns)
     }
 
     "not update or insert returns if a registration doc doesn't already exist" in new Setup {
-      count shouldBe 0
+      count mustBe 0
 
       await(repository.updateReturns(registrationId, returns))
 
-      fetchAll without _id shouldBe None
+      fetchAll without _id mustBe None
     }
 
     "not update or insert returns if a registration doc associated with the given reg id doesn't already exist" in new Setup {
       insert(otherUsersVatScheme)
 
-      fetchAll without _id shouldBe Some(otherUsersVatScheme)
+      fetchAll without _id mustBe Some(otherUsersVatScheme)
 
       await(repository.updateReturns(registrationId, returns))
 
-      fetchAll without _id shouldBe Some(otherUsersVatScheme)
+      fetchAll without _id mustBe Some(otherUsersVatScheme)
     }
   }
 
@@ -655,31 +657,31 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
     val eligibilityData = Json.obj("sections" -> sections)
 
     "update lodgingOfficer block with ivPassed in registration" in new Setup {
-      val result = for {
+      val result: Future[Option[LodgingOfficer]] = for {
         _ <- repository.insert(vatScheme.copy(lodgingOfficer = Some(lodgingOfficer), eligibilityData = Some(eligibilityData)))
         _ <- repository.updateIVStatus(vatScheme.id.value, true)
         Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
       } yield updatedScheme.lodgingOfficer
 
-      await(result) shouldBe Some(lodgingOfficer.copy(ivPassed = Some(true)))
+      await(result) mustBe Some(lodgingOfficer.copy(ivPassed = Some(true)))
     }
 
     "not update lodgingOfficer if registration does not exist" in new Setup {
       await(repository.insert(vatScheme))
 
-      count shouldBe 1
-      await(repository.findAll()).head shouldBe vatScheme
+      count mustBe 1
+      await(repository.findAll()).head mustBe vatScheme
 
-      a[MissingRegDocument] shouldBe thrownBy(await(repository.updateIVStatus("wrongRegId", true)))
+      a[MissingRegDocument] mustBe thrownBy(await(repository.updateIVStatus("wrongRegId", true)))
     }
 
     "not update lodgingOfficer if registration is missing a lodgingOfficer block" in new Setup {
       await(repository.insert(vatScheme))
 
-      count shouldBe 1
-      await(repository.findAll()).head shouldBe vatScheme
+      count mustBe 1
+      await(repository.findAll()).head mustBe vatScheme
 
-      a[MissingRegDocument] shouldBe thrownBy(await(repository.updateIVStatus(vatScheme.id.value, true)))
+      a[MissingRegDocument] mustBe thrownBy(await(repository.updateIVStatus(vatScheme.id.value, true)))
     }
   }
 
@@ -691,283 +693,283 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
       otherBusinessActivities = Nil
     ))
     "return a SicAndComplianceModel from existing data based on the reg Id" in new Setup {
-      val result = for {
+      val result: Future[Option[SicAndCompliance]] = for {
         _ <- repository.insert(vatScheme)
         _ <- repository.updateSicAndCompliance(vatScheme.id.value, validSicAndCompliance.get)
-        _ = count shouldBe 1
+        _ = count mustBe 1
         res <- repository.getSicAndCompliance(vatScheme.id.value)
       } yield res
 
-      await(result).get shouldBe validSicAndCompliance.get
+      await(result).get mustBe validSicAndCompliance.get
     }
     "read data to a SicAndCompliance model regardless of whether apivalidation is valid" in new Setup {
-      val modelThatDoesNotConformToApiValidation = SicAndCompliance(
+      val modelThatDoesNotConformToApiValidation: SicAndCompliance = SicAndCompliance(
         "foo",
         Some(ComplianceLabour(1, None, None)),
         SicCode("fooBARFIZZANDBANG1234", "bar", "wizz"),
         otherBusinessActivities = List(SicCode("11111 FOO BAR WIZZ AND BANG", "barFoo", "amended other foo")))
-      val result = for {
+      val result: Future[Option[SicAndCompliance]] = for {
         _ <- repository.insert(vatScheme.copy(sicAndCompliance = Some(modelThatDoesNotConformToApiValidation)))
-        _ = count shouldBe 1
+        _ = count mustBe 1
         res <- repository.getSicAndCompliance(vatScheme.id.value)
       } yield res
-      await(result).get shouldBe modelThatDoesNotConformToApiValidation
+      await(result).get mustBe modelThatDoesNotConformToApiValidation
     }
     "return None from an existing registration that exists but SicAndCompliance does not exist" in new Setup {
-      val result = for {
+      val result: Future[Option[SicAndCompliance]] = for {
         _ <- repository.insert(vatScheme)
         res <- repository.getSicAndCompliance(vatScheme.id.value)
       } yield res
-      await(result) shouldBe None
+      await(result) mustBe None
     }
     "return a MissingRegDocument when nothing is returned from mongo for the reg id" in new Setup {
-      val result = repository.getSicAndCompliance("madeUpRegId")
+      val result: Future[Option[SicAndCompliance]] = repository.getSicAndCompliance("madeUpRegId")
 
-      a[MissingRegDocument] shouldBe thrownBy(await(result))
+      a[MissingRegDocument] mustBe thrownBy(await(result))
     }
     "return an exception if the json is incorrect in the repository (an element is missing)" in new Setup {
-      val json = Json.toJson(
+      val json: JsValue = Json.toJson(
         Json.obj("registrationId" -> regId.value,
           "status" -> VatRegStatus.draft,
           "sicAndCompliance" -> Json.toJson(validSicAndCompliance).as[JsObject].-("businessDescription")))
       insert(json.as[JsObject])
-      an[Exception] shouldBe thrownBy(await(repository.getSicAndCompliance(vatScheme.id.value)))
+      an[Exception] mustBe thrownBy(await(repository.getSicAndCompliance(vatScheme.id.value)))
     }
   }
   "calling updateSicAndCompliance" should {
-    val validSicAndCompliance = Some(SicAndCompliance(
+    val validSicAndCompliance: Option[SicAndCompliance] = Some(SicAndCompliance(
       "this is my business description",
       Some(ComplianceLabour(1000, Some(true), Some(true))),
       SicCode("12345", "the flu", "sic details"),
       otherBusinessActivities = List(SicCode("99999", "fooBar", "other foo"))
     ))
     "return an amended SicAndCompliance Model when an entry already exists in the repo for 1 field" in new Setup {
-      val amendedModel = validSicAndCompliance.map(a => a.copy(businessDescription = "fooBarWizz"))
-      val result = for {
+      val amendedModel: Option[SicAndCompliance] = validSicAndCompliance.map(a => a.copy(businessDescription = "fooBarWizz"))
+      val result: Future[SicAndCompliance] = for {
         _ <- repository.insert(vatScheme.copy(sicAndCompliance = validSicAndCompliance))
-        _ = count shouldBe 1
+        _ = count mustBe 1
         res <- repository.updateSicAndCompliance(vatScheme.id.value, amendedModel.get)
       } yield res
 
-      await(result) shouldBe amendedModel.get
+      await(result) mustBe amendedModel.get
     }
     "return an amended Option SicAndCompliance Model when an entry already exists and all fields have changed in the model" in new Setup {
-      val amendedModel = SicAndCompliance(
+      val amendedModel: SicAndCompliance = SicAndCompliance(
         "foo",
         Some(ComplianceLabour(1, None, None)),
         SicCode("foo", "bar", "wizz"),
         otherBusinessActivities = List(SicCode("11111", "barFoo", "amended other foo")))
-      val result = for {
+      val result: Future[SicAndCompliance] = for {
         _ <- repository.insert(vatScheme.copy(sicAndCompliance = validSicAndCompliance))
         res <- repository.updateSicAndCompliance(vatScheme.id.value, amendedModel)
       } yield res
-      await(result) shouldBe amendedModel
+      await(result) mustBe amendedModel
     }
     "return an SicAndComplance Model when the block did not exist in the existing reg doc" in new Setup {
-      val result = for {
+      val result: Future[SicAndCompliance] = for {
         _ <- repository.insert(vatScheme)
-        _ = count shouldBe 1
+        _ = count mustBe 1
         res <- repository.updateSicAndCompliance(vatScheme.id.value, validSicAndCompliance.get)
       } yield res
-      await(result) shouldBe validSicAndCompliance.get
+      await(result) mustBe validSicAndCompliance.get
     }
 
     "return an MissingRegDocument if registration document does not exist for the registration id" in new Setup {
-      val result = repository.updateSicAndCompliance("madeUpRegId", validSicAndCompliance.get)
-      a[MissingRegDocument] shouldBe thrownBy(await(result))
+      val result: Future[SicAndCompliance] = repository.updateSicAndCompliance("madeUpRegId", validSicAndCompliance.get)
+      a[MissingRegDocument] mustBe thrownBy(await(result))
     }
   }
   "calling getBusinessContact" should {
 
     "return a BusinessContact Model from existing data based on the reg Id" in new Setup {
-      val result = for {
+      val result: Future[Option[BusinessContact]] = for {
         _ <- repository.insert(vatScheme)
         _ <- repository.updateBusinessContact(vatScheme.id.value, businessContact)
-        _ = count shouldBe 1
+        _ = count mustBe 1
         res <- repository.getBusinessContact(vatScheme.id.value)
       } yield res
 
-      await(result).get shouldBe businessContact
+      await(result).get mustBe businessContact
     }
     "return None from an existing registration that exists but BusinessContact does not exist" in new Setup {
-      val result = for {
+      val result: Future[Option[BusinessContact]] = for {
         _ <- repository.insert(vatScheme)
         res <- repository.getBusinessContact(vatScheme.id.value)
       } yield res
-      await(result) shouldBe None
+      await(result) mustBe None
     }
     "return a MissingRegDocument when nothing is returned from mongo for the reg id" in new Setup {
-      val result = repository.getBusinessContact("madeUpRegId")
+      val result: Future[Option[BusinessContact]] = repository.getBusinessContact("madeUpRegId")
 
-      a[MissingRegDocument] shouldBe thrownBy(await(result))
+      a[MissingRegDocument] mustBe thrownBy(await(result))
     }
     "return an exception if the json is incorrect in the repository (an element is missing)" in new Setup {
-      val json = Json.toJson(
+      val json: JsValue = Json.toJson(
         Json.obj("registrationId" -> regId.value,
           "status" -> VatRegStatus.draft,
           "businessContact" -> Json.toJson(businessContact).as[JsObject].-("digitalContact")))
       insert(json.as[JsObject])
-      an[Exception] shouldBe thrownBy(await(repository.getBusinessContact(vatScheme.id.value)))
+      an[Exception] mustBe thrownBy(await(repository.getBusinessContact(vatScheme.id.value)))
     }
   }
   "calling updateBusinessContact" should {
     "return an amended Business Contact Model when an entry already exists in the repo for 1 field" in new Setup {
-      val amendedModel = businessContact.copy(website = Some("fooBARUpdated"))
+      val amendedModel: BusinessContact = businessContact.copy(website = Some("fooBARUpdated"))
 
-      val result = for {
+      val result: Future[BusinessContact] = for {
         _ <- repository.insert(vatScheme.copy(businessContact = Some(businessContact)))
-        _ = count shouldBe 1
+        _ = count mustBe 1
         res <- repository.updateBusinessContact(vatScheme.id.value, amendedModel)
       } yield res
 
-      await(result) shouldBe amendedModel
+      await(result) mustBe amendedModel
     }
     "return an amended Option BusinessContact Model when an entry already exists and all fields have changed in the model" in new Setup {
-      val amendedModel = businessContact.copy(
+      val amendedModel: BusinessContact = businessContact.copy(
         digitalContact = DigitalContact("foozle", Some("2434738"), Some("37483784")),
         website = Some("myLittleWebsite"),
         ppob = Address("lino1", "lino2", None, None, None, Some("Funsville"))
       )
-      val result = for {
+      val result: Future[BusinessContact] = for {
         _ <- repository.insert(vatScheme.copy(businessContact = Some(businessContact)))
         res <- repository.updateBusinessContact(vatScheme.id.value, amendedModel)
       } yield res
-      await(result) shouldBe amendedModel
+      await(result) mustBe amendedModel
     }
     "return an BusinessContact Model when the block did not exist in the existing reg doc" in new Setup {
-      val result = for {
+      val result: Future[BusinessContact] = for {
         _ <- repository.insert(vatScheme)
-        _ = count shouldBe 1
+        _ = count mustBe 1
         res <- repository.updateBusinessContact(vatScheme.id.value, businessContact)
       } yield res
-      await(result) shouldBe businessContact
+      await(result) mustBe businessContact
     }
 
     "return an MissingRegDocument if registration document does not exist for the registration id" in new Setup {
-      val result = repository.updateBusinessContact("madeUpRegId", businessContact)
-      a[MissingRegDocument] shouldBe thrownBy(await(result))
+      val result: Future[BusinessContact] = repository.updateBusinessContact("madeUpRegId", businessContact)
+      a[MissingRegDocument] mustBe thrownBy(await(result))
     }
   }
 
   "fetchFlatRateScheme" should {
     "return flat rate scheme data from an existing registration containing data" in new Setup {
-      val result = for {
+      val result: Future[Option[FlatRateScheme]] = for {
         _ <- repository.insert(vatScheme.copy(flatRateScheme = Some(flatRateScheme)))
         res <- repository.fetchFlatRateScheme(vatScheme.id.value)
       } yield res
 
-      await(result) shouldBe Some(flatRateScheme)
+      await(result) mustBe Some(flatRateScheme)
     }
 
     "return None from an existing registration containing no data" in new Setup {
-      val result = for {
+      val result: Future[Option[FlatRateScheme]] = for {
         _ <- repository.insert(vatScheme)
         res <- repository.fetchFlatRateScheme(vatScheme.id.value)
       } yield res
 
-      await(result) shouldBe None
+      await(result) mustBe None
     }
 
     "throw a MissingRegDocument for a none existing registration" in new Setup {
-      val result = for {
+      val result: Future[Option[FlatRateScheme]] = for {
         _ <- repository.insert(vatScheme.copy(flatRateScheme = Some(flatRateScheme)))
         res <- repository.fetchFlatRateScheme("wrongRegId")
       } yield res
 
-      a[MissingRegDocument] shouldBe thrownBy(await(result))
+      a[MissingRegDocument] mustBe thrownBy(await(result))
     }
   }
 
   "updateFlatRateScheme" should {
 
     "update flat rate scheme block in registration when there is no flat rate scheme data" in new Setup {
-      val result = for {
+      val result: Future[Option[FlatRateScheme]] = for {
         _ <- repository.insert(vatScheme)
         _ <- repository.updateFlatRateScheme(vatScheme.id.value, flatRateScheme)
         Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
       } yield updatedScheme.flatRateScheme
 
-      await(result) shouldBe Some(flatRateScheme)
+      await(result) mustBe Some(flatRateScheme)
     }
 
     "update flat rate scheme block in registration when there is already flat rate scheme data" in new Setup {
-      val otherFlatRateScheme = FlatRateScheme(joinFrs = false, None)
-      val result = for {
+      val otherFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = false, None)
+      val result: Future[Option[FlatRateScheme]] = for {
         _ <- repository.insert(vatScheme.copy(flatRateScheme = Some(flatRateScheme)))
         _ <- repository.updateFlatRateScheme(vatScheme.id.value, flatRateScheme)
         Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
       } yield updatedScheme.flatRateScheme
 
-      await(result) shouldBe Some(flatRateScheme)
+      await(result) mustBe Some(flatRateScheme)
     }
 
     "not update or insert flat rate scheme if registration does not exist" in new Setup {
       await(repository.insert(vatScheme))
 
-      count shouldBe 1
-      await(repository.findAll()).head shouldBe vatScheme
+      count mustBe 1
+      await(repository.findAll()).head mustBe vatScheme
 
-      a[MissingRegDocument] shouldBe thrownBy(await(repository.updateFlatRateScheme("wrongRegId", flatRateScheme)))
+      a[MissingRegDocument] mustBe thrownBy(await(repository.updateFlatRateScheme("wrongRegId", flatRateScheme)))
     }
   }
 
   "removeFlatRateScheme" should {
     "remove a flatRateScheme block in the registration document if it exists in the registration doc" in new Setup {
-      val result = for {
+      val result: Future[Option[VatScheme]] = for {
         _ <- repository.insert(vatScheme.copy(flatRateScheme = Some(flatRateScheme)))
         _ <- repository.removeFlatRateScheme(vatScheme.id.value)
         updatedScheme <- repository.retrieveVatScheme(vatScheme.id)
       } yield updatedScheme
 
-      await(result) shouldBe Some(vatScheme)
+      await(result) mustBe Some(vatScheme)
     }
 
     "throw a MissingRegDocument if the vat scheme does not exist for the regId" in new Setup {
-      a[MissingRegDocument] shouldBe thrownBy(await(repository.removeFlatRateScheme(vatScheme.id.value)))
+      a[MissingRegDocument] mustBe thrownBy(await(repository.removeFlatRateScheme(vatScheme.id.value)))
     }
   }
 
   "getInternalId" should {
     "return a Future[Option[String]] containing Some(InternalId)" in new Setup {
-      val result = for {
+      val result: Future[Option[String]] = for {
         _ <- repository.insert(vatScheme)
         result <- repository.getInternalId(vatScheme.id.value)
 
       } yield result
-      await(result) shouldBe Some(internalid)
+      await(result) mustBe Some(internalid)
     }
 
     "return a None when no regId document is found" in new Setup {
-      await(repository.getInternalId(vatScheme.id.value)) shouldBe None
+      await(repository.getInternalId(vatScheme.id.value)) mustBe None
     }
   }
   "getCombinedLodgingOfficer" should {
-    val completionCapacity = Json.obj("role" -> "director", "name" -> Json.obj(
+    val completionCapacity: JsObject = Json.obj("role" -> "director", "name" -> Json.obj(
       "forename" -> "First Name Test",
       "other_forenames" -> "Middle Name Test",
       "surname" -> "Last Name Test"
     ))
-    val questions1 = Seq(
+    val questions1: Seq[JsObject] = Seq(
       Json.obj("questionId" -> "completionCapacity", "question" -> "Some Question 11", "answer" -> "Some Answer 11", "answerValue" -> completionCapacity),
       Json.obj("questionId" -> "testQId12", "question" -> "Some Question 12", "answer" -> "Some Answer 12", "answerValue" -> "val12")
     )
-    val questions2 = Seq(
+    val questions2: Seq[JsObject] = Seq(
       Json.obj("questionId" -> "applicantUKNino-optionalData", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "JW778877A"),
       Json.obj("questionId" -> "testQId21", "question" -> "Some Question 21", "answer" -> "Some Answer 21", "answerValue" -> "val21"),
       Json.obj("questionId" -> "testQId22", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "val22")
     )
-    val section1 = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions1))
-    val section2 = Json.obj("title" -> "test TITLE 2", "data" -> JsArray(questions2))
-    val sections = JsArray(Seq(section1, section2))
+    val section1: JsObject = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions1))
+    val section2: JsObject = Json.obj("title" -> "test TITLE 2", "data" -> JsArray(questions2))
+    val sections: JsArray = JsArray(Seq(section1, section2))
     val eligibilityData = Json.obj("sections" -> sections)
 
     "return Lodging Officer Model from eligibilityData block and lodgingOfficer block" in new Setup {
       await(repository.insert(vatScheme.copy(eligibilityData = Some(eligibilityData), lodgingOfficer = Some(vatLodgingOfficer))))
       await(repository.insert(vatScheme.copy(id = RegistrationId("differentRegId"), lodgingOfficer = Some(vatLodgingOfficer))))
 
-      await(repository.count) shouldBe 2
+      await(repository.count) mustBe 2
 
-      val expectedModel = LodgingOfficer(
+      val expectedModel: LodgingOfficer = LodgingOfficer(
         dob = vatLodgingOfficer.dob,
         nino = "JW778877A",
         role = "director",
@@ -977,19 +979,19 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
         isOfficerApplying = true
       )
 
-      await(repository.getCombinedLodgingOfficer(vatScheme.id.value)) shouldBe Some(expectedModel)
+      await(repository.getCombinedLodgingOfficer(vatScheme.id.value)) mustBe Some(expectedModel)
     }
 
     "return None if both eligibilityData block and lodging officer block are missing" in new Setup {
       await(repository.insert(vatScheme))
-      await(repository.count) shouldBe 1
+      await(repository.count) mustBe 1
 
-      await(repository.getCombinedLodgingOfficer(vatScheme.id.value)) shouldBe None
+      await(repository.getCombinedLodgingOfficer(vatScheme.id.value)) mustBe None
     }
 
     "return an exception if eligibilityData block is missing but lodging officer block exists" in new Setup {
       await(repository.insert(vatScheme.copy(lodgingOfficer = Some(vatLodgingOfficer))))
-      await(repository.count) shouldBe 1
+      await(repository.count) mustBe 1
 
       intercept[Exception](await(repository.getCombinedLodgingOfficer(vatScheme.id.value)))
     }
@@ -1000,7 +1002,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
   }
 
   "patchLodgingOfficer" should {
-    val lodgingOfficerDetails = Json.toJson(LodgingOfficerDetails(
+    val lodgingOfficerDetails: JsValue = Json.toJson(LodgingOfficerDetails(
       currentAddress = scrsAddress,
       changeOfName = None,
       previousAddress = None,
@@ -1011,7 +1013,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
       )
     ))
     "patch with Dob and ivPassed and details" in new Setup {
-      val lodgeOfficerJson = Json.parse(
+      val lodgeOfficerJson: JsObject = Json.parse(
         s"""{
            | "ivPassed": true,
            | "dob": "2015-11-20",
@@ -1021,14 +1023,14 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
 
 
       await(repository.insert(vatScheme))
-      await(repository.count) shouldBe 1
-      val res = await(repository.patchLodgingOfficer(vatScheme.id.value, lodgeOfficerJson))
-      await(repository.count) shouldBe 1
-      (fetchAll.get \ "lodgingOfficer").as[JsObject] shouldBe lodgeOfficerJson
+      await(repository.count) mustBe 1
+      val res: JsObject = await(repository.patchLodgingOfficer(vatScheme.id.value, lodgeOfficerJson))
+      await(repository.count) mustBe 1
+      (fetchAll.get \ "lodgingOfficer").as[JsObject] mustBe lodgeOfficerJson
     }
 
     "patch with Dob only" in new Setup {
-      val lodgeOfficerJson = Json.parse(
+      val lodgeOfficerJson: JsObject = Json.parse(
         s"""{
            | "dob": "2015-11-20"
            |}
@@ -1036,13 +1038,13 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
 
 
       await(repository.insert(vatScheme))
-      await(repository.count) shouldBe 1
-      val res = await(repository.patchLodgingOfficer(vatScheme.id.value, lodgeOfficerJson))
-      await(repository.count) shouldBe 1
-      (fetchAll.get \ "lodgingOfficer").as[JsObject] shouldBe lodgeOfficerJson
+      await(repository.count) mustBe 1
+      val res: JsObject = await(repository.patchLodgingOfficer(vatScheme.id.value, lodgeOfficerJson))
+      await(repository.count) mustBe 1
+      (fetchAll.get \ "lodgingOfficer").as[JsObject] mustBe lodgeOfficerJson
     }
     "fail to patch without Dob but with IvPased and details" in new Setup {
-      val lodgeOfficerJson = Json.parse(
+      val lodgeOfficerJson: JsObject = Json.parse(
         s"""{
            | "ivPassed": true,
            | "details": $lodgingOfficerDetails
@@ -1051,14 +1053,14 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
 
 
       await(repository.insert(vatScheme))
-      await(repository.count) shouldBe 1
+      await(repository.count) mustBe 1
       intercept[NoSuchElementException](await(repository.patchLodgingOfficer(vatScheme.id.value, lodgeOfficerJson)))
-      await(repository.count) shouldBe 1
-      (fetchAll.get \ "lodgingOfficer").asOpt[JsObject] shouldBe None
+      await(repository.count) mustBe 1
+      (fetchAll.get \ "lodgingOfficer").asOpt[JsObject] mustBe None
     }
   }
 
-  val jsonEligiblityData = Json.parse(
+  val jsonEligiblityData: JsObject = Json.parse(
     """
       | {
       |    "foo" : "bar"
@@ -1068,31 +1070,31 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
   "getEligibilityData" should {
     "return some of eligibilityData" in new Setup {
       await(repository.insert(vatScheme.copy(eligibilityData = Some(jsonEligiblityData))))
-      await(repository.count) shouldBe 1
+      await(repository.count) mustBe 1
 
-      await(repository.getEligibilityData(vatScheme.id.value)) shouldBe Some(jsonEligiblityData)
+      await(repository.getEligibilityData(vatScheme.id.value)) mustBe Some(jsonEligiblityData)
     }
     "return None of eligibilityData" in new Setup {
       await(repository.insert(vatScheme))
-      await(repository.count) shouldBe 1
+      await(repository.count) mustBe 1
 
-      await(repository.getEligibilityData(vatScheme.id.value)) shouldBe None
+      await(repository.getEligibilityData(vatScheme.id.value)) mustBe None
     }
   }
   "updateEligibilityData" should {
     "update eligibilityData successfully when no eligibilityData block exists" in new Setup {
       await(repository.insert(vatScheme))
-      await(repository.count) shouldBe 1
+      await(repository.count) mustBe 1
 
-      await(repository.getEligibilityData(vatScheme.id.value)) shouldBe None
+      await(repository.getEligibilityData(vatScheme.id.value)) mustBe None
 
-      val res = await(repository.updateEligibilityData(vatScheme.id.value, jsonEligiblityData))
-      res shouldBe jsonEligiblityData
+      val res: JsObject = await(repository.updateEligibilityData(vatScheme.id.value, jsonEligiblityData))
+      res mustBe jsonEligiblityData
 
-      await(repository.getEligibilityData(vatScheme.id.value)) shouldBe Some(jsonEligiblityData)
+      await(repository.getEligibilityData(vatScheme.id.value)) mustBe Some(jsonEligiblityData)
     }
     "update eligibilityData successfully when eligibilityData block already exists" in new Setup {
-      val newJsonEligiblityData = Json.parse(
+      val newJsonEligiblityData: JsObject = Json.parse(
         """
           | {
           |    "wizz" : "new bar"
@@ -1100,14 +1102,14 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
         """.stripMargin).as[JsObject]
 
       await(repository.insert(vatScheme.copy(eligibilityData = Some(jsonEligiblityData))))
-      await(repository.count) shouldBe 1
+      await(repository.count) mustBe 1
 
-      await(repository.getEligibilityData(vatScheme.id.value)) shouldBe Some(jsonEligiblityData)
+      await(repository.getEligibilityData(vatScheme.id.value)) mustBe Some(jsonEligiblityData)
 
-      val res = await(repository.updateEligibilityData(vatScheme.id.value, newJsonEligiblityData))
-      res shouldBe newJsonEligiblityData
+      val res: JsObject = await(repository.updateEligibilityData(vatScheme.id.value, newJsonEligiblityData))
+      res mustBe newJsonEligiblityData
 
-      await(repository.getEligibilityData(vatScheme.id.value)) shouldBe Some(newJsonEligiblityData)
+      await(repository.getEligibilityData(vatScheme.id.value)) mustBe Some(newJsonEligiblityData)
     }
   }
 }

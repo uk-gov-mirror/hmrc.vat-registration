@@ -35,7 +35,7 @@ trait BusinessRegistrationTestConnector {
 
 class VatRegBusinessRegistrationTestConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) extends BusinessRegistrationTestConnector {
   //$COVERAGE-OFF$
-  val businessRegUrl = backendConfig.baseUrl("business-registration")
+  val businessRegUrl = backendConfig.servicesConfig.baseUrl("business-registration")
 
   def createCurrentProfileEntry()(implicit hc: HeaderCarrier): Future[Result] = {
     http.POST(s"$businessRegUrl/business-registration/business-tax-registration", Json.toJson(BusinessRegistrationRequest("ENG"))).map(_ => Results.Ok)

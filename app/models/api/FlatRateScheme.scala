@@ -18,7 +18,6 @@ package models.api
 
 import java.time.LocalDate
 
-import play.api.data.validation.ValidationError
 import play.api.libs.json._
 
 case class FlatRateScheme(joinFrs: Boolean,
@@ -31,7 +30,7 @@ object FlatRateScheme {
 case class BusinessGoods(estimatedTotalSales: Long, overTurnover: Boolean)
 
 object BusinessGoods {
-  implicit val format = Json.format[BusinessGoods]
+  implicit val format: OFormat[BusinessGoods] = Json.format[BusinessGoods]
 }
 
 case class FRSDetails(businessGoods: Option[BusinessGoods],

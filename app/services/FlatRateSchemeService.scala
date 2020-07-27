@@ -16,19 +16,14 @@
 
 package services
 
-import javax.inject.Inject
-
+import javax.inject.{Inject, Singleton}
 import models.api.FlatRateScheme
-import repositories.{RegistrationMongo, RegistrationMongoRepository}
+import repositories.RegistrationMongoRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class FlatRateSchemeService @Inject()(registrationMongo: RegistrationMongo) extends FlatRateSchemeSrv {
-  val registrationRepository: RegistrationMongoRepository = registrationMongo.store
-}
-
-trait FlatRateSchemeSrv {
-  val registrationRepository: RegistrationMongoRepository
+@Singleton
+class FlatRateSchemeService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
   def retrieveFlatRateScheme(regId: String)(implicit ec: ExecutionContext): Future[Option[FlatRateScheme]] = {
     registrationRepository.fetchFlatRateScheme(regId)

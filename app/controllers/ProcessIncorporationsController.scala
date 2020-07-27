@@ -19,22 +19,22 @@ package controllers
 import javax.inject.{Inject, Singleton}
 import models.external.IncorpStatus
 import play.api.Logger
-import play.api.libs.json.JsValue
-import play.api.mvc.Action
+import play.api.libs.json.{JsValue, Reads}
+import play.api.mvc.{Action, ControllerComponents}
 import services.SubmissionService
+
 import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 @Singleton
-class ProcessIncorporationsControllerImpl @Inject()(val submissionService: SubmissionService) extends ProcessIncorporationsController
+class ProcessIncorporationsController @Inject()(val submissionService: SubmissionService,
+                                                    controllerComponents: ControllerComponents)
+                                                    extends BackendController(controllerComponents) {
 
-trait ProcessIncorporationsController extends BaseController {
-
-  val submissionService: SubmissionService
 
   def processIncorp: Action[JsValue] = Action.async[JsValue](parse.json) {
     implicit request =>
-      implicit val reads = IncorpStatus.reads
+      implicit val reads: Reads[IncorpStatus] = IncorpStatus.reads
       withJsonBody[IncorpStatus] { incorp =>
 
         submissionService.submitTopUpVatRegistration(incorp) map {
