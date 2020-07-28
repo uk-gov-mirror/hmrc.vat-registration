@@ -19,25 +19,24 @@ package models
 import fixtures.VatRegistrationFixture
 import helpers.BaseSpec
 import models.api.{BusinessGoods, FRSDetails, FlatRateScheme}
-import play.api.data.validation.ValidationError
-import play.api.libs.json.{JsPath, JsSuccess, Json}
+import play.api.libs.json.{JsPath, JsSuccess, Json, JsonValidationError}
 
 class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegistrationFixture {
 
   "Creating a FlatRateScheme model from Json" should {
     "complete successfully" when {
       "complete json provided" in {
-        Json.fromJson[FlatRateScheme](validFullFlatRateSchemeJson) shouldBe JsSuccess(validFullFlatRateScheme)
+        Json.fromJson[FlatRateScheme](validFullFlatRateSchemeJson) mustBe JsSuccess(validFullFlatRateScheme)
       }
       "frsDetails is missing" in {
-        Json.fromJson[FlatRateScheme](validEmptyFlatRateSchemeJson) shouldBe JsSuccess(validEmptyFlatRateScheme)
+        Json.fromJson[FlatRateScheme](validEmptyFlatRateSchemeJson) mustBe JsSuccess(validEmptyFlatRateScheme)
       }
     }
     "fail" when {
       "joinFrs is missing" in {
         val json = Json.parse("{}")
         val result = Json.fromJson[FlatRateScheme](json)
-        result shouldHaveErrors (JsPath() \ "joinFrs" -> ValidationError("error.path.missing"))
+        result shouldHaveErrors (JsPath() \ "joinFrs" -> JsonValidationError("error.path.missing"))
       }
     }
   }
@@ -45,7 +44,7 @@ class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegi
   "Creating a FRSDetails model from Json" should {
     "complete successfully" when {
       "optional fields not present" in {
-        Json.fromJson[FRSDetails](validFRSDetailsJsonWithoutOptionals) shouldBe JsSuccess(validFullFRSDetails.copy(businessGoods = None, startDate = None))
+        Json.fromJson[FRSDetails](validFRSDetailsJsonWithoutOptionals) mustBe JsSuccess(validFullFRSDetails.copy(businessGoods = None, startDate = None))
       }
     }
     "fail" when {
@@ -58,7 +57,7 @@ class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegi
              |}
          """.stripMargin)
         val result = Json.fromJson[FRSDetails](json)
-        result shouldHaveErrors (JsPath() \ "categoryOfBusiness" -> ValidationError("error.path.missing"))
+        result shouldHaveErrors (JsPath() \ "categoryOfBusiness" -> JsonValidationError("error.path.missing"))
       }
       "percent is missing" in {
         val json = Json.parse(
@@ -69,7 +68,7 @@ class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegi
              |}
          """.stripMargin)
         val result = Json.fromJson[FRSDetails](json)
-        result shouldHaveErrors (JsPath() \ "percent" -> ValidationError("error.path.missing"))
+        result shouldHaveErrors (JsPath() \ "percent" -> JsonValidationError("error.path.missing"))
       }
     }
   }
@@ -84,7 +83,7 @@ class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegi
              |}
          """.stripMargin)
         val result = Json.fromJson[BusinessGoods](json)
-        result shouldHaveErrors (JsPath() \ "estimatedTotalSales" -> ValidationError("error.path.missing"))
+        result shouldHaveErrors (JsPath() \ "estimatedTotalSales" -> JsonValidationError("error.path.missing"))
       }
       "overTurnover is missing" in {
         val json = Json.parse(
@@ -94,7 +93,7 @@ class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegi
              |}
          """.stripMargin)
         val result = Json.fromJson[BusinessGoods](json)
-        result shouldHaveErrors (JsPath() \ "overTurnover" -> ValidationError("error.path.missing"))
+        result shouldHaveErrors (JsPath() \ "overTurnover" -> JsonValidationError("error.path.missing"))
       }
     }
   }
@@ -102,10 +101,10 @@ class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegi
   "Parsing FlatRateScheme to Json" should {
     "succeed" when {
       "FlatRateScheme is full" in {
-        Json.toJson[FlatRateScheme](validFullFlatRateScheme) shouldBe validFullFlatRateSchemeJson
+        Json.toJson[FlatRateScheme](validFullFlatRateScheme) mustBe validFullFlatRateSchemeJson
       }
       "frsDetails is missing" in {
-        Json.toJson[FlatRateScheme](FlatRateScheme(true, None)) shouldBe (validFullFlatRateSchemeJson - "frsDetails")
+        Json.toJson[FlatRateScheme](FlatRateScheme(true, None)) mustBe (validFullFlatRateSchemeJson - "frsDetails")
       }
     }
   }
@@ -113,7 +112,7 @@ class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegi
   "Parsing FRSDetails to Json" should {
     "succeed" when {
       "FRSDetails is missing either optional field" in {
-        Json.toJson[FRSDetails](FRSDetails(None, None, "testCategory", 15.00)) shouldBe (validFullFRSDetailsJsonWithOptionals - "businessGoods" - "startDate")
+        Json.toJson[FRSDetails](FRSDetails(None, None, "testCategory", 15.00)) mustBe (validFullFRSDetailsJsonWithOptionals - "businessGoods" - "startDate")
       }
     }
   }

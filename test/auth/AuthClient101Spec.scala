@@ -18,8 +18,9 @@ package auth
 
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.Matchers
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.play.PlaySpec
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
@@ -29,16 +30,16 @@ import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.retrieve.Retrievals._
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AuthClient101Spec extends WordSpec with Matchers with MockitoSugar {
-  val mockAuthConnector = mock[AuthConnector]
+class AuthClient101Spec extends PlaySpec with MockitoSugar {
+  val mockAuthConnector: AuthConnector = mock[AuthConnector]
 
-  object TestController extends BaseController with AuthorisedFunctions {
-    override val authConnector = mockAuthConnector
+  object TestController extends BackendController(stubControllerComponents()) with AuthorisedFunctions {
+    override val authConnector: AuthConnector = mockAuthConnector
 
     def isAuthorised: Action[AnyContent] = Action.async { implicit request =>
       authorised() {
@@ -82,7 +83,7 @@ class AuthClient101Spec extends WordSpec with Matchers with MockitoSugar {
         .thenReturn(Future.failed(new Exception("error")))
 
       val response = TestController.isAuthorised(FakeRequest())
-      status(response) shouldBe Status.FORBIDDEN
+      status(response) mustBe Status.FORBIDDEN
     }
 
     "return 200 if the user is authorised" in {
@@ -90,7 +91,7 @@ class AuthClient101Spec extends WordSpec with Matchers with MockitoSugar {
         .thenReturn(Future.successful({}))
 
       val result = TestController.isAuthorised(FakeRequest())
-      status(result) shouldBe OK
+      status(result) mustBe OK
     }
   }
 
@@ -100,8 +101,8 @@ class AuthClient101Spec extends WordSpec with Matchers with MockitoSugar {
         .thenReturn(Future.successful(Some("test-internal-id")))
 
       val result = TestController.isAuthorisedWithData(FakeRequest())
-      status(result) shouldBe OK
-      contentAsString(result) shouldBe "test-internal-id"
+      status(result) mustBe OK
+      contentAsString(result) mustBe "test-internal-id"
     }
 
     "return 204 if there is no internalId and the user is authorised" in {
@@ -109,7 +110,7 @@ class AuthClient101Spec extends WordSpec with Matchers with MockitoSugar {
         .thenReturn(Future.successful(None))
 
       val result = TestController.isAuthorisedWithData(FakeRequest())
-      status(result) shouldBe NO_CONTENT
+      status(result) mustBe NO_CONTENT
     }
   }
 
@@ -119,8 +120,8 @@ class AuthClient101Spec extends WordSpec with Matchers with MockitoSugar {
         .thenReturn(Future.successful(Credentials("some-provider-id", "some-provider-type")))
 
       val result = TestController.isAuthorisedWithCredId(FakeRequest())
-      status(result) shouldBe OK
-      contentAsString(result) shouldBe "some-provider-id"
+      status(result) mustBe OK
+      contentAsString(result) mustBe "some-provider-id"
     }
   }
 
@@ -128,33 +129,33 @@ class AuthClient101Spec extends WordSpec with Matchers with MockitoSugar {
     "return 200 with a valid externalId and providerId" in {
       val cred = Credentials("some-provider-id", "some-provider-type")
 
-      when(mockAuthConnector.authorise[Option[String] ~ Credentials](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any()))
-        .thenReturn(Future.successful(new ~(Some("some-external-id"), cred)))
+      when(mockAuthConnector.authorise[Option[String] ~ Credentials](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(),
+        ArgumentMatchers.any())).thenReturn(Future.successful(new ~(Some("some-external-id"), cred)))
 
       val result = TestController.isAuthorisedWithExternalIdAndCredId(FakeRequest())
-      status(result) shouldBe OK
+      status(result) mustBe OK
 
-      contentAsJson(result) shouldBe Json.obj("externalId" -> "some-external-id", "providerId" -> cred.providerId)
+      contentAsJson(result) mustBe Json.obj("externalId" -> "some-external-id", "providerId" -> cred.providerId)
     }
 
     "return 204 if there is no externalId" in {
       val cred = Credentials("some-provider-id", "some-provider-type")
 
-      when(mockAuthConnector.authorise[Option[String] ~ Credentials](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any()))
-        .thenReturn(Future.successful(new ~(None, cred)))
+      when(mockAuthConnector.authorise[Option[String] ~ Credentials](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(),
+        ArgumentMatchers.any())).thenReturn(Future.successful(new ~(None, cred)))
 
       val result = TestController.isAuthorisedWithExternalIdAndCredId(FakeRequest())
-      status(result) shouldBe NO_CONTENT
+      status(result) mustBe NO_CONTENT
     }
 
     "return 403 if something failed" in {
       val cred = Credentials("some-provider-id", "some-provider-type")
 
-      when(mockAuthConnector.authorise[Option[String] ~ Credentials](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any()))
-        .thenReturn(Future.failed(new Exception("something wrong")))
+      when(mockAuthConnector.authorise[Option[String] ~ Credentials](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(),
+        ArgumentMatchers.any())).thenReturn(Future.failed(new Exception("something wrong")))
 
       val result = TestController.isAuthorisedWithExternalIdAndCredId(FakeRequest())
-      status(result) shouldBe FORBIDDEN
+      status(result) mustBe FORBIDDEN
     }
   }
 }

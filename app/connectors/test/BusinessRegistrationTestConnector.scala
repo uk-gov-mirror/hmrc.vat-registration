@@ -16,9 +16,8 @@
 
 package connectors.test
 
-import com.google.inject.ImplementedBy
 import config.BackendConfig
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import models.external.BusinessRegistrationRequest
 import play.api.libs.json.Json
 import play.api.mvc.{Result, Results}
@@ -28,17 +27,11 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@ImplementedBy(classOf[VatRegBusinessRegistrationTestConnector])
-trait BusinessRegistrationTestConnector {
-  def createCurrentProfileEntry()(implicit hc: HeaderCarrier): Future[Result]
-}
-
-class VatRegBusinessRegistrationTestConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) extends BusinessRegistrationTestConnector {
-  //$COVERAGE-OFF$
-  val businessRegUrl = backendConfig.baseUrl("business-registration")
+@Singleton
+class BusinessRegistrationTestConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) {
+  val businessRegUrl: String = backendConfig.servicesConfig.baseUrl("business-registration")
 
   def createCurrentProfileEntry()(implicit hc: HeaderCarrier): Future[Result] = {
     http.POST(s"$businessRegUrl/business-registration/business-tax-registration", Json.toJson(BusinessRegistrationRequest("ENG"))).map(_ => Results.Ok)
   }
-  //$COVERAGE-ON$
 }

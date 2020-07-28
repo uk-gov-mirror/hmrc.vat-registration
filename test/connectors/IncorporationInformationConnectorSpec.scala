@@ -21,26 +21,28 @@ import java.time.LocalDate
 import common.TransactionId
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import play.api.libs.json.Json
+import models.external.IncorporationStatus
+import org.apache.http.client.HttpClient
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, NotFoundException}
+import uk.gov.hmrc.play.http.ws.WSHttp
 
 class IncorporationInformationConnectorSpec extends VatRegSpec with VatRegistrationFixture {
 
   trait Setup {
-    val connector = new IncorporationInformationConnector {
-      override val iiUrl = "anyUrl"
-      override val iiUri = "tst-url"
-      override val http = mockWSHttp
-      override val vatRegUri: String = "test"
+    val connector: IncorporationInformationConnector = new IncorporationInformationConnector(backendConfig, mockHttpClient) {
+      override lazy val iiUrl = "anyUrl"
+      override lazy val iiUri = "tst-url"
+      override lazy val vatRegUri: String = "test"
     }
   }
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "retrieveIncorporationStatus" should {
     "return an IncorporationStatus if one is found in II" in new Setup {
-      val returnedFromII = Json.parse(
+      val returnedFromII: JsValue = Json.parse(
         s"""
            |{
            |  "SCRSIncorpStatus":{
@@ -62,14 +64,14 @@ class IncorporationInformationConnectorSpec extends VatRegSpec with VatRegistrat
            |  }
            |}
         """.stripMargin)
-      val expectedIIStatus = incorporationStatus(incorpDate = LocalDate.of(2016, 8, 5))
+      val expectedIIStatus: IncorporationStatus = incorporationStatus(incorpDate = LocalDate.of(2016, 8, 5))
       mockHttpPOST("anyUrl", HttpResponse(200, responseJson = Some(returnedFromII)))
-      await(connector.retrieveIncorporationStatus(Some("any"),TransactionId("any"), regime, subscriber)) shouldBe Some(expectedIIStatus)
+      await(connector.retrieveIncorporationStatus(Some("any"),TransactionId("any"), regime, subscriber)) mustBe Some(expectedIIStatus)
     }
 
     "returns None if incorporation status not found in II and a new subscription has been setup" in new Setup {
       mockHttpPOST("anyUrl", HttpResponse(202))
-      await(connector.retrieveIncorporationStatus(Some("any"),TransactionId("any"), regime, subscriber)) shouldBe None
+      await(connector.retrieveIncorporationStatus(Some("any"),TransactionId("any"), regime, subscriber)) mustBe None
     }
 
     "returns an exception when failed to get incorporation status or setup a subscription" in new Setup {
@@ -84,7 +86,7 @@ class IncorporationInformationConnectorSpec extends VatRegSpec with VatRegistrat
 
   "getCompanyName" should {
     "return the company name if one is found in II" in new Setup {
-      val returnedFromII = Json.parse(
+      val returnedFromII: JsValue = Json.parse(
         s"""
            |{
            |  "company-name":"test"
@@ -92,9 +94,9 @@ class IncorporationInformationConnectorSpec extends VatRegSpec with VatRegistrat
         """.stripMargin)
 
       mockHttpGet("anyUrl", HttpResponse(200, responseJson = Some(returnedFromII)))
-      val res = await(connector.getCompanyName(regId, TransactionId("any")))
-      res.json shouldBe returnedFromII
-      res.status shouldBe OK
+      val res: HttpResponse = await(connector.getCompanyName(regId, TransactionId("any")))
+      res.json mustBe returnedFromII
+      res.status mustBe OK
     }
 
     "throw an exception if the company could not be found" in new Setup {
@@ -111,7 +113,7 @@ class IncorporationInformationConnectorSpec extends VatRegSpec with VatRegistrat
 
     "be serialised to JSON" in {
       val expectedJson = """{"SCRSIncorpSubscription":{"callbackUrl":"someUrl/vatreg/incorporation-data"}}"""
-      Json.toJson(IncorpStatusRequest("someUrl"))(IncorpStatusRequest.writes).toString() shouldBe expectedJson
+      Json.toJson(IncorpStatusRequest("someUrl"))(IncorpStatusRequest.writes).toString() mustBe expectedJson
     }
     
   }

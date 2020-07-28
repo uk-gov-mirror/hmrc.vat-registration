@@ -30,7 +30,6 @@ import models.api.VatScheme
 import models.external.CurrentProfile
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
-import play.api.test.FakeApplication
 import play.api.test.Helpers._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,7 +38,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
 
   class Setup extends SetupHelper
 
-  val validBusinessRegistrationResponse = CurrentProfile(
+  val validBusinessRegistrationResponse: CurrentProfile = CurrentProfile(
     "12345",
     Some("director"),
     "ENG"
@@ -51,10 +50,10 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
         given.user.isAuthorised
         stubBusinessReg(OK)(Some(validBusinessRegistrationResponse))
 
-        val res = await(client(VatRegistrationController.newVatRegistration().url).post("test"))
+        val res: WSResponse = await(client(VatRegistrationController.newVatRegistration().url).post("test"))
 
-        res.status shouldBe CREATED
-        res.json shouldBe Json.obj(
+        res.status mustBe CREATED
+        res.json mustBe Json.obj(
           "registrationId" -> "12345",
           "internalId" -> "INT-123-456-789",
           "status" -> "draft"
@@ -64,9 +63,9 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
         given.user.isAuthorised
         stubBusinessReg(NOT_FOUND)()
 
-        val res = await(client(s"/12345").post("test"))
+        val res: WSResponse = await(client(s"/12345").post("test"))
 
-        res.status shouldBe NOT_FOUND
+        res.status mustBe NOT_FOUND
       }
     }
     "the user is not authorised" should {
@@ -74,9 +73,9 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
         given.user.isNotAuthorised
         stubBusinessReg(OK)(Some(validBusinessRegistrationResponse))
 
-        val res = await(client(VatRegistrationController.newVatRegistration().url).post("test"))
+        val res: WSResponse = await(client(VatRegistrationController.newVatRegistration().url).post("test"))
 
-        res.status shouldBe FORBIDDEN
+        res.status mustBe FORBIDDEN
       }
     }
   }
@@ -100,10 +99,10 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
         VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
       )
 
-      result.status shouldBe OK
+      result.status mustBe OK
 
       val reg: Option[VatScheme] = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
-      reg.get.status shouldBe VatRegStatus.submitted
+      reg.get.status mustBe VatRegStatus.submitted
 
       await(repo.remove("registrationId" -> registrationID))
     }
@@ -118,14 +117,14 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
 
       repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateTradingDetails(registrationID, tradingDetails))
 
-      val result = await(client(
+      val result: WSResponse = await(client(
         VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
       )
 
-      result.status shouldBe OK
+      result.status mustBe OK
 
-      val reg = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
-      reg.get.status shouldBe VatRegStatus.held
+      val reg: Option[VatScheme] = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
+      reg.get.status mustBe VatRegStatus.held
 
       await(repo.remove("registrationId" -> registrationID))
     }
@@ -140,14 +139,14 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
 
       repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateTradingDetails(registrationID, tradingDetails))
 
-      val result = await(client(
+      val result: WSResponse = await(client(
         VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
       )
 
-      result.status shouldBe BAD_REQUEST
+      result.status mustBe BAD_REQUEST
 
-      val reg = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
-      reg.get.status shouldBe VatRegStatus.locked
+      val reg: Option[VatScheme] = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
+      reg.get.status mustBe VatRegStatus.locked
 
       await(repo.remove("registrationId" -> registrationID))
     }
@@ -162,11 +161,11 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
 
       repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateTradingDetails(registrationID, tradingDetails))
 
-      val result = await(client(
+      val result: WSResponse = await(client(
         VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
       )
 
-      result.status shouldBe OK
+      result.status mustBe OK
     }
 
     "return a BAD_GATEWAY status when DES returns a 499" in new Setup() {
@@ -179,10 +178,10 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
 
       repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateTradingDetails(registrationID, tradingDetails))
 
-      val result = await(client(
+      val result: WSResponse = await(client(
         VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
       )
-      result.status shouldBe BAD_GATEWAY
+      result.status mustBe BAD_GATEWAY
     }
 
     "return a SERVICE_UNAVAILABLE status when DES returns TOO_MANY_REQUESTS" in new Setup() {
@@ -195,11 +194,11 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
 
       repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateTradingDetails(registrationID, tradingDetails))
 
-      val result = await(client(
+      val result: WSResponse = await(client(
         VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
       )
 
-      result.status shouldBe SERVICE_UNAVAILABLE
+      result.status mustBe SERVICE_UNAVAILABLE
     }
 
     "mock the return if the mock submission flag is on" in new Setup{
@@ -209,11 +208,11 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
 
       repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateReturns(registrationID, returns))
 
-      val result = await(client(
+      val result: WSResponse = await(client(
         VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
       )
 
-      result.status shouldBe OK
+      result.status mustBe OK
     }
   }
 }

@@ -33,17 +33,9 @@ import scala.concurrent.Future
 import scala.util.control.NoStackTrace
 
 @Singleton
-class SequenceMongo @Inject()(mongo: ReactiveMongoComponent) extends ReactiveMongoFormats {
-  lazy val store = new SequenceMongoRepository(mongo.mongoConnector.db)
-}
-
-trait SequenceRepository extends ReactiveRepository[Sequence, BSONObjectID]{
-  def getNext(sequenceID: String)(implicit hc : HeaderCarrier): Future[Int]
-}
-
-class SequenceMongoRepository (mongo: () => DB)
-  extends ReactiveRepository[Sequence, BSONObjectID]("sequence", mongo, Sequence.formats, ReactiveMongoFormats.objectIdFormats)
-    with SequenceRepository {
+class SequenceMongoRepository @Inject()(mongo: ReactiveMongoComponent)
+  extends ReactiveRepository[Sequence, BSONObjectID]("sequence", mongo.mongoConnector.db, Sequence.formats, ReactiveMongoFormats.objectIdFormats)
+    with ReactiveMongoFormats {
 
   def getNext(sequenceID: String)(implicit hc: HeaderCarrier): Future[Int] = {
     val selector = BSONDocument("_id" -> sequenceID)

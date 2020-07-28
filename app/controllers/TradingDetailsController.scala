@@ -17,23 +17,23 @@
 package controllers
 
 import auth.{Authorisation, AuthorisationResource}
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import models.api.TradingDetails
 import play.api.libs.json.JsValue
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.TradingDetailsService
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class TradingDetailsControllerImpl @Inject()(val tradingDetailsService: TradingDetailsService,
-                                             val authConnector: AuthConnector) extends TradingDetailsController {
-  val resourceConn: AuthorisationResource                              = tradingDetailsService.registrationRepository
-}
+@Singleton
+class TradingDetailsController @Inject()(val tradingDetailsService: TradingDetailsService,
+                                         val authConnector: AuthConnector,
+                                         controllerComponents: ControllerComponents)
+                                         extends BackendController(controllerComponents) with Authorisation {
 
-trait TradingDetailsController extends BaseController with Authorisation {
-
-  val tradingDetailsService: TradingDetailsService
+  val resourceConn: AuthorisationResource = tradingDetailsService.registrationRepository
 
   def fetchTradingDetails(regId: String): Action[AnyContent] = Action.async {
     implicit request =>

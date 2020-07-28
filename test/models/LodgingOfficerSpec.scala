@@ -21,17 +21,16 @@ import java.time.LocalDate
 import fixtures.VatRegistrationFixture
 import helpers.BaseSpec
 import models.api._
-import play.api.data.validation.ValidationError
-import play.api.libs.json.{Format, JsArray, JsObject, JsPath, JsSuccess, Json}
+import play.api.libs.json.{Format, JsArray, JsObject, JsPath, JsSuccess, Json, JsonValidationError, OFormat}
 import utils.EligibilityDataJsonUtils
 
 class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegistrationFixture {
 
   private def writeAndRead[T](t: T)(implicit fmt: Format[T]) = fmt.reads(Json.toJson(fmt.writes(t)))
 
-  implicit val format = LodgingOfficer.format
+  implicit val format: OFormat[LodgingOfficer] = LodgingOfficer.format
 
-  val vatLodgingOfficer = LodgingOfficer(
+  val vatLodgingOfficer: LodgingOfficer = LodgingOfficer(
     dob                      = Some(LocalDate.of(1990, 1, 1)),
     nino                     = "NB686868C",
     role                     = "director",
@@ -47,21 +46,21 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
   }
 
   "Creating a Json from an invalid VatLodgingOfficer model" should {
-    "fail with a ValidationError" when {
+    "fail with a JsonValidationError" when {
       "NINO is invalid" in {
         val lodgingOfficer = vatLodgingOfficer.copy(nino = "NB888")
-        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "nino" -> ValidationError("error.pattern"))
+        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "nino" -> JsonValidationError("error.pattern"))
       }
 
       "Role is invalid" in {
         val lodgingOfficer = vatLodgingOfficer.copy(role = "magician")
-        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "role" -> ValidationError("error.pattern"))
+        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "role" -> JsonValidationError("error.pattern"))
       }
 
       "Name is invalid" in {
         val name = Name(first = Some("$%@$%^@#%@$^@$^$%@#$%@#$"), middle = None, last = "valid name")
         val lodgingOfficer = vatLodgingOfficer.copy(name = name)
-        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "name" \ "first" -> ValidationError("error.pattern"))
+        writeAndRead(lodgingOfficer) shouldHaveErrors (JsPath() \ "name" \ "first" -> JsonValidationError("error.pattern"))
       }
     }
   }
@@ -114,7 +113,7 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
 
         val res = Json.fromJson[LodgingOfficer](EligibilityDataJsonUtils.toJsObject(eligibilityData) ++ lodgingOfficerJson)(LodgingOfficer.mongoReads)
 
-        res shouldBe JsSuccess(expectedModel)
+        res mustBe JsSuccess(expectedModel)
       }
 
       "retrieved from eligiblityData json combined with lodging officer json with completionCapacity = noneofthese" in {
@@ -134,7 +133,7 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
 
         val res = Json.fromJson[LodgingOfficer](EligibilityDataJsonUtils.toJsObject(eligibilityData) ++ lodgingOfficerJson)(LodgingOfficer.mongoReads)
 
-        res shouldBe JsSuccess(expectedModel.copy(isOfficerApplying = false))
+        res mustBe JsSuccess(expectedModel.copy(isOfficerApplying = false))
       }
 
       "return jsError when CompletionCapacity = nonofthese but there is no CompletionCapacityFillingInFor" in {
@@ -153,7 +152,7 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
 
         val res = Json.fromJson[LodgingOfficer](EligibilityDataJsonUtils.toJsObject(eligibilityData) ++ lodgingOfficerJson)(LodgingOfficer.mongoReads)
 
-        res.isError shouldBe true
+        res.isError mustBe true
       }
 
       "return jsError when CompletionCapacity has an incorrect value" in {
@@ -171,7 +170,7 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
         val eligibilityData = Json.obj("eligibilityData" -> Json.obj("sections" -> sections))
 
         val res = Json.fromJson[LodgingOfficer](EligibilityDataJsonUtils.toJsObject(eligibilityData) ++ lodgingOfficerJson)(LodgingOfficer.mongoReads)
-        res.isError shouldBe true
+        res.isError mustBe true
       }
     }
   }
@@ -196,7 +195,7 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
     "return JsSuccess" when {
       "completionCapacity is defined with a JsObject" in {
         val res = Json.fromJson(json)(LodgingOfficer.eligibilityDataJsonReads)
-        res shouldBe JsSuccess(("JW778877A", Name(first = Some("First Name Test"), middle = Some("Middle Name Test"), last = "Last Name Test"), "director", true))
+        res mustBe JsSuccess(("JW778877A", Name(first = Some("First Name Test"), middle = Some("Middle Name Test"), last = "Last Name Test"), "director", true))
       }
       "completionCapacity is defined with noneofthese and completionCapacityFillingInFor is defined with a JsObject" in {
         val rep = Json.obj("role" -> "director", "name" -> Json.obj(
@@ -209,7 +208,7 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
         val res = Json.fromJson(json2)(LodgingOfficer.eligibilityDataJsonReads)
         val expected = ("JW778877A", Name(first = Some("First Name Test 2"), middle = Some("Middle Name Test 2"), last = "Last Name Test 2"), "director", false)
 
-        res shouldBe JsSuccess(expected)
+        res mustBe JsSuccess(expected)
       }
     }
 
@@ -217,27 +216,27 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
       "completionCapacity is not defined" in {
         val testJson = json - "completionCapacity"
         val res = Json.fromJson(testJson)(LodgingOfficer.eligibilityDataJsonReads)
-        res.isError shouldBe true
+        res.isError mustBe true
       }
       "completionCapacity is not defined correctly" in {
         val testJson = json - "completionCapacity" ++ Json.obj("completionCapacity" -> 125454)
         val res = Json.fromJson(testJson)(LodgingOfficer.eligibilityDataJsonReads)
-        res.isError shouldBe true
+        res.isError mustBe true
       }
       "completionCapacity is defined with noneofthese but completionCapacityFillingInFor is missing" in {
         val testJson = json - "completionCapacity" ++ Json.obj("completionCapacity" -> "noneofthese")
         val res = Json.fromJson(testJson)(LodgingOfficer.eligibilityDataJsonReads)
-        res.isError shouldBe true
+        res.isError mustBe true
       }
       "completionCapacity is defined with noneofthese but completionCapacityFillingInFor is not defined correctly" in {
         val testJson = json - "completionCapacity" ++ Json.obj("completionCapacity" -> "noneofthese", "completionCapacityFillingInFor" -> 4564654)
         val res = Json.fromJson(testJson)(LodgingOfficer.eligibilityDataJsonReads)
-        res.isError shouldBe true
+        res.isError mustBe true
       }
       "applicantUKNino is not valid" in {
         val testJson = json - "applicantUKNino" ++ Json.obj("applicantUKNino-optionalData" -> "SF123456E")
         val res = Json.fromJson(testJson)(LodgingOfficer.eligibilityDataJsonReads)
-        res.isError shouldBe true
+        res.isError mustBe true
       }
       "officer role is not valid" in {
         val invalidOfficer = Json.obj("role" -> "manager", "name" -> Json.obj(
@@ -249,7 +248,7 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
         val testJson = json - "completionCapacity" ++ Json.obj("completionCapacity" -> invalidOfficer)
         val res = Json.fromJson(testJson)(LodgingOfficer.eligibilityDataJsonReads)
 
-        res.isError shouldBe true
+        res.isError mustBe true
       }
     }
   }
@@ -264,7 +263,7 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
         )
 
         val res = Json.fromJson(json)(LodgingOfficer.patchJsonReads)
-        res shouldBe JsSuccess(json)
+        res mustBe JsSuccess(json)
       }
       "min json is defined" in {
         val json = Json.obj(
@@ -272,7 +271,7 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
         )
 
         val res = Json.fromJson(json)(LodgingOfficer.patchJsonReads)
-        res shouldBe JsSuccess(json)
+        res mustBe JsSuccess(json)
       }
     }
     "return JsError" when {
@@ -283,7 +282,7 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
         )
 
         val res = Json.fromJson(json)(LodgingOfficer.patchJsonReads)
-        res.isError shouldBe true
+        res.isError mustBe true
       }
       "ivPassed is not correct" in {
         val json = Json.obj(
@@ -293,7 +292,7 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
         )
 
         val res = Json.fromJson(json)(LodgingOfficer.patchJsonReads)
-        res.isError shouldBe true
+        res.isError mustBe true
       }
       "details is not correct" in {
         val json = Json.obj(
@@ -303,7 +302,7 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
         )
 
         val res = Json.fromJson(json)(LodgingOfficer.patchJsonReads)
-        res.isError shouldBe true
+        res.isError mustBe true
       }
     }
   }

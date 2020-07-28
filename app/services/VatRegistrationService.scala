@@ -14,22 +14,6 @@
  * limitations under the License.
  */
 
-/*
- * Copyright 2018 HM Revenue & Customs
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package services
 
 import cats.data.{EitherT, OptionT}
@@ -40,36 +24,27 @@ import common.exceptions._
 import config.BackendConfig
 import connectors._
 import enums.VatRegStatus
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import models.AcknowledgementReferencePath
 import models.api.VatScheme
 import models.external.CurrentProfile
 import org.slf4j.LoggerFactory
 import play.api.libs.json._
-import repositories.{RegistrationMongo, RegistrationRepository}
+import repositories.RegistrationMongoRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import scala.concurrent.ExecutionContext.Implicits.global
 import utils.EligibilityDataJsonUtils
-
 import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class VatRegistrationService @Inject()(val brConnector: BusinessRegistrationConnector,
-                                       regMongo: RegistrationMongo,
+                                       registrationRepository: RegistrationMongoRepository,
                                        val backendConfig: BackendConfig,
-                                       val http: HttpClient) extends RegistrationService {
+                                       val http: HttpClient) extends ApplicativeSyntax with FutureInstances {
 
-  val registrationRepository: RegistrationRepository = regMongo.store
-  override lazy val vatRestartUrl = backendConfig.getString("api.vatRestartURL")
-  override lazy val vatCancelUrl  = backendConfig.getString("api.vatCancelURL")
-}
-
-trait RegistrationService extends ApplicativeSyntax with FutureInstances {
-  val registrationRepository: RegistrationRepository
-  val brConnector: BusinessRegistrationConnector
-
-  val vatRestartUrl: String
-  val vatCancelUrl: String
+  lazy val vatRestartUrl: String = backendConfig.servicesConfig.getString("api.vatRestartURL")
+  lazy val vatCancelUrl: String = backendConfig.servicesConfig.getString("api.vatCancelURL")
 
   private val cancelStatuses: Seq[VatRegStatus.Value] = Seq(VatRegStatus.draft, VatRegStatus.invalid)
 

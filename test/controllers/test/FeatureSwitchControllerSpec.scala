@@ -16,26 +16,30 @@
 
 package controllers.test
 
-import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
+import org.scalatest.{BeforeAndAfterEach, Matchers}
+import org.scalatestplus.play.PlaySpec
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
-class FeatureSwitchControllerSpec extends WordSpec with Matchers with BeforeAndAfterEach {
+import scala.concurrent.Future
+
+class FeatureSwitchControllerSpec extends PlaySpec with BeforeAndAfterEach {
 
   override def beforeEach() {
     System.clearProperty("feature.mockSubmission")
   }
 
   class Setup {
-    val controller = new FeatureSwitchController
+    val controller = new FeatureSwitchController(stubControllerComponents())
   }
 
   "show" should {
 
     "return a 200 and display all feature flags and their " in new Setup {
-      val result = controller.show(FakeRequest())
-      status(result) shouldBe 200
-      contentAsString(result) shouldBe "mockSubmission false\n"
+      val result: Future[Result] = controller.show(FakeRequest())
+      status(result) mustBe 200
+      contentAsString(result) mustBe "mockSubmission false\n"
     }
   }
 
@@ -45,36 +49,36 @@ class FeatureSwitchControllerSpec extends WordSpec with Matchers with BeforeAndA
       val featureName = "mockSubmission"
       val featureState = "false"
 
-      val result = controller.switch(featureName, featureState)(FakeRequest())
-      status(result) shouldBe OK
-      contentAsString(result) shouldBe "BooleanFeatureSwitch(mockSubmission,false)"
+      val result: Future[Result] = controller.switch(featureName, featureState)(FakeRequest())
+      status(result) mustBe OK
+      contentAsString(result) mustBe "BooleanFeatureSwitch(mockSubmission,false)"
     }
 
     "return a mockSubmission feature state set to true when we specify on" in new Setup {
       val featureName = "mockSubmission"
       val featureState = "true"
 
-      val result = controller.switch(featureName, featureState)(FakeRequest())
-      status(result) shouldBe OK
-      contentAsString(result) shouldBe "BooleanFeatureSwitch(mockSubmission,true)"
+      val result: Future[Result] = controller.switch(featureName, featureState)(FakeRequest())
+      status(result) mustBe OK
+      contentAsString(result) mustBe "BooleanFeatureSwitch(mockSubmission,true)"
     }
 
     "return a submissionCheck feature state set to false as a default when we specify xxxx" in new Setup {
       val featureName = "mockSubmission"
       val featureState = "xxxx"
 
-      val result = controller.switch(featureName, featureState)(FakeRequest())
-      status(result) shouldBe OK
-      contentAsString(result) shouldBe "BooleanFeatureSwitch(mockSubmission,false)"
+      val result: Future[Result] = controller.switch(featureName, featureState)(FakeRequest())
+      status(result) mustBe OK
+      contentAsString(result) mustBe "BooleanFeatureSwitch(mockSubmission,false)"
     }
 
     "return a bad request when we specify a non implemented feature name" in new Setup {
       val featureName = "Rubbish"
       val featureState = "on"
 
-      val result = controller.switch(featureName, featureState)(FakeRequest())
+      val result: Future[Result] = controller.switch(featureName, featureState)(FakeRequest())
 
-      status(result) shouldBe BAD_REQUEST
+      status(result) mustBe BAD_REQUEST
     }
   }
 }

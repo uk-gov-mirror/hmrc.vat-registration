@@ -16,9 +16,10 @@
 
 package utils
 
-import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
+import org.scalatest.{BeforeAndAfterEach, Matchers}
+import org.scalatestplus.play.PlaySpec
 
-class FeatureSwitchSpec extends WordSpec with Matchers with BeforeAndAfterEach {
+class FeatureSwitchSpec extends PlaySpec with BeforeAndAfterEach {
 
   override def beforeEach() {
     System.clearProperty("feature.mockSubmission")
@@ -30,12 +31,12 @@ class FeatureSwitchSpec extends WordSpec with Matchers with BeforeAndAfterEach {
     "return a constructed BooleanFeatureSwitch if the set system property is a boolean" in {
       System.setProperty("feature.test", "true")
 
-      FeatureSwitch("test") shouldBe BooleanFeatureSwitch("test", enabled = true)
+      FeatureSwitch("test") mustBe BooleanFeatureSwitch("test", enabled = true)
     }
 
     "create an instance of BooleanFeatureSwitch which inherits FeatureSwitch" in {
-      FeatureSwitch("test") shouldBe a[FeatureSwitch]
-      FeatureSwitch("test") shouldBe a[BooleanFeatureSwitch]
+      FeatureSwitch("test") mustBe a[FeatureSwitch]
+      FeatureSwitch("test") mustBe a[BooleanFeatureSwitch]
     }
   }
 
@@ -44,58 +45,58 @@ class FeatureSwitchSpec extends WordSpec with Matchers with BeforeAndAfterEach {
     "deconstruct a given FeatureSwitch into it's name and a false enabled value if undefined as a system property" in {
       val fs = FeatureSwitch("test")
 
-      FeatureSwitch.unapply(fs) shouldBe Some("test" -> false)
+      FeatureSwitch.unapply(fs) mustBe Some("test" -> false)
     }
 
     "deconstruct a given FeatureSwitch into its name and true if defined as true as a system property" in {
       System.setProperty("feature.test", "true")
       val fs = FeatureSwitch("test")
 
-      FeatureSwitch.unapply(fs) shouldBe Some("test" -> true)
+      FeatureSwitch.unapply(fs) mustBe Some("test" -> true)
     }
 
     "deconstruct a given FeatureSwitch into its name and false if defined as false as a system property" in {
       System.setProperty("feature.test", "false")
       val fs = FeatureSwitch("test")
 
-      FeatureSwitch.unapply(fs) shouldBe Some("test" -> false)
+      FeatureSwitch.unapply(fs) mustBe Some("test" -> false)
     }
   }
 
   "getProperty" should {
 
     "return a disabled feature switch if the system property is undefined" in {
-      FeatureSwitch.getProperty("test") shouldBe BooleanFeatureSwitch("test", enabled = false)
+      FeatureSwitch.getProperty("test") mustBe BooleanFeatureSwitch("test", enabled = false)
     }
 
     "return an enabled feature switch if the system property is defined as 'true'" in {
       System.setProperty("feature.test", "true")
 
-      FeatureSwitch.getProperty("test") shouldBe BooleanFeatureSwitch("test", enabled = true)
+      FeatureSwitch.getProperty("test") mustBe BooleanFeatureSwitch("test", enabled = true)
     }
 
     "return an enabled feature switch if the system property is defined as 'false'" in {
       System.setProperty("feature.test", "false")
 
-      FeatureSwitch.getProperty("test") shouldBe BooleanFeatureSwitch("test", enabled = false)
+      FeatureSwitch.getProperty("test") mustBe BooleanFeatureSwitch("test", enabled = false)
     }
   }
 
   "systemPropertyName" should {
 
     "append feature. to the supplied string'" in {
-      FeatureSwitch.systemPropertyName("test") shouldBe "feature.test"
+      FeatureSwitch.systemPropertyName("test") mustBe "feature.test"
     }
   }
 
   "setProperty" should {
 
     "return a feature switch (testKey, false) when supplied with (testKey, testValue)" in {
-      FeatureSwitch.setProperty("test", "testValue") shouldBe BooleanFeatureSwitch("test", enabled = false)
+      FeatureSwitch.setProperty("test", "testValue") mustBe BooleanFeatureSwitch("test", enabled = false)
     }
 
     "return a feature switch (testKey, true) when supplied with (testKey, true)" in {
-      FeatureSwitch.setProperty("test", "true") shouldBe BooleanFeatureSwitch("test", enabled = true)
+      FeatureSwitch.setProperty("test", "true") mustBe BooleanFeatureSwitch("test", enabled = true)
     }
   }
 
@@ -104,7 +105,7 @@ class FeatureSwitchSpec extends WordSpec with Matchers with BeforeAndAfterEach {
       val fs = FeatureSwitch("test")
       System.setProperty("feature.test", "false")
 
-      FeatureSwitch.enable(fs) shouldBe BooleanFeatureSwitch("test", enabled = true)
+      FeatureSwitch.enable(fs) mustBe BooleanFeatureSwitch("test", enabled = true)
     }
   }
 
@@ -113,42 +114,42 @@ class FeatureSwitchSpec extends WordSpec with Matchers with BeforeAndAfterEach {
       val fs = FeatureSwitch("test")
       System.setProperty("feature.test", "true")
 
-      FeatureSwitch.disable(fs) shouldBe BooleanFeatureSwitch("test", enabled = false)
+      FeatureSwitch.disable(fs) mustBe BooleanFeatureSwitch("test", enabled = false)
     }
   }
 
   "dynamic toggling should be supported" in {
     val fs = FeatureSwitch("test")
 
-    FeatureSwitch.disable(fs).enabled shouldBe false
-    FeatureSwitch.enable(fs).enabled shouldBe true
+    FeatureSwitch.disable(fs).enabled mustBe false
+    FeatureSwitch.enable(fs).enabled mustBe true
   }
 
   "SCRSFeatureSwitches" should {
     "return a disabled feature when the associated system property doesn't exist" in {
-      VATFeatureSwitches.mockSubmission.enabled shouldBe false
+      VATFeatureSwitches.mockSubmission.enabled mustBe false
     }
 
     "return an enabled feature when the associated system property is true" in {
       FeatureSwitch.enable(VATFeatureSwitches.mockSubmission)
 
-      VATFeatureSwitches.mockSubmission.enabled shouldBe true
+      VATFeatureSwitches.mockSubmission.enabled mustBe true
     }
 
     "return a disable feature when the associated system property is false" in {
       FeatureSwitch.disable(VATFeatureSwitches.mockSubmission)
 
-      VATFeatureSwitches.mockSubmission.enabled shouldBe false
+      VATFeatureSwitches.mockSubmission.enabled mustBe false
     }
 
     "return an enabled mockSubmission feature switch if it exists" in {
       System.setProperty("feature.mockSubmission", "true")
 
-      VATFeatureSwitches("mockSubmission") shouldBe Some(BooleanFeatureSwitch("mockSubmission", true))
+      VATFeatureSwitches("mockSubmission") mustBe Some(BooleanFeatureSwitch("mockSubmission", true))
     }
 
     "return a disable feature switch if the mockSubmission system property doesn't exist when using the apply function" in {
-      VATFeatureSwitches("mockSubmission") shouldBe Some(BooleanFeatureSwitch("mockSubmission", false))
+      VATFeatureSwitches("mockSubmission") mustBe Some(BooleanFeatureSwitch("mockSubmission", false))
     }
   }
 }

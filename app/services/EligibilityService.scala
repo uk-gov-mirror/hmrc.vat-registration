@@ -16,22 +16,16 @@
 
 package services
 
-import javax.inject.Inject
-
+import javax.inject.{Inject, Singleton}
 import models.api.Eligibility
 import play.api.libs.json.{JsObject, JsResultException}
-import repositories.{RegistrationMongo, RegistrationMongoRepository}
+import repositories.RegistrationMongoRepository
 import utils.EligibilityDataJsonUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class EligibilityService @Inject()(val registrationMongo: RegistrationMongo) extends EligibilitySrv {
-  val registrationRepository: RegistrationMongoRepository = registrationMongo.store
-}
-
-trait EligibilitySrv {
-
-  val registrationRepository: RegistrationMongoRepository
+@Singleton
+class EligibilityService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
   @deprecated("Use upsertEligibilityData instead", "SCRS-11579")
   def upsertEligibility(regId: String, eligibility: Eligibility)(implicit ex: ExecutionContext): Future[Eligibility] =

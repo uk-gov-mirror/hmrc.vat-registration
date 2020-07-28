@@ -17,50 +17,51 @@
 package itutil
 
 import cats.data.{EitherT, OptionT}
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.Matchers
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatestplus.play.PlaySpec
 import play.api.mvc.Result
 import play.api.test.Helpers._
 
 import scala.concurrent.Future
 
 trait FutureAssertions extends ScalaFutures {
-  self: WordSpec with Matchers =>
+  self: PlaySpec =>
 
   implicit class PlayFutureResultReturns(f: Future[Result]) {
 
-    def returnsStatus(s: Int): Unit = status(f) shouldBe s
+    def returnsStatus(s: Int): Unit = status(f) mustBe s
 
   }
 
   implicit class FutureReturns(f: Future[_]) {
 
-    def returns(o: Any): Unit = whenReady(f)(_ shouldBe o)
+    def returns(o: Any): Unit = whenReady(f)(_ mustBe o)
 
-    def failedWith(e: Exception): Unit = whenReady(f.failed)(_ shouldBe e)
+    def failedWith(e: Exception): Unit = whenReady(f.failed)(_ mustBe e)
 
-    def failedWith[T <: Throwable](exClass: Class[T]): Unit = whenReady(f.failed)(_.getClass shouldBe exClass)
+    def failedWith[T <: Throwable](exClass: Class[T]): Unit = whenReady(f.failed)(_.getClass mustBe exClass)
 
   }
 
   implicit class OptionTReturns[T](ot: OptionT[Future, T]) {
 
-    def returnsSome(t: T): Unit = whenReady(ot.value)(_ shouldBe Some(t))
+    def returnsSome(t: T): Unit = whenReady(ot.value)(_ mustBe Some(t))
 
-    def returnsNone: Unit = whenReady(ot.value)(_ shouldBe Option.empty[T])
+    def returnsNone(): Unit = whenReady(ot.value)(_ mustBe Option.empty[T])
 
-    def failedWith(e: Exception): Unit = whenReady(ot.value.failed)(_ shouldBe e)
+    def failedWith(e: Exception): Unit = whenReady(ot.value.failed)(_ mustBe e)
 
   }
 
 
   implicit class EitherTReturns[L, R](et: EitherT[Future, L, R]) {
 
-    def returnsRight(value: R): Unit = whenReady(et.value)(_ shouldBe Right(value))
+    def returnsRight(value: R): Unit = whenReady(et.value)(_ mustBe Right(value))
 
-    def returnsLeft(value: L): Unit = whenReady(et.value)(_ shouldBe Left(value))
+    def returnsLeft(value: L): Unit = whenReady(et.value)(_ mustBe Left(value))
 
-    def failedWith(e: Exception): Unit = whenReady(et.value.failed)(_ shouldBe e)
+    def failedWith(e: Exception): Unit = whenReady(et.value.failed)(_ mustBe e)
 
   }
 

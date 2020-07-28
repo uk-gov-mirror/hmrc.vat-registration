@@ -18,8 +18,7 @@ package models
 
 import helpers.BaseSpec
 import models.api.Eligibility
-import play.api.data.validation.ValidationError
-import play.api.libs.json.{JsPath, JsSuccess, Json}
+import play.api.libs.json.{JsPath, JsSuccess, Json, JsonValidationError}
 
 class EligibilitySpec extends BaseSpec with JsonFormatValidation {
   "Eligibility model" should {
@@ -38,7 +37,7 @@ class EligibilitySpec extends BaseSpec with JsonFormatValidation {
           result = "test result"
         )
 
-        Json.fromJson[Eligibility](json)(Eligibility.format) shouldBe JsSuccess(expectedResult)
+        Json.fromJson[Eligibility](json)(Eligibility.format) mustBe JsSuccess(expectedResult)
       }
     }
 
@@ -52,7 +51,7 @@ class EligibilitySpec extends BaseSpec with JsonFormatValidation {
          """.stripMargin)
 
         val result = Json.fromJson[Eligibility](json)(Eligibility.format)
-        result shouldHaveErrors (JsPath() \ "version" -> ValidationError("error.path.missing"))
+        result shouldHaveErrors (JsPath() \ "version" -> JsonValidationError("error.path.missing"))
       }
 
       "read from json if result is missing" in {
@@ -64,7 +63,7 @@ class EligibilitySpec extends BaseSpec with JsonFormatValidation {
          """.stripMargin)
 
         val result = Json.fromJson[Eligibility](json)(Eligibility.format)
-        result shouldHaveErrors (JsPath() \ "result" -> ValidationError("error.path.missing"))
+        result shouldHaveErrors (JsPath() \ "result" -> JsonValidationError("error.path.missing"))
       }
     }
   }

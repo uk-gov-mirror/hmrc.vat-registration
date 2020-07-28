@@ -18,24 +18,18 @@ package connectors
 
 import common.exceptions._
 import config.BackendConfig
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import models.external.CurrentProfile
 import org.slf4j.{Logger, LoggerFactory}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class VatRegBusinessRegistrationConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) extends BusinessRegistrationConnector {
-  //$COVERAGE-OFF$
-  lazy val businessRegUrl = backendConfig.baseUrl("business-registration")
-  //$COVERAGE-ON$
-}
-
-trait BusinessRegistrationConnector {
-  val businessRegUrl: String
-  val http: CoreGet
+@Singleton
+class BusinessRegistrationConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient){
+  lazy val businessRegUrl: String = backendConfig.servicesConfig.baseUrl("business-registration")
 
   private val logger: Logger = LoggerFactory.getLogger(getClass)
 

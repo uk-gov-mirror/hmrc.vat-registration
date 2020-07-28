@@ -61,7 +61,7 @@ class IncorporationInfoSpec extends BaseSpec with JsonFormatValidation {
           incorporationDate = Some(LocalDate.of(2016, 8, 5)),
           description = Some("Some description")))
 
-      Json.fromJson[IncorporationStatus](json)(IncorporationStatus.iiReads) shouldBe JsSuccess(tstStatus)
+      Json.fromJson[IncorporationStatus](json)(IncorporationStatus.iiReads) mustBe JsSuccess(tstStatus)
     }
 
     "deserialise from minimal Json" in {
@@ -97,7 +97,7 @@ class IncorporationInfoSpec extends BaseSpec with JsonFormatValidation {
           incorporationDate = None,
           description = None))
 
-      Json.fromJson[IncorporationStatus](json)(IncorporationStatus.iiReads) shouldBe JsSuccess(tstStatus)
+      Json.fromJson[IncorporationStatus](json)(IncorporationStatus.iiReads) mustBe JsSuccess(tstStatus)
     }
 
   }

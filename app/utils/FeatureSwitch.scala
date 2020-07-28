@@ -16,33 +16,23 @@
 
 package utils
 
-import org.joda.time.{DateTimeZone, DateTime}
-import org.joda.time.format.ISODateTimeFormat
-import play.api.libs.json.Json
-
+import org.joda.time.{DateTime, DateTimeZone}
+import org.joda.time.format.{DateTimeFormatter, ISODateTimeFormat}
+import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.JodaReads._
+import play.api.libs.json.JodaWrites._
+import scala.util.matching.Regex
 
 sealed trait FeatureSwitch {
   def name: String
   def enabled: Boolean
 }
 
-case class BooleanFeatureSwitch(name: String, enabled: Boolean) extends FeatureSwitch
-
-case class TimedFeatureSwitch(name: String, start: Option[DateTime], end: Option[DateTime], target: DateTime) extends FeatureSwitch {
-
-  override def enabled: Boolean = (start, end) match {
-    case (Some(s), Some(e)) => !target.isBefore(s) && !target.isAfter(e)
-    case (None, Some(e)) => !target.isAfter(e)
-    case (Some(s), None) => !target.isBefore(s)
-    case (None, None) => false
-  }
-}
-
 object FeatureSwitch {
 
-  val DatesIntervalExtractor = """(\S+)_(\S+)""".r
+  val DatesIntervalExtractor: Regex = """(\S+)_(\S+)""".r
   val UNSPECIFIED = "X"
-  val dateFormat = ISODateTimeFormat.dateTimeNoMillis()
+  val dateFormat: DateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis()
 
   private[utils] def getProperty(name: String): FeatureSwitch = {
     val value = sys.props.get(systemPropertyName(name))
@@ -59,7 +49,7 @@ object FeatureSwitch {
     getProperty(name)
   }
 
-  private[utils] def toDate(text: String) : Option[DateTime] = {
+  private[utils] def toDate(text: String): Option[DateTime] = {
     text match {
       case UNSPECIFIED => None
       case _ => Some(dateFormat.parseDateTime(text))
@@ -69,13 +59,35 @@ object FeatureSwitch {
   private[utils] def systemPropertyName(name: String) = s"feature.$name"
 
   def enable(fs: FeatureSwitch): FeatureSwitch = setProperty(fs.name, "true")
+
   def disable(fs: FeatureSwitch): FeatureSwitch = setProperty(fs.name, "false")
 
   def apply(name: String, enabled: Boolean = false): FeatureSwitch = getProperty(name)
+
   def unapply(fs: FeatureSwitch): Option[(String, Boolean)] = Some(fs.name -> fs.enabled)
 
-  implicit val formats = Json.format[FeatureSwitch]
+  implicit val formats: OFormat[FeatureSwitch] = Json.format[FeatureSwitch]
 }
+
+
+case class BooleanFeatureSwitch(name: String, enabled: Boolean) extends FeatureSwitch
+
+  object BooleanFeatureSwitch {
+    implicit val format: OFormat[BooleanFeatureSwitch] = Json.format[BooleanFeatureSwitch]
+  }
+
+case class TimedFeatureSwitch(name: String, start: Option[DateTime], end: Option[DateTime], target: DateTime) extends FeatureSwitch {
+  override def enabled: Boolean = (start, end) match {
+    case (Some(s), Some(e)) => !target.isBefore(s) && !target.isAfter(e)
+    case (None, Some(e)) => !target.isAfter(e)
+    case (Some(s), None) => !target.isBefore(s)
+    case (None, None) => false
+  }
+}
+
+  object TimedFeatureSwitch {
+    implicit val format: OFormat[TimedFeatureSwitch] = Json.format[TimedFeatureSwitch]
+  }
 
 object VATFeatureSwitches extends VATFeatureSwitches {
   val mockSub = "mockSubmission"

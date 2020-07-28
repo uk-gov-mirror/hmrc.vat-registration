@@ -6,12 +6,13 @@ import models.api._
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import controllers.routes.SicAndComplianceController
+import play.api.libs.ws.WSResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SicAndComplianceControllerISpec extends IntegrationStubbing {
 
-  val validSicAndCompliance = Some(SicAndCompliance(
+  val validSicAndCompliance: Option[SicAndCompliance] = Some(SicAndCompliance(
     "this is my business description",
     Some(ComplianceLabour(1000, Some(true), Some(true))),
     SicCode("12345", "the flu", "sic details"),
@@ -37,7 +38,7 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
        |}
     """.stripMargin).as[JsObject]
 
-  val validUpdatedSicAndCompliancejson = Json.parse(
+  val validUpdatedSicAndCompliancejson: JsObject = Json.parse(
     s"""
        |{
        |  "businessDescription": "fooBar",
@@ -60,7 +61,7 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
        |}
     """.stripMargin).as[JsObject]
 
-  val validSicAndComplianceJsonWithoutOtherBusinessActivities = Json.parse(
+  val validSicAndComplianceJsonWithoutOtherBusinessActivities: JsObject = Json.parse(
     s"""
        |{
        |  "businessDescription": "this is my business description",
@@ -76,7 +77,7 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
        |}
     """.stripMargin).as[JsObject]
 
-  val invalidSicAndComplianceJson = Json.parse(
+  val invalidSicAndComplianceJson: JsObject = Json.parse(
     s"""
        |{
        | "fooBar":"fooWizzBarBang"
@@ -92,32 +93,32 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
       given.user.isAuthorised
         .regRepo.insertIntoDb(vatScheme("foo"), repo.insert)
 
-      val response = await(client(SicAndComplianceController.getSicAndCompliance("foo").url).get())
+      val response: WSResponse = await(client(SicAndComplianceController.getSicAndCompliance("foo").url).get())
 
-      response.json shouldBe validSicAndComplianceJson
-      response.status shouldBe OK
+      response.json mustBe validSicAndComplianceJson
+      response.status mustBe OK
     }
     "return NO_CONTENT when no SicAndComplianceRecord is found but reg doc exists" in new Setup {
       given.user.isAuthorised
         .regRepo.insertIntoDb(emptyVatScheme("foo"), repo.insert)
 
-      val response = await(client(SicAndComplianceController.getSicAndCompliance("foo").url).get())
+      val response: WSResponse = await(client(SicAndComplianceController.getSicAndCompliance("foo").url).get())
 
-      response.status shouldBe NO_CONTENT
+      response.status mustBe NO_CONTENT
     }
     "return NOT_FOUND when no reg doc is found" in new Setup {
       given.user.isAuthorised
 
-      val response = await(client(SicAndComplianceController.getSicAndCompliance("fooBar").url).get())
+      val response: WSResponse = await(client(SicAndComplianceController.getSicAndCompliance("fooBar").url).get())
 
-      response.status shouldBe NOT_FOUND
+      response.status mustBe NOT_FOUND
     }
     "return FORBIDDEN when user is not authorised" in new Setup {
       given.user.isNotAuthorised
 
-      val response = await(client(SicAndComplianceController.getSicAndCompliance("fooBar").url).get())
+      val response: WSResponse = await(client(SicAndComplianceController.getSicAndCompliance("fooBar").url).get())
 
-      response.status shouldBe FORBIDDEN
+      response.status mustBe FORBIDDEN
     }
   }
   "updateSicAndCompliance" should {
@@ -125,37 +126,37 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
       given.user.isAuthorised
         .regRepo.insertIntoDb(vatScheme("fooBar"), repo.insert)
 
-      val response = await(client(SicAndComplianceController.updateSicAndCompliance("fooBar").url)
+      val response: WSResponse = await(client(SicAndComplianceController.updateSicAndCompliance("fooBar").url)
         .patch(validUpdatedSicAndCompliancejson))
 
-      response.status shouldBe OK
-      response.json shouldBe validUpdatedSicAndCompliancejson
+      response.status mustBe OK
+      response.json mustBe validUpdatedSicAndCompliancejson
     }
     "return OK during update to vat doc whereby no sicAndCompliance existed before" in new Setup {
       given.user.isAuthorised
         .regRepo.insertIntoDb(emptyVatScheme("fooBar"), repo.insert)
 
-      val response = await(client(SicAndComplianceController.updateSicAndCompliance("fooBar").url)
+      val response: WSResponse = await(client(SicAndComplianceController.updateSicAndCompliance("fooBar").url)
         .patch(validSicAndComplianceJson))
 
-      response.status shouldBe OK
-      response.json shouldBe validSicAndComplianceJson
+      response.status mustBe OK
+      response.json mustBe validSicAndComplianceJson
     }
     "return NOT_FOUND during update when no regDoc exists" in new Setup {
       given.user.isAuthorised
 
-      val response = await(client(SicAndComplianceController.updateSicAndCompliance("fooBar").url)
+      val response: WSResponse = await(client(SicAndComplianceController.updateSicAndCompliance("fooBar").url)
         .patch(validSicAndComplianceJson))
 
-      response.status shouldBe NOT_FOUND
+      response.status mustBe NOT_FOUND
     }
     "return FORBIDDEN when the user is not Authorised" in new Setup {
       given.user.isNotAuthorised
 
-      val response = await(client(SicAndComplianceController.updateSicAndCompliance("fooBar").url)
+      val response: WSResponse = await(client(SicAndComplianceController.updateSicAndCompliance("fooBar").url)
         .patch(validSicAndComplianceJson))
 
-      response.status shouldBe FORBIDDEN
+      response.status mustBe FORBIDDEN
     }
   }
 }

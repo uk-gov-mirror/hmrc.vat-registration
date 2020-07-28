@@ -16,22 +16,18 @@
 
 package services
 
-import javax.inject.Inject
-
+import javax.inject.{Inject, Singleton}
 import models.api.BusinessContact
-import repositories.{RegistrationMongo, RegistrationMongoRepository}
+import repositories.RegistrationMongoRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class BusinessContactService @Inject()(registrationMongo: RegistrationMongo) extends BusinessContactSrv {
-  val registrationRepository: RegistrationMongoRepository = registrationMongo.store
-}
-
-trait BusinessContactSrv {
-  val registrationRepository : RegistrationMongoRepository
+@Singleton
+class BusinessContactService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
   def getBusinessContact(regId: String)(implicit ec: ExecutionContext): Future[Option[BusinessContact]] =
     registrationRepository.getBusinessContact(regId)
 
-  def updateBusinessContact(regId: String, businessCont: BusinessContact)(implicit ec: ExecutionContext): Future[BusinessContact] = registrationRepository.updateBusinessContact(regId,businessCont)
+  def updateBusinessContact(regId: String, businessCont: BusinessContact)(implicit ec: ExecutionContext): Future[BusinessContact] =
+    registrationRepository.updateBusinessContact(regId,businessCont)
 }

@@ -16,15 +16,17 @@
 
 package config
 
-import javax.inject.Inject
-import play.api.Mode.Mode
-import play.api.{Configuration, Environment}
-import uk.gov.hmrc.play.config.ServicesConfig
+import javax.inject.{Inject, Singleton}
+import play.api.{Configuration, Environment, Mode}
+import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
 
-class BackendConfigImpl @Inject()(val environment:Environment, val runModeConfiguration: Configuration) extends BackendConfig {
-  override protected def mode: Mode = environment.mode
-}
+@Singleton
+class BackendConfig @Inject()(val servicesConfig: ServicesConfig,
+                              val environment:Environment,
+                              val runModeConfiguration: Configuration,
+                              val runMode: RunMode
+                             ) {
 
-trait BackendConfig extends ServicesConfig {
+  protected def mode: Mode = environment.mode
 
 }

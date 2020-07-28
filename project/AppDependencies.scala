@@ -21,18 +21,20 @@ object AppDependencies {
 }
 
 object CompileDependencies {
-  val domainVersion = "5.6.0-play-25"
-  val bootstrapVersion = "5.1.0"
-  val reactiveMongoVersion = "7.23.0-play-25"
+  val domainVersion = "5.6.0-play-26"
+  val bootstrapVersion = "1.8.0"
+  val simpleReactiveMongoVersion = "7.27.0-play-26"
   val catsVersion = "0.9.0"
-  private val authClientVersion = "2.33.0-play-25"
+  private val authClientVersion = "3.0.0-play-26"
+  private val playJsonVersion = "2.6.14"
 
   val compile = Seq(
-    "uk.gov.hmrc" %% "simple-reactivemongo" % reactiveMongoVersion,
-    "uk.gov.hmrc" %% "bootstrap-play-25" % bootstrapVersion,
+    "uk.gov.hmrc" %% "simple-reactivemongo" % simpleReactiveMongoVersion,
+    "uk.gov.hmrc" %% "bootstrap-play-26" % bootstrapVersion,
     "uk.gov.hmrc" %% "domain" % domainVersion,
     "org.typelevel" %% "cats" % catsVersion,
-    "uk.gov.hmrc" %% "auth-client" % authClientVersion
+    "uk.gov.hmrc" %% "auth-client" % authClientVersion,
+    "com.typesafe.play" %% "play-json-joda" % playJsonVersion
   )
 
   def apply(): Seq[ModuleID] = compile
@@ -56,7 +58,7 @@ object UnitTestDependencies extends CommonTestDependencies {
 object IntegrationTestDependencies extends CommonTestDependencies {
   override val scope: Configuration = IntegrationTest
 
-  val wireMockVersion = "2.26.0"
+  val wireMockVersion = "2.26.3"
 
   override val testDependencies: Seq[ModuleID] = Seq(
     "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
@@ -76,9 +78,9 @@ object TempMacWorkaround {
 }
 
 trait CommonTestDependencies {
-  val scalaTestPlusVersion = "2.0.1"
+  val scalaTestPlusVersion = "3.1.3"
   val scoverageVersion = "1.3.1"
-  val reactiveMongoTestVersion = "4.16.0-play-25"
+  val reactiveMongoTestVersion = "4.16.0-play-26"
   val scope: Configuration
   val testDependencies: Seq[ModuleID]
 }

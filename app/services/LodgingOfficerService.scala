@@ -16,27 +16,25 @@
 
 package services
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import models.api.LodgingOfficer
 import play.api.libs.json.JsObject
-import repositories.{RegistrationMongo, RegistrationMongoRepository}
+import repositories.RegistrationMongoRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class LodgingOfficerService @Inject()(registrationMongo: RegistrationMongo) extends LodgingOfficerSrv {
-  val registrationRepository: RegistrationMongoRepository = registrationMongo.store
-}
-
-trait LodgingOfficerSrv {
-  val registrationRepository: RegistrationMongoRepository
+@Singleton
+class LodgingOfficerService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
   def updateIVStatus(regId: String, ivStatus: Boolean)(implicit ec: ExecutionContext): Future[Boolean] = {
     registrationRepository.updateIVStatus(regId, ivStatus)
   }
 
-  def getLodgingOfficerData(regId: String)(implicit ex: ExecutionContext): Future[Option[LodgingOfficer]] =
+  def getLodgingOfficerData(regId: String)(implicit ex: ExecutionContext): Future[Option[LodgingOfficer]] = {
     registrationRepository.getCombinedLodgingOfficer(regId)
+  }
 
-  def updateLodgingOfficerData(regId: String, lodgingOfficer: JsObject)(implicit ex: ExecutionContext): Future[JsObject] =
+  def updateLodgingOfficerData(regId: String, lodgingOfficer: JsObject)(implicit ex: ExecutionContext): Future[JsObject] = {
     registrationRepository.patchLodgingOfficer(regId, lodgingOfficer)
+  }
 }

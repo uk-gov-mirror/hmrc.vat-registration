@@ -33,11 +33,9 @@ import scala.concurrent.Future
 class SicAndComplianceServiceSpec extends VatRegSpec with VatRegistrationFixture  {
 
   class Setup {
-    val service = new SicAndComplianceService(
-      registrationMongo = mockRegistrationMongo
-    ) {
-      override val registrationRepository: RegistrationMongoRepository = mockRegistrationMongoRepository
-    }
+    val service: SicAndComplianceService = new SicAndComplianceService(
+      registrationRepository = mockRegistrationMongoRepository
+    )
   }
   def getFromMongo(res:Future[Option[SicAndCompliance]]): OngoingStubbing[Future[Option[SicAndCompliance]]] =
     when(mockRegistrationMongoRepository.getSicAndCompliance(any())(any()))
@@ -50,22 +48,22 @@ class SicAndComplianceServiceSpec extends VatRegSpec with VatRegistrationFixture
   "getSicAndCompliance" should {
     "return a SicAndCompliance Model when an entry exists in mongo for the specified regId" in new Setup {
       getFromMongo(Future.successful(validSicAndCompliance))
-      await(service.getSicAndCompliance("fooBarAndWizz")) shouldBe validSicAndCompliance
+      await(service.getSicAndCompliance("fooBarAndWizz")) mustBe validSicAndCompliance
     }
     "return None when no entry exists in the dataBase for the specified regId" in new Setup {
       getFromMongo(Future.successful(None))
-      await(service.getSicAndCompliance("bangBuzzFang")) shouldBe None
+      await(service.getSicAndCompliance("bangBuzzFang")) mustBe None
     }
   }
-  "updateSiceAndCompliance" should {
+  "updateSicAndCompliance" should {
     "return an updated SicAndCompliance Model when an update successfully takes place in mongo" in new Setup {
       updateMongo(Future.successful(validSicAndCompliance.get))
-      await(service.updateSicAndCompliance("ImARegId",validSicAndCompliance.get)) shouldBe validSicAndCompliance.get
+      await(service.updateSicAndCompliance("ImARegId",validSicAndCompliance.get)) mustBe validSicAndCompliance.get
     }
     "return a missingRegDocument when no reg Document exists for the reg id when an update takes place" in new Setup {
       updateMongo(Future.failed(MissingRegDocument(RegistrationId("testId"))))
       intercept[MissingRegDocument](await(
-        service.updateSicAndCompliance("testId",validSicAndCompliance.get))) shouldBe MissingRegDocument(RegistrationId("testId"))
+        service.updateSicAndCompliance("testId",validSicAndCompliance.get))) mustBe MissingRegDocument(RegistrationId("testId"))
     }
     "return new Exception when an exception is returned from the repo during an update" in new Setup {
       updateMongo(Future.failed(new Exception("foo Bar Wizz Bang")))

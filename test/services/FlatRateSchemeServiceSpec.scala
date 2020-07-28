@@ -32,11 +32,9 @@ import scala.concurrent.Future
 class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   class Setup {
-    val service = new FlatRateSchemeService(
-      registrationMongo = mockRegistrationMongo
-    ) {
-      override val registrationRepository: RegistrationMongoRepository = mockRegistrationMongoRepository
-    }
+    val service: FlatRateSchemeService = new FlatRateSchemeService(
+      registrationRepository = mockRegistrationMongoRepository
+    )
   }
 
   "retrieveFlatRateScheme" should {
@@ -46,7 +44,7 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
       val result: Option[FlatRateScheme] = await(service.retrieveFlatRateScheme("testId"))
 
-      result shouldBe Some(validFullFlatRateScheme)
+      result mustBe Some(validFullFlatRateScheme)
     }
 
     "return None if none found matching regId" in new Setup {
@@ -55,7 +53,7 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
       val result: Option[FlatRateScheme] = await(service.retrieveFlatRateScheme("testId"))
 
-      result shouldBe None
+      result mustBe None
     }
   }
 
@@ -66,7 +64,7 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
       val result: FlatRateScheme = await(service.updateFlatRateScheme("testId", validFullFlatRateScheme))
 
-      result shouldBe validFullFlatRateScheme
+      result mustBe validFullFlatRateScheme
     }
 
     "encounter an exception if an error occurs" in new Setup {
@@ -91,7 +89,7 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
       val result: Boolean = await(service.removeFlatRateScheme("testId"))
 
-      result shouldBe true
+      result mustBe true
     }
 
     "encounter an exception if an error occurs" in new Setup {

@@ -19,18 +19,22 @@ package controllers
 import auth.{Authorisation, AuthorisationResource}
 import common.TransactionId
 import connectors.IncorporationInformationConnector
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.SubmissionService
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
-
+@Singleton
 class IncorporationInformationController @Inject()(val iiConnector: IncorporationInformationConnector,
                                                    val submissionService: SubmissionService,
-                                                   val authConnector: AuthConnector) extends BaseController with Authorisation {
+                                                   val authConnector: AuthConnector,
+                                                   controllerComponents: ControllerComponents
+                                                  ) extends BackendController(controllerComponents) with Authorisation {
+
   val resourceConn: AuthorisationResource = submissionService.registrationRepository
 
   private val REGIME = "vat"

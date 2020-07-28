@@ -30,45 +30,39 @@ import org.mockito.{ArgumentMatchers => Matchers}
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import repositories._
 import services._
 import uk.gov.hmrc.auth.core.{AuthConnector, InvalidBearerToken}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost}
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import utils.VATFeatureSwitches
-
 
 import scala.concurrent.Future
 
-trait VatMocks extends WSHTTPMock {
+trait VatMocks extends HttpClientMock {
 
   this: MockitoSugar =>
 
-  lazy val mockAuthConnector = mock[AuthConnector]
-  lazy val mockIIConnector = mock[IncorporationInformationConnector]
-  lazy val mockRegistrationService = mock[RegistrationService]
-  lazy val mockAuthorisationResource = mock[AuthorisationResource]
-  lazy val mockBusRegConnector = mock[BusinessRegistrationConnector]
-  lazy val mockRegistrationRepository = mock[RegistrationRepository]
-  lazy val mockRegistrationMongoRepository = mock[RegistrationMongoRepository]
-  lazy val mockRegistrationMongo = mock[RegistrationMongo]
-  lazy val mockHttp = mock[HttpGet with HttpPost]
-  lazy val mockSubmissionService = mock[SubmissionService]
-  lazy val mockVatRegistrationService = mock[VatRegistrationService]
-  lazy val mockSequenceMongo = mock[SequenceMongo]
-  lazy val mockSequenceRepository = mock[SequenceRepository]
-  lazy val mockCompanyRegConnector = mock[CompanyRegistrationConnector]
-  lazy val mockDesConnector = mock[DESConnectorImpl]
-  lazy val mockVatFeatureSwitches = mock[VATFeatureSwitches]
-  lazy val mockEligibilityService = mock[EligibilityService]
-  lazy val mockLodgingOfficerService = mock[LodgingOfficerService]
-  lazy val mockSicAndComplianceService = mock[SicAndComplianceService]
-  lazy val mockBusinessContactService = mock[BusinessContactService]
-  lazy val mockTradingDetailsService = mock[TradingDetailsService]
-  lazy val mockFlatRateSchemeService = mock[FlatRateSchemeService]
-  lazy val mockVatThresholdService = mock[VatThresholdService]
-
+  lazy val mockAuthConnector: AuthConnector                             = mock[AuthConnector]
+  lazy val mockIIConnector: IncorporationInformationConnector           = mock[IncorporationInformationConnector]
+  lazy val mockAuthorisationResource: AuthorisationResource             = mock[AuthorisationResource]
+  lazy val mockBusRegConnector: BusinessRegistrationConnector           = mock[BusinessRegistrationConnector]
+  lazy val mockRegistrationMongoRepository: RegistrationMongoRepository = mock[RegistrationMongoRepository]
+  lazy val mockSubmissionService: SubmissionService                     = mock[SubmissionService]
+  lazy val mockVatRegistrationService: VatRegistrationService           = mock[VatRegistrationService]
+  lazy val mockSequenceRepository: SequenceMongoRepository              = mock[SequenceMongoRepository]
+  lazy val mockCompanyRegConnector: CompanyRegistrationConnector        = mock[CompanyRegistrationConnector]
+  lazy val mockDesConnector: DESConnector                               = mock[DESConnector]
+  lazy val mockVatFeatureSwitches: VATFeatureSwitches                   = mock[VATFeatureSwitches]
+  lazy val mockEligibilityService: EligibilityService                   = mock[EligibilityService]
+  lazy val mockLodgingOfficerService: LodgingOfficerService             = mock[LodgingOfficerService]
+  lazy val mockSicAndComplianceService: SicAndComplianceService         = mock[SicAndComplianceService]
+  lazy val mockBusinessContactService: BusinessContactService           = mock[BusinessContactService]
+  lazy val mockTradingDetailsService: TradingDetailsService             = mock[TradingDetailsService]
+  lazy val mockFlatRateSchemeService: FlatRateSchemeService             = mock[FlatRateSchemeService]
+  lazy val mockVatThresholdService: VatThresholdService                 = mock[VatThresholdService]
 
   object AuthorisationMocks {
 
@@ -150,45 +144,45 @@ trait VatMocks extends WSHTTPMock {
     def mockRetrieveVatSchemeThrowsException(id: RegistrationId): Unit = {
       val exception = new Exception("Exception")
       val idMatcher: RegistrationId = RegistrationId(anyString())
-      when(mockRegistrationService.retrieveVatScheme(idMatcher)(any()))
+      when(mockVatRegistrationService.retrieveVatScheme(idMatcher)(any()))
         .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
     }
 
     def mockRetrieveVatScheme(id: RegistrationId, vatScheme: VatScheme): Unit = {
       val idMatcher: RegistrationId = RegistrationId(anyString())
-      when(mockRegistrationService.retrieveVatScheme(idMatcher)(any()))
+      when(mockVatRegistrationService.retrieveVatScheme(idMatcher)(any()))
         .thenReturn(serviceResult(vatScheme))
     }
 
     def mockDeleteVatScheme(id: String): Unit = {
-      when(mockRegistrationService.deleteVatScheme(Matchers.eq(id), any())(any()))
+      when(mockVatRegistrationService.deleteVatScheme(Matchers.eq(id), any())(any()))
         .thenReturn(Future.successful(true))
     }
 
     def mockDeleteVatSchemeFail(id: String): Unit = {
-      when(mockRegistrationService.deleteVatScheme(Matchers.eq(id), any())(any()))
+      when(mockVatRegistrationService.deleteVatScheme(Matchers.eq(id), any())(any()))
         .thenReturn(Future.successful(false))
     }
 
     def mockDeleteVatSchemeInvalidStatus(id: String): Unit = {
-      when(mockRegistrationService.deleteVatScheme(Matchers.eq(id), any())(any()))
+      when(mockVatRegistrationService.deleteVatScheme(Matchers.eq(id), any())(any()))
         .thenReturn(Future.failed(new InvalidSubmissionStatus("")))
     }
 
 
     def mockSuccessfulCreateNewRegistration(registrationId: RegistrationId, internalId:String): Unit = {
-      when(mockRegistrationService.createNewRegistration(Matchers.eq(internalId))(any[HeaderCarrier]()))
+      when(mockVatRegistrationService.createNewRegistration(Matchers.eq(internalId))(any[HeaderCarrier]()))
         .thenReturn(serviceResult(VatScheme(registrationId,internalId, None, None, None, status = VatRegStatus.draft)))
     }
 
     def mockFailedCreateNewRegistration(registrationId: RegistrationId, internalId:String): Unit = {
-      when(mockRegistrationService.createNewRegistration(Matchers.eq(internalId))(any[HeaderCarrier]()))
+      when(mockVatRegistrationService.createNewRegistration(Matchers.eq(internalId))(any[HeaderCarrier]()))
         .thenReturn(serviceError[VatScheme](GenericError(new RuntimeException("something went wrong"))))
     }
 
     def mockFailedCreateNewRegistrationWithDbError(registrationId: RegistrationId, internalId:String): Unit = {
       val exception = new Exception("Exception")
-      when(mockRegistrationService.createNewRegistration(Matchers.eq(internalId))(any[HeaderCarrier]()))
+      when(mockVatRegistrationService.createNewRegistration(Matchers.eq(internalId))(any[HeaderCarrier]()))
         .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
     }
 
@@ -206,7 +200,7 @@ trait VatMocks extends WSHTTPMock {
 
     def mockGetDocumentStatus(json: JsValue): Unit = {
       val idMatcher: RegistrationId = RegistrationId(anyString())
-      when(mockRegistrationService.getStatus(idMatcher)(any()))
+      when(mockVatRegistrationService.getStatus(idMatcher)(any()))
         .thenReturn(Future.successful(json))
     }
 

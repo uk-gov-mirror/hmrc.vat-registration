@@ -20,24 +20,25 @@ import auth.{Authorisation, AuthorisationResource}
 import cats.instances.FutureInstances
 import common.TransactionId
 import connectors.test.IncorporationInformationTestConnector
-import javax.inject.Inject
-import play.api.mvc.{Action, AnyContent}
+import javax.inject.{Inject, Singleton}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.LodgingOfficerService
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
+@Singleton
 class IncorporationInformationTestController @Inject()(val iiTestConnector: IncorporationInformationTestConnector,
                                                        lodgingOfficer: LodgingOfficerService,
-                                                       val authConnector: AuthConnector) extends IncorpInfoTestCon {
+                                                       controllerComponents: ControllerComponents,
+                                                       val authConnector: AuthConnector
+                                                      )extends BackendController(controllerComponents) with Authorisation with FutureInstances {
 
-  val resourceConn: AuthorisationResource                              =  lodgingOfficer.registrationRepository
-}
-  trait IncorpInfoTestCon extends BaseController with Authorisation with FutureInstances {
-
-    val iiTestConnector:IncorporationInformationTestConnector
+  val resourceConn: AuthorisationResource =  lodgingOfficer.registrationRepository
 
   def incorpCompany(transactionId: TransactionId, incorpDate: String): Action[AnyContent] = Action.async { implicit request =>
+
     isAuthenticated { _ =>
       iiTestConnector.incorpCompany(transactionId, incorpDate).map(_ => Ok)
     }

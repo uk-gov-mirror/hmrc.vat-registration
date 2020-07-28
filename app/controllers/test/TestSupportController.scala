@@ -19,28 +19,26 @@ package controllers.test
 import auth.{Authorisation, AuthorisationResource}
 import connectors.BusinessRegistrationConnector
 import connectors.test.BusinessRegistrationTestConnector
-import javax.inject.Inject
-import play.api.mvc.{Action, AnyContent}
+import javax.inject.{Inject, Singleton}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.LodgingOfficerService
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
-import scala.concurrent.ExecutionContext.Implicits.global
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Left, Right}
 
+@Singleton
 class TestSupportController @Inject()(val brConnector: BusinessRegistrationConnector,
                                       val brTestConnector: BusinessRegistrationTestConnector,
+                                      val authConnector: AuthConnector,
                                       lodgingOfficerService: LodgingOfficerService,
-                                      val authConnector: AuthConnector) extends TestSupportCon {
+                                      controllerComponents: ControllerComponents
+                                     ) extends BackendController(controllerComponents) with Authorisation {
 
-  val resourceConn: AuthorisationResource                              =  lodgingOfficerService.registrationRepository
-}
+  val resourceConn: AuthorisationResource =  lodgingOfficerService.registrationRepository
 
-  trait TestSupportCon extends BaseController with Authorisation{
-
-    val brConnector:BusinessRegistrationConnector
-    val brTestConnector: BusinessRegistrationTestConnector
   def currentProfileSetup(): Action[AnyContent] = Action.async { implicit request =>
     isAuthenticated { _ =>
       brConnector.retrieveCurrentProfile flatMap {

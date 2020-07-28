@@ -17,8 +17,8 @@
 package models.external
 
 import java.time.{Instant, LocalDate, ZoneId}
-
 import org.joda.time.DateTime
+import play.api.libs.json.JodaReads._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -75,9 +75,6 @@ case class IncorpStatus(transactionId: String,
                         description: Option[String],
                         incorporationDate: Option[DateTime]){
 
-//  def toIncorpUpdate: IncorpUpdate = {
-//    IncorpUpdate(transactionId, status, crn, incorporationDate, "N/A", description)
-//  }
 }
 
 object IncorpStatus {

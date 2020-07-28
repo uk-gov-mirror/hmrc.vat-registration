@@ -22,9 +22,11 @@ import models.external.IncorpStatus
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatest.Matchers
+import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsObject, Json}
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import services.SubmissionService
@@ -32,25 +34,24 @@ import uk.gov.hmrc.http.Upstream5xxResponse
 
 import scala.concurrent.Future
 
-class ProcessIncorporationsControllerSpec extends WordSpec with Matchers with MockitoSugar  {
+class ProcessIncorporationsControllerSpec extends PlaySpec with MockitoSugar  {
 
-  implicit val as = ActorSystem()
-  implicit val mat = ActorMaterializer()
+  implicit val as: ActorSystem = ActorSystem()
+  implicit val mat: ActorMaterializer = ActorMaterializer()
 
-  val regId = "1234"
-  val incDate = DateTime.parse("2000-12-12")
-  val transactionId = "trans-12345"
-  val crn = "crn-12345"
+  val regId: String = "1234"
+  val incDate: DateTime = DateTime.parse("2000-12-12")
+  val transactionId: String = "trans-12345"
+  val crn: String = "crn-12345"
 
-  val mockSubmissionService = mock[SubmissionService]
+  val mockSubmissionService: SubmissionService = mock[SubmissionService]
 
   class Setup {
-    val controller = new ProcessIncorporationsController {
-      override val submissionService = mockSubmissionService
+    val controller: ProcessIncorporationsController = new ProcessIncorporationsController(mockSubmissionService, stubControllerComponents()) {
     }
   }
 
-  val rejectedIncorpJson = Json.parse(
+  val rejectedIncorpJson: JsObject = Json.parse(
     s"""
        |{
        |  "SCRSIncorpStatus":{
@@ -70,9 +71,9 @@ class ProcessIncorporationsControllerSpec extends WordSpec with Matchers with Mo
        |}
     """.stripMargin).as[JsObject]
 
-  val rejectedIncorpStatus = IncorpStatus(transactionId, "rejected", None, Some("description"), None)
+  val rejectedIncorpStatus: IncorpStatus = IncorpStatus(transactionId, "rejected", None, Some("description"), None)
 
-  val acceptedIncorpJson = Json.parse(
+  val acceptedIncorpJson: JsObject = Json.parse(
     s"""
        |{
        |  "SCRSIncorpStatus":{
@@ -93,38 +94,38 @@ class ProcessIncorporationsControllerSpec extends WordSpec with Matchers with Mo
        |}
     """.stripMargin).as[JsObject]
 
-  val acceptedIncorpStatus = IncorpStatus(transactionId, "accepted", Some(crn), None, Some(incDate))
+  val acceptedIncorpStatus: IncorpStatus = IncorpStatus(transactionId, "accepted", Some(crn), None, Some(incDate))
 
   "ProcessIncorp" should {
 
     "read json from request into IncorpStatus case class" in {
-      rejectedIncorpJson.as[IncorpStatus](IncorpStatus.reads) shouldBe rejectedIncorpStatus
+      rejectedIncorpJson.as[IncorpStatus](IncorpStatus.reads) mustBe rejectedIncorpStatus
     }
 
     "return a 200 response " in new Setup {
 
       when(mockSubmissionService.submitTopUpVatRegistration(ArgumentMatchers.any[IncorpStatus]())(ArgumentMatchers.any())).thenReturn(Future.successful(true))
 
-      val request = FakeRequest().withBody[JsObject](rejectedIncorpJson)
+      val request: FakeRequest[JsObject] = FakeRequest().withBody[JsObject](rejectedIncorpJson)
 
-      val result = call(controller.processIncorp, request)
+      val result: Future[Result] = controller.processIncorp(request)
 
-      status(result) shouldBe 200
+      status(result) mustBe 200
 
     }
   }
 
   "Invalid Data" should {
 
-    "return a 500 response for non admin flow (falsee)" in new Setup {
+    "return a 500 response for non admin flow (false)" in new Setup {
 
       when(mockSubmissionService.submitTopUpVatRegistration(ArgumentMatchers.any[IncorpStatus]())(ArgumentMatchers.any())).thenReturn(Future.successful(false))
 
-      val request = FakeRequest().withBody[JsObject](rejectedIncorpJson)
+      val request: FakeRequest[JsObject] = FakeRequest().withBody[JsObject](rejectedIncorpJson)
 
-      val result = call(controller.processIncorp, request)
+      val result: Future[Result] = controller.processIncorp(request)
 
-      status(result) shouldBe 400
+      status(result) mustBe 400
 
     }
   }
@@ -133,13 +134,14 @@ class ProcessIncorporationsControllerSpec extends WordSpec with Matchers with Mo
 
     "exception returned for 5xx" in new Setup {
 
-      when(mockSubmissionService.submitTopUpVatRegistration(ArgumentMatchers.any[IncorpStatus]())(ArgumentMatchers.any())).thenReturn(Future.failed(Upstream5xxResponse("message", 501, 1)))
+      when(mockSubmissionService.submitTopUpVatRegistration(ArgumentMatchers.any[IncorpStatus]())(ArgumentMatchers.any()))
+        .thenReturn(Future.failed(Upstream5xxResponse("message", 501, 1)))
 
-      val request = FakeRequest().withBody[JsObject](rejectedIncorpJson)
+      val request: FakeRequest[JsObject] = FakeRequest().withBody[JsObject](rejectedIncorpJson)
 
-      val result = intercept[Upstream5xxResponse](await(call(controller.processIncorp, request)))
+      val result: Upstream5xxResponse = intercept[Upstream5xxResponse](await(controller.processIncorp(request)))
 
-      result shouldBe Upstream5xxResponse("message", 501, 1)
+      result mustBe Upstream5xxResponse("message", 501, 1)
 
     }
   }

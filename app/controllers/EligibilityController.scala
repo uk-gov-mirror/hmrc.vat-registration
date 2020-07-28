@@ -17,26 +17,27 @@
 package controllers
 
 import auth.Authorisation
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import models.api.Eligibility
 import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsObject, JsValue}
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import repositories.RegistrationMongoRepository
 import services.EligibilityService
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class EligibilityControllerImpl @Inject()(val eligibilityService: EligibilityService,
-                                          val authConnector: AuthConnector) extends EligibilityController {
+@Singleton
+class EligibilityController @Inject()(val eligibilityService: EligibilityService,
+                                          val authConnector: AuthConnector,
+                                          controllerComponents: ControllerComponents
+                                     ) extends BackendController(controllerComponents) with Authorisation {
 
-  val resourceConn = eligibilityService.registrationRepository
-}
-
-trait EligibilityController extends BaseController with Authorisation {
+  val resourceConn: RegistrationMongoRepository = eligibilityService.registrationRepository
 
   private val logger = LoggerFactory.getLogger(getClass)
-  val eligibilityService: EligibilityService
 
   @deprecated("Use getEligibilityData instead", "SCRS-11579")
   def getEligibility(regId: String): Action[AnyContent] = Action.async {

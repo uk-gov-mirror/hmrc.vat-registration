@@ -18,7 +18,6 @@ package models
 
 import helpers.BaseSpec
 import models.api.{DigitalContact, DigitalContactOptional}
-import play.api.data.validation.ValidationError
 import play.api.libs.json._
 
 class DigitalContactOptionalSpec extends BaseSpec with JsonFormatValidation {
@@ -26,7 +25,7 @@ class DigitalContactOptionalSpec extends BaseSpec with JsonFormatValidation {
 
   "Creating a DigitalContactOptional model from Json" should {
 
-    implicit val format = DigitalContact.format
+    implicit val format: OFormat[DigitalContact] = DigitalContact.format
 
     "complete successfully" when {
       "from full Json" in {
@@ -40,7 +39,7 @@ class DigitalContactOptionalSpec extends BaseSpec with JsonFormatValidation {
         """.stripMargin)
         val tstVatDigitalContact = DigitalContactOptional(Some("test@test.com"), Some("12345678910"), Some("12345678910"))
 
-        Json.fromJson[DigitalContactOptional](json) shouldBe JsSuccess(tstVatDigitalContact)
+        Json.fromJson[DigitalContactOptional](json) mustBe JsSuccess(tstVatDigitalContact)
       }
 
       "from partial Json" in {
@@ -52,7 +51,7 @@ class DigitalContactOptionalSpec extends BaseSpec with JsonFormatValidation {
         """.stripMargin)
         val tstVatDigitalContact = DigitalContactOptional(None, Some("12345678910"), None)
 
-        Json.fromJson[DigitalContactOptional](json) shouldBe JsSuccess(tstVatDigitalContact)
+        Json.fromJson[DigitalContactOptional](json) mustBe JsSuccess(tstVatDigitalContact)
       }
     }
 
@@ -64,7 +63,7 @@ class DigitalContactOptionalSpec extends BaseSpec with JsonFormatValidation {
         """.stripMargin)
 
         val result = Json.fromJson[DigitalContactOptional](json)
-        result shouldHaveErrors (JsPath() -> ValidationError("error.path.missing.atLeast.oneValue"))
+        result shouldHaveErrors (JsPath() -> JsonValidationError("error.path.missing.atLeast.oneValue"))
       }
 
       "Json with invalid char email" in {
@@ -78,7 +77,7 @@ class DigitalContactOptionalSpec extends BaseSpec with JsonFormatValidation {
         """.stripMargin)
 
         val result = Json.fromJson[DigitalContactOptional](json)
-        result shouldHaveErrors (JsPath() \ "email" -> ValidationError("error.email"))
+        result shouldHaveErrors (JsPath() \ "email" -> JsonValidationError("error.email"))
       }
 
       "Json with invalid email length" in {
@@ -92,7 +91,7 @@ class DigitalContactOptionalSpec extends BaseSpec with JsonFormatValidation {
         """.stripMargin)
 
         val result = Json.fromJson[DigitalContactOptional](json)
-        result shouldHaveErrors (JsPath() \ "email" -> ValidationError("error.maxLength", 70))
+        result shouldHaveErrors (JsPath() \ "email" -> JsonValidationError("error.maxLength", 70))
       }
 
       "Json with invalid Telephone" in {
@@ -106,7 +105,7 @@ class DigitalContactOptionalSpec extends BaseSpec with JsonFormatValidation {
         """.stripMargin)
 
         val result = Json.fromJson[DigitalContactOptional](json)
-        result shouldHaveErrors (JsPath() \ "tel" -> ValidationError("error.pattern"))
+        result shouldHaveErrors (JsPath() \ "tel" -> JsonValidationError("error.pattern"))
       }
 
       "Json with invalid Mobile" in {
@@ -120,7 +119,7 @@ class DigitalContactOptionalSpec extends BaseSpec with JsonFormatValidation {
         """.stripMargin)
 
         val result = Json.fromJson[DigitalContactOptional](json)
-        result shouldHaveErrors (JsPath() \ "mobile" -> ValidationError("error.pattern"))
+        result shouldHaveErrors (JsPath() \ "mobile" -> JsonValidationError("error.pattern"))
       }
     }
   }

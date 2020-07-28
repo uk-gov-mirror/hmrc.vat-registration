@@ -16,20 +16,19 @@
 
 package services
 
-import javax.inject.Inject
-import com.typesafe.config.ConfigRenderOptions
+import javax.inject.{Inject, Singleton}
+import com.typesafe.config.{ConfigList, ConfigRenderOptions}
+import config.BackendConfig
 import models.VatThreshold
 import org.joda.time.DateTime
 import play.api.Configuration
 import play.api.libs.json._
 
-class VatThresholdServiceImpl @Inject()(config: Configuration) extends VatThresholdService {
-  lazy val thresholdString = config.underlying.getList("thresholds").render(ConfigRenderOptions.concise())
-  lazy val thresholds = Json.parse(thresholdString).as[List[VatThreshold]]
-}
+@Singleton
+class VatThresholdService @Inject()(backendConfig: BackendConfig) {
 
-trait VatThresholdService {
-  val thresholds: List[VatThreshold]
+  lazy val thresholdString: String = backendConfig.runModeConfiguration.get[ConfigList]("thresholds").render(ConfigRenderOptions.concise())
+  lazy val thresholds: Seq[VatThreshold] = Json.parse(thresholdString).as[List[VatThreshold]]
 
   def getThresholdForGivenDate(givenDate: DateTime): Option[VatThreshold] = {
     thresholds

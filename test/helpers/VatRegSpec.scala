@@ -17,23 +17,28 @@
 package helpers
 
 import cats.instances.FutureInstances
+import cats.implicits._
+import config.BackendConfig
 import mocks.VatMocks
 import org.mockito.Mockito.reset
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, Inside, Matchers, ParallelTestExecution, WordSpec}
+import org.scalatestplus.mockito.MockitoSugar
+import org.scalatestplus.play.PlaySpec
+import org.scalatest.{BeforeAndAfterEach, Inside, ParallelTestExecution}
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
-trait VatRegSpec extends WordSpec with Matchers with Inside with MockitoSugar with VatMocks with FutureAssertions
-  with BeforeAndAfterEach with FutureInstances with ParallelTestExecution {
+trait VatRegSpec extends PlaySpec with Inside with MockitoSugar with VatMocks
+  with BeforeAndAfterEach with FutureInstances with ParallelTestExecution with GuiceOneAppPerSuite with FutureAssertions {
+
+  val backendConfig: BackendConfig = app.injector.instanceOf[BackendConfig]
 
   override def beforeEach() {
-    reset(mockRegistrationService)
     reset(mockAuthConnector)
     reset(mockIIConnector)
-    reset(mockWSHttp)
+    reset(mockHttpClient)
     reset(mockAuthorisationResource)
     reset(mockBusRegConnector)
-    reset(mockRegistrationRepository)
-    reset(mockHttp)
+    reset(mockRegistrationMongoRepository)
+    reset(mockHttpClient)
     reset(mockSubmissionService)
     reset(mockVatRegistrationService)
   }

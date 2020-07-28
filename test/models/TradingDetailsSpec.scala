@@ -18,8 +18,7 @@ package models
 
 import helpers.BaseSpec
 import models.api.TradingDetails
-import play.api.data.validation.ValidationError
-import play.api.libs.json.{JsError, JsPath, JsSuccess, JsValue, Json}
+import play.api.libs.json.{JsError, JsPath, JsSuccess, JsValue, Json, JsonValidationError}
 
 class TradingDetailsSpec extends BaseSpec with JsonFormatValidation {
 
@@ -31,7 +30,7 @@ class TradingDetailsSpec extends BaseSpec with JsonFormatValidation {
        |}
          """.stripMargin
   )
-  val fullModel = TradingDetails(Some("test-name"), true)
+  val fullModel: TradingDetails = TradingDetails(Some("test-name"), true)
 
   val noNameJson: JsValue = Json.parse(
     """
@@ -40,7 +39,7 @@ class TradingDetailsSpec extends BaseSpec with JsonFormatValidation {
       |}
     """.stripMargin
   )
-  val noNameModel = TradingDetails(None, true)
+  val noNameModel: TradingDetails = TradingDetails(None, true)
 
   val noEoriJson: JsValue = Json.parse(
     """
@@ -60,27 +59,27 @@ class TradingDetailsSpec extends BaseSpec with JsonFormatValidation {
 
   "Creating a TradingDetails model from Json" should {
     "complete successfully from full Json" in {
-      Json.fromJson[TradingDetails](fullJson) shouldBe JsSuccess(fullModel)
+      Json.fromJson[TradingDetails](fullJson) mustBe JsSuccess(fullModel)
     }
     "complete successfully without a trading name" in {
-      Json.fromJson[TradingDetails](noNameJson) shouldBe JsSuccess(noNameModel)
+      Json.fromJson[TradingDetails](noNameJson) mustBe JsSuccess(noNameModel)
     }
     "be unsuccessful" when {
       "json is without eori-requested" in {
-        Json.fromJson[TradingDetails](noEoriJson) shouldHaveErrors (JsPath() \ "eoriRequested" -> ValidationError("error.path.missing"))
+        Json.fromJson[TradingDetails](noEoriJson) shouldHaveErrors (JsPath() \ "eoriRequested" -> JsonValidationError("error.path.missing"))
       }
       "json is without any details" in {
-        Json.fromJson[TradingDetails](emptyJson) shouldHaveErrors (JsPath() \ "eoriRequested" -> ValidationError("error.path.missing"))
+        Json.fromJson[TradingDetails](emptyJson) shouldHaveErrors (JsPath() \ "eoriRequested" -> JsonValidationError("error.path.missing"))
       }
     }
   }
 
   "Parsing a TradingDetails model to Json" should {
     "complete successfully with full details" in {
-      Json.toJson[TradingDetails](fullModel) shouldBe fullJson
+      Json.toJson[TradingDetails](fullModel) mustBe fullJson
     }
     "complete successfully without a trading name" in {
-      Json.toJson[TradingDetails](noNameModel) shouldBe noNameJson
+      Json.toJson[TradingDetails](noNameModel) mustBe noNameJson
     }
   }
 

@@ -16,21 +16,19 @@
 
 package services
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import models.api.SicAndCompliance
-import repositories.{RegistrationMongo, RegistrationMongoRepository}
+import repositories.RegistrationMongoRepository
 import scala.concurrent.{ExecutionContext, Future}
 
-class SicAndComplianceService @Inject()(registrationMongo: RegistrationMongo) extends SicAndComplianceSrv {
-  val registrationRepository: RegistrationMongoRepository = registrationMongo.store
-}
+@Singleton
+class SicAndComplianceService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
-trait SicAndComplianceSrv{
-  val registrationRepository: RegistrationMongoRepository
-
-  def getSicAndCompliance(regId: String)(implicit ec: ExecutionContext): Future[Option[SicAndCompliance]] =
+  def getSicAndCompliance(regId: String)(implicit ec: ExecutionContext): Future[Option[SicAndCompliance]] = {
     registrationRepository.getSicAndCompliance(regId)
+  }
 
-  def updateSicAndCompliance(regId: String, sicAndCompliance: SicAndCompliance)(implicit ec: ExecutionContext): Future[SicAndCompliance] =
-    registrationRepository.updateSicAndCompliance(regId,sicAndCompliance)
+  def updateSicAndCompliance(regId: String, sicAndCompliance: SicAndCompliance)(implicit ec: ExecutionContext): Future[SicAndCompliance] = {
+    registrationRepository.updateSicAndCompliance(regId, sicAndCompliance)
+  }
 }

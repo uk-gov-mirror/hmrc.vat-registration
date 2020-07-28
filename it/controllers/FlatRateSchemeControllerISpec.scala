@@ -8,6 +8,7 @@ import models.api.{FlatRateScheme, VatScheme}
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import controllers.routes.FlatRateSchemeController
+import play.api.libs.ws.WSResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -51,10 +52,10 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing {
 
       insertIntoDb(vatScheme("regId"))
 
-      val response = await(client(FlatRateSchemeController.fetchFlatRateScheme("regId").url).get())
+      val response: WSResponse = await(client(FlatRateSchemeController.fetchFlatRateScheme("regId").url).get())
 
-      response.status shouldBe OK
-      response.json shouldBe validFullFlatRateSchemeJson
+      response.status mustBe OK
+      response.json mustBe validFullFlatRateSchemeJson
     }
 
     "return NO_CONTENT if successfully obtained" in new Setup {
@@ -62,25 +63,25 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing {
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      val response = await(client(FlatRateSchemeController.fetchFlatRateScheme("regId").url).get())
+      val response: WSResponse = await(client(FlatRateSchemeController.fetchFlatRateScheme("regId").url).get())
 
-      response.status shouldBe NO_CONTENT
+      response.status mustBe NO_CONTENT
     }
 
     "return NOT_FOUND if no document found" in new Setup {
       given.user.isAuthorised
 
-      val response = await(client(FlatRateSchemeController.fetchFlatRateScheme("regId").url).get())
+      val response: WSResponse = await(client(FlatRateSchemeController.fetchFlatRateScheme("regId").url).get())
 
-      response.status shouldBe NOT_FOUND
+      response.status mustBe NOT_FOUND
     }
 
     "return FORBIDDEN if user is not authorised" in new Setup {
       given.user.isNotAuthorised
 
-      val response = await(client(FlatRateSchemeController.fetchFlatRateScheme("regId").url).get())
+      val response: WSResponse = await(client(FlatRateSchemeController.fetchFlatRateScheme("regId").url).get())
 
-      response.status shouldBe FORBIDDEN
+      response.status mustBe FORBIDDEN
     }
   }
 
@@ -90,11 +91,11 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing {
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      val response = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url)
+      val response: WSResponse = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url)
         .patch(validFullFlatRateSchemeJson))
 
-      response.status shouldBe OK
-      response.json shouldBe validFullFlatRateSchemeJson
+      response.status mustBe OK
+      response.json mustBe validFullFlatRateSchemeJson
     }
 
     "return BAD_REQUEST if an invalid json body is posted" in new Setup {
@@ -102,19 +103,19 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing {
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      val response = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url)
+      val response: WSResponse = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url)
         .patch(invalidFlatRateSchemeJson))
 
-      response.status shouldBe BAD_REQUEST
+      response.status mustBe BAD_REQUEST
     }
 
     "return NOT_FOUND if no reg document is found" in new Setup {
       given.user.isAuthorised
 
-      val response = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url)
+      val response: WSResponse = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url)
         .patch(validFullFlatRateSchemeJson))
 
-      response.status shouldBe NOT_FOUND
+      response.status mustBe NOT_FOUND
     }
 
     "return OK if no data updated because data to be updated already exists" in new Setup {
@@ -122,18 +123,18 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing {
 
       await(repo.insert(vatScheme))
 
-      val response = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url)
+      val response: WSResponse = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url)
         .patch(validFullFlatRateSchemeJson))
 
-      response.status shouldBe OK
+      response.status mustBe OK
     }
 
     "return FORBIDDEN if user is not authorised" in new Setup {
       given.user.isNotAuthorised
 
-      val response = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url).patch(validFullFlatRateSchemeJson))
+      val response: WSResponse = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url).patch(validFullFlatRateSchemeJson))
 
-      response.status shouldBe FORBIDDEN
+      response.status mustBe FORBIDDEN
     }
   }
 
@@ -143,25 +144,25 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing {
 
       insertIntoDb(vatScheme("regId"))
 
-      val response = await(client(FlatRateSchemeController.removeFlatRateScheme("regId").url).delete())
+      val response: WSResponse = await(client(FlatRateSchemeController.removeFlatRateScheme("regId").url).delete())
 
-      response.status shouldBe OK
+      response.status mustBe OK
     }
 
     "return NOT_FOUND if no reg document is found" in new Setup {
       given.user.isAuthorised
 
-      val response = await(client(FlatRateSchemeController.removeFlatRateScheme("regId").url).delete())
+      val response: WSResponse = await(client(FlatRateSchemeController.removeFlatRateScheme("regId").url).delete())
 
-      response.status shouldBe NOT_FOUND
+      response.status mustBe NOT_FOUND
     }
 
     "return FORBIDDEN if user is not authorised" in new Setup {
       given.user.isNotAuthorised
 
-      val response = await(client(FlatRateSchemeController.removeFlatRateScheme("regId").url).delete())
+      val response: WSResponse = await(client(FlatRateSchemeController.removeFlatRateScheme("regId").url).delete())
 
-      response.status shouldBe FORBIDDEN
+      response.status mustBe FORBIDDEN
     }
   }
 }

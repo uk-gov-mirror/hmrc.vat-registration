@@ -18,8 +18,9 @@ package helpers
 
 import akka.stream.{ActorMaterializer, Materializer}
 import cats.data.{EitherT, OptionT}
-import org.scalatest.{Assertion, Matchers, WordSpec}
+import org.scalatest.{Assertion, Matchers}
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.JsValue
 import play.api.mvc.Result
 import play.api.test.Helpers._
@@ -27,44 +28,44 @@ import play.api.test.Helpers._
 import scala.concurrent.Future
 
 trait FutureAssertions extends ScalaFutures {
-  self: WordSpec with Matchers =>
+  self: PlaySpec =>
 
   implicit class PlayFutureResultReturns(f: Future[Result]) {
 
-    def returnsStatus(s: Int): Assertion = status(f) shouldBe s
+    def returnsStatus(s: Int): Assertion = status(f) mustBe s
 
-    def returnsJson(j: JsValue)(implicit mat: Materializer): Assertion = contentAsJson(f) shouldBe j
+    def returnsJson(j: JsValue)(implicit mat: Materializer): Assertion = contentAsJson(f) mustBe j
 
   }
 
   implicit class FutureReturns(f: Future[_]) {
 
-    def returns(o: Any): Assertion = whenReady(f)(_ shouldBe o)
+    def returns(o: Any): Assertion = whenReady(f)(_ mustBe o)
 
-    def failedWith(e: Exception): Assertion = whenReady(f.failed)(_ shouldBe e)
+    def failedWith(e: Exception): Assertion = whenReady(f.failed)(_ mustBe e)
 
-    def failedWith[T <: Throwable](exClass: Class[T]): Assertion = whenReady(f.failed)(_.getClass shouldBe exClass)
+    def failedWith[T <: Throwable](exClass: Class[T]): Assertion = whenReady(f.failed)(_.getClass mustBe exClass)
 
   }
 
   implicit class OptionTReturns[T](ot: OptionT[Future, T]) {
 
-    def returnsSome(t: T): Assertion = whenReady(ot.value)(_ shouldBe Some(t))
+    def returnsSome(t: T): Assertion = whenReady(ot.value)(_ mustBe Some(t))
 
-    def returnsNone: Assertion = whenReady(ot.value)(_ shouldBe Option.empty[T])
+    def returnsNone: Assertion = whenReady(ot.value)(_ mustBe Option.empty[T])
 
-    def failedWith(e: Exception): Assertion = whenReady(ot.value.failed)(_ shouldBe e)
+    def failedWith(e: Exception): Assertion = whenReady(ot.value.failed)(_ mustBe e)
 
   }
 
 
   implicit class EitherTReturns[L, R](et: EitherT[Future, L, R]) {
 
-    def returnsRight(value: R): Assertion = whenReady(et.value)(_ shouldBe Right(value))
+    def returnsRight(value: R): Assertion = whenReady(et.value)(_ mustBe Right(value))
 
-    def returnsLeft(value: L): Assertion = whenReady(et.value)(_ shouldBe Left(value))
+    def returnsLeft(value: L): Assertion = whenReady(et.value)(_ mustBe Left(value))
 
-    def failedWith(e: Exception): Assertion = whenReady(et.value.failed)(_ shouldBe e)
+    def failedWith(e: Exception): Assertion = whenReady(et.value.failed)(_ mustBe e)
 
   }
 

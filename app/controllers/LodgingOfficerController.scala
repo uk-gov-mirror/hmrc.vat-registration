@@ -18,23 +18,22 @@ package controllers
 
 import auth.{Authorisation, AuthorisationResource}
 import common.exceptions.MissingRegDocument
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import models.api.LodgingOfficer
 import play.api.libs.json.{JsBoolean, JsObject, JsValue}
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.LodgingOfficerService
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class LodgingOfficerControllerImpl @Inject()(val lodgingOfficerService: LodgingOfficerService,
-                                             val authConnector: AuthConnector) extends LodgingOfficerController{
-  val resourceConn: AuthorisationResource                              = lodgingOfficerService.registrationRepository
-}
+@Singleton
+class LodgingOfficerController @Inject()(val lodgingOfficerService: LodgingOfficerService,
+                                             val authConnector: AuthConnector,
+                                         controllerComponents: ControllerComponents) extends BackendController(controllerComponents) with Authorisation {
 
-trait LodgingOfficerController extends BaseController with Authorisation {
-
-  val lodgingOfficerService: LodgingOfficerService
+  val resourceConn: AuthorisationResource = lodgingOfficerService.registrationRepository
 
   def updateIVStatus(regId: String, ivPassed: Boolean): Action[AnyContent] = Action.async {
     implicit request =>

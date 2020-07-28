@@ -26,6 +26,7 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import play.api.libs.json.{JsBoolean, JsObject, Json}
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.RegistrationMongoRepository
@@ -35,7 +36,7 @@ import scala.concurrent.Future
 class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
   class Setup {
-    val controller = new LodgingOfficerControllerImpl(lodgingOfficerService = mockLodgingOfficerService, authConnector = mockAuthConnector){
+    val controller: LodgingOfficerController = new LodgingOfficerController(mockLodgingOfficerService, mockAuthConnector, stubControllerComponents()){
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
     }
 
@@ -49,7 +50,7 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
       .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
   }
 
-  val upsertLodgingOfficerJson = Json.parse(
+  val upsertLodgingOfficerJson: JsObject = Json.parse(
     s"""
        |{
        | "name": {
@@ -73,7 +74,7 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
        |}
     """.stripMargin).as[JsObject]
 
-  val validLodgingOfficerJson = Json.parse(
+  val validLodgingOfficerJson: JsObject = Json.parse(
     s"""
        |{
        | "name": {
@@ -87,7 +88,7 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
        |}
     """.stripMargin).as[JsObject]
 
-  val invalidLodgingOfficerJson = Json.parse(
+  val invalidLodgingOfficerJson: JsObject = Json.parse(
     s"""
        |{
        | "dob" : "${LocalDate.now()}",
@@ -100,8 +101,8 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
     "returns 403 if user is not authorised" in new Setup {
       AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
 
-      val result = controller.updateIVStatus("testId", true)(FakeRequest())
-      status(result) shouldBe 403
+      val result: Future[Result] = controller.updateIVStatus("testId", true)(FakeRequest())
+      status(result) mustBe 403
     }
 
     "returns 200 if successful" when {
@@ -109,9 +110,9 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
         AuthorisationMocks.mockAuthorised(regId.value,internalid)
         updateIVStatusSuccess()
 
-        val result = controller.updateIVStatus("testId", true)(FakeRequest())
-        status(result) shouldBe 200
-        contentAsJson(result) shouldBe JsBoolean(true)
+        val result: Future[Result] = controller.updateIVStatus("testId", true)(FakeRequest())
+        status(result) mustBe 200
+        contentAsJson(result) mustBe JsBoolean(true)
       }
     }
 
@@ -119,16 +120,16 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
       AuthorisationMocks.mockAuthorised(regId.value,internalid)
       updateIVStatusNotFound()
 
-      val result = controller.updateIVStatus("testId", true)(FakeRequest())
-      status(result) shouldBe 404
+      val result: Future[Result] = controller.updateIVStatus("testId", true)(FakeRequest())
+      status(result) mustBe 404
     }
 
     "returns 500 if an error occurs" in new Setup {
       AuthorisationMocks.mockAuthorised(regId.value,internalid)
       updateIVStatusFails()
 
-      val result = controller.updateIVStatus("testId", true)(FakeRequest())
-      status(result) shouldBe 500
+      val result: Future[Result] = controller.updateIVStatus("testId", true)(FakeRequest())
+      status(result) mustBe 500
     }
   }
 
@@ -138,9 +139,9 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockLodgingOfficerService.getLodgingOfficerData(any())(any()))
         .thenReturn(Future.successful(Some(validLodgingOfficerPreIV)))
 
-      val result = controller.getLodgingOfficerData("testId")(FakeRequest())
-      status(result) shouldBe 200
-      contentAsJson(result) shouldBe validLodgingOfficerJson
+      val result: Future[Result] = controller.getLodgingOfficerData("testId")(FakeRequest())
+      status(result) mustBe 200
+      contentAsJson(result) mustBe validLodgingOfficerJson
     }
 
     "returns 204 if none found" in new Setup {
@@ -148,9 +149,9 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockLodgingOfficerService.getLodgingOfficerData(any())(any()))
         .thenReturn(Future.successful(None))
 
-      val result = controller.getLodgingOfficerData("testId")(FakeRequest())
+      val result: Future[Result] = controller.getLodgingOfficerData("testId")(FakeRequest())
 
-      status(result) shouldBe 204
+      status(result) mustBe 204
     }
 
     "returns 404 if none found" in new Setup {
@@ -158,15 +159,15 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockLodgingOfficerService.getLodgingOfficerData(any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
 
-      val result = controller.getLodgingOfficerData("testId")(FakeRequest())
-      status(result) shouldBe 404
+      val result: Future[Result] = controller.getLodgingOfficerData("testId")(FakeRequest())
+      status(result) mustBe 404
     }
 
     "returns 403 if user is not authorised" in new Setup {
       AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
 
-      val result = controller.getLodgingOfficerData("testId")(FakeRequest())
-      status(result) shouldBe 403
+      val result: Future[Result] = controller.getLodgingOfficerData("testId")(FakeRequest())
+      status(result) mustBe 403
     }
   }
 
@@ -175,8 +176,8 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
     "returns 403 if user is not authorised" in new Setup {
       AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
 
-      val result = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
-      status(result) shouldBe 403
+      val result: Future[Result] = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
+      status(result) mustBe 403
     }
 
     "returns 200 if successful" in new Setup {
@@ -184,13 +185,13 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockLodgingOfficerService.updateLodgingOfficerData(any(), any())(any()))
         .thenReturn(Future.successful(upsertLodgingOfficerJson))
 
-      val result = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
-      status(result) shouldBe 200
-      contentAsJson(result) shouldBe upsertLodgingOfficerJson
+      val result: Future[Result] = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
+      status(result) mustBe 200
+      contentAsJson(result) mustBe upsertLodgingOfficerJson
     }
 
     "returns 400 if json received is invalid" in new Setup {
-      val invalidPatchLodgingOfficerJson = Json.parse(
+      val invalidPatchLodgingOfficerJson: JsObject = Json.parse(
         s"""
            |{
            | "nino" : "AB123456A",
@@ -200,8 +201,8 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
 
       AuthorisationMocks.mockAuthorised(regId.value,internalid)
 
-      val result = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](invalidPatchLodgingOfficerJson))
-      status(result) shouldBe 400
+      val result: Future[Result] = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](invalidPatchLodgingOfficerJson))
+      status(result) mustBe 400
     }
 
     "returns 404 if the registration is not found" in new Setup {
@@ -209,8 +210,8 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockLodgingOfficerService.updateLodgingOfficerData(any(), any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
 
-      val result = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
-      status(result) shouldBe 404
+      val result: Future[Result] = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
+      status(result) mustBe 404
     }
 
     "returns 500 if an error occurs" in new Setup {
@@ -218,8 +219,8 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockLodgingOfficerService.updateLodgingOfficerData(any(), any())(any()))
         .thenReturn(Future.failed(new Exception))
 
-      val result = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
-      status(result) shouldBe 500
+      val result: Future[Result] = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
+      status(result) mustBe 500
     }
   }
 }

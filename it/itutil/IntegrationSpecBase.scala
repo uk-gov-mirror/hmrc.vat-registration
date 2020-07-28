@@ -19,27 +19,26 @@ import auth.CryptoSCRS
 import models.api.VatScheme
 import org.scalatest._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatestplus.play.OneServerPerSuite
-import play.api.Configuration
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import org.scalatestplus.play.PlaySpec
+import play.api.{Application, Configuration}
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsString, Reads, Writes}
-import play.api.libs.ws.WSClient
-import play.api.test.FakeApplication
+import play.api.libs.ws.{WSClient, WSRequest}
+import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.WriteResult
-import repositories.{RegistrationMongo, RegistrationMongoRepository, SequenceMongo, SequenceMongoRepository}
-import uk.gov.hmrc.crypto.{CompositeSymmetricCrypto, CryptoWithKeysFromConfig}
+import repositories.{RegistrationMongoRepository, SequenceMongoRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
-trait IntegrationSpecBase extends WordSpec with OneServerPerSuite with ScalaFutures with IntegrationPatience with Matchers
-  with WiremockHelper with BeforeAndAfterEach with BeforeAndAfterAll {
+trait IntegrationSpecBase extends PlaySpec
+  with GuiceOneServerPerSuite with ScalaFutures with IntegrationPatience
+  with WiremockHelper with BeforeAndAfterEach with BeforeAndAfterAll with DefaultAwaitTimeout {
 
-  val cryptoForTest: CryptoSCRS = new CryptoSCRS {
-    def crypto: CompositeSymmetricCrypto = new CryptoWithKeysFromConfig(
-      baseConfigKey = "json.encryption",
-      config = app.injector.instanceOf(classOf[Configuration]).underlying)
+  lazy val cryptoForTest: CryptoSCRS = new CryptoSCRS(config = app.injector.instanceOf(classOf[Configuration])) {
+
     override val rds: Reads[String] = Reads[String](_.validate[String])
     override val wts: Writes[String] = Writes[String](s => JsString(s))
   }
@@ -69,15 +68,15 @@ trait IntegrationSpecBase extends WordSpec with OneServerPerSuite with ScalaFutu
     "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
   )
 
-  override implicit lazy val app = FakeApplication(additionalConfiguration = config)
+  override implicit lazy val app: Application = new GuiceApplicationBuilder()
+    .configure(config)
+    .build()
 
   trait SetupHelper {
 
-    lazy val reactiveMongoComponent = app.injector.instanceOf[ReactiveMongoComponent]
-    val mongo = new RegistrationMongo(reactiveMongoComponent, cryptoForTest)
-    val sequenceMongo = new SequenceMongo(reactiveMongoComponent)
-    val repo: RegistrationMongoRepository = mongo.store
-    val sequenceRepository: SequenceMongoRepository = sequenceMongo.store
+    lazy val reactiveMongoComponent: ReactiveMongoComponent = app.injector.instanceOf[ReactiveMongoComponent]
+    val repo: RegistrationMongoRepository = new RegistrationMongoRepository(reactiveMongoComponent, cryptoForTest)
+    val sequenceRepository: SequenceMongoRepository = new SequenceMongoRepository(reactiveMongoComponent)
 
     await(repo.drop)
     await(repo.ensureIndexes)
@@ -85,15 +84,16 @@ trait IntegrationSpecBase extends WordSpec with OneServerPerSuite with ScalaFutu
     await(sequenceRepository.ensureIndexes)
 
     def insertIntoDb(vatScheme: VatScheme): WriteResult = {
-      val count =  await(repo.count)
+      val count = await(repo.count)
       val res = await(repo.insert(vatScheme))
-      await(repo.count) shouldBe count + 1
+      await(repo.count) mustBe count + 1
       res
     }
 
-    lazy val ws   = app.injector.instanceOf(classOf[WSClient])
-    def client(path: String) = ws.url(s"http://localhost:$port$path").withFollowRedirects(false)
-}
+    lazy val ws: WSClient = app.injector.instanceOf(classOf[WSClient])
+
+    def client(path: String): WSRequest = ws.url(s"http://localhost:$port$path").withFollowRedirects(false)
+  }
 
   override def beforeEach(): Unit = {
     resetWiremock()

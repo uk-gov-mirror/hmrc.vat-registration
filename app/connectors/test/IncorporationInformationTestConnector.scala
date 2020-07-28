@@ -19,26 +19,21 @@ package connectors.test
 import com.google.inject.ImplementedBy
 import common.TransactionId
 import config.BackendConfig
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Result, Results}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@ImplementedBy(classOf[VatRegIncorporationInformationTestConnector])
-trait IncorporationInformationTestConnector {
-  def incorpCompany(transactionId: TransactionId, incorpDate: String)(implicit hc: HeaderCarrier): Future[Result]
-}
+@Singleton
+class IncorporationInformationTestConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) {
 
-class VatRegIncorporationInformationTestConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) extends IncorporationInformationTestConnector {
-
-  //$COVERAGE-OFF$
-  val iiUrl = backendConfig.baseUrl("incorporation-information")
+  val iiUrl: String = backendConfig.servicesConfig.baseUrl("incorporation-information")
 
   def incorpCompany(transactionId: TransactionId, incorpDate: String)(implicit hc: HeaderCarrier): Future[Result] = {
     http.GET(s"$iiUrl/incorporation-information/test-only/add-incorp-update?txId=" +
       s"$transactionId&date=$incorpDate&success=true&crn=12345").map(_ => Results.Ok)
   }
-  //$COVERAGE-ON$
 }

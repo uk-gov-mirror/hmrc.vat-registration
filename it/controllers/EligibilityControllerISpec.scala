@@ -7,8 +7,7 @@ import models.api.{Eligibility, VatScheme}
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import controllers.routes.EligibilityController
-
-import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.libs.ws.WSResponse
 
 class EligibilityControllerISpec extends IntegrationStubbing {
 
@@ -18,7 +17,7 @@ class EligibilityControllerISpec extends IntegrationStubbing {
 
   def vatScheme(regId: String): VatScheme = emptyVatScheme(regId).copy(eligibility = Some(Eligibility(1,"success")))
 
-  val validEligibilityJson = Json.parse(
+  val validEligibilityJson: JsObject = Json.parse(
     """
       |{
       | "version": 1,
@@ -26,7 +25,7 @@ class EligibilityControllerISpec extends IntegrationStubbing {
       |}
     """.stripMargin).as[JsObject]
 
-  val invalidEligibilityJson = Json.parse(
+  val invalidEligibilityJson: JsObject = Json.parse(
     """
       |{
       | "result": "success"
@@ -39,11 +38,11 @@ class EligibilityControllerISpec extends IntegrationStubbing {
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      val response = await(client(EligibilityController.updateEligibility("regId").url)
+      val response: WSResponse = await(client(EligibilityController.updateEligibility("regId").url)
         .patch(validEligibilityJson))
 
-      response.status shouldBe OK
-      response.json shouldBe validEligibilityJson
+      response.status mustBe OK
+      response.json mustBe validEligibilityJson
     }
 
     "return BAD_REQUEST if an invalid json body is posted" in new Setup {
@@ -51,19 +50,19 @@ class EligibilityControllerISpec extends IntegrationStubbing {
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      val response = await(client(EligibilityController.updateEligibility("regId").url)
+      val response: WSResponse = await(client(EligibilityController.updateEligibility("regId").url)
         .patch(invalidEligibilityJson))
 
-      response.status shouldBe BAD_REQUEST
+      response.status mustBe BAD_REQUEST
     }
 
     "return NOT_FOUND if no reg document is found" in new Setup {
       given.user.isAuthorised
 
-      val response = await(client(EligibilityController.updateEligibility("regId").url)
+      val response: WSResponse = await(client(EligibilityController.updateEligibility("regId").url)
         .patch(validEligibilityJson))
 
-      response.status shouldBe NOT_FOUND
+      response.status mustBe NOT_FOUND
     }
 
     "return OK if no data updated because data is same" in new Setup {
@@ -71,19 +70,19 @@ class EligibilityControllerISpec extends IntegrationStubbing {
 
       insertIntoDb(vatScheme("regId"))
 
-      val response = await(client(EligibilityController.updateEligibility("regId").url)
+      val response: WSResponse = await(client(EligibilityController.updateEligibility("regId").url)
         .patch(validEligibilityJson))
 
-      response.status shouldBe OK
+      response.status mustBe OK
     }
 
     "return FORBIDDEN if user is not authorised obtained" in new Setup {
       given.user.isNotAuthorised
 
-      val response = await(client(EligibilityController.updateEligibility("regId").url)
+      val response: WSResponse = await(client(EligibilityController.updateEligibility("regId").url)
         .patch(validEligibilityJson))
 
-      response.status shouldBe FORBIDDEN
+      response.status mustBe FORBIDDEN
     }
   }
 }

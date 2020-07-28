@@ -23,6 +23,7 @@ import helpers.VatRegSpec
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import play.api.libs.json.JsObject
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import repositories.RegistrationMongoRepository
 
@@ -33,7 +34,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
   import play.api.test.Helpers._
 
   class Setup {
-    val controller = new FlatRateSchemeControllerImpl(flatRateSchemeService = mockFlatRateSchemeService, authConnector = mockAuthConnector){
+    val controller: FlatRateSchemeController = new FlatRateSchemeController(mockFlatRateSchemeService, mockAuthConnector, stubControllerComponents()){
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
     }
   }
@@ -44,9 +45,9 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockFlatRateSchemeService.retrieveFlatRateScheme(any())(any()))
         .thenReturn(Future.successful(Some(validFullFlatRateScheme)))
 
-      val result = controller.fetchFlatRateScheme("testId")(FakeRequest())
-      status(result) shouldBe 200
-      contentAsJson(result) shouldBe validFullFlatRateSchemeJson
+      val result: Future[Result] = controller.fetchFlatRateScheme("testId")(FakeRequest())
+      status(result) mustBe 200
+      contentAsJson(result) mustBe validFullFlatRateSchemeJson
     }
 
     "return an OK with a valid flat rate scheme json where the frsDetails is not present" in new Setup {
@@ -54,9 +55,9 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockFlatRateSchemeService.retrieveFlatRateScheme(any())(any()))
         .thenReturn(Future.successful(Some(validEmptyFlatRateScheme)))
 
-      val result = controller.fetchFlatRateScheme("testId")(FakeRequest())
-      status(result) shouldBe 200
-      contentAsJson(result) shouldBe validEmptyFlatRateSchemeJson
+      val result: Future[Result] = controller.fetchFlatRateScheme("testId")(FakeRequest())
+      status(result) mustBe 200
+      contentAsJson(result) mustBe validEmptyFlatRateSchemeJson
     }
 
     "return a NoContent if the flat rate scheme block is not present in the document" in new Setup {
@@ -64,8 +65,8 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockFlatRateSchemeService.retrieveFlatRateScheme(any())(any()))
         .thenReturn(Future.successful(None))
 
-      val result = controller.fetchFlatRateScheme("testId")(FakeRequest())
-      status(result) shouldBe 204
+      val result: Future[Result] = controller.fetchFlatRateScheme("testId")(FakeRequest())
+      status(result) mustBe 204
     }
 
     "return NotFound if the registration document was not found for the regId provided" in new Setup {
@@ -73,15 +74,15 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockFlatRateSchemeService.retrieveFlatRateScheme(any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
 
-      val result = controller.fetchFlatRateScheme("testId")(FakeRequest())
-      status(result) shouldBe 404
+      val result: Future[Result] = controller.fetchFlatRateScheme("testId")(FakeRequest())
+      status(result) mustBe 404
     }
 
     "return Forbidden if the registration document was not found for the regId provided" in new Setup {
       AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
 
-      val result = controller.fetchFlatRateScheme("testId")(FakeRequest())
-      status(result) shouldBe 403
+      val result: Future[Result] = controller.fetchFlatRateScheme("testId")(FakeRequest())
+      status(result) mustBe 403
     }
   }
 
@@ -91,9 +92,9 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any())(any()))
         .thenReturn(Future.successful(validFullFlatRateScheme))
 
-      val result  = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
-      status(result) shouldBe 200
-      contentAsJson(result) shouldBe validFullFlatRateSchemeJson
+      val result: Future[Result] = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
+      status(result) mustBe 200
+      contentAsJson(result) mustBe validFullFlatRateSchemeJson
     }
 
     "returns Ok if successful with a missing frsDetails" in new Setup {
@@ -101,9 +102,9 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any())(any()))
         .thenReturn(Future.successful(validEmptyFlatRateScheme))
 
-      val result  = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validEmptyFlatRateSchemeJson))
-      status(result) shouldBe 200
-      contentAsJson(result) shouldBe validEmptyFlatRateSchemeJson
+      val result: Future[Result] = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validEmptyFlatRateSchemeJson))
+      status(result) mustBe 200
+      contentAsJson(result) mustBe validEmptyFlatRateSchemeJson
     }
 
     "returns NotFound if the registration is not found" in new Setup {
@@ -111,8 +112,8 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
 
-      val result = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
-      status(result) shouldBe 404
+      val result: Future[Result] = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
+      status(result) mustBe 404
     }
 
     "returns InternalServerError if an error occurs" in new Setup {
@@ -120,15 +121,15 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any())(any()))
         .thenReturn(Future.failed(new Exception))
 
-      val result = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
-      status(result) shouldBe 500
+      val result: Future[Result] = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
+      status(result) mustBe 500
     }
 
     "returns Forbidden if the user is not authoirised" in new Setup {
       AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
 
-      val result = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
-      status(result) shouldBe 403
+      val result: Future[Result] = controller.updateFlatRateScheme("testId")(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
+      status(result) mustBe 403
     }
   }
 
@@ -138,8 +139,8 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockFlatRateSchemeService.removeFlatRateScheme(any())(any()))
         .thenReturn(Future.successful(true))
 
-      val result  = controller.removeFlatRateScheme("testId")(FakeRequest())
-      status(result) shouldBe 200
+      val result: Future[Result] = controller.removeFlatRateScheme("testId")(FakeRequest())
+      status(result) mustBe 200
     }
 
     "returns NotFound if the registration is not found" in new Setup {
@@ -147,8 +148,8 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockFlatRateSchemeService.removeFlatRateScheme(any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
 
-      val result = controller.removeFlatRateScheme("testId")(FakeRequest())
-      status(result) shouldBe 404
+      val result: Future[Result] = controller.removeFlatRateScheme("testId")(FakeRequest())
+      status(result) mustBe 404
     }
 
     "returns InternalServerError if an error occurs" in new Setup {
@@ -156,15 +157,15 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
       when(mockFlatRateSchemeService.removeFlatRateScheme(any())(any()))
         .thenReturn(Future.failed(new Exception))
 
-      val result = controller.removeFlatRateScheme("testId")(FakeRequest())
-      status(result) shouldBe 500
+      val result: Future[Result] = controller.removeFlatRateScheme("testId")(FakeRequest())
+      status(result) mustBe 500
     }
 
-    "returns Forbidden if the user is not authoirised" in new Setup {
+    "returns Forbidden if the user is not authorised" in new Setup {
       AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
 
-      val result = controller.removeFlatRateScheme("testId")(FakeRequest())
-      status(result) shouldBe 403
+      val result: Future[Result] = controller.removeFlatRateScheme("testId")(FakeRequest())
+      status(result) mustBe 403
     }
   }
 

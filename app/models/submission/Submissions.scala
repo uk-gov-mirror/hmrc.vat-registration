@@ -22,6 +22,7 @@ import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.functional.syntax.unlift
 import play.api.libs.json.{Writes, __}
+import play.api.libs.json.JodaWrites._
 
 case class DESSubmission(acknowledgementReference: String,
                          companyName: String,

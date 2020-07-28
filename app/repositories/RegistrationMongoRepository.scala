@@ -24,7 +24,7 @@ import cats.instances.future._
 import common.RegistrationId
 import common.exceptions._
 import enums.VatRegStatus
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import models._
 import models.api._
 import play.api.Logger
@@ -43,43 +43,13 @@ import utils.EligibilityDataJsonUtils
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-class RegistrationMongo @Inject()(mongo: ReactiveMongoComponent, crypto: CryptoSCRS) extends ReactiveMongoFormats {
-  lazy val store = new RegistrationMongoRepository(mongo.mongoConnector.db, crypto)
-}
-
-trait RegistrationRepository {
-  def createNewVatScheme(id: RegistrationId, intId: String)(implicit hc: HeaderCarrier): Future[VatScheme]
-  def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[Option[VatScheme]]
-  def deleteVatScheme(regId: String)(implicit hc: HeaderCarrier): Future[Boolean]
-  def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String]
-  def prepareRegistrationSubmission(id: RegistrationId, ackRef: String, status: VatRegStatus.Value)(implicit hc: HeaderCarrier): Future[Boolean]
-  def finishRegistrationSubmission(id: RegistrationId, status: VatRegStatus.Value)(implicit hc: HeaderCarrier): Future[VatRegStatus.Value]
-  def updateIVStatus(regId: String, ivStatus: Boolean)(implicit ex: ExecutionContext): Future[Boolean]
-  def saveTransId(transId: String, regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String]
-  def fetchRegByTxId(transId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]]
-  def retrieveTradingDetails(regId: String)(implicit ex: ExecutionContext): Future[Option[TradingDetails]]
-  def updateTradingDetails(regId: String, tradingDetails: TradingDetails)(implicit ex: ExecutionContext): Future[TradingDetails]
-  def fetchReturns(regId: String)(implicit hc: HeaderCarrier): Future[Option[Returns]]
-  def updateReturns(regId: String, returns: Returns)(implicit ex: ExecutionContext): Future[Returns]
-  def fetchBankAccount(regId: String)(implicit ex: ExecutionContext): Future[Option[BankAccount]]
-  def updateBankAccount(regId: String, bankAcount: BankAccount)(implicit ex: ExecutionContext): Future[BankAccount]
-  def fetchFlatRateScheme(regId: String)(implicit ec: ExecutionContext): Future[Option[FlatRateScheme]]
-  def updateFlatRateScheme(regId: String, flatRateScheme: FlatRateScheme)(implicit ec: ExecutionContext): Future[FlatRateScheme]
-  def getInternalId(id: String)(implicit hc: HeaderCarrier): Future[Option[String]]
-  def removeFlatRateScheme(regId: String)(implicit ec: ExecutionContext): Future[Boolean]
-  def clearDownDocument(transId: String)(implicit ec: ExecutionContext): Future[Boolean]
-  def getCombinedLodgingOfficer(regId: String)(implicit ec: ExecutionContext): Future[Option[LodgingOfficer]]
-  def patchLodgingOfficer(regId: String, lodgingOfficer: JsObject)(implicit ec: ExecutionContext): Future[JsObject]
-  def getEligibilityData(regId: String)(implicit ec: ExecutionContext): Future[Option[JsObject]]
-  def updateEligibilityData(regId: String, eligibilityData: JsObject)(implicit ec: ExecutionContext): Future[JsObject]
-}
-
-class RegistrationMongoRepository(mongo: () => DB, crypto: CryptoSCRS)
+@Singleton
+class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypto: CryptoSCRS)
   extends ReactiveRepository[VatScheme, BSONObjectID](
     collectionName = "registration-information",
-    mongo = mongo,
+    mongo = mongo.mongoConnector.db,
     domainFormat = VatScheme.mongoFormat(crypto)
-  ) with RegistrationRepository with AuthorisationResource {
+  ) with ReactiveMongoFormats with AuthorisationResource {
 
   startUp
 
@@ -112,7 +82,7 @@ class RegistrationMongoRepository(mongo: () => DB, crypto: CryptoSCRS)
   )
 
   //TODO: should be written with $set to not use vatscheme writes
-  override def createNewVatScheme(id: RegistrationId, intId: String)(implicit hc: HeaderCarrier): Future[VatScheme] = {
+  def createNewVatScheme(id: RegistrationId, intId: String)(implicit hc: HeaderCarrier): Future[VatScheme] = {
     val set = Json.obj(
       "registrationId" -> Json.toJson[String](id.value),
       "status" -> Json.toJson(VatRegStatus.draft),
@@ -127,7 +97,7 @@ class RegistrationMongoRepository(mongo: () => DB, crypto: CryptoSCRS)
     }
   }
 
-  override def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
+  def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
     collection.find(ridSelector(id)).one[JsObject] map { doc =>
       doc map { json =>
         val jsonWithoutElData = json - "threshold" - "lodgingOfficer" - "turnoverEstimates"
@@ -143,14 +113,14 @@ class RegistrationMongoRepository(mongo: () => DB, crypto: CryptoSCRS)
     }
   }
 
-  override def deleteVatScheme(regId: String)(implicit hc: HeaderCarrier): Future[Boolean] = {
+  def deleteVatScheme(regId: String)(implicit hc: HeaderCarrier): Future[Boolean] = {
     collection.remove(regIdSelector(regId)) map { wr => wr
       if (!wr.ok) logger.error(s"[deleteVatScheme] - Error deleting vat reg doc for regId $regId - Error: ${Message.unapply(wr)}")
       wr.ok
     }
   }
 
-  override def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String] =
+  def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String] =
     setElement(id, elementPath.path, value)
 
   private def setElement(id: RegistrationId, element: String, value: String)(implicit hc: HeaderCarrier): Future[String] =
@@ -160,7 +130,7 @@ class RegistrationMongoRepository(mongo: () => DB, crypto: CryptoSCRS)
       throw UpdateFailed(id, element)
     }
 
-  override def prepareRegistrationSubmission(id: RegistrationId, ackRef: String, status: VatRegStatus.Value)(implicit hc: HeaderCarrier): Future[Boolean] = {
+  def prepareRegistrationSubmission(id: RegistrationId, ackRef: String, status: VatRegStatus.Value)(implicit hc: HeaderCarrier): Future[Boolean] = {
     val modifier = toBSON(Json.obj(
       AcknowledgementReferencePath.path -> ackRef,
       VatStatusPath.path -> (if (status == VatRegStatus.draft) VatRegStatus.locked else status)
@@ -169,7 +139,7 @@ class RegistrationMongoRepository(mongo: () => DB, crypto: CryptoSCRS)
     collection.update(ridSelector(id), BSONDocument("$set" -> modifier)).map(_.ok)
   }
 
-  override def finishRegistrationSubmission(id: RegistrationId, status: VatRegStatus.Value)(implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
+  def finishRegistrationSubmission(id: RegistrationId, status: VatRegStatus.Value)(implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
     val modifier = toBSON(Json.obj(
       VatStatusPath.path -> status
     )).get
@@ -177,7 +147,7 @@ class RegistrationMongoRepository(mongo: () => DB, crypto: CryptoSCRS)
     collection.update(ridSelector(id), BSONDocument("$set" -> modifier)).map(_ => status)
   }
 
-  override def saveTransId(transId: String, regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String] = {
+  def saveTransId(transId: String, regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String] = {
     val modifier = toBSON(Json.obj(
       VatTransIdPath.path -> transId
     )).get
@@ -185,13 +155,13 @@ class RegistrationMongoRepository(mongo: () => DB, crypto: CryptoSCRS)
     collection.update(ridSelector(regId), BSONDocument("$set" -> modifier)).map(_ => transId)
   }
 
-  override def fetchRegByTxId(transId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
+  def fetchRegByTxId(transId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
     collection.find(tidSelector(transId)).one[VatScheme]
   }
 
   private[repositories] def tidSelector(id: String) = BSONDocument("transactionId" -> id)
 
-  override def updateIVStatus(regId: String, ivStatus: Boolean)(implicit ex: ExecutionContext): Future[Boolean] = {
+  def updateIVStatus(regId: String, ivStatus: Boolean)(implicit ex: ExecutionContext): Future[Boolean] = {
     val querySelect = Json.obj("registrationId" -> regId, "lodgingOfficer" -> Json.obj("$exists" -> true))
     val setDoc = Json.obj("$set" -> Json.obj("lodgingOfficer.ivPassed" -> ivStatus))
 
@@ -210,7 +180,7 @@ class RegistrationMongoRepository(mongo: () => DB, crypto: CryptoSCRS)
     }
   }
 
-  override def fetchReturns(regId: String)(implicit hc: HeaderCarrier): Future[Option[Returns]] = {
+  def fetchReturns(regId: String)(implicit hc: HeaderCarrier): Future[Option[Returns]] = {
     val selector = regIdSelector(regId)
     val projection = Json.obj("returns" -> 1)
     collection.find(selector, projection).one[JsObject].map { doc =>
@@ -220,15 +190,15 @@ class RegistrationMongoRepository(mongo: () => DB, crypto: CryptoSCRS)
     }
   }
 
-  override def retrieveTradingDetails(regId: String)(implicit ex: ExecutionContext): Future[Option[TradingDetails]] = {
+  def retrieveTradingDetails(regId: String)(implicit ex: ExecutionContext): Future[Option[TradingDetails]] = {
     fetchBlock[TradingDetails](regId, "tradingDetails")
   }
 
-  override def updateTradingDetails(regId: String, tradingDetails: TradingDetails)(implicit ex: ExecutionContext): Future[TradingDetails] = {
+  def updateTradingDetails(regId: String, tradingDetails: TradingDetails)(implicit ex: ExecutionContext): Future[TradingDetails] = {
     updateBlock(regId, tradingDetails, "tradingDetails")
   }
 
-  override def updateReturns(regId: String, returns: Returns)(implicit ex: ExecutionContext): Future[Returns] = {
+  def updateReturns(regId: String, returns: Returns)(implicit ex: ExecutionContext): Future[Returns] = {
     val selector = regIdSelector(regId)
     val update = BSONDocument("$set" -> BSONDocument("returns" -> Json.toJson(returns)))
     collection.update(selector, update) map { updateResult =>
@@ -237,7 +207,7 @@ class RegistrationMongoRepository(mongo: () => DB, crypto: CryptoSCRS)
     }
   }
 
-  override def fetchBankAccount(regId: String)(implicit ex: ExecutionContext): Future[Option[BankAccount]] = {
+  def fetchBankAccount(regId: String)(implicit ex: ExecutionContext): Future[Option[BankAccount]] = {
     val selector = regIdSelector(regId)
     val projection = Json.obj("bankAccount" -> 1)
     collection.find(selector, projection).one[JsObject].map(
@@ -245,7 +215,7 @@ class RegistrationMongoRepository(mongo: () => DB, crypto: CryptoSCRS)
     )
   }
 
-  override def updateBankAccount(regId: String, bankAccount: BankAccount)(implicit ex: ExecutionContext): Future[BankAccount] = {
+  def updateBankAccount(regId: String, bankAccount: BankAccount)(implicit ex: ExecutionContext): Future[BankAccount] = {
     val selector = regIdSelector(regId)
     val update = BSONDocument("$set" -> Json.obj("bankAccount" -> Json.toJson(bankAccount)(bankAccountCryptoFormatter)))
     collection.update(selector, update) map { updateResult =>
@@ -278,7 +248,7 @@ class RegistrationMongoRepository(mongo: () => DB, crypto: CryptoSCRS)
   def updateThreshold(regId: String, threshold: Threshold)(implicit ec: ExecutionContext): Future[Threshold] =
     updateBlock(regId, threshold)
 
-  override def getCombinedLodgingOfficer(regId: String)(implicit ec: ExecutionContext): Future[Option[LodgingOfficer]] = {
+ def getCombinedLodgingOfficer(regId: String)(implicit ec: ExecutionContext): Future[Option[LodgingOfficer]] = {
     val projection = Json.obj("eligibilityData.sections.data.questionId" -> 1,
       "eligibilityData.sections.data.answerValue" -> 1,
       "lodgingOfficer" -> 1,
@@ -299,7 +269,7 @@ class RegistrationMongoRepository(mongo: () => DB, crypto: CryptoSCRS)
     }
   }
 
-  override def patchLodgingOfficer(regId: String, lodgingOfficer: JsObject)(implicit ec: ExecutionContext): Future[JsObject] = {
+  def patchLodgingOfficer(regId: String, lodgingOfficer: JsObject)(implicit ec: ExecutionContext): Future[JsObject] = {
     val dob = (lodgingOfficer \ "dob").validate[LocalDate].getOrElse {
       Logger.warn(s"LodgingOfficer] [patchLodgingOfficer] dob is either missing or in the incorrect format for regId: $regId")
       throw new NoSuchElementException("dob missing or incorrect")

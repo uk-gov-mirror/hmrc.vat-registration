@@ -54,7 +54,7 @@ class EligibilityDataJsonUtilsSpec extends JsonFormatValidation {
         "fooDirectorDetails2" -> true,
         "fooDirectorDetails3" -> true)
 
-      EligibilityDataJsonUtils.toJsObject(json) shouldBe expectedResult
+      EligibilityDataJsonUtils.toJsObject(json) mustBe expectedResult
     }
   }
 
@@ -103,7 +103,7 @@ class EligibilityDataJsonUtilsSpec extends JsonFormatValidation {
         "fooDirectorDetails3" -> true
       )
 
-      json.as[JsObject](EligibilityDataJsonUtils.readsOfFullJson) shouldBe expected
+      json.as[JsObject](EligibilityDataJsonUtils.readsOfFullJson) mustBe expected
     }
 
     "return a JsError" when {
@@ -133,7 +133,7 @@ class EligibilityDataJsonUtilsSpec extends JsonFormatValidation {
 
         val res = Json.fromJson[JsObject](json)(EligibilityDataJsonUtils.readsOfFullJson)
 
-        res.isError shouldBe true
+        res.isError mustBe true
       }
       "threshold is missing" in {
         val json = Json.parse(
@@ -160,7 +160,7 @@ class EligibilityDataJsonUtilsSpec extends JsonFormatValidation {
 
         val res = Json.fromJson[JsObject](json)(EligibilityDataJsonUtils.readsOfFullJson)
 
-        res.isError shouldBe true
+        res.isError mustBe true
       }
     }
   }
