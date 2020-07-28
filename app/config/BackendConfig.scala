@@ -16,10 +16,11 @@
 
 package config
 
-import javax.inject.Inject
-import play.api.{Configuration, Mode, Environment}
-import uk.gov.hmrc.play.bootstrap.config.{ServicesConfig, RunMode}
+import javax.inject.{Inject, Singleton}
+import play.api.{Configuration, Environment, Mode}
+import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
 
+@Singleton
 class BackendConfig @Inject()(val servicesConfig: ServicesConfig,
                               val environment:Environment,
                               val runModeConfiguration: Configuration,
