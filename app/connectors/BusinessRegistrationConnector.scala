@@ -18,15 +18,16 @@ package connectors
 
 import common.exceptions._
 import config.BackendConfig
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import models.external.CurrentProfile
 import org.slf4j.{Logger, LoggerFactory}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+@Singleton
 class BusinessRegistrationConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient){
   lazy val businessRegUrl: String = backendConfig.servicesConfig.baseUrl("business-registration")
 

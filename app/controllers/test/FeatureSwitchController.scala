@@ -16,13 +16,14 @@
 
 package controllers.test
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.{BooleanFeatureSwitch, FeatureSwitch, VATFeatureSwitches}
 
 import scala.concurrent.Future
 
+@Singleton
 class FeatureSwitchController @Inject()(controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
 
   val fs: FeatureSwitch.type =  FeatureSwitch

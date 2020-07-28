@@ -20,13 +20,15 @@ import auth.{Authorisation, AuthorisationResource}
 import cats.instances.FutureInstances
 import common.TransactionId
 import connectors.test.IncorporationInformationTestConnector
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.LodgingOfficerService
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
+@Singleton
 class IncorporationInformationTestController @Inject()(val iiTestConnector: IncorporationInformationTestConnector,
                                                        lodgingOfficer: LodgingOfficerService,
                                                        controllerComponents: ControllerComponents,

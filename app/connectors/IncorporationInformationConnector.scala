@@ -18,7 +18,7 @@ package connectors
 
 import common.{RegistrationId, TransactionId}
 import config.BackendConfig
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import models.external.IncorporationStatus
 import org.joda.time.LocalDateTime
 import org.joda.time.format.DateTimeFormat
@@ -27,8 +27,8 @@ import play.api.http.Status.{ACCEPTED, OK}
 import play.api.libs.json._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NoStackTrace
 
@@ -36,6 +36,7 @@ class IncorporationInformationResponseException(msg: String) extends NoStackTrac
   override def getMessage: String = msg
 }
 
+@Singleton
 class IncorporationInformationConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) {
 
   lazy val iiUrl: String     = backendConfig.servicesConfig.baseUrl("incorporation-information")

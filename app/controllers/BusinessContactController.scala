@@ -30,12 +30,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class BusinessContactController @Inject()(val businessContactService: BusinessContactService,
-                                              val authConnector: AuthConnector,
-                                              controllerComponents: ControllerComponents
+                                          val authConnector: AuthConnector,
+                                          controllerComponents: ControllerComponents
                                          ) extends BackendController(controllerComponents) with Authorisation {
 
   val resourceConn: RegistrationMongoRepository = businessContactService.registrationRepository
-
 
   def getBusinessContact(regId: String): Action[AnyContent] = Action.async {
     implicit request =>

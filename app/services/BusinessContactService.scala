@@ -16,13 +16,13 @@
 
 package services
 
-import javax.inject.Inject
-
+import javax.inject.{Inject, Singleton}
 import models.api.BusinessContact
 import repositories.RegistrationMongoRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class BusinessContactService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
   def getBusinessContact(regId: String)(implicit ec: ExecutionContext): Future[Option[BusinessContact]] =
