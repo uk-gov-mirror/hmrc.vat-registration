@@ -64,6 +64,15 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
       }
   }
 
+  def retrieveVatSchemeByInternalId(): Action[AnyContent] = Action.async {
+    implicit request =>
+      isAuthenticated { internalId =>
+        implicit val writes = VatScheme.apiWrites
+
+        registrationService.retrieveVatSchemeByInternalId(internalId).fold(errorHandler, vatScheme => Ok(Json.toJson(vatScheme)))
+      }
+  }
+
 // TODO: this returns 404 when other methods return 204. Refactor to return 204 at some point
   def fetchReturns(regId: String) : Action[AnyContent] = Action.async {
     implicit request =>

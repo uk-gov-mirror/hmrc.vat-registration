@@ -17,30 +17,28 @@
 package services
 
 import java.time.LocalDate
-import javax.inject.{Inject, Singleton}
+
 import cats.instances.FutureInstances
 import common.exceptions._
 import common.{RegistrationId, TransactionId}
-import connectors.{CompanyRegistrationConnector, DESConnector, IncorporationInformationConnector}
+import connectors.DESConnector
 import enums.VatRegStatus
+import javax.inject.{Inject, Singleton}
 import models.api.VatScheme
 import models.external.{IncorpStatus, IncorporationStatus}
 import models.submission.{DESSubmission, TopUpSubmission}
-import org.joda.time.DateTime
 import repositories._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.VATFeatureSwitches
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
 
 @Singleton
 class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepository,
                                   val vatRegistrationService: VatRegistrationService,
                                   val registrationRepository: RegistrationMongoRepository,
-                                  val companyRegistrationConnector: CompanyRegistrationConnector,
-                                  val desConnector: DESConnector,
-                                  val incorporationInformationConnector : IncorporationInformationConnector) extends FutureInstances {
+                                  val desConnector: DESConnector) extends FutureInstances {
 
   private[services] def useMockSubmission: Boolean = VATFeatureSwitches.mockSubmission.enabled
 
@@ -51,13 +49,9 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     for {
       status        <- getValidDocumentStatus(regId)
       ackRefs       <- ensureAcknowledgementReference(regId, status)
-      transID       <- if(!useMockSubmission) fetchCompanyRegistrationTransactionID(regId) else Future.successful(s"000-434-$regId")
-      incorpStatus  <- if(!useMockSubmission) registerForInterest(transID,regId.toString) else Future.successful(None)
-      incorpDate    =  if(!useMockSubmission) incorpStatus.map(status => getIncorpDate(status)) else Some(LocalDate.now())
-      companyName   <- if(!useMockSubmission) getCompanyName(regId, TransactionId(transID)) else Future.successful("CompName")
-      submission    <- buildDesSubmission(regId, ackRefs, companyName, incorpDate)
+      submission    <- buildDesSubmission(regId, ackRefs)
       _             <- desConnector.submitToDES(submission, regId.toString)
-      _             <- updateSubmissionStatus(regId, incorpDate)
+      _             <- updateSubmissionStatus(regId)
     } yield {
       ackRefs
     }
@@ -68,7 +62,7 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
       regId         <- getRegistrationIDByTxId(incorpUpdate.transactionId)
       status        <- getValidDocumentTopupStatus(regId)
       ackRefs       <- ensureAcknowledgementReference(regId, status)
-      submission    <- buildTopUpSubmission(regId, ackRefs, incorpUpdate.status, incorpUpdate.incorporationDate)
+      submission    <- buildTopUpSubmission(regId, ackRefs, incorpUpdate.status)
       _             <- desConnector.submitTopUpToDES(submission, regId.toString)
       _             <- updateTopUpSubmissionStatus(regId, incorpUpdate.status)
     } yield true
@@ -106,27 +100,25 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     }
   }
 
-  private[services] def buildDesSubmission(regId: RegistrationId, ackRef: String, companyName: String, incorpDate: Option[LocalDate])
+  private[services] def buildDesSubmission(regId: RegistrationId, ackRef: String)
                                           (implicit hc: HeaderCarrier): Future[DESSubmission] = {
     registrationRepository.retrieveVatScheme(regId) map {
       case Some(vs)     =>
         DESSubmission(
           ackRef,
-          companyName,
-          incorpDate.flatMap(_ => retrieveVatStartDate(vs, regId)),
-          incorpDate
+          retrieveVatStartDate(vs, regId)
         )
       case None         => throw MissingRegDocument(regId)
     }
   }
 
-  def buildTopUpSubmission(regId: RegistrationId, ackRef: String, status: String, incorpDate: Option[DateTime])
+  def buildTopUpSubmission(regId: RegistrationId, ackRef: String, status: String)
                           (implicit hc: HeaderCarrier) : Future[TopUpSubmission] = {
     registrationRepository.retrieveVatScheme(regId) map {
       case Some(vs) =>
         val startDate = retrieveVatStartDate(vs, regId)
         status match {
-          case "accepted" => TopUpSubmission(ackRef, status, startDate, incorpDate)
+          case "accepted" => TopUpSubmission(ackRef, status, startDate)
           case "rejected" => TopUpSubmission(ackRef, status)
           case _ => throw UnknownIncorpStatus(s"Status of $status did not match recognised status for building a top up submission")
         }
@@ -155,35 +147,11 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     }
   }
 
-  private[services] def fetchCompanyRegistrationTransactionID(regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String] = {
-    companyRegistrationConnector.fetchCompanyRegistrationDocument(regId) flatMap { response =>
-      Try((response.json \ "confirmationReferences" \ "transaction-id").as[String]) match {
-        case Success(transactionID) => saveTransId(transactionID, regId)
-        case Failure(_)             => throw NoTransactionId(s"Fetching of transaction id failed for regId: $regId")
-      }
-    }
-  }
-
-  private[services] def saveTransId(transId: String, regId: RegistrationId)(implicit hc:HeaderCarrier): Future[String] = {
-    registrationRepository.saveTransId(transId, regId)
-  }
-
-  private[services] def registerForInterest(transID: String, regId: String)(implicit hc: HeaderCarrier): Future[Option[IncorporationStatus]] = {
-    incorporationInformationConnector.retrieveIncorporationStatus(Option(regId), TransactionId(transID), REGIME, SUBSCRIBER)
-  }
-
-  private[services] def getIncorpDate(incorpStatus: IncorporationStatus): LocalDate = {
-    incorpStatus.statusEvent.incorporationDate match {
-      case Some(incorpDate) => incorpDate
-      case None             => throw NoIncorpDate(s"No incorp date found in the incorpStatus for transID: ${incorpStatus.subscription.transactionId}")
-    }
-  }
-
-  private[services] def updateSubmissionStatus(regId : RegistrationId, incorpDate : Option[LocalDate])
+  private[services] def updateSubmissionStatus(regId : RegistrationId)
                                               (implicit hc : HeaderCarrier): Future[VatRegStatus.Value] = {
     registrationRepository.finishRegistrationSubmission(
       regId,
-      if (incorpDate.isDefined) VatRegStatus.submitted else VatRegStatus.held
+      VatRegStatus.submitted //TODO - Confirm if this is correct, state should always be submitted as we're not doing pre-incorp VAT reg
     )
   }
 
@@ -195,12 +163,4 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     )
   }
 
-  private[services] def getCompanyName(regId: RegistrationId, txId: TransactionId)(implicit hc: HeaderCarrier): Future[String] = {
-    incorporationInformationConnector.getCompanyName(regId, txId) map { resp =>
-      Try((resp.json \ "company_name").as[String]) match {
-        case Success(companyName)   => companyName
-        case Failure(_)             => throw NoCompanyName(s"Could not retrieve company name from II with regId: $regId and transId: $txId")
-      }
-    }
-  }
 }

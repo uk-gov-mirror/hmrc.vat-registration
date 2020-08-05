@@ -25,31 +25,25 @@ import play.api.libs.json.{Writes, __}
 import play.api.libs.json.JodaWrites._
 
 case class DESSubmission(acknowledgementReference: String,
-                         companyName: String,
-                         vatStartDate: Option[LocalDate] = None,
-                         incorpDate: Option[LocalDate] = None)
+                         vatStartDate: Option[LocalDate] = None)
 
 object DESSubmission {
   implicit val writes: Writes[DESSubmission] =
     (
       (__ \ "acknowledgementReference").write[String] and
-        (__ \ "companyName").write[String] and
-        (__ \ "vatStartDate").writeNullable[LocalDate] and
-        (__ \ "incorpDate").writeNullable[LocalDate]
+        (__ \ "vatStartDate").writeNullable[LocalDate]
       )(unlift(DESSubmission.unapply))
 }
 
 case class TopUpSubmission(acknowledgementReference: String,
                          status: String,
-                         vatStartDate: Option[LocalDate] = None,
-                         incorpDate: Option[DateTime] = None)
+                         vatStartDate: Option[LocalDate] = None)
 
 object TopUpSubmission {
   implicit val writes: Writes[TopUpSubmission] =
     (
       (__ \ "acknowledgementReference").write[String] and
         (__ \ "status").write[String] and
-        (__ \ "vatStartDate").writeNullable[LocalDate] and
-        (__ \ "incorpDate").writeNullable[DateTime]
+        (__ \ "vatStartDate").writeNullable[LocalDate]
       )(unlift(TopUpSubmission.unapply))
 }

@@ -656,16 +656,6 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
     val sections = JsArray(Seq(section1, section2))
     val eligibilityData = Json.obj("sections" -> sections)
 
-    "update lodgingOfficer block with ivPassed in registration" in new Setup {
-      val result: Future[Option[LodgingOfficer]] = for {
-        _ <- repository.insert(vatScheme.copy(lodgingOfficer = Some(lodgingOfficer), eligibilityData = Some(eligibilityData)))
-        _ <- repository.updateIVStatus(vatScheme.id.value, true)
-        Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
-      } yield updatedScheme.lodgingOfficer
-
-      await(result) mustBe Some(lodgingOfficer.copy(ivPassed = Some(true)))
-    }
-
     "not update lodgingOfficer if registration does not exist" in new Setup {
       await(repository.insert(vatScheme))
 
@@ -963,37 +953,12 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
     val sections: JsArray = JsArray(Seq(section1, section2))
     val eligibilityData = Json.obj("sections" -> sections)
 
-    "return Lodging Officer Model from eligibilityData block and lodgingOfficer block" in new Setup {
-      await(repository.insert(vatScheme.copy(eligibilityData = Some(eligibilityData), lodgingOfficer = Some(vatLodgingOfficer))))
-      await(repository.insert(vatScheme.copy(id = RegistrationId("differentRegId"), lodgingOfficer = Some(vatLodgingOfficer))))
 
-      await(repository.count) mustBe 2
-
-      val expectedModel: LodgingOfficer = LodgingOfficer(
-        dob = vatLodgingOfficer.dob,
-        nino = "JW778877A",
-        role = "director",
-        name = Name(first = Some("First Name Test"), middle = Some("Middle Name Test"), last = "Last Name Test"),
-        ivPassed = vatLodgingOfficer.ivPassed,
-        details = vatLodgingOfficer.details,
-        isOfficerApplying = true
-      )
-
-      await(repository.getCombinedLodgingOfficer(vatScheme.id.value)) mustBe Some(expectedModel)
-    }
-
-    "return None if both eligibilityData block and lodging officer block are missing" in new Setup {
+    "return None if both eligibilityData block is missing" in new Setup {
       await(repository.insert(vatScheme))
       await(repository.count) mustBe 1
 
       await(repository.getCombinedLodgingOfficer(vatScheme.id.value)) mustBe None
-    }
-
-    "return an exception if eligibilityData block is missing but lodging officer block exists" in new Setup {
-      await(repository.insert(vatScheme.copy(lodgingOfficer = Some(vatLodgingOfficer))))
-      await(repository.count) mustBe 1
-
-      intercept[Exception](await(repository.getCombinedLodgingOfficer(vatScheme.id.value)))
     }
 
     "return an exception if no vatscheme doc exists" in new Setup {

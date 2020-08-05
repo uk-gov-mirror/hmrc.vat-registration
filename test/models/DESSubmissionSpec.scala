@@ -30,9 +30,7 @@ class DESSubmissionSpec extends BaseSpec with JsonFormatValidation {
     s"""
        |{
        |  "acknowledgementReference" : "ackRef",
-       |  "companyName" : "compName",
-       |  "vatStartDate" : "$date",
-       |  "incorpDate" : "$date"
+       |  "vatStartDate" : "$date"
        |}
         """.stripMargin
   )
@@ -40,22 +38,18 @@ class DESSubmissionSpec extends BaseSpec with JsonFormatValidation {
   val partialJson: JsValue = Json.parse(
     s"""
        |{
-       |  "acknowledgementReference" : "ackRef",
-       |  "companyName" : "compName"
+       |  "acknowledgementReference" : "ackRef"
        |}
         """.stripMargin
   )
 
   val testDesSubmission: DESSubmission = DESSubmission(
     acknowledgementReference = "ackRef",
-    companyName = "compName",
-    vatStartDate = Some(date),
-    incorpDate = Some(date)
+    vatStartDate = Some(date)
   )
 
   val testDesPartialSubmission: DESSubmission = DESSubmission(
-    acknowledgementReference = "ackRef",
-    companyName = "compName"
+    acknowledgementReference = "ackRef"
   )
 
   "Converting a DESSubmission model into JSON" should {

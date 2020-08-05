@@ -88,7 +88,6 @@ trait ITFixtures {
       internalid,
       Some(TransactionId(transactionId)),
       Some(tradingDetails),
-      Some(vatLodgingOfficer),
       Some(returns),
       Some(sicAndCompliance),
       Some(vatContact),

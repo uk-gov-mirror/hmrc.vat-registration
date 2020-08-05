@@ -18,10 +18,9 @@ package models.api
 
 import java.time.LocalDate
 
+import deprecated.DeprecatedConstants
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-
-import scala.collection.Seq
 
 case class LodgingOfficerDetails(currentAddress: Address,
                                  changeOfName: Option[FormerName],
@@ -76,35 +75,7 @@ object LodgingOfficer extends VatLodgingOfficerValidator{
     )(Tuple2[Name, String] _)
 
     override def reads(json: JsValue): JsResult[(String, Name, String, Boolean)] = {
-      val niNumber = (json \ "applicantUKNino-optionalData").validate[String](ninoValidator)
-      val completionCapacity = (json \ "completionCapacity").validate[JsValue]
-      val ccFillingInFor = (json \ "completionCapacityFillingInFor").validateOpt[JsObject]
-
-      val seqErrors = niNumber.fold(identity, _ => Seq.empty) ++
-        completionCapacity.fold(identity, _ => Seq.empty) ++
-        ccFillingInFor.fold(identity, _ => Seq.empty)
-
-      if(seqErrors.nonEmpty) {
-        JsError(seqErrors)
-      } else {
-        completionCapacity.get match {
-          case s: JsString if s.value.toLowerCase == "noneofthese" =>
-            ccFillingInFor.get.fold[JsResult[(String, Name, String, Boolean)]] {
-              JsError("completionCapacity is 'NoneOfThese' but missing JsObject for completionCapacityFillingInFor")
-            } {_.validate[(Name, String)](nameRoleReads) map { tuple =>
-                val (name, role) = tuple
-                (niNumber.get, name, role, false)
-              }
-            }
-          case cc: JsObject =>
-            cc.validate[(Name, String)](nameRoleReads) map { tuple =>
-              val (name, role) = tuple
-              (niNumber.get, name, role, true)
-            }
-          case _ =>
-            JsError("completionCapacity does not contain a JsObject or correct JsString of 'NoneOfThese'")
-        }
-      }
+      JsSuccess((DeprecatedConstants.fakeNino, DeprecatedConstants.fakeOfficerName, "director", true))
     }
   }
 

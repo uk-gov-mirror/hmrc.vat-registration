@@ -16,6 +16,8 @@
 
 package services
 
+import java.util.UUID
+
 import cats.data.{EitherT, OptionT}
 import cats.instances.FutureInstances
 import cats.syntax.ApplicativeSyntax
@@ -33,13 +35,14 @@ import play.api.libs.json._
 import repositories.RegistrationMongoRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import utils.EligibilityDataJsonUtils
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class VatRegistrationService @Inject()(val brConnector: BusinessRegistrationConnector,
-                                       registrationRepository: RegistrationMongoRepository,
+class VatRegistrationService @Inject()(registrationRepository: RegistrationMongoRepository,
                                        val backendConfig: BackendConfig,
                                        val http: HttpClient) extends ApplicativeSyntax with FutureInstances {
 
@@ -56,13 +59,10 @@ class VatRegistrationService @Inject()(val brConnector: BusinessRegistrationConn
     case t: Throwable           => Left(GenericError(t))
   }
 
-  private def toEitherT[T](eventualT: Future[T])(implicit ex: ExecutionContext) =
-    EitherT[Future, LeftState, T](eventualT.map(Right(_)).recover(repositoryErrorHandler))
-
-  private def getOrCreateVatScheme(profile: CurrentProfile, internalId:String)(implicit hc: HeaderCarrier): Future[Either[LeftState, VatScheme]] =
-    registrationRepository.retrieveVatScheme(RegistrationId(profile.registrationID)).flatMap {
+  private def getOrCreateVatScheme(registrationId: String, internalId:String)(implicit hc: HeaderCarrier): Future[Either[LeftState, VatScheme]] =
+    registrationRepository.retrieveVatScheme(RegistrationId(registrationId)).flatMap {
       case Some(vatScheme) => Future.successful(Right(vatScheme))
-      case None => registrationRepository.createNewVatScheme(RegistrationId(profile.registrationID),internalId)
+      case None => registrationRepository.createNewVatScheme(RegistrationId(registrationId),internalId)
         .map(Right(_)).recover(repositoryErrorHandler)
     }
 
@@ -107,14 +107,17 @@ class VatRegistrationService @Inject()(val brConnector: BusinessRegistrationConn
     }
   }
 
+  //TODO - confirm if this is correct
+  def generateRegistrationId():String = UUID.randomUUID().toString
+
   def createNewRegistration(intId:String)(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme] =
-    for {
-      profile <- EitherT(brConnector.retrieveCurrentProfile)
-      vatScheme <- EitherT(getOrCreateVatScheme(profile,intId))
-    } yield vatScheme
+    EitherT(getOrCreateVatScheme(generateRegistrationId(),intId))
 
   def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[VatScheme] =
     OptionT(registrationRepository.retrieveVatScheme(id)).toRight(ResourceNotFound(id.value))
+
+  def retrieveVatSchemeByInternalId(internalId: String)(implicit hc: HeaderCarrier): ServiceResult[VatScheme] =
+    OptionT(registrationRepository.retrieveVatSchemeByInternalId(internalId)).toRight(ResourceNotFound(internalId))
 
   def deleteVatScheme(regId: String, validStatuses: VatRegStatus.Value*)(implicit hc: HeaderCarrier): Future[Boolean] = {
     for {
