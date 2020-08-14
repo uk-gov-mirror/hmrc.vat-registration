@@ -33,10 +33,8 @@ trait VatRegSpec extends PlaySpec with Inside with MockitoSugar with VatMocks
 
   override def beforeEach() {
     reset(mockAuthConnector)
-    reset(mockIIConnector)
     reset(mockHttpClient)
     reset(mockAuthorisationResource)
-    reset(mockBusRegConnector)
     reset(mockRegistrationMongoRepository)
     reset(mockHttpClient)
     reset(mockSubmissionService)

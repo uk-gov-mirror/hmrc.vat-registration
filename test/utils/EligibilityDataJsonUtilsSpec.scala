@@ -107,34 +107,6 @@ class EligibilityDataJsonUtilsSpec extends JsonFormatValidation {
     }
 
     "return a JsError" when {
-      "completionCapacity is missing" in {
-        val json = Json.parse(
-          s"""{
-             |"sections": [
-             |   {
-             |     "title": "VAT details",
-             |     "data": [
-             |       {"questionId": "mandatoryRegistration", "question": "Some Question 11", "answer": "Some Answer 11", "answerValue": true},
-             |       {"questionId": "voluntaryRegistration", "question": "Some Question 12", "answer": "Some Answer 12", "answerValue": false},
-             |       {"questionId": "thresholdPreviousThirtyDays", "question": "Some Question 12", "answer": "Some Answer 12", "answerValue": "$thresholdPreviousThirtyDays"},
-             |       {"questionId": "thresholdInTwelveMonths", "question": "Some Question 12", "answer": "Some Answer 12", "answerValue": "$thresholdInTwelveMonths"}
-             |     ]
-             |   },
-             |   {
-             |     "title": "Director details",
-             |     "data": [
-             |       {"questionId": "turnoverEstimate-value", "question": "Some Question 11", "answer": "Some Answer 11", "answerValue": "oneandtenthousand"},
-             |       {"questionId":"fooDirectorDetails3","question": "Date of birth", "answer": "1 January 2000", "answerValue": true}
-             |     ]
-             |   }
-             | ]
-             |}
-        """.stripMargin)
-
-        val res = Json.fromJson[JsObject](json)(EligibilityDataJsonUtils.readsOfFullJson)
-
-        res.isError mustBe true
-      }
       "threshold is missing" in {
         val json = Json.parse(
           s"""{

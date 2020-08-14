@@ -32,7 +32,7 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
     details = None)
   val validLodgingOfficerPostIv: LodgingOfficer = validLodgingOfficerPreIV.copy(details = Some(lodgingOfficerDetails))
 
-  def vatScheme(regId: String): VatScheme = emptyVatScheme(regId).copy(lodgingOfficer = Some(validLodgingOfficerPreIV))
+  def vatScheme(regId: String): VatScheme = emptyVatScheme(regId)
 
   val upsertLodgingOfficerJson: JsObject = Json.parse(
     s"""
@@ -98,7 +98,8 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
   val sections: JsArray = JsArray(Seq(section1, section2))
   val eligibilityData: JsObject = Json.obj("sections" -> sections)
 
-  "getLodgingOfficerData" should {
+  //TODO - remove when applicant data is recorded as part of other services
+  "getLodgingOfficerData" ignore {
     "return OK" in new Setup {
       given.user.isAuthorised
 
@@ -137,7 +138,8 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
     }
   }
 
-  "updateLodgingOfficerData" should {
+  //TODO - remove when applicant data is recorded as part of other services
+  "updateLodgingOfficerData" ignore {
     "return OK with a lodgingOfficer json body" in new Setup {
       given.user.isAuthorised
 
@@ -203,7 +205,8 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
     }
   }
 
-  "updateIVStatus" should {
+  //TODO - remove when applicant data is recorded as part of other services
+  "updateIVStatus" ignore {
     "return OK" in new Setup {
       given.user.isAuthorised
 

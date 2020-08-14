@@ -49,8 +49,8 @@ class DesConnectorSpec extends PlaySpec with VatRegSpec with MockitoSugar with H
     }
   }
 
-  val validDesSubmission: DESSubmission = DESSubmission("AckRef", "CompanyName", Some(LocalDate.of(2017, 1, 1)), Some(LocalDate.of(2017, 1, 1)))
-  val validTopUpAcceptedSubmission: TopUpSubmission = TopUpSubmission("AckRef", "accepted", Some(LocalDate.of(2017, 1, 1)), Some(DateTime.now()))
+  val validDesSubmission: DESSubmission = DESSubmission("AckRef", Some(LocalDate.of(2017, 1, 1)))
+  val validTopUpAcceptedSubmission: TopUpSubmission = TopUpSubmission("AckRef", "accepted", Some(LocalDate.of(2017, 1, 1)))
   val validTopUpRejectedSubmission: TopUpSubmission = TopUpSubmission("AckRef", "rejected")
   val upstream4xx: Upstream4xxResponse = Upstream4xxResponse("400", 400, 400)
 

@@ -113,6 +113,22 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     }
   }
 
+  def retrieveVatSchemeByInternalId(id: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
+    collection.find(Json.obj("internalId" -> id)).one[JsObject] map { doc =>
+      doc map { json =>
+        val jsonWithoutElData = json - "threshold" - "lodgingOfficer" - "turnoverEstimates"
+        val eligibilityData = (json \ "eligibilityData").validateOpt[JsObject](EligibilityDataJsonUtils.readsOfFullJson).get
+        val thresholdData = eligibilityData.fold(Json.obj())(js => Json.obj("threshold" -> Json.toJson(js.validate[Threshold](Threshold.eligibilityDataJsonReads).get).as[JsObject]))
+        val lodgingOfficer = (json \ "lodgingOfficer").validateOpt[JsObject].get.fold(Json.obj())(identity)
+        val combinedLodgingOfficer = eligibilityData.map(_ ++ Json.obj("lodgingOfficer" -> lodgingOfficer)).getOrElse(Json.obj())
+        val lodgingOfficerData = eligibilityData.fold(Json.obj())(js => Json.obj("lodgingOfficer" -> Json.toJson(combinedLodgingOfficer.validate[LodgingOfficer](LodgingOfficer.mongoReads).get).as[JsObject]))
+        val turnoverEstimatesData = eligibilityData.fold(Json.obj())(js => Json.obj("turnoverEstimates" -> Json.toJson(js.validate[TurnoverEstimates](TurnoverEstimates.eligibilityDataJsonReads).get).as[JsObject]))
+
+        (jsonWithoutElData ++ thresholdData ++ lodgingOfficerData ++ turnoverEstimatesData).as[VatScheme]
+      }
+    }
+  }
+
   def deleteVatScheme(regId: String)(implicit hc: HeaderCarrier): Future[Boolean] = {
     collection.remove(regIdSelector(regId)) map { wr => wr
       if (!wr.ok) logger.error(s"[deleteVatScheme] - Error deleting vat reg doc for regId $regId - Error: ${Message.unapply(wr)}")

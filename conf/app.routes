@@ -3,6 +3,7 @@
 POST         /new                                   controllers.VatRegistrationController.newVatRegistration
 POST         /incorporation-data                    controllers.ProcessIncorporationsController.processIncorp
 
+GET          /scheme                                controllers.VatRegistrationController.retrieveVatSchemeByInternalId()
 GET          /:regId/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regId: RegistrationId)
 
 GET          /:regId/trading-details                controllers.TradingDetailsController.fetchTradingDetails(regId)
@@ -16,8 +17,6 @@ GET          /:regId/returns                        controllers.VatRegistrationC
 PATCH        /:regId/returns                        controllers.VatRegistrationController.updateReturns(regId)
 
 GET          /:regId/acknowledgement-reference      controllers.VatRegistrationController.getAcknowledgementReference(regId: RegistrationId)
-
-GET          /incorporation-information/:txId       controllers.IncorporationInformationController.getIncorporationInformation(txId: TransactionId)
 
 DELETE       /:regId/delete-scheme                  controllers.VatRegistrationController.deleteVatScheme(regId: String)
 PATCH        /:transId/clear-scheme                 controllers.VatRegistrationController.clearDownDocument(transId: String)

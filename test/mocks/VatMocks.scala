@@ -46,14 +46,11 @@ trait VatMocks extends HttpClientMock {
   this: MockitoSugar =>
 
   lazy val mockAuthConnector: AuthConnector                             = mock[AuthConnector]
-  lazy val mockIIConnector: IncorporationInformationConnector           = mock[IncorporationInformationConnector]
   lazy val mockAuthorisationResource: AuthorisationResource             = mock[AuthorisationResource]
-  lazy val mockBusRegConnector: BusinessRegistrationConnector           = mock[BusinessRegistrationConnector]
   lazy val mockRegistrationMongoRepository: RegistrationMongoRepository = mock[RegistrationMongoRepository]
   lazy val mockSubmissionService: SubmissionService                     = mock[SubmissionService]
   lazy val mockVatRegistrationService: VatRegistrationService           = mock[VatRegistrationService]
   lazy val mockSequenceRepository: SequenceMongoRepository              = mock[SequenceMongoRepository]
-  lazy val mockCompanyRegConnector: CompanyRegistrationConnector        = mock[CompanyRegistrationConnector]
   lazy val mockDesConnector: DESConnector                               = mock[DESConnector]
   lazy val mockVatFeatureSwitches: VATFeatureSwitches                   = mock[VATFeatureSwitches]
   lazy val mockEligibilityService: EligibilityService                   = mock[EligibilityService]
@@ -111,22 +108,6 @@ trait VatMocks extends HttpClientMock {
         when(mockRegistrationMongoRepository.getInternalId(Matchers.eq(regId))(any[HeaderCarrier]()))
           .thenReturn(Future.successful(Some("SomeInternalId")))
       }
-
-  }
-
-  object IIMocks extends FutureInstances with ApplicativeSyntax with EitherSyntax {
-
-    def mockIncorporationStatus(incorporationStatus: IncorporationStatus): Unit =
-      when(mockIIConnector.retrieveIncorporationStatus(any(),TransactionId(anyString()), any(), any())(any(), any()))
-        .thenReturn(Future.successful(Some(incorporationStatus)))
-
-    def mockIncorporationStatusNone(): Unit =
-      when(mockIIConnector.retrieveIncorporationStatus(any(),TransactionId(anyString()), any(), any())(any(), any()))
-        .thenReturn(Future.successful(None))
-
-    def mockIncorporationStatusLeft(message : String): Unit =
-      when(mockIIConnector.retrieveIncorporationStatus(any(),TransactionId(anyString()), any(), any())(any(), any()))
-        .thenReturn(Future.failed(new IncorporationInformationResponseException(message)))
 
   }
 
