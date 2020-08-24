@@ -71,17 +71,14 @@ trait VatRegistrationFixture {
   val skylakeDigitalContact     = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
   val lodgingOfficerDetails     = LodgingOfficerDetails(currentAddress = currentAddress, None, None, contact = skylakeDigitalContact)
   val validLodgingOfficerPreIV  = LodgingOfficer(
-    dob = Some(LocalDate.now()),
     nino = "AB123456A",
     role = "secretary",
     name = skylakeValiarm,
-    ivPassed = None,
     details = None
   )
-  val validLodgingOfficerPostIv = validLodgingOfficerPreIV.copy(ivPassed = Some(true), details = Some(lodgingOfficerDetails))
 
-   val otherBusinessActivitiesSicAndCompiliance =
-     SicCode("00998","otherBusiness desc 1","fooBar 1") :: SicCode("00889","otherBusiness desc 2", "fooBar 2") :: Nil
+  val otherBusinessActivitiesSicAndCompiliance =
+    SicCode("00998","otherBusiness desc 1","fooBar 1") :: SicCode("00889","otherBusiness desc 2", "fooBar 2") :: Nil
 
   val validSicAndCompliance = Some(SicAndCompliance(
     "this is my business description",

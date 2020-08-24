@@ -286,17 +286,9 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
   }
 
   def patchLodgingOfficer(regId: String, lodgingOfficer: JsObject)(implicit ec: ExecutionContext): Future[JsObject] = {
-    val dob = (lodgingOfficer \ "dob").validate[LocalDate].getOrElse {
-      Logger.warn(s"LodgingOfficer] [patchLodgingOfficer] dob is either missing or in the incorrect format for regId: $regId")
-      throw new NoSuchElementException("dob missing or incorrect")
-    }
-    val ivPassed = (lodgingOfficer \ "ivPassed").validateOpt[Boolean].get
     val details = (lodgingOfficer \ "details").validateOpt[LodgingOfficerDetails].get
-
     val querySelect = Json.obj("registrationId" -> regId)
-    val data = Json.obj("lodgingOfficer.dob" -> dob) ++
-      ivPassed.fold(Json.obj())(v => Json.obj("lodgingOfficer.ivPassed" -> v)) ++
-      details.fold(Json.obj())(v => Json.obj("lodgingOfficer.details" -> v))
+    val data = details.fold(Json.obj())(v => Json.obj("lodgingOfficer.details" -> v))
     val setDoc = Json.obj("$set" -> data)
 
     collection.update(querySelect, setDoc) map { updateResult =>

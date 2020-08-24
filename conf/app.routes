@@ -33,8 +33,6 @@ PATCH       /:regId/eligibility                     controllers.EligibilityContr
 GET          /:regId/bank-account                   controllers.VatRegistrationController.fetchBankAccountDetails(regId)
 PATCH        /:regId/bank-account                   controllers.VatRegistrationController.updateBankAccountDetails(regId)
 
-PATCH       /:regId/update-iv-status/:ivPassed      controllers.LodgingOfficerController.updateIVStatus(regId, ivPassed: Boolean)
-
 GET         /:regId/sicAndComp                      controllers.SicAndComplianceController.getSicAndCompliance(regId: String)
 PATCH       /:regId/sicAndComp                      controllers.SicAndComplianceController.updateSicAndCompliance(regId: String)
 

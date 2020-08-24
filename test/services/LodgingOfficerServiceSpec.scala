@@ -57,10 +57,8 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
       |   "first" : "Skylake",
       |   "last" : "Valiarm"
       | },
-      | "dob" : "${LocalDate.now()}",
       | "nino" : "AB123456A",
       | "role" : "secretary",
-      | "ivPassed" : true,
       | "details" : {
       |   "currentAddress" : {
       |     "line1" : "12 Lukewarm",
@@ -81,30 +79,11 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
        |   "first" : "Skylake",
        |   "last" : "Valiarm"
        | },
-       | "dob" : "${LocalDate.now()}",
        | "nino" : "AB123456A",
        | "role" : "secretary",
        | "isOfficerApplying": true
        |}
     """.stripMargin).as[LodgingOfficer]
-
-  "updateIVStatus" should {
-    "return a boolean" in new Setup {
-      updateIVPassedToMongo()
-      val result: Boolean = await(service.updateIVStatus("regId", true))
-      result mustBe true
-    }
-
-    "encounter an exception if an error occurs" in new Setup {
-      updateIVPassedToMongoFail()
-      intercept[Exception](await(service.updateIVStatus("regId", true)))
-    }
-
-    "encounter an MissingRegDocument Exception if no document is found" in new Setup {
-      updateIVPassedToMongoNoRegDoc()
-      intercept[MissingRegDocument](await(service.updateIVStatus("regId", true)))
-    }
-  }
 
   "getLodgingOfficerData" should {
     "return an Lodging Officer if found" in new Setup {
@@ -137,8 +116,6 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
     ))
     val lodgeOfficerJson = Json.parse(
       s"""{
-         | "ivPassed": true,
-         | "dob": "2015-11-20",
          | "details": $lodgingOfficerDetails
          |}
         """.stripMargin).as[JsObject]

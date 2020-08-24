@@ -64,11 +64,9 @@ trait ITFixtures {
   val name                      = Name(first = Some("Forename"), middle = None, last = "Surname")
   val formerName                = FormerName(Some("Bob Smith"), Some(date), name = Some(oldName), change = Some(date))
   val vatLodgingOfficer         = LodgingOfficer(
-    dob                       = Some(LocalDate.of(1980, 1, 1)),
     nino                      = "NB686868C",
     role                      = "director",
     name                      = name,
-    ivPassed                  = None,
     details                   = None
   )
   val businessContact         = BusinessContact(digitalContact = digitalContact, website = None, ppob = scrsAddress)

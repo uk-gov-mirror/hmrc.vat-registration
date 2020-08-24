@@ -35,20 +35,6 @@ class LodgingOfficerController @Inject()(val lodgingOfficerService: LodgingOffic
 
   val resourceConn: AuthorisationResource = lodgingOfficerService.registrationRepository
 
-  def updateIVStatus(regId: String, ivPassed: Boolean): Action[AnyContent] = Action.async {
-    implicit request =>
-      isAuthorised(regId) { authResult =>
-        authResult.ifAuthorised(regId, "LodgingOfficerController", "updateIVStatus") {
-          lodgingOfficerService.updateIVStatus(regId, ivPassed) map { _ =>
-            Ok(JsBoolean(ivPassed))
-          } recover {
-            case _: MissingRegDocument => NotFound(s"Registration not found or the registration does no have lodgingOfficer defined for regId: $regId")
-            case e => InternalServerError(s"An error occurred while updating lodging officer - ivPassed: ${e.getMessage}")
-          }
-        }
-      }
-  }
-
   def getLodgingOfficerData(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
       isAuthorised(regId) { authResult =>
