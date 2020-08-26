@@ -31,11 +31,9 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
   implicit val format: OFormat[LodgingOfficer] = LodgingOfficer.format
 
   val vatLodgingOfficer: LodgingOfficer = LodgingOfficer(
-    dob                      = Some(LocalDate.of(1990, 1, 1)),
     nino                     = "NB686868C",
     role                     = "director",
     name                     = name,
-    ivPassed                 = None,
     details                  = None
   )
 
@@ -74,7 +72,6 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
         s"""
            |{
            |   "lodgingOfficer" : {
-           |     "dob" : "2017-01-15",
            |     "details" : ${Json.toJson(lodgingOfficerDetails)}
            |   }
            |}
@@ -87,7 +84,6 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
       ))
 
       val expectedModel = LodgingOfficer(
-        dob = Some(LocalDate.of(2017,1,15)),
         nino = "JW778877A",
         role = "director",
         name = Name(
@@ -95,7 +91,6 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
           middle = Some("Middle Name Test"),
           last = "Last Name Test"
         ),
-        ivPassed = None,
         details = Some(lodgingOfficerDetails),
         isOfficerApplying = true
       )
@@ -262,17 +257,7 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
     "return JsSuccess" when {
       "full json is defined" in {
         val json = Json.obj(
-          "dob" -> "2015-05-27",
-          "ivPassed" -> true,
           "details" -> Json.toJson(lodgingOfficerDetails).as[JsObject]
-        )
-
-        val res = Json.fromJson(json)(LodgingOfficer.patchJsonReads)
-        res mustBe JsSuccess(json)
-      }
-      "min json is defined" in {
-        val json = Json.obj(
-          "dob" -> "2015-05-27"
         )
 
         val res = Json.fromJson(json)(LodgingOfficer.patchJsonReads)
@@ -280,29 +265,8 @@ class LodgingOfficerSpec extends BaseSpec with JsonFormatValidation with VatRegi
       }
     }
     "return JsError" when {
-      "dob is missing" in {
-        val json = Json.obj(
-          "ivPassed" -> true,
-          "details" -> Json.toJson(lodgingOfficerDetails).as[JsObject]
-        )
-
-        val res = Json.fromJson(json)(LodgingOfficer.patchJsonReads)
-        res.isError mustBe true
-      }
-      "ivPassed is not correct" in {
-        val json = Json.obj(
-          "dob" -> "2015-05-27",
-          "ivPassed" -> "wrong value",
-          "details" -> Json.toJson(lodgingOfficerDetails).as[JsObject]
-        )
-
-        val res = Json.fromJson(json)(LodgingOfficer.patchJsonReads)
-        res.isError mustBe true
-      }
       "details is not correct" in {
         val json = Json.obj(
-          "dob" -> "2015-05-27",
-          "ivPassed" -> true,
           "details" -> (Json.toJson(lodgingOfficerDetails).as[JsObject] - "contact")
         )
 

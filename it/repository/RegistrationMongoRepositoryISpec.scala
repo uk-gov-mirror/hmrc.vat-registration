@@ -627,54 +627,6 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
 //    }
 //  }
 
-  "Calling updateIVStatus" should {
-    val lodgingOfficer = LodgingOfficer(
-      dob = Some(LocalDate.of(1990, 1, 30)),
-      nino = "NB686868C",
-      role = "director",
-      name = name,
-      ivPassed = None,
-      details = None
-    )
-
-    val completionCapacity = Json.obj("role" -> "director", "name" -> Json.obj(
-      "forename" -> name.first,
-      "other_forenames" -> name.middle,
-      "surname" -> name.last
-    ))
-    val questions1 = Seq(
-      Json.obj("questionId" -> "completionCapacity", "question" -> "Some Question 11", "answer" -> "Some Answer 11", "answerValue" -> completionCapacity),
-      Json.obj("questionId" -> "testQId12", "question" -> "Some Question 12", "answer" -> "Some Answer 12", "answerValue" -> "val12")
-    )
-    val questions2 = Seq(
-      Json.obj("questionId" -> "applicantUKNino-optionalData", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "NB686868C"),
-      Json.obj("questionId" -> "turnoverEstimate-value", "question" -> "Some Question 21", "answer" -> "Some Answer 21", "answerValue" -> "zeropounds"),
-      Json.obj("questionId" -> "testQId22", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "val22")
-    )
-    val section1 = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions1))
-    val section2 = Json.obj("title" -> "test TITLE 2", "data" -> JsArray(questions2))
-    val sections = JsArray(Seq(section1, section2))
-    val eligibilityData = Json.obj("sections" -> sections)
-
-    "not update lodgingOfficer if registration does not exist" in new Setup {
-      await(repository.insert(vatScheme))
-
-      count mustBe 1
-      await(repository.findAll()).head mustBe vatScheme
-
-      a[MissingRegDocument] mustBe thrownBy(await(repository.updateIVStatus("wrongRegId", true)))
-    }
-
-    "not update lodgingOfficer if registration is missing a lodgingOfficer block" in new Setup {
-      await(repository.insert(vatScheme))
-
-      count mustBe 1
-      await(repository.findAll()).head mustBe vatScheme
-
-      a[MissingRegDocument] mustBe thrownBy(await(repository.updateIVStatus(vatScheme.id.value, true)))
-    }
-  }
-
   "calling getSicAndCompliance" should {
     val validSicAndCompliance = Some(SicAndCompliance(
       "this is my business description",
@@ -977,11 +929,9 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
         mobile = None
       )
     ))
-    "patch with Dob and ivPassed and details" in new Setup {
+    "patch with details only" in new Setup {
       val lodgeOfficerJson: JsObject = Json.parse(
         s"""{
-           | "ivPassed": true,
-           | "dob": "2015-11-20",
            | "details": $lodgingOfficerDetails
            |}
         """.stripMargin).as[JsObject]
@@ -992,36 +942,6 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
       val res: JsObject = await(repository.patchLodgingOfficer(vatScheme.id.value, lodgeOfficerJson))
       await(repository.count) mustBe 1
       (fetchAll.get \ "lodgingOfficer").as[JsObject] mustBe lodgeOfficerJson
-    }
-
-    "patch with Dob only" in new Setup {
-      val lodgeOfficerJson: JsObject = Json.parse(
-        s"""{
-           | "dob": "2015-11-20"
-           |}
-        """.stripMargin).as[JsObject]
-
-
-      await(repository.insert(vatScheme))
-      await(repository.count) mustBe 1
-      val res: JsObject = await(repository.patchLodgingOfficer(vatScheme.id.value, lodgeOfficerJson))
-      await(repository.count) mustBe 1
-      (fetchAll.get \ "lodgingOfficer").as[JsObject] mustBe lodgeOfficerJson
-    }
-    "fail to patch without Dob but with IvPased and details" in new Setup {
-      val lodgeOfficerJson: JsObject = Json.parse(
-        s"""{
-           | "ivPassed": true,
-           | "details": $lodgingOfficerDetails
-           |}
-        """.stripMargin).as[JsObject]
-
-
-      await(repository.insert(vatScheme))
-      await(repository.count) mustBe 1
-      intercept[NoSuchElementException](await(repository.patchLodgingOfficer(vatScheme.id.value, lodgeOfficerJson)))
-      await(repository.count) mustBe 1
-      (fetchAll.get \ "lodgingOfficer").asOpt[JsObject] mustBe None
     }
   }
 

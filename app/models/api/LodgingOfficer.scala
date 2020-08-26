@@ -36,22 +36,18 @@ object LodgingOfficerDetails {
   )(LodgingOfficerDetails.apply, unlift(LodgingOfficerDetails.unapply))
 }
 
-case class LodgingOfficer(dob: Option[LocalDate],
-                          nino: String,
+case class LodgingOfficer(nino: String,
                           role: String,
                           name: Name,
-                          ivPassed: Option[Boolean],
                           details: Option[LodgingOfficerDetails],
                           isOfficerApplying: Boolean = true)
 
 object LodgingOfficer extends VatLodgingOfficerValidator{
 
   val reads: Reads[LodgingOfficer] = (
-    (__ \ "dob").readNullable[LocalDate] and
     (__ \ "nino").read[String](ninoValidator) and
     (__ \ "role").read[String](roleValidator) and
     (__ \ "name").read[Name] and
-    (__ \ "ivPassed").readNullable[Boolean] and
     (__ \ "details").readNullable[LodgingOfficerDetails] and
     ((__ \ "isOfficerApplying").read[Boolean] or Reads.pure(true))
   )(LodgingOfficer.apply _)
@@ -59,13 +55,9 @@ object LodgingOfficer extends VatLodgingOfficerValidator{
   implicit val format: OFormat[LodgingOfficer] = OFormat(reads, Json.writes[LodgingOfficer])
 
   val patchJsonReads: Reads[JsObject] = {
-    def apply(dob: LocalDate, ivPassed: Option[Boolean], details: Option[LodgingOfficerDetails]): JsObject =
-      Json.obj("dob" -> dob) ++ ivPassed.fold(Json.obj())(b => Json.obj("ivPassed" -> b)) ++ details.fold(Json.obj())(d => Json.obj("details" -> d))
-
-    ((__ \ "dob").read[LocalDate] and
-     (__ \ "ivPassed").readNullable[Boolean] and
-     (__ \ "details").readNullable[LodgingOfficerDetails]
-    )(apply _)
+    def apply(details: Option[LodgingOfficerDetails]): JsObject =
+      details.fold(Json.obj())(d => Json.obj("details" -> d))
+    (__ \ "details").readNullable[LodgingOfficerDetails].map(apply _)
   }
 
   val eligibilityDataJsonReads: Reads[(String, Name, String, Boolean)] = new Reads[(String, Name, String, Boolean)] {
@@ -81,18 +73,14 @@ object LodgingOfficer extends VatLodgingOfficerValidator{
 
   val mongoReads: Reads[LodgingOfficer] = new Reads[LodgingOfficer] {
     override def reads(json: JsValue): JsResult[LodgingOfficer] = {
-      val dateOfBirth = (json \ "lodgingOfficer" \ "dob").validateOpt[LocalDate].get
-      val ivDone = (json \ "lodgingOfficer" \ "ivPassed").validateOpt[Boolean].get
       val officerDetails = (json \ "lodgingOfficer" \ "details").validateOpt[LodgingOfficerDetails].get
 
       json.validate[(String, Name, String, Boolean)](eligibilityDataJsonReads) map { tuple =>
         val (niNumber: String, officerName: Name, officerRole: String, isOfficerApplying: Boolean) = tuple
         LodgingOfficer(
-          dob = dateOfBirth,
           nino = niNumber,
           role = officerRole,
           name = officerName,
-          ivPassed = ivDone,
           isOfficerApplying = isOfficerApplying,
           details = officerDetails
         )

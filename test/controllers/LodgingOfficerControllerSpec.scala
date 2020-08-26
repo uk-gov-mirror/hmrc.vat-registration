@@ -57,10 +57,8 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
        |   "first" : "Skylake",
        |   "last" : "Valiarm"
        | },
-       | "dob" : "${LocalDate.now()}",
        | "nino" : "AB123456A",
        | "role" : "secretary",
-       | "ivPassed" : true,
        | "details" : {
        |   "currentAddress" : {
        |     "line1" : "12 Lukewarm",
@@ -81,7 +79,6 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
        |   "first" : "Skylake",
        |   "last" : "Valiarm"
        | },
-       | "dob" : "${LocalDate.now()}",
        | "nino" : "AB123456A",
        | "role" : "secretary",
        | "isOfficerApplying": true
@@ -91,47 +88,10 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
   val invalidLodgingOfficerJson: JsObject = Json.parse(
     s"""
        |{
-       | "dob" : "${LocalDate.now()}",
        | "nino" : "AB123456A",
        | "role" : "secretary"
        |}
     """.stripMargin).as[JsObject]
-
-  "updateIVStatus" should {
-    "returns 403 if user is not authorised" in new Setup {
-      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
-
-      val result: Future[Result] = controller.updateIVStatus("testId", true)(FakeRequest())
-      status(result) mustBe 403
-    }
-
-    "returns 200 if successful" when {
-      "the users IV status has been successfully updated" in new Setup {
-        AuthorisationMocks.mockAuthorised(regId.value,internalid)
-        updateIVStatusSuccess()
-
-        val result: Future[Result] = controller.updateIVStatus("testId", true)(FakeRequest())
-        status(result) mustBe 200
-        contentAsJson(result) mustBe JsBoolean(true)
-      }
-    }
-
-    "returns 404 if the registration is not found" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      updateIVStatusNotFound()
-
-      val result: Future[Result] = controller.updateIVStatus("testId", true)(FakeRequest())
-      status(result) mustBe 404
-    }
-
-    "returns 500 if an error occurs" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      updateIVStatusFails()
-
-      val result: Future[Result] = controller.updateIVStatus("testId", true)(FakeRequest())
-      status(result) mustBe 500
-    }
-  }
 
   "getLodgingOfficerData" should {
     "returns a valid json if found for id" in new Setup {
@@ -188,21 +148,6 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
       val result: Future[Result] = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
       status(result) mustBe 200
       contentAsJson(result) mustBe upsertLodgingOfficerJson
-    }
-
-    "returns 400 if json received is invalid" in new Setup {
-      val invalidPatchLodgingOfficerJson: JsObject = Json.parse(
-        s"""
-           |{
-           | "nino" : "AB123456A",
-           | "role" : "secretary"
-           |}
-    """.stripMargin).as[JsObject]
-
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-
-      val result: Future[Result] = controller.updateLodgingOfficerData("testId")(FakeRequest().withBody[JsObject](invalidPatchLodgingOfficerJson))
-      status(result) mustBe 400
     }
 
     "returns 404 if the registration is not found" in new Setup {

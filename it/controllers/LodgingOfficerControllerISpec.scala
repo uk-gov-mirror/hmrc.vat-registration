@@ -23,14 +23,12 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
   val skylakeValiarm: Name                          = Name(first = Some("Skylake"), middle = None, last = "Valiarm")
   val skylakeDigitalContact: DigitalContactOptional = DigitalContactOptional(None, Some("123456789012345678"), None)
   val lodgingOfficerDetails: LodgingOfficerDetails  = LodgingOfficerDetails(currentAddress = currentAddress, None, None, contact = skylakeDigitalContact)
-  val validLodgingOfficerPreIV: LodgingOfficer      = LodgingOfficer(
-    dob = Some(LocalDate.of(1980, 5, 25)),
+  val validLodgingOfficer: LodgingOfficer           = LodgingOfficer(
     nino = "AB123456A",
     role = "secretary",
     name = skylakeValiarm,
-    ivPassed = None,
     details = None)
-  val validLodgingOfficerPostIv: LodgingOfficer = validLodgingOfficerPreIV.copy(details = Some(lodgingOfficerDetails))
+  val validLodgingOfficerPostIv: LodgingOfficer = validLodgingOfficer.copy(details = Some(lodgingOfficerDetails))
 
   def vatScheme(regId: String): VatScheme = emptyVatScheme(regId)
 
@@ -41,10 +39,8 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
        |   "first" : "Skylake",
        |   "last" : "Valiarm"
        | },
-       | "dob" : "1980-05-25",
        | "nino" : "AB123456A",
        | "role" : "secretary",
-       | "ivPassed" : true,
        | "details" : {
        |   "currentAddress" : {
        |     "line1" : "12 Lukewarm",
@@ -65,7 +61,6 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
        |   "first" : "Skylake",
        |   "last" : "Valiarm"
        | },
-       | "dob" : "1980-05-25",
        | "nino" : "AB123456A",
        | "role" : "secretary",
        | "isOfficerApplying": true
@@ -149,19 +144,7 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
         .patch(validLodgingOfficerJson))
 
       response.status mustBe OK
-      response.json mustBe Json.parse("""{"dob" : "1980-05-25"}""".stripMargin)
-    }
-
-    "return OK with when updating the lodging officer post IV" in new Setup {
-      given.user.isAuthorised
-
-      insertIntoDb(vatScheme("regId").copy(eligibilityData = Some(eligibilityData)))
-
-      val response: WSResponse = await(client(LodgingOfficerController.updateLodgingOfficerData("regId").url)
-        .patch(upsertLodgingOfficerJson))
-
-      response.status mustBe OK
-      response.json mustBe upsertLodgingOfficerJson - "name" - "nino" - "role" - "isOfficerApplying"
+      response.json mustBe Json.parse("""{}""".stripMargin)
     }
 
     "return BAD_REQUEST if an invalid json body is posted" in new Setup {
@@ -205,56 +188,4 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
     }
   }
 
-  //TODO - remove when applicant data is recorded as part of other services
-  "updateIVStatus" ignore {
-    "return OK" in new Setup {
-      given.user.isAuthorised
-
-      insertIntoDb(vatScheme("regId"))
-
-      val response: WSResponse = await(client(LodgingOfficerController.updateIVStatus("regId", true).url)
-        .patch(""))
-
-      response.status mustBe OK
-      response.json mustBe JsBoolean(true)
-    }
-
-    "return NOT_FOUND if a none boolean is provided in the query parameter" in new Setup {
-      given.user.isAuthorised
-
-      insertIntoDb(emptyVatScheme("regId"))
-
-      val response: WSResponse = await(client("/regId/update-iv-status/test").patch(""))
-
-      response.status mustBe NOT_FOUND
-    }
-
-    "return NOT_FOUND if no reg document is found" in new Setup {
-      given.user.isAuthorised
-
-      val response: WSResponse = await(client(LodgingOfficerController.updateIVStatus("regId", true).url).patch(""))
-
-      response.status mustBe NOT_FOUND
-    }
-
-    "return NOT_FOUND if the reg document has no lodgingOfficer block" in new Setup {
-      given.user.isAuthorised
-
-      insertIntoDb(emptyVatScheme("regId"))
-
-      val response: WSResponse = await(client(LodgingOfficerController.updateIVStatus("regId", true).url)
-        .patch(""))
-
-      response.status mustBe NOT_FOUND
-    }
-
-    "return FORBIDDEN if user is not authorised obtained" in new Setup {
-      given.user.isNotAuthorised
-
-      val response: WSResponse = await(client(LodgingOfficerController.updateIVStatus("regId", true).url)
-        .patch(""))
-
-      response.status mustBe FORBIDDEN
-    }
-  }
 }

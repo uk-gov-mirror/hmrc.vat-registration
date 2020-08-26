@@ -41,11 +41,9 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
   import play.api.test.Helpers._
 
   val vatLodgingOfficer: LodgingOfficer = LodgingOfficer(
-    dob = Some(LocalDate.of(1980, 1, 1)),
     nino = "NB666666C",
     role = "director",
     name = name,
-    ivPassed = None,
     details = None
   )
 
@@ -338,7 +336,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
     }
   }
 
-  "call to clearDownDocment" should {
+  "call to clearDownDocument" should {
     "pass" when {
       "given a transactionid" in new Setup {
         when(mockVatRegistrationService.clearDownDocument(any())(any())).thenReturn(Future.successful(true))
