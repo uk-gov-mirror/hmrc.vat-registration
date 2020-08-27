@@ -16,15 +16,26 @@
 
 package models.api
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
 case class Address(line1: String,
                    line2: String,
                    line3: Option[String] = None,
                    line4: Option[String] = None,
                    postcode: Option[String] = None,
-                   country: Option[String] = None )
+                   country: Option[String] = None)
 
 object Address {
+
+  val submissionWrites: OWrites[Address] = (
+    (__ \ "line1").write[String] and
+      (__ \ "line2").write[String] and
+      (__ \ "line3").writeNullable[String] and
+      (__ \ "line4").writeNullable[String] and
+      (__ \ "postCode").writeNullable[String] and
+      (__ \ "countryCode").writeNullable[String]
+    ) (unlift(Address.unapply))
+
   implicit val format: OFormat[Address] = Json.format[Address]
 }

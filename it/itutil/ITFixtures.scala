@@ -59,7 +59,6 @@ trait ITFixtures {
 
   val scrsAddress               = Address("line1", "line2", None, None, Some("XX XX"), Some("UK"))
   val digitalContact            = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
-  val vatContact                = VatContact(digitalContact = digitalContact, website = None, ppob = scrsAddress)
 
   val name                      = Name(first = Some("Forename"), middle = None, last = "Surname")
   val formerName                = FormerName(Some("Bob Smith"), Some(date), name = Some(oldName), change = Some(date))
@@ -88,7 +87,6 @@ trait ITFixtures {
       Some(tradingDetails),
       Some(returns),
       Some(sicAndCompliance),
-      Some(vatContact),
       Some(businessContact),
       Some(eligibility),
       Some(vatTurnoverEstimates),

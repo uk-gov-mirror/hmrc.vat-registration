@@ -30,7 +30,6 @@ case class VatScheme(id: RegistrationId,
                      tradingDetails: Option[TradingDetails] = None,
                      returns: Option[Returns] = None,
                      sicAndCompliance: Option[SicAndCompliance] = None,
-                     vatContact: Option[VatContact] = None,
                      businessContact: Option[BusinessContact] = None,
                      eligibility: Option[Eligibility] = None,
                      @deprecated("Use eligibilityData instead", "SCRS-11579")
@@ -52,7 +51,6 @@ object VatScheme {
     (__ \ "tradingDetails").writeNullable[TradingDetails] and
     (__ \ "returns").writeNullable[Returns] and
     (__ \ "sicAndCompliance").writeNullable[SicAndCompliance] and
-    (__ \ "vatContact").writeNullable[VatContact] and
     (__ \ "businessContact").writeNullable[BusinessContact] and
     (__ \ "eligibility").writeNullable[Eligibility] and
     (__ \ "turnoverEstimates").writeNullable[TurnoverEstimates] and
@@ -72,7 +70,6 @@ object VatScheme {
 //      (__ \ "lodgingOfficer").formatNullable[LodgingOfficer] and
       (__ \ "returns").formatNullable[Returns] and
       (__ \ "sicAndCompliance").formatNullable[SicAndCompliance] and
-      (__ \ "vatContact").formatNullable[VatContact] and
       (__ \ "businessContact").formatNullable[BusinessContact] and
       (__ \ "eligibility").formatNullable[Eligibility] and
       (__ \ "turnoverEstimates").formatNullable[TurnoverEstimates] and
