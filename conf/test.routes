@@ -1,2 +1,5 @@
 GET         /feature-flag/:featureName/:featureStatus              controllers.test.FeatureSwitchController.switch(featureName: String, featureStatus: String)
 GET         /feature-flag                                          controllers.test.FeatureSwitchController.show
+
+GET         /api/feature-switches                                  featureswitch.api.controllers.FeatureSwitchApiController.getFeatureSwitches()
+POST        /api/feature-switches                                  featureswitch.api.controllers.FeatureSwitchApiController.updateFeatureSwitches()
