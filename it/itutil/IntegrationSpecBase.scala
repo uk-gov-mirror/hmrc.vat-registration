@@ -70,6 +70,7 @@ trait IntegrationSpecBase extends PlaySpec
 
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
     .configure(config)
+    .configure("application.router" -> "testOnlyDoNotUseInAppConf.Routes")
     .build()
 
   trait SetupHelper {

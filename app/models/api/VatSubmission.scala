@@ -28,14 +28,14 @@ case class VatSubmission(messageType: String = "SubscriptionCreate",
 
 object VatSubmission {
 
-  val submissionWrites: OWrites[VatSubmission] = (
-    (__ \ "messageType").write[String] and
-      (__ \ "admin" \ "additionalInformation" \ "customerStatus").writeNullable[String] and
-      (__ \ "customerIdentification" \ "tradersPartyType").writeNullable[String] and
-      (__ \ "customerIdentification" \ "primeBPSafeId").writeNullable[String] and
-      (__ \ "contact" \ "address").writeNullable[Address](Address.submissionWrites) and
-      (__ \ "declaration" \ "declarationSigning" \ "confirmInformationDeclaration").writeNullable[Boolean]
-    ) (unlift(VatSubmission.unapply))
+  val submissionFormat: OFormat[VatSubmission] = (
+    (__ \ "messageType").format[String] and
+      (__ \ "admin" \ "additionalInformation" \ "customerStatus").formatNullable[String] and
+      (__ \ "customerIdentification" \ "tradersPartyType").formatNullable[String] and
+      (__ \ "customerIdentification" \ "primeBPSafeId").formatNullable[String] and
+      (__ \ "contact" \ "address").formatNullable[Address](Address.submissionFormat) and
+      (__ \ "declaration" \ "declarationSigning" \ "confirmInformationDeclaration").formatNullable[Boolean]
+    ) (VatSubmission.apply, unlift(VatSubmission.unapply))
 
   implicit val mongoFormat: OFormat[VatSubmission] = Json.format[VatSubmission]
 }

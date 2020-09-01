@@ -3,3 +3,5 @@ GET         /feature-flag                                          controllers.t
 
 GET         /api/feature-switches                                  featureswitch.api.controllers.FeatureSwitchApiController.getFeatureSwitches()
 POST        /api/feature-switches                                  featureswitch.api.controllers.FeatureSwitchApiController.updateFeatureSwitches()
+
+POST        /stub/submission                                       controllers.test.StubDesSubmissionController.processSubmission

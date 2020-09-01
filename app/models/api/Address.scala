@@ -28,14 +28,14 @@ case class Address(line1: String,
 
 object Address {
 
-  val submissionWrites: OWrites[Address] = (
-    (__ \ "line1").write[String] and
-      (__ \ "line2").write[String] and
-      (__ \ "line3").writeNullable[String] and
-      (__ \ "line4").writeNullable[String] and
-      (__ \ "postCode").writeNullable[String] and
-      (__ \ "countryCode").writeNullable[String]
-    ) (unlift(Address.unapply))
+  val submissionFormat: OFormat[Address] = (
+    (__ \ "line1").format[String] and
+      (__ \ "line2").format[String] and
+      (__ \ "line3").formatNullable[String] and
+      (__ \ "line4").formatNullable[String] and
+      (__ \ "postCode").formatNullable[String] and
+      (__ \ "countryCode").formatNullable[String]
+    ) (Address.apply, unlift(Address.unapply))
 
   implicit val format: OFormat[Address] = Json.format[Address]
 }
