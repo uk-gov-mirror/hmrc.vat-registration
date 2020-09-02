@@ -82,7 +82,7 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation {
 
   "converting a VatSubmission model into Json" should {
     "produce a valid Json for a DES submission" in {
-      val json = Json.toJson(testVatSubmission)(VatSubmission.submissionWrites)
+      val json = Json.toJson(testVatSubmission)(VatSubmission.submissionFormat)
 
       json mustBe submissionJson
     }
