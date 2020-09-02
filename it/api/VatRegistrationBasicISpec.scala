@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package api
 
 import common.RegistrationId
 import connectors.stubs.BusinessRegConnectorStub._
+import connectors.stubs.VatSubmissionStub._
 import controllers.routes.VatRegistrationController
 import enums.VatRegStatus
-import itutil.{IntegrationStubbing, WiremockHelper}
+import itutil.IntegrationStubbing
 import models.api.VatScheme
 import models.external.CurrentProfile
-import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.test.Helpers._
 
@@ -48,11 +49,11 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
 
         res.status mustBe CREATED
         //TODO - test body by injecting journey id generator
-//        res.json mustBe Json.obj(
-//          "registrationId" -> "12345",
-//          "internalId" -> "INT-123-456-789",
-//          "status" -> "draft"
-//        )
+        //        res.json mustBe Json.obj(
+        //          "registrationId" -> "12345",
+        //          "internalId" -> "INT-123-456-789",
+        //          "status" -> "draft"
+        //        )
       }
       "Return NOT FOUND if the registration is missing" in new Setup {
         given.user.isAuthorised
@@ -83,9 +84,9 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
     "return an Ok if the submission is successful for the regID" in new Setup() {
       System.setProperty("feature.mockSubmission", "false")
       given.user.isAuthorised
-      stubBusinessRegVat(ACCEPTED)()
+      stubVatSubmission(ACCEPTED)()
 
-      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateReturns(registrationID, returns))
+      repo.createNewVatScheme(RegistrationId(registrationID), internalid).flatMap(_ => repo.updateReturns(registrationID, returns))
 
       val result: WSResponse = await(client(
         VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
@@ -99,12 +100,12 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
       await(repo.remove("registrationId" -> registrationID))
     }
 
-    "mock the return if the mock submission flag is on" in new Setup{
+    "mock the return if the mock submission flag is on" in new Setup {
       System.setProperty("feature.mockSubmission", "true")
       given.user.isAuthorised
-      stubBusinessRegVat(ACCEPTED)()
+      stubVatSubmission(ACCEPTED)()
 
-      repo.createNewVatScheme(RegistrationId(registrationID),internalid).flatMap(_ => repo.updateReturns(registrationID, returns))
+      repo.createNewVatScheme(RegistrationId(registrationID), internalid).flatMap(_ => repo.updateReturns(registrationID, returns))
 
       val result: WSResponse = await(client(
         VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")

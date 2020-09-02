@@ -18,19 +18,20 @@ package connectors
 
 import java.time.LocalDate
 
+import config.BackendConfig
 import helpers.VatRegSpec
+import models.api.{Address, VatSubmission}
 import models.submission.{DESSubmission, TopUpSubmission}
-import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.{any, anyString, contains}
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
-import org.scalatest.Matchers
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
+import play.api.Configuration
 import play.api.libs.json.Writes
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.http.ws.WSHttp
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.Future
 
@@ -38,18 +39,26 @@ class DesConnectorSpec extends PlaySpec with VatRegSpec with MockitoSugar with H
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  class SetupWithProxy {
-    val connector: DESConnector = new DESConnector(backendConfig, mockHttpClient) {
-      override lazy val desStubURI             = "testStubURI"
-      override lazy val desStubUrl             = "desStubURL"
-      override lazy val desStubTopUpUrl        = "desStubTopUpURL"
-      override lazy val desStubTopUpURI        = "testStubTopUpURI"
-      override lazy val urlHeaderEnvironment   = "env"
-      override lazy val urlHeaderAuthorization = "auth"
-    }
+  override val backendConfig: BackendConfig = new BackendConfig(mock[ServicesConfig], mock[Configuration]) {
+    override lazy val desBaseUrl = "testDesUrl"
+    override lazy val desStubTopUpUrl = "desStubTopUpURL"
+    override lazy val desStubTopUpURI = "testStubTopUpURI"
+    override lazy val urlHeaderEnvironment = "env"
+    override lazy val urlHeaderAuthorization = "auth"
   }
 
-  val validDesSubmission: DESSubmission = DESSubmission("AckRef", Some(LocalDate.of(2017, 1, 1)))
+  class SetupWithProxy {
+    val connector: DESConnector = new DESConnector(backendConfig, mockHttpClient)
+  }
+
+  val validVatSubmission: VatSubmission = VatSubmission(
+    "SubmissionCreate",
+    Some("3"),
+    Some("50"),
+    Some("12345678901234567890"),
+    Some(Address(line1 = "line1", line2 = "line2", postcode = Some("A11 11A"), country = Some("GB"))),
+    Some(true)
+  )
   val validTopUpAcceptedSubmission: TopUpSubmission = TopUpSubmission("AckRef", "accepted", Some(LocalDate.of(2017, 1, 1)))
   val validTopUpRejectedSubmission: TopUpSubmission = TopUpSubmission("AckRef", "rejected")
   val upstream4xx: Upstream4xxResponse = Upstream4xxResponse("400", 400, 400)
@@ -67,33 +76,33 @@ class DesConnectorSpec extends PlaySpec with VatRegSpec with MockitoSugar with H
   }
 
 
-  "submitToDES with a DES Submission Model" should {
+  "submitToDES with a VAT Submission Model" should {
     "successfully POST" in new SetupWithProxy {
-      mockHttpPOST[DESSubmission, HttpResponse](s"${connector.desStubUrl}/${connector.desStubURI}", HttpResponse(202))
+      mockHttpPOST[DESSubmission, HttpResponse](s"${connector.config.desUrl}", HttpResponse(202))
 
-      await(connector.submitToDES(validDesSubmission, "regId")).status mustBe 202
+      await(connector.submitToDES(validVatSubmission, "regId")).status mustBe 202
     }
 
     "handle a failed POST" in new SetupWithProxy {
-      mockHttpFailedPOST[DESSubmission, HttpResponse](s"${connector.desStubUrl}/${connector.desStubURI}", upstream4xx)
+      mockHttpFailedPOST[DESSubmission, HttpResponse](s"${connector.config.desUrl}", upstream4xx)
 
-      intercept[Upstream4xxResponse](await(connector.submitToDES(validDesSubmission, "regId")))
+      intercept[Upstream4xxResponse](await(connector.submitToDES(validVatSubmission, "regId")))
     }
   }
 
   "submitTopUpDES" should {
     "successfully POST with an accepted DES TopUpSubmission Model" in new SetupWithProxy {
-      mockHttpPOST[TopUpSubmission, HttpResponse](s"${connector.desStubTopUpUrl}/${connector.desStubTopUpURI}", HttpResponse(202))
+      mockHttpPOST[TopUpSubmission, HttpResponse](s"${connector.config.desStubTopUpUrl}/${connector.config.desStubTopUpURI}", HttpResponse(202))
       await(connector.submitTopUpToDES(validTopUpAcceptedSubmission, "regId"))
     }
 
     "successfully POST with a rejected DES TopUpSubmission Model" in new SetupWithProxy {
-      mockHttpPOST[TopUpSubmission, HttpResponse](s"${connector.desStubTopUpUrl}/${connector.desStubTopUpURI}", HttpResponse(202))
+      mockHttpPOST[TopUpSubmission, HttpResponse](s"${connector.config.desStubTopUpUrl}/${connector.config.desStubTopUpURI}", HttpResponse(202))
       await(connector.submitTopUpToDES(validTopUpRejectedSubmission, "regId"))
     }
 
     "handle a failed POST" in new SetupWithProxy {
-      mockHttpFailedPOST[TopUpSubmission, HttpResponse](s"${connector.desStubTopUpUrl}/${connector.desStubTopUpURI}", upstream4xx)
+      mockHttpFailedPOST[TopUpSubmission, HttpResponse](s"${connector.config.desStubTopUpUrl}/${connector.config.desStubTopUpURI}", upstream4xx)
       intercept[Upstream4xxResponse](await(connector.submitTopUpToDES(validTopUpAcceptedSubmission, "regId")))
     }
   }
@@ -102,31 +111,31 @@ class DesConnectorSpec extends PlaySpec with VatRegSpec with MockitoSugar with H
   "customDesRead" should {
     "successfully convert 409 from DES to 202" in new SetupWithProxy {
       val httpResponse: AnyRef with HttpResponse = HttpResponse(409)
-      connector.customDESRead("test","testUrl",httpResponse).status mustBe 202
+      connector.customDESRead("test", "testUrl", httpResponse).status mustBe 202
     }
   }
 
-    "successfully convert 499 from DES to 502" in new SetupWithProxy {
-      val httpResponse: AnyRef with HttpResponse = HttpResponse(499)
-      val ex: Upstream5xxResponse = intercept[Upstream5xxResponse](connector.customDESRead("test", "testUrl", httpResponse))
-      ex mustBe Upstream5xxResponse("Timeout received from DES submission", 499, 502)
-    }
+  "successfully convert 499 from DES to 502" in new SetupWithProxy {
+    val httpResponse: AnyRef with HttpResponse = HttpResponse(499)
+    val ex: Upstream5xxResponse = intercept[Upstream5xxResponse](connector.customDESRead("test", "testUrl", httpResponse))
+    ex mustBe Upstream5xxResponse("Timeout received from DES submission", 499, 502)
+  }
 
-    "successfully convert 429 from DES to 503" in new SetupWithProxy {
-      val httpResponse: AnyRef with HttpResponse = HttpResponse(429)
-      val ex: Upstream5xxResponse = intercept[Upstream5xxResponse](connector.customDESRead("test", "testUrl", httpResponse))
-      ex mustBe Upstream5xxResponse("429 received fro DES - converted to 503", 429, 503)
-    }
+  "successfully convert 429 from DES to 503" in new SetupWithProxy {
+    val httpResponse: AnyRef with HttpResponse = HttpResponse(429)
+    val ex: Upstream5xxResponse = intercept[Upstream5xxResponse](connector.customDESRead("test", "testUrl", httpResponse))
+    ex mustBe Upstream5xxResponse("429 received fro DES - converted to 503", 429, 503)
+  }
 
-    "successfully convert 480 from DES to 400" in new SetupWithProxy {
-      val httpResponse: AnyRef with HttpResponse = HttpResponse(480, responseString = Some("foo"))
-      val ex: Upstream4xxResponse = intercept[Upstream4xxResponse](connector.customDESRead("test", "testUrl", httpResponse))
-      ex mustBe Upstream4xxResponse(upstreamResponseMessage("test", "testUrl", 480, "foo"), 480, 400)
-    }
+  "successfully convert 480 from DES to 400" in new SetupWithProxy {
+    val httpResponse: AnyRef with HttpResponse = HttpResponse(480, responseString = Some("foo"))
+    val ex: Upstream4xxResponse = intercept[Upstream4xxResponse](connector.customDESRead("test", "testUrl", httpResponse))
+    ex mustBe Upstream4xxResponse(upstreamResponseMessage("test", "testUrl", 480, "foo"), 480, 400)
+  }
 
-    "successfully convert 500 from DES to 502" in new SetupWithProxy {
-      val httpResponse: AnyRef with HttpResponse = HttpResponse(500, responseString = Some("foo"))
-      val ex: Upstream5xxResponse = intercept[Upstream5xxResponse](connector.customDESRead("test", "testUrl", httpResponse))
-      ex mustBe Upstream5xxResponse(upstreamResponseMessage("test", "testUrl", 500, "foo"), 500, 502)
-    }
+  "successfully convert 500 from DES to 502" in new SetupWithProxy {
+    val httpResponse: AnyRef with HttpResponse = HttpResponse(500, responseString = Some("foo"))
+    val ex: Upstream5xxResponse = intercept[Upstream5xxResponse](connector.customDESRead("test", "testUrl", httpResponse))
+    ex mustBe Upstream5xxResponse(upstreamResponseMessage("test", "testUrl", 500, "foo"), 500, 502)
+  }
 }

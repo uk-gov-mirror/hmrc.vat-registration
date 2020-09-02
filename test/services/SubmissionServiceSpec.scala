@@ -26,29 +26,27 @@ import enums.VatRegStatus
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models.api._
-import models.external.{IncorpStatusEvent, IncorpSubscription, IncorporationStatus}
 import models.submission.{DESSubmission, TopUpSubmission}
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with ApplicativeSyntax with FutureInstances  {
-  class Setup(useMockSub: Boolean = false) {
+class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with ApplicativeSyntax with FutureInstances {
+
+  class Setup {
     val service: SubmissionService = new SubmissionService(
       sequenceMongoRepository = mockSequenceRepository,
       vatRegistrationService = mockVatRegistrationService,
       registrationRepository = mockRegistrationMongoRepository,
-      desConnector = mockDesConnector) {
-
-      override private[services] def useMockSubmission: Boolean = useMockSub
-    }
+      desConnector = mockDesConnector
+    )
   }
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -58,24 +56,24 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
 
     "successfully return a future string when mockSubmission = false" in new Setup {
       when(mockRegistrationMongoRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
-        .thenReturn(Future.successful(Some(vatScheme.copy(returns = Some(Returns(true,"",Some("foo"),StartDate(Some(LocalDate.now))))))))
+        .thenReturn(Future.successful(Some(vatScheme.copy(returns = Some(Returns(true, "", Some("foo"), StartDate(Some(LocalDate.now))))))))
       when(mockSequenceRepository.getNext(any())(any())).thenReturn(Future.successful(100))
       when(mockRegistrationMongoRepository.prepareRegistrationSubmission(RegistrationId(anyString()), any(), any())(any())).thenReturn(Future.successful(true))
-      when(mockRegistrationMongoRepository.saveTransId(any(),RegistrationId(anyString()))(any())).thenReturn(Future.successful("transID"))
-      when(mockDesConnector.submitToDES(any[DESSubmission],any())(any())).thenReturn(Future.successful(HttpResponse(200)))
-      when(mockRegistrationMongoRepository.finishRegistrationSubmission(RegistrationId(anyString()),any())(any())).thenReturn(Future.successful(VatRegStatus.submitted))
+      when(mockRegistrationMongoRepository.saveTransId(any(), RegistrationId(anyString()))(any())).thenReturn(Future.successful("transID"))
+      when(mockDesConnector.submitToDES(any[VatSubmission], any())(any())).thenReturn(Future.successful(HttpResponse(200)))
+      when(mockRegistrationMongoRepository.finishRegistrationSubmission(RegistrationId(anyString()), any())(any())).thenReturn(Future.successful(VatRegStatus.submitted))
 
       await(service.submitVatRegistration(RegistrationId("foo"))) mustBe "BRVT00000000100"
 
     }
-    "successfully submit to des using mockSubmission = true" in new Setup(true) {
+    "successfully submit to des using mockSubmission = true" in new Setup {
       when(mockRegistrationMongoRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
-        .thenReturn(Future.successful(Some(vatScheme.copy(returns = Some(Returns(true,"",Some("foo"),StartDate(Some(LocalDate.now))))))))
+        .thenReturn(Future.successful(Some(vatScheme.copy(returns = Some(Returns(true, "", Some("foo"), StartDate(Some(LocalDate.now))))))))
       when(mockSequenceRepository.getNext(any())(any())).thenReturn(Future.successful(100))
       when(mockRegistrationMongoRepository.prepareRegistrationSubmission(RegistrationId(anyString()), any(), any())(any())).thenReturn(Future.successful(true))
-      when(mockRegistrationMongoRepository.saveTransId(any(),RegistrationId(anyString()))(any())).thenReturn(Future.successful("transID"))
-      when(mockDesConnector.submitToDES(any[DESSubmission],any())(any())).thenReturn(Future.successful(HttpResponse(200)))
-      when(mockRegistrationMongoRepository.finishRegistrationSubmission(RegistrationId(anyString()),any())(any())).thenReturn(Future.successful(VatRegStatus.submitted))
+      when(mockRegistrationMongoRepository.saveTransId(any(), RegistrationId(anyString()))(any())).thenReturn(Future.successful("transID"))
+      when(mockDesConnector.submitToDES(any[VatSubmission], any())(any())).thenReturn(Future.successful(HttpResponse(200)))
+      when(mockRegistrationMongoRepository.finishRegistrationSubmission(RegistrationId(anyString()), any())(any())).thenReturn(Future.successful(VatRegStatus.submitted))
 
       await(service.submitVatRegistration(RegistrationId("foo"))) mustBe "BRVT00000000100"
     }
@@ -84,7 +82,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
 
   "call to getAcknowledgementReference" should {
 
-    val vatScheme = VatScheme(RegistrationId("1"),internalId = internalid, None, None, None, status = VatRegStatus.draft)
+    val vatScheme = VatScheme(RegistrationId("1"), internalId = internalid, None, None, None, status = VatRegStatus.draft)
 
     "return Success response " in new Setup {
       when(mockVatRegistrationService.retrieveAcknowledgementReference(regId)).
@@ -130,7 +128,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
   }
 
   "ensureAcknowledgementReference" should {
-    val vatScheme = VatScheme(RegistrationId("1"),internalid, None, None, None, status = VatRegStatus.draft, acknowledgementReference = Some("testref"))
+    val vatScheme = VatScheme(RegistrationId("1"), internalid, None, None, None, status = VatRegStatus.draft, acknowledgementReference = Some("testref"))
     val sequenceNo = 1
     val formattedRefNumber = f"BRVT$sequenceNo%011d"
 
@@ -160,7 +158,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
   }
 
   "getValidDocumentStatus" should {
-    val vatScheme = VatScheme(RegistrationId("1"),internalid, None, None, None, status = VatRegStatus.draft)
+    val vatScheme = VatScheme(RegistrationId("1"), internalid, None, None, None, status = VatRegStatus.draft)
 
     "throw an exception if the document is not available" in new Setup {
       when(mockRegistrationMongoRepository.retrieveVatScheme(RegistrationId(anyString()))(ArgumentMatchers.any()))
@@ -187,14 +185,14 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
   "updateSubmissionStatus" should {
     "update the submission to submitted if there is an incorp date" in new Setup {
       when(mockRegistrationMongoRepository.finishRegistrationSubmission(RegistrationId(anyString()), ArgumentMatchers.any())
-        (ArgumentMatchers.any())).thenReturn(Future.successful(VatRegStatus.submitted))
+      (ArgumentMatchers.any())).thenReturn(Future.successful(VatRegStatus.submitted))
 
       await(service.updateSubmissionStatus(regId)) mustBe VatRegStatus.submitted
     }
 
     "update the submission to held if there is no incorp date" in new Setup {
       when(mockRegistrationMongoRepository.finishRegistrationSubmission(RegistrationId(anyString()), ArgumentMatchers.any())
-        (ArgumentMatchers.any())).thenReturn(Future.successful(VatRegStatus.held))
+      (ArgumentMatchers.any())).thenReturn(Future.successful(VatRegStatus.held))
 
       await(service.updateSubmissionStatus(regId)) mustBe VatRegStatus.held
     }
@@ -203,14 +201,14 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
   "updateTopUpSubmissionStatus" should {
     "update the submission to submitted if there is an incorp date" in new Setup {
       when(mockRegistrationMongoRepository.finishRegistrationSubmission(RegistrationId(anyString()), ArgumentMatchers.any())
-        (ArgumentMatchers.any())).thenReturn(Future.successful(VatRegStatus.submitted))
+      (ArgumentMatchers.any())).thenReturn(Future.successful(VatRegStatus.submitted))
 
       await(service.updateTopUpSubmissionStatus(regId, "accepted")) mustBe VatRegStatus.submitted
     }
 
     "update the submission to held if there is no incorp date" in new Setup {
       when(mockRegistrationMongoRepository.finishRegistrationSubmission(RegistrationId(anyString()), ArgumentMatchers.any())
-        (ArgumentMatchers.any())).thenReturn(Future.successful(VatRegStatus.rejected))
+      (ArgumentMatchers.any())).thenReturn(Future.successful(VatRegStatus.rejected))
 
       await(service.updateTopUpSubmissionStatus(regId, "rejected")) mustBe VatRegStatus.rejected
     }
@@ -219,9 +217,9 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
   "Calling buildDesSubmission" should {
 
     val schemeReturns = Returns(true, "monthly", None, StartDate(date = Some(date)))
-    val vatScheme = VatScheme(RegistrationId("1"),internalid, Some(TransactionId("1")), returns = Some(schemeReturns), status = VatRegStatus.draft)
-    val vatSchemeNoTradingDetails = VatScheme(RegistrationId("1"),internalid, None, None, None, status = VatRegStatus.draft)
-    val vatSchemeNoStartDate = VatScheme(RegistrationId("1"),internalid, Some(TransactionId("1")), None, None, status = VatRegStatus.draft)
+    val vatScheme = VatScheme(RegistrationId("1"), internalid, Some(TransactionId("1")), returns = Some(schemeReturns), status = VatRegStatus.draft)
+    val vatSchemeNoTradingDetails = VatScheme(RegistrationId("1"), internalid, None, None, None, status = VatRegStatus.draft)
+    val vatSchemeNoStartDate = VatScheme(RegistrationId("1"), internalid, Some(TransactionId("1")), None, None, status = VatRegStatus.draft)
     val fullDESSubmission = DESSubmission("ackRef", Some(date))
     val partialDESSubmission = DESSubmission("ackRef", Some(date))
 
@@ -261,7 +259,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
     val someDateTimeNow = Some(DateTime.now())
 
     val schemeReturns = Returns(true, "monthly", None, StartDate(date = someLocalDateNow))
-    val vatScheme = VatScheme(RegistrationId("1"),internalid, Some(TransactionId("1")), returns = Some(schemeReturns), status = VatRegStatus.draft)
+    val vatScheme = VatScheme(RegistrationId("1"), internalid, Some(TransactionId("1")), returns = Some(schemeReturns), status = VatRegStatus.draft)
     val vatSchemeNoTradingDetails = VatScheme(RegistrationId("1"), internalid, None, None, None, status = VatRegStatus.draft)
     val topUpAccepted = TopUpSubmission("ackRef", "accepted", someLocalDateNow)
     val topUpRejected = TopUpSubmission("ackRef", "rejected")
