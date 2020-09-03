@@ -8,7 +8,7 @@ import play.api.libs.json.{JsObject, Json}
 object VatSubmissionStub {
 
   def stubVatSubmission(status: Int)(body: JsObject = Json.obj()): StubMapping =
-    stubFor(post(urlMatching(s"/vatreg/test-only/stub/submission"))
+    stubFor(post(urlMatching(s".*/vat/subscription"))
       .willReturn(aResponse()
         .withStatus(status)
         .withBody(body.toString())

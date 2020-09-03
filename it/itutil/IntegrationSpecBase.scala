@@ -43,6 +43,7 @@ trait IntegrationSpecBase extends PlaySpec
     override val wts: Writes[String] = Writes[String](s => JsString(s))
   }
 
+  val mockUrl: String = WiremockHelper.url
   val mockHost: String = WiremockHelper.wiremockHost
   val mockPort: String = WiremockHelper.wiremockPort.toString
 
@@ -53,10 +54,7 @@ trait IntegrationSpecBase extends PlaySpec
     "microservice.services.auth.port" -> mockPort,
     "microservice.services.business-registration.host" -> mockHost,
     "microservice.services.business-registration.port" -> mockPort,
-    "microservice.services.des.stub.host" -> mockHost,
-    "microservice.services.des.stub.port" -> mockPort,
-    "microservice.services.des.service.host" -> mockHost,
-    "microservice.services.des.service.port" -> mockPort,
+    "microservice.services.des.url" -> mockUrl,
     "microservice.services.des-stub.host" -> mockHost,
     "microservice.services.des-stub.port" -> mockPort,
     "microservice.services.des-service.host" -> mockHost,
