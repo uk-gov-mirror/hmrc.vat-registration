@@ -21,6 +21,7 @@ import connectors.stubs.BusinessRegConnectorStub._
 import connectors.stubs.VatSubmissionStub._
 import controllers.routes.VatRegistrationController
 import enums.VatRegStatus
+import featureswitch.core.config.{FeatureSwitching, StubSubmission}
 import itutil.IntegrationStubbing
 import models.api.VatScheme
 import models.external.CurrentProfile
@@ -29,7 +30,7 @@ import play.api.test.Helpers._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class VatRegistrationBasicISpec extends IntegrationStubbing {
+class VatRegistrationBasicISpec extends IntegrationStubbing with FeatureSwitching {
 
   class Setup extends SetupHelper
 
@@ -82,7 +83,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
     val subscriber = "scrs"
 
     "return an Ok if the submission is successful for the regID" in new Setup() {
-      System.setProperty("feature.mockSubmission", "false")
+      disable(StubSubmission)
       given.user.isAuthorised
       stubVatSubmission(ACCEPTED)()
 
@@ -100,8 +101,8 @@ class VatRegistrationBasicISpec extends IntegrationStubbing {
       await(repo.remove("registrationId" -> registrationID))
     }
 
-    "mock the return if the mock submission flag is on" in new Setup {
-      System.setProperty("feature.mockSubmission", "true")
+    "mock the return if the stub submission flag is on" in new Setup {
+      enable(StubSubmission)
       given.user.isAuthorised
       stubVatSubmission(ACCEPTED)()
 
