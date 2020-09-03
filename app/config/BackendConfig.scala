@@ -16,17 +16,33 @@
 
 package config
 
+import featureswitch.core.config.{FeatureSwitching, StubSubmission}
 import javax.inject.{Inject, Singleton}
-import play.api.{Configuration, Environment, Mode}
-import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
+import play.api.Configuration
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
 class BackendConfig @Inject()(val servicesConfig: ServicesConfig,
-                              val environment:Environment,
-                              val runModeConfiguration: Configuration,
-                              val runMode: RunMode
-                             ) {
+                              val runModeConfiguration: Configuration) extends FeatureSwitching {
 
-  protected def mode: Mode = environment.mode
+  lazy val vatRegistrationUrl: String = servicesConfig.baseUrl("vat-registration")
+  lazy val desBaseUrl: String = servicesConfig.getConfString("des.url", "")
+  val desEndpoint = "/vat/subscription"
+
+  def desUrl: String = if (isEnabled(StubSubmission)) {
+    vatRegistrationUrl + "/vatreg/test-only" + desEndpoint
+  }
+  else {
+    desBaseUrl + desEndpoint
+  }
+
+  lazy val desStubTopUpUrl: String = servicesConfig.baseUrl("des-stub")
+  lazy val desStubTopUpURI: String = servicesConfig.getConfString("des-stub.uri", "")
+
+  lazy val urlHeaderEnvironment: String = servicesConfig.getConfString("des-service.environment", throw new Exception("could not find config value for des-service.environment"))
+  lazy val urlHeaderAuthorization: String = s"Bearer ${
+    servicesConfig.getConfString("des-service.authorization-token",
+      throw new Exception("could not find config value for des-service.authorization-token"))
+  }"
 
 }

@@ -18,26 +18,21 @@ package mocks
 
 import auth.AuthorisationResource
 import cats.data.EitherT
-import cats.instances.FutureInstances
-import cats.syntax.{ApplicativeSyntax, EitherSyntax}
+import common.RegistrationId
 import common.exceptions._
-import common.{RegistrationId, TransactionId}
 import connectors._
 import enums.VatRegStatus
 import models.api.VatScheme
-import models.external.IncorporationStatus
-import org.mockito.{ArgumentMatchers => Matchers}
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
+import org.mockito.{ArgumentMatchers => Matchers}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import repositories._
 import services._
 import uk.gov.hmrc.auth.core.{AuthConnector, InvalidBearerToken}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpGet, HttpPost}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import utils.VATFeatureSwitches
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
@@ -45,21 +40,20 @@ trait VatMocks extends HttpClientMock {
 
   this: MockitoSugar =>
 
-  lazy val mockAuthConnector: AuthConnector                             = mock[AuthConnector]
-  lazy val mockAuthorisationResource: AuthorisationResource             = mock[AuthorisationResource]
+  lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
+  lazy val mockAuthorisationResource: AuthorisationResource = mock[AuthorisationResource]
   lazy val mockRegistrationMongoRepository: RegistrationMongoRepository = mock[RegistrationMongoRepository]
-  lazy val mockSubmissionService: SubmissionService                     = mock[SubmissionService]
-  lazy val mockVatRegistrationService: VatRegistrationService           = mock[VatRegistrationService]
-  lazy val mockSequenceRepository: SequenceMongoRepository              = mock[SequenceMongoRepository]
-  lazy val mockDesConnector: DESConnector                               = mock[DESConnector]
-  lazy val mockVatFeatureSwitches: VATFeatureSwitches                   = mock[VATFeatureSwitches]
-  lazy val mockEligibilityService: EligibilityService                   = mock[EligibilityService]
-  lazy val mockLodgingOfficerService: LodgingOfficerService             = mock[LodgingOfficerService]
-  lazy val mockSicAndComplianceService: SicAndComplianceService         = mock[SicAndComplianceService]
-  lazy val mockBusinessContactService: BusinessContactService           = mock[BusinessContactService]
-  lazy val mockTradingDetailsService: TradingDetailsService             = mock[TradingDetailsService]
-  lazy val mockFlatRateSchemeService: FlatRateSchemeService             = mock[FlatRateSchemeService]
-  lazy val mockVatThresholdService: VatThresholdService                 = mock[VatThresholdService]
+  lazy val mockSubmissionService: SubmissionService = mock[SubmissionService]
+  lazy val mockVatRegistrationService: VatRegistrationService = mock[VatRegistrationService]
+  lazy val mockSequenceRepository: SequenceMongoRepository = mock[SequenceMongoRepository]
+  lazy val mockDesConnector: DESConnector = mock[DESConnector]
+  lazy val mockEligibilityService: EligibilityService = mock[EligibilityService]
+  lazy val mockLodgingOfficerService: LodgingOfficerService = mock[LodgingOfficerService]
+  lazy val mockSicAndComplianceService: SicAndComplianceService = mock[SicAndComplianceService]
+  lazy val mockBusinessContactService: BusinessContactService = mock[BusinessContactService]
+  lazy val mockTradingDetailsService: TradingDetailsService = mock[TradingDetailsService]
+  lazy val mockFlatRateSchemeService: FlatRateSchemeService = mock[FlatRateSchemeService]
+  lazy val mockVatThresholdService: VatThresholdService = mock[VatThresholdService]
 
   object AuthorisationMocks {
 
@@ -93,21 +87,21 @@ trait VatMocks extends HttpClientMock {
     }
 
 
-      def mockAuthMongoResourceNotFound(regId: String, internalId: String): OngoingStubbing[Future[Option[String]]] = {
-        when(mockAuthConnector.authorise[Option[String]](any(), any())(any(), any()))
-          .thenReturn(Future.successful(Some(internalId)))
+    def mockAuthMongoResourceNotFound(regId: String, internalId: String): OngoingStubbing[Future[Option[String]]] = {
+      when(mockAuthConnector.authorise[Option[String]](any(), any())(any(), any()))
+        .thenReturn(Future.successful(Some(internalId)))
 
-        when(mockRegistrationMongoRepository.getInternalId(Matchers.eq(regId))(any[HeaderCarrier]()))
-          .thenReturn(Future.successful(None))
-      }
+      when(mockRegistrationMongoRepository.getInternalId(Matchers.eq(regId))(any[HeaderCarrier]()))
+        .thenReturn(Future.successful(None))
+    }
 
-      def mockNotLoggedInOrAuthorised(regId: String): OngoingStubbing[Future[Option[String]]] = {
-        when(mockAuthConnector.authorise[Option[String]](any(), any())(any(), any()))
-          .thenReturn(Future.successful(None))
+    def mockNotLoggedInOrAuthorised(regId: String): OngoingStubbing[Future[Option[String]]] = {
+      when(mockAuthConnector.authorise[Option[String]](any(), any())(any(), any()))
+        .thenReturn(Future.successful(None))
 
-        when(mockRegistrationMongoRepository.getInternalId(Matchers.eq(regId))(any[HeaderCarrier]()))
-          .thenReturn(Future.successful(Some("SomeInternalId")))
-      }
+      when(mockRegistrationMongoRepository.getInternalId(Matchers.eq(regId))(any[HeaderCarrier]()))
+        .thenReturn(Future.successful(Some("SomeInternalId")))
+    }
 
   }
 
@@ -151,17 +145,17 @@ trait VatMocks extends HttpClientMock {
     }
 
 
-    def mockSuccessfulCreateNewRegistration(registrationId: RegistrationId, internalId:String): Unit = {
+    def mockSuccessfulCreateNewRegistration(registrationId: RegistrationId, internalId: String): Unit = {
       when(mockVatRegistrationService.createNewRegistration(Matchers.eq(internalId))(any[HeaderCarrier]()))
-        .thenReturn(serviceResult(VatScheme(registrationId,internalId, None, None, None, status = VatRegStatus.draft)))
+        .thenReturn(serviceResult(VatScheme(registrationId, internalId, None, None, None, status = VatRegStatus.draft)))
     }
 
-    def mockFailedCreateNewRegistration(registrationId: RegistrationId, internalId:String): Unit = {
+    def mockFailedCreateNewRegistration(registrationId: RegistrationId, internalId: String): Unit = {
       when(mockVatRegistrationService.createNewRegistration(Matchers.eq(internalId))(any[HeaderCarrier]()))
         .thenReturn(serviceError[VatScheme](GenericError(new RuntimeException("something went wrong"))))
     }
 
-    def mockFailedCreateNewRegistrationWithDbError(registrationId: RegistrationId, internalId:String): Unit = {
+    def mockFailedCreateNewRegistrationWithDbError(registrationId: RegistrationId, internalId: String): Unit = {
       val exception = new Exception("Exception")
       when(mockVatRegistrationService.createNewRegistration(Matchers.eq(internalId))(any[HeaderCarrier]()))
         .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
@@ -191,4 +185,5 @@ trait VatMocks extends HttpClientMock {
         .thenReturn(serviceError[String](AcknowledgementReferenceExists("regId")))
     }
   }
+
 }

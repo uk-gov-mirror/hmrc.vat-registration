@@ -26,10 +26,13 @@ import org.scalatestplus.play.PlaySpec
 import org.scalatest.{BeforeAndAfterEach, Inside, ParallelTestExecution}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
+import scala.concurrent.ExecutionContext
+
 trait VatRegSpec extends PlaySpec with Inside with MockitoSugar with VatMocks
   with BeforeAndAfterEach with FutureInstances with ParallelTestExecution with GuiceOneAppPerSuite with FutureAssertions {
 
   val backendConfig: BackendConfig = app.injector.instanceOf[BackendConfig]
+  implicit val executionContext: ExecutionContext = app.injector.instanceOf[ExecutionContext]
 
   override def beforeEach() {
     reset(mockAuthConnector)

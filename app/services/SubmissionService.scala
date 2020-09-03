@@ -24,12 +24,11 @@ import common.{RegistrationId, TransactionId}
 import connectors.DESConnector
 import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
-import models.api.VatScheme
-import models.external.{IncorpStatus, IncorporationStatus}
+import models.api.{Address, VatScheme, VatSubmission}
+import models.external.IncorpStatus
 import models.submission.{DESSubmission, TopUpSubmission}
 import repositories._
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.VATFeatureSwitches
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,31 +39,34 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
                                   val registrationRepository: RegistrationMongoRepository,
                                   val desConnector: DESConnector) extends FutureInstances {
 
-  private[services] def useMockSubmission: Boolean = VATFeatureSwitches.mockSubmission.enabled
-
-  private val REGIME = "vat"
-  private val SUBSCRIBER = "scrs"
-
-  def submitVatRegistration(regId : RegistrationId)(implicit hc : HeaderCarrier) : Future[String] = {
+  def submitVatRegistration(regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String] = {
     for {
-      status        <- getValidDocumentStatus(regId)
-      ackRefs       <- ensureAcknowledgementReference(regId, status)
-      submission    <- buildDesSubmission(regId, ackRefs)
-      _             <- desConnector.submitToDES(submission, regId.toString)
-      _             <- updateSubmissionStatus(regId)
+      status <- getValidDocumentStatus(regId)
+      ackRefs <- ensureAcknowledgementReference(regId, status)
+      submission <- buildDesSubmission(regId, ackRefs)
+      fakeSubmission = VatSubmission(
+        "SubmissionCreate",
+        Some("3"),
+        Some("50"),
+        Some("12345678901234567890"),
+        Some(Address(line1 = "line1", line2 = "line2", postcode = Some("A11 11A"), country = Some("GB"))),
+        Some(true)
+      )
+      _ <- desConnector.submitToDES(fakeSubmission, regId.toString)
+      _ <- updateSubmissionStatus(regId)
     } yield {
       ackRefs
     }
   }
 
-  def submitTopUpVatRegistration(incorpUpdate: IncorpStatus)(implicit hc : HeaderCarrier): Future[Boolean] = {
+  def submitTopUpVatRegistration(incorpUpdate: IncorpStatus)(implicit hc: HeaderCarrier): Future[Boolean] = {
     for {
-      regId         <- getRegistrationIDByTxId(incorpUpdate.transactionId)
-      status        <- getValidDocumentTopupStatus(regId)
-      ackRefs       <- ensureAcknowledgementReference(regId, status)
-      submission    <- buildTopUpSubmission(regId, ackRefs, incorpUpdate.status)
-      _             <- desConnector.submitTopUpToDES(submission, regId.toString)
-      _             <- updateTopUpSubmissionStatus(regId, incorpUpdate.status)
+      regId <- getRegistrationIDByTxId(incorpUpdate.transactionId)
+      status <- getValidDocumentTopupStatus(regId)
+      ackRefs <- ensureAcknowledgementReference(regId, status)
+      submission <- buildTopUpSubmission(regId, ackRefs, incorpUpdate.status)
+      _ <- desConnector.submitTopUpToDES(submission, regId.toString)
+      _ <- updateTopUpSubmissionStatus(regId, incorpUpdate.status)
     } yield true
   }
 
@@ -85,15 +87,15 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     registrationRepository.retrieveVatScheme(regId) flatMap {
       case Some(vs) => vs.acknowledgementReference.fold(
         for {
-          newAckref   <- generateAcknowledgementReference
-          _           <- registrationRepository.prepareRegistrationSubmission(regId, newAckref, status)
+          newAckref <- generateAcknowledgementReference
+          _ <- registrationRepository.prepareRegistrationSubmission(regId, newAckref, status)
         } yield newAckref
       )(ar => Future.successful(ar))
       case _ => throw new MissingRegDocument(regId)
     }
   }
 
-  private[services] def retrieveVatStartDate(vatScheme: VatScheme, regId: RegistrationId) : Option[LocalDate] = {
+  private[services] def retrieveVatStartDate(vatScheme: VatScheme, regId: RegistrationId): Option[LocalDate] = {
     vatScheme.returns match {
       case Some(returns) => returns.start.date
       case None => throw NoReturns()
@@ -103,17 +105,17 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
   private[services] def buildDesSubmission(regId: RegistrationId, ackRef: String)
                                           (implicit hc: HeaderCarrier): Future[DESSubmission] = {
     registrationRepository.retrieveVatScheme(regId) map {
-      case Some(vs)     =>
+      case Some(vs) =>
         DESSubmission(
           ackRef,
           retrieveVatStartDate(vs, regId)
         )
-      case None         => throw MissingRegDocument(regId)
+      case None => throw MissingRegDocument(regId)
     }
   }
 
   def buildTopUpSubmission(regId: RegistrationId, ackRef: String, status: String)
-                          (implicit hc: HeaderCarrier) : Future[TopUpSubmission] = {
+                          (implicit hc: HeaderCarrier): Future[TopUpSubmission] = {
     registrationRepository.retrieveVatScheme(regId) map {
       case Some(vs) =>
         val startDate = retrieveVatStartDate(vs, regId)
@@ -127,36 +129,36 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
 
   }
 
-  private[services] def getValidDocumentStatus(regID : RegistrationId)(implicit hc : HeaderCarrier): Future[VatRegStatus.Value] = {
+  private[services] def getValidDocumentStatus(regID: RegistrationId)(implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
     registrationRepository.retrieveVatScheme(regID) map {
       case Some(registration) => registration.status match {
-        case VatRegStatus.draft | VatRegStatus.locked  => registration.status
-        case _                                         => throw InvalidSubmissionStatus(s"VAT submission status was in a ${registration.status} state")
+        case VatRegStatus.draft | VatRegStatus.locked => registration.status
+        case _ => throw InvalidSubmissionStatus(s"VAT submission status was in a ${registration.status} state")
       }
       case None => throw new MissingRegDocument(regID)
     }
   }
 
-  private[services] def getValidDocumentTopupStatus(regID : RegistrationId)(implicit hc : HeaderCarrier): Future[VatRegStatus.Value] = {
+  private[services] def getValidDocumentTopupStatus(regID: RegistrationId)(implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
     registrationRepository.retrieveVatScheme(regID) map {
       case Some(registration) => registration.status match {
-        case VatRegStatus.held  => registration.status
-        case _                  => throw InvalidSubmissionStatus(s"VAT topup submission status was in a ${registration.status} state")
+        case VatRegStatus.held => registration.status
+        case _ => throw InvalidSubmissionStatus(s"VAT topup submission status was in a ${registration.status} state")
       }
       case None => throw new MissingRegDocument(regID)
     }
   }
 
-  private[services] def updateSubmissionStatus(regId : RegistrationId)
-                                              (implicit hc : HeaderCarrier): Future[VatRegStatus.Value] = {
+  private[services] def updateSubmissionStatus(regId: RegistrationId)
+                                              (implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
     registrationRepository.finishRegistrationSubmission(
       regId,
       VatRegStatus.submitted //TODO - Confirm if this is correct, state should always be submitted as we're not doing pre-incorp VAT reg
     )
   }
 
-  private[services] def updateTopUpSubmissionStatus(regId : RegistrationId, status : String)
-                                                   (implicit hc : HeaderCarrier): Future[VatRegStatus.Value] = {
+  private[services] def updateTopUpSubmissionStatus(regId: RegistrationId, status: String)
+                                                   (implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
     registrationRepository.finishRegistrationSubmission(
       regId,
       if (status == "accepted") VatRegStatus.submitted else VatRegStatus.rejected

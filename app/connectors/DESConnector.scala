@@ -18,27 +18,21 @@ package connectors
 
 import config.BackendConfig
 import javax.inject.{Inject, Singleton}
-import models.submission.{DESSubmission, TopUpSubmission}
+import models.api.VatSubmission
+import models.submission.TopUpSubmission
 import play.api.Logger
-import play.api.libs.json.Writes
+import play.api.libs.json.{OWrites, Writes}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class DESConnector @Inject()(val backendConfig: BackendConfig, val http: HttpClient) extends HttpErrorFunctions {
-
-  lazy val desStubUrl: String = backendConfig.servicesConfig.baseUrl("des-stub")
-  lazy val desStubURI: String = backendConfig.servicesConfig.getConfString("des-stub.uri", "")
-  lazy val desStubTopUpUrl: String = backendConfig.servicesConfig.baseUrl("des-stub")
-  lazy val desStubTopUpURI: String = backendConfig.servicesConfig.getConfString("des-stub.uri", "")
-
-  lazy val urlHeaderEnvironment: String = backendConfig.servicesConfig.getConfString("des-service.environment", throw new Exception("could not find config value for des-service.environment"))
-  lazy val urlHeaderAuthorization: String = s"Bearer ${backendConfig.servicesConfig.getConfString("des-service.authorization-token",
-    throw new Exception("could not find config value for des-service.authorization-token"))}"
+class DESConnector @Inject()(val config: BackendConfig,
+                             val http: HttpClient
+                            )(implicit executionContext: ExecutionContext)
+  extends HttpErrorFunctions {
 
   private[connectors] def customDESRead(http: String, url: String, response: HttpResponse): HttpResponse = {
     response.status match {
@@ -61,28 +55,28 @@ class DESConnector @Inject()(val backendConfig: BackendConfig, val http: HttpCli
     def read(http: String, url: String, res: HttpResponse) = customDESRead(http, url, res)
   }
 
-  def submitToDES(submission: DESSubmission, regId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    val url = s"$desStubUrl/$desStubURI"
-    vatPOST[DESSubmission](url, submission) map { resp =>
+  def submitToDES(submission: VatSubmission, regId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    implicit val writes: OWrites[VatSubmission] = VatSubmission.submissionFormat
+    vatPOST[VatSubmission](config.desUrl, submission) map { resp =>
       resp
     }
   }
 
   def submitTopUpToDES(submission: TopUpSubmission, regId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    val url = s"$desStubTopUpUrl/$desStubTopUpURI"
+    val url = s"${config.desStubTopUpUrl}/${config.desStubTopUpURI}"
     vatPOST[TopUpSubmission](url, submission) map { resp =>
       resp
     }
   }
 
   private def vatPOST[I](url: String, body: I, headers: Seq[(String, String)] = Seq.empty)
-                           (implicit wts: Writes[I], rds: HttpReads[HttpResponse], hc: HeaderCarrier, ec: ExecutionContext) =
+                        (implicit wts: Writes[I], rds: HttpReads[HttpResponse], hc: HeaderCarrier, ec: ExecutionContext) =
     http.POST[I, HttpResponse](url, body, headers)(wts = wts, rds = rds, hc = createHeaderCarrier(hc), ec = ec)
 
   private def createHeaderCarrier(headerCarrier: HeaderCarrier): HeaderCarrier = {
     headerCarrier.
-      withExtraHeaders("Environment" -> urlHeaderEnvironment).
-      copy(authorization = Some(Authorization(urlHeaderAuthorization)))
+      withExtraHeaders("Environment" -> config.urlHeaderEnvironment).
+      copy(authorization = Some(Authorization(config.urlHeaderAuthorization)))
   }
 
 }
