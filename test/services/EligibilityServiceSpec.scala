@@ -124,7 +124,7 @@ class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
     )
     val questions2 = Seq(
       Json.obj("questionId" -> "applicantUKNino-optionalData", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "JW778877A"),
-      Json.obj("questionId" -> "turnoverEstimate-value", "question" -> "Some Question 21", "answer" -> "Some Answer 21", "answerValue" -> "oneandtenthousand"),
+      Json.obj("questionId" -> "turnoverEstimate-value", "question" -> "Some Question 21", "answer" -> "Some Answer 21", "answerValue" -> 12345),
       Json.obj("questionId" -> "testQId22", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "val22")
     )
     val section1 = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions1))

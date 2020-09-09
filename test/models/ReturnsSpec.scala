@@ -20,7 +20,6 @@ import java.time.LocalDate
 
 import helpers.BaseSpec
 import models.api.{Returns, StartDate, TurnoverEstimates}
-import models.submission.DESSubmission
 import play.api.libs.json._
 import utils.EligibilityDataJsonUtils
 
@@ -98,7 +97,7 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
       }
       "staggeredStart is missing" in {
         val json = Json.parse(
-        s"""
+          s"""
              |{
              |  "reclaimVatOnMostReturns" : true,
              |  "frequency" : "quarterly",
@@ -113,7 +112,7 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
     "fails" when {
       "reclaimVatOnMostReturns is missing" in {
         val json = Json.parse(
-        s"""
+          s"""
              |{
              |  "frequency" : "quarterly",
              |  "staggerStart" : "jan",
@@ -128,7 +127,7 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
 
       "frequency is missing" in {
         val json = Json.parse(
-        s"""
+          s"""
              |{
              |  "reclaimVatOnMostReturns" : true,
              |  "staggerStart" : "jan",
@@ -143,7 +142,7 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
 
       "start is missing" in {
         val json = Json.parse(
-        s"""
+          s"""
              |{
              |  "reclaimVatOnMostReturns" : true,
              |  "frequency" : "quarterly",
@@ -151,7 +150,7 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
              |}
         """.stripMargin)
         val result = Json.fromJson[Returns](json)
-        result shouldHaveErrors (__  \ "start" -> JsonValidationError("error.path.missing"))
+        result shouldHaveErrors (__ \ "start" -> JsonValidationError("error.path.missing"))
       }
     }
   }
@@ -167,79 +166,22 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
     }
   }
   "TurnoverEstimates mongoReads" must {
-    "return model successfully when turnoverEstimate-value exists and turnoverEstimate-optionalData does not exist with enum of oneandtenthousand" in {
-      val json = Json.parse(
-        s""" {
-           |  "sections": [
-           |   {
-           |     "title": "Foo bar",
-           |     "data": [
-           |       {"questionId":"turnoverEstimate-value","question": "VAT start date", "answer": "The date the company is registered with Companies House" , "answerValue": "oneandtenthousand"}
-           |     ]
-           |   },
-           |   { "title": "Director details",
-           |     "data": [
-           |       {"questionId":"fooDirectorDetails2","question": "Former name", "answer": "Dan Swales", "answerValue": true}
-           |     ]
-           |   }
-           | ]
-           | }""".stripMargin)
-      val expected = TurnoverEstimates(vatTaxable = None, turnoverEstimate = Some(10000))
-
-      val result = Json.fromJson[TurnoverEstimates](EligibilityDataJsonUtils.toJsObject(json))(TurnoverEstimates.eligibilityDataJsonReads)
-      result mustBe JsSuccess(expected)
-    }
-    "return model successfully when turnoverEstimate-value exists and turnoverEstimate-optionalData does not exist with enum of zeropounds" in {
-      val json = Json.parse(
-        s""" {
-           |  "sections": [
-           |   {
-           |     "title": "Foo bar",
-           |     "data": [
-           |       {"questionId":"turnoverEstimate-value","question": "VAT start date", "answer": "The date the company is registered with Companies House" , "answerValue": "zeropounds"}
-           |     ]
-           |   }
-           | ]
-           | }""".stripMargin)
-      val expected = TurnoverEstimates(vatTaxable = None, turnoverEstimate = Some(0))
-
-      val result = Json.fromJson[TurnoverEstimates](EligibilityDataJsonUtils.toJsObject(json))(TurnoverEstimates.eligibilityDataJsonReads)
-      result mustBe JsSuccess(expected)
-    }
-    "return model successfully when turnoverEstimate-value exists and turnoverEstimate-optionalData does exist with enum of tenthousand" in {
+    "return model successfully when turnoverEstimate-value exists" in {
       val json = Json.parse(
         s"""{
            |  "sections": [
            |   {
            |     "title": "Foo bar",
            |     "data": [
-           |       {"questionId":"turnoverEstimate-optionalData","question": "VAT start date", "answer": "The date the company is registered with Companies House" , "answerValue": 123456},
-           |       {"questionId":"turnoverEstimate-value","question": "VAT start date", "answer": "The date the company is registered with Companies House" , "answerValue": "tenthousand"}
+           |       {"questionId":"turnoverEstimate-value","question": "VAT start date", "answer": "£123456" , "answerValue": 123456}
            |     ]
            |   }
            | ]
            | }""".stripMargin)
-      val expected = TurnoverEstimates(vatTaxable = None, turnoverEstimate = Some(123456))
+      val expected = TurnoverEstimates(turnoverEstimate = 123456)
 
       val result = Json.fromJson[TurnoverEstimates](EligibilityDataJsonUtils.toJsObject(json))(TurnoverEstimates.eligibilityDataJsonReads)
       result mustBe JsSuccess(expected)
-    }
-    "return a JsError when turnoverEstimate-value exists and turnoverEstimate-optionalData does not exist with enum of tenthousand" in {
-      val json = Json.parse(
-        s""" {
-           |  "sections": [
-           |   {
-           |     "title": "Foo bar",
-           |     "data": [
-           |       {"questionId":"turnoverEstimate-value","question": "VAT start date", "answer": "The date the company is registered with Companies House" , "answerValue": "tenthousand"}
-           |     ]
-           |   }
-           | ]
-           | }""".stripMargin)
-      val expected = TurnoverEstimates(vatTaxable = None, turnoverEstimate = Some(123456))
-
-      val result = Json.fromJson[TurnoverEstimates](EligibilityDataJsonUtils.toJsObject(json))(TurnoverEstimates.eligibilityDataJsonReads)
-      result.isError mustBe true
     }
 
     "return empty model successfully" in {

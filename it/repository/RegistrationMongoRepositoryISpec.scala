@@ -120,7 +120,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
      """.stripMargin).as[JsObject]
 
   val vatTaxable = 1000L
-  val turnoverEstimates: TurnoverEstimates = TurnoverEstimates(Some(vatTaxable))
+  val turnoverEstimates: TurnoverEstimates = TurnoverEstimates(vatTaxable)
 
   def vatSchemeWithTurnoverEstimates(regId: String = registrationId): JsObject = vatSchemeJson(regId) ++ Json.parse(
     """
