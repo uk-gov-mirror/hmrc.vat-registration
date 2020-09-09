@@ -84,7 +84,7 @@ class EligibilityDataJsonUtilsSpec extends JsonFormatValidation {
           |     "title": "Director details",
           |     "data": [
           |       {"questionId": "applicantUKNino-optionalData", "question": "Some Question 11", "answer": "Some Answer 11", "answerValue": "SR123456C"},
-          |       {"questionId": "turnoverEstimate-value", "question": "Some Question 11", "answer": "Some Answer 11", "answerValue": "oneandtenthousand"},
+          |       {"questionId": "turnoverEstimate-value", "question": "Some Question 11", "answer": "Some Answer 11", "answerValue": 1234},
           |       {"questionId": "completionCapacity", "question": "Some Question 11", "answer": "Some Answer 11", "answerValue": $officer},
           |       {"questionId":"fooDirectorDetails3","question": "Date of birth", "answer": "1 January 2000", "answerValue": true}
           |     ]
@@ -98,7 +98,7 @@ class EligibilityDataJsonUtilsSpec extends JsonFormatValidation {
         "thresholdPreviousThirtyDays" -> thresholdPreviousThirtyDays,
         "thresholdInTwelveMonths" -> thresholdInTwelveMonths,
         "applicantUKNino-optionalData" -> "SR123456C",
-        "turnoverEstimate-value" -> "oneandtenthousand",
+        "turnoverEstimate-value" -> 1234,
         "completionCapacity" -> officer,
         "fooDirectorDetails3" -> true
       )

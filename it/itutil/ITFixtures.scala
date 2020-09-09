@@ -73,7 +73,7 @@ trait ITFixtures {
 
   val eligibility             = Eligibility(1, "result")
 
-  val vatTurnoverEstimates       = TurnoverEstimates(Some(12345678L))
+  val vatTurnoverEstimates       = TurnoverEstimates(12345678L)
 
   val vatBankAccount             = BankAccount(true, None)
 

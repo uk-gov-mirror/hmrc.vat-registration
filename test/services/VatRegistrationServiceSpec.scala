@@ -264,47 +264,14 @@ class VatRegistrationServiceSpec extends VatRegSpec with VatRegistrationFixture 
       await(service.getBlockFromEligibilityData[Threshold]("regId")) mustBe Some(expected)
     }
 
-    "return correct TurnoverEstimates model when turnover estimate is provided with zeropounds" in new Setup {
-      val questions = Seq(
-        Json.obj("questionId" -> "turnoverEstimate-value", "question" -> "Some Question 11", "answer" -> "Some Answer 11", "answerValue" -> "zeropounds")
-      )
-      val section: JsObject = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions))
-      val jsonTurnoverEstimatesDataFormat: JsObject = Json.obj("sections" -> section)
-
-      val expected: TurnoverEstimates = TurnoverEstimates(turnoverEstimate = Some(0))
-
-      when(mockRegistrationMongoRepository.getEligibilityData(any())(any())).thenReturn(Future.successful(Some(jsonTurnoverEstimatesDataFormat)))
-
-      implicit val read: Reads[TurnoverEstimates] = TurnoverEstimates.eligibilityDataJsonReads
-
-      await(service.getBlockFromEligibilityData[TurnoverEstimates]("regId")) mustBe Some(expected)
-    }
-
-    "return correct TurnoverEstimates model when turnover estimate is provided with oneandtenthousand" in new Setup {
-      val questions = Seq(
-        Json.obj("questionId" -> "turnoverEstimate-value", "question" -> "Some Question 11", "answer" -> "Some Answer 11", "answerValue" -> "oneandtenthousand")
-      )
-      val section: JsObject = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions))
-      val jsonTurnoverEstimatesDataFormat: JsObject = Json.obj("sections" -> section)
-
-      val expected: TurnoverEstimates = TurnoverEstimates(turnoverEstimate = Some(10000))
-
-      when(mockRegistrationMongoRepository.getEligibilityData(any())(any())).thenReturn(Future.successful(Some(jsonTurnoverEstimatesDataFormat)))
-
-      implicit val read: Reads[TurnoverEstimates] = TurnoverEstimates.eligibilityDataJsonReads
-
-      await(service.getBlockFromEligibilityData[TurnoverEstimates]("regId")) mustBe Some(expected)
-    }
-
     "return correct TurnoverEstimates model when turnover estimate is provided with a number" in new Setup {
       val questions = Seq(
-        Json.obj("questionId" -> "turnoverEstimate-value", "question" -> "Some Question 11", "answer" -> "Some Answer 11", "answerValue" -> "tenthousand"),
-        Json.obj("questionId" -> "turnoverEstimate-optionalData", "question" -> "Some Question 11", "answer" -> "Some Answer 11", "answerValue" -> 10001)
+        Json.obj("questionId" -> "turnoverEstimate-value", "question" -> "Some Question 11", "answer" -> "£10,001", "answerValue" -> 10001)
       )
       val section: JsObject = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions))
       val jsonTurnoverEstimatesDataFormat: JsObject = Json.obj("sections" -> section)
 
-      val expected: TurnoverEstimates = TurnoverEstimates(turnoverEstimate = Some(10001))
+      val expected: TurnoverEstimates = TurnoverEstimates(turnoverEstimate = 10001)
 
       when(mockRegistrationMongoRepository.getEligibilityData(any())(any())).thenReturn(Future.successful(Some(jsonTurnoverEstimatesDataFormat)))
 

@@ -374,7 +374,7 @@ class VatRegistrationControllerSpec extends VatRegSpec with VatRegistrationFixtu
     "return a 200 and TurnoverEstimates json when it is returned from the repository" in new Setup {
       AuthorisationMocks.mockAuthorised(regId.value, internalid)
       when(mockVatRegistrationService.getBlockFromEligibilityData[TurnoverEstimates](any())(any(), any()))
-        .thenReturn(Future.successful(Some(TurnoverEstimates(None, Some(2024)))))
+        .thenReturn(Future.successful(Some(TurnoverEstimates(2024))))
 
       val result: Future[Result] = controller.getTurnoverEstimates(regId.value)(FakeRequest())
       val expectedJson: JsValue = Json.obj("turnoverEstimate" -> 2024)
