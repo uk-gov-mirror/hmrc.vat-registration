@@ -131,6 +131,35 @@ class ThresholdSpec extends JsonFormatValidation {
       }
     }
 
+    "the threshold model has a value for next thirty days" in {
+      val thresholdPreviousThirtyDays = "2017-01-02"
+      val thresholdInTwelveMonths = "2017-01-04"
+      val thresholdNextThirtyDays = "2017-01-10"
+      val json = Json.parse(
+        s"""{
+           |  "thresholdPreviousThirtyDays-optionalData": "$thresholdPreviousThirtyDays",
+           |  "thresholdInTwelveMonths-optionalData": "$thresholdInTwelveMonths",
+           |  "thresholdNextThirtyDays-optionalData": "$thresholdNextThirtyDays",
+           |  "fooDirectorDetails2": true,
+           |  "fooDirectorDetails3": true
+           |}
+        """.stripMargin)
+
+      val expectedResult = Threshold(
+        mandatoryRegistration = true,
+        voluntaryReason = None,
+        overThresholdDateThirtyDays = None,
+        pastOverThresholdDateThirtyDays = None,
+        overThresholdOccuredTwelveMonth = None,
+        thresholdPreviousThirtyDays = Some(LocalDate.parse(thresholdPreviousThirtyDays)),
+        thresholdInTwelveMonths = Some(LocalDate.parse(thresholdInTwelveMonths)),
+        thresholdNextThirtyDays = Some(LocalDate.parse(thresholdNextThirtyDays))
+      )
+
+      val result = Json.fromJson[Threshold](json)(Threshold.eligibilityDataJsonReads)
+      result mustBe JsSuccess(expectedResult)
+    }
+
     "eligibilityDataJsonReads fails from incorrect json" in {
       val thresholdInTwelveMonths = "2017-01-04"
       val json = Json.parse(

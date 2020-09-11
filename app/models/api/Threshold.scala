@@ -28,7 +28,8 @@ case class Threshold(mandatoryRegistration: Boolean,
                      @deprecated("Use thresholdPreviousThirtyDays instead", "SCRS-11579") pastOverThresholdDateThirtyDays: Option[LocalDate] = None,
                      @deprecated("Use thresholdInTwelveMonths instead", "SCRS-11579") overThresholdOccuredTwelveMonth: Option[LocalDate] = None,
                      thresholdPreviousThirtyDays: Option[LocalDate] = None,
-                     thresholdInTwelveMonths: Option[LocalDate] = None)
+                     thresholdInTwelveMonths: Option[LocalDate] = None,
+                     thresholdNextThirtyDays: Option[LocalDate] = None)
 
 object Threshold {
   implicit val format: OFormat[Threshold] = Json.format
@@ -38,6 +39,7 @@ object Threshold {
       val voluntaryRegistration = (json \ "voluntaryRegistration").validateOpt[Boolean]
       val thresholdThirtyDays = (json \ "thresholdPreviousThirtyDays-optionalData").validateOpt[LocalDate]
       val thresholdTwelveMonths = (json \ "thresholdInTwelveMonths-optionalData").validateOpt[LocalDate]
+      val thresholdNextThirtyDays = (json \ "thresholdNextThirtyDays-optionalData").validateOpt[LocalDate]
 
       val seqErrors = voluntaryRegistration.fold(identity, _ => Seq.empty) ++
         thresholdThirtyDays.fold(identity, _ => Seq.empty) ++
@@ -49,7 +51,8 @@ object Threshold {
         JsSuccess(Threshold(
           mandatoryRegistration = !voluntaryRegistration.get.contains(true) && List(thresholdThirtyDays.get, thresholdTwelveMonths.get).flatten.nonEmpty,
           thresholdPreviousThirtyDays = thresholdThirtyDays.get,
-          thresholdInTwelveMonths = thresholdTwelveMonths.get
+          thresholdInTwelveMonths = thresholdTwelveMonths.get,
+          thresholdNextThirtyDays = thresholdNextThirtyDays.get
         ))
       }
     }

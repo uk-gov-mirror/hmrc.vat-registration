@@ -43,7 +43,7 @@ object CompileDependencies {
 object UnitTestDependencies extends CommonTestDependencies {
   override val scope: Configuration = Test
 
-  val mockitoVersion = "2.13.0"
+  val mockitoVersion = "3.3.3"
 
   override val testDependencies: Seq[ModuleID] = Seq(
     "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
