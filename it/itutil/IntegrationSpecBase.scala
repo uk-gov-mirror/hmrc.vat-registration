@@ -15,12 +15,15 @@
  */
 package itutil
 
+import java.time.LocalDate
+
 import auth.CryptoSCRS
 import models.api.VatScheme
 import org.scalatest._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import org.scalatestplus.play.PlaySpec
+import play.api.inject.bind
 import play.api.{Application, Configuration}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsString, Reads, Writes}
@@ -29,7 +32,9 @@ import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.WriteResult
+import repositories.trafficmanagement.{DailyQuotaRepository, RegistrationInformationRepository}
 import repositories.{RegistrationMongoRepository, SequenceMongoRepository}
+import utils.TimeMachine
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -70,21 +75,30 @@ trait IntegrationSpecBase extends PlaySpec
     "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
   )
 
+  val testDate = "2020-01-01"
+
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
     .configure(config)
     .configure("application.router" -> "testOnlyDoNotUseInAppConf.Routes")
+    .overrides(bind[TimeMachine].to[FakeTimeMachine])
     .build()
 
   trait SetupHelper {
-
     lazy val reactiveMongoComponent: ReactiveMongoComponent = app.injector.instanceOf[ReactiveMongoComponent]
+    val fakeTimeMachine = new FakeTimeMachine()
     val repo: RegistrationMongoRepository = new RegistrationMongoRepository(reactiveMongoComponent, cryptoForTest)
     val sequenceRepository: SequenceMongoRepository = new SequenceMongoRepository(reactiveMongoComponent)
+    val dailyQuotaRepo: DailyQuotaRepository = new DailyQuotaRepository(reactiveMongoComponent, fakeTimeMachine)
+    val regInfoRepo: RegistrationInformationRepository = new RegistrationInformationRepository(reactiveMongoComponent, fakeTimeMachine)
 
     await(repo.drop)
     await(repo.ensureIndexes)
     await(sequenceRepository.drop)
     await(sequenceRepository.ensureIndexes)
+    await(dailyQuotaRepo.drop)
+    await(dailyQuotaRepo.ensureIndexes)
+    await(regInfoRepo.drop)
+    await(regInfoRepo.ensureIndexes)
 
     def insertIntoDb(vatScheme: VatScheme): WriteResult = {
       val count = await(repo.count)

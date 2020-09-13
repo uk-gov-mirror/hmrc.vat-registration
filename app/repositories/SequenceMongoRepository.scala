@@ -20,15 +20,13 @@ import javax.inject.{Inject, Singleton}
 import models.api.Sequence
 import play.api.libs.json.JsValue
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.DB
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
+import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import reactivemongo.play.json.ImplicitBSONHandlers._
-
 import scala.concurrent.Future
 import scala.util.control.NoStackTrace
 

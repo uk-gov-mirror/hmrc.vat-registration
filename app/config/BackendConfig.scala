@@ -45,4 +45,6 @@ class BackendConfig @Inject()(val servicesConfig: ServicesConfig,
       throw new Exception("could not find config value for des-service.authorization-token"))
   }"
 
+  lazy val dailyQuota: Int = servicesConfig.getConfInt("constants.daily-quota", 10)
+
 }

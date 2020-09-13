@@ -3,6 +3,11 @@
 POST         /new                                   controllers.VatRegistrationController.newVatRegistration
 POST         /incorporation-data                    controllers.ProcessIncorporationsController.processIncorp
 
+GET          /traffic-management/daily-total        controllers.DailyQuotaController.canAllocate
+PATCH        /traffic-management/daily-total        controllers.DailyQuotaController.updateDailyTotal
+GET          /traffic-management/reg-info           controllers.RegistrationInformationController.getRegistrationInformation
+PATCH        /traffic-management/reg-info           controllers.RegistrationInformationController.upsertRegistrationInformation
+
 GET          /scheme                                controllers.VatRegistrationController.retrieveVatSchemeByInternalId()
 GET          /:regId/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regId: RegistrationId)
 
