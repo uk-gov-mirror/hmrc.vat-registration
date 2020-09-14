@@ -27,9 +27,6 @@ PUT          /:regID/submit-registration            controllers.VatRegistrationC
 
 GET          /:regId/status                         controllers.VatRegistrationController.getDocumentStatus(regId: RegistrationId)
 
-GET         /:regId/eligibility                     controllers.EligibilityController.getEligibility(regId: String)
-PATCH       /:regId/eligibility                     controllers.EligibilityController.updateEligibility(regId: String)
-
 GET          /:regId/bank-account                   controllers.VatRegistrationController.fetchBankAccountDetails(regId)
 PATCH        /:regId/bank-account                   controllers.VatRegistrationController.updateBankAccountDetails(regId)
 

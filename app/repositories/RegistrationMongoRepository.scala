@@ -16,8 +16,6 @@
 
 package repositories
 
-import java.time.LocalDate
-
 import auth.{AuthorisationResource, CryptoSCRS}
 import cats.data.OptionT
 import cats.instances.future._
@@ -30,7 +28,6 @@ import models.api._
 import play.api.Logger
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.DB
 import reactivemongo.api.commands.WriteResult.Message
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONDocument, BSONObjectID, BSONString}
@@ -130,7 +127,8 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
   }
 
   def deleteVatScheme(regId: String)(implicit hc: HeaderCarrier): Future[Boolean] = {
-    collection.remove(regIdSelector(regId)) map { wr => wr
+    collection.remove(regIdSelector(regId)) map { wr =>
+      wr
       if (!wr.ok) logger.error(s"[deleteVatScheme] - Error deleting vat reg doc for regId $regId - Error: ${Message.unapply(wr)}")
       wr.ok
     }
@@ -247,15 +245,6 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     }
   }
 
-  @deprecated("Use getEligibilityData instead", "SCRS-11579")
-  def getEligibility(regId: String)(implicit ec: ExecutionContext): Future[Option[Eligibility]] =
-    fetchBlock[Eligibility](regId, "eligibility")
-
-  @deprecated("Use updateEligibilityData instead", "SCRS-11579")
-  def updateEligibility(regId: String, eligibility: Eligibility)(implicit ec: ExecutionContext): Future[Eligibility] = {
-    updateBlock(regId, eligibility)
-  }
-
   @deprecated("No longer used, data provided by EligibilityData instead", "SCRS-11579")
   def getThreshold(regId: String)(implicit ec: ExecutionContext): Future[Option[Threshold]] =
     fetchBlock[Threshold](regId, "threshold")
@@ -264,7 +253,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
   def updateThreshold(regId: String, threshold: Threshold)(implicit ec: ExecutionContext): Future[Threshold] =
     updateBlock(regId, threshold)
 
- def getCombinedLodgingOfficer(regId: String)(implicit ec: ExecutionContext): Future[Option[LodgingOfficer]] = {
+  def getCombinedLodgingOfficer(regId: String)(implicit ec: ExecutionContext): Future[Option[LodgingOfficer]] = {
     val projection = Json.obj("eligibilityData.sections.data.questionId" -> 1,
       "eligibilityData.sections.data.answerValue" -> 1,
       "lodgingOfficer" -> 1,
