@@ -28,7 +28,6 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito.when
-import org.omg.PortableInterceptor.SUCCESSFUL
 import play.api.http.Status
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.Result
