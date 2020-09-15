@@ -18,6 +18,7 @@ package itutil
 import java.time.LocalDate
 
 import auth.CryptoSCRS
+import config.BackendConfig
 import models.api.VatScheme
 import org.scalatest._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
@@ -32,7 +33,7 @@ import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.WriteResult
-import repositories.trafficmanagement.{DailyQuotaRepository, RegistrationInformationRepository}
+import repositories.trafficmanagement.{DailyQuotaRepository, TrafficManagementRepository}
 import repositories.{RegistrationMongoRepository, SequenceMongoRepository}
 import utils.TimeMachine
 
@@ -72,7 +73,8 @@ trait IntegrationSpecBase extends PlaySpec
     "microservice.services.ThresholdsJsonLocation" -> "conf/thresholds.json",
     "microservice.services.vat-registration.host" -> mockHost,
     "microservice.services.vat-registration.port" -> mockPort,
-    "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV=="
+    "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV==",
+    "constants.daily-quota" -> "10"
   )
 
   val testDate = "2020-01-01"
@@ -88,8 +90,8 @@ trait IntegrationSpecBase extends PlaySpec
     val fakeTimeMachine = new FakeTimeMachine()
     val repo: RegistrationMongoRepository = new RegistrationMongoRepository(reactiveMongoComponent, cryptoForTest)
     val sequenceRepository: SequenceMongoRepository = new SequenceMongoRepository(reactiveMongoComponent)
-    val dailyQuotaRepo: DailyQuotaRepository = new DailyQuotaRepository(reactiveMongoComponent, fakeTimeMachine)
-    val regInfoRepo: RegistrationInformationRepository = new RegistrationInformationRepository(reactiveMongoComponent, fakeTimeMachine)
+    val dailyQuotaRepo: DailyQuotaRepository = new DailyQuotaRepository(reactiveMongoComponent, fakeTimeMachine, app.injector.instanceOf[BackendConfig])
+    val trafficManagementRepo: TrafficManagementRepository = new TrafficManagementRepository(reactiveMongoComponent)
 
     await(repo.drop)
     await(repo.ensureIndexes)
@@ -97,8 +99,8 @@ trait IntegrationSpecBase extends PlaySpec
     await(sequenceRepository.ensureIndexes)
     await(dailyQuotaRepo.drop)
     await(dailyQuotaRepo.ensureIndexes)
-    await(regInfoRepo.drop)
-    await(regInfoRepo.ensureIndexes)
+    await(trafficManagementRepo.drop)
+    await(trafficManagementRepo.ensureIndexes)
 
     def insertIntoDb(vatScheme: VatScheme): WriteResult = {
       val count = await(repo.count)

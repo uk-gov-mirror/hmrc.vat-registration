@@ -21,22 +21,19 @@ import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.Suite
 import org.scalatestplus.mockito.MockitoSugar
-import repositories.trafficmanagement.DailyQuotaRepository
+import services.{NewRegistrationService, RegistrationResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockDailyQuotaRepository extends MockitoSugar {
+trait MockNewRegistrationService extends MockitoSugar {
   self: Suite =>
 
-  val mockDailyQuotaRepository = mock[DailyQuotaRepository]
+  val mockNewRegistrationService = mock[NewRegistrationService]
 
-  def mockQuotaReached(response: Boolean): OngoingStubbing[Future[Boolean]] =
-    when(mockDailyQuotaRepository.quotaReached(ArgumentMatchers.any[HeaderCarrier]))
-      .thenReturn(Future.successful(response))
-
-  def mockIncrementTotal(response: Int): OngoingStubbing[Future[Int]] =
-    when(mockDailyQuotaRepository.incrementTotal(ArgumentMatchers.any[HeaderCarrier]))
-      .thenReturn(Future.successful(response))
+  def mockNewRegistration(internalId: String)
+                         (response: Future[RegistrationResponse]): OngoingStubbing[Future[RegistrationResponse]] =
+    when(mockNewRegistrationService.newRegistration(ArgumentMatchers.eq(internalId))(ArgumentMatchers.any[HeaderCarrier]))
+    .thenReturn(response)
 
 }

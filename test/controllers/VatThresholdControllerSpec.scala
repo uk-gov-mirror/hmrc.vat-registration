@@ -16,27 +16,16 @@
 
 package controllers
 
-import java.time.LocalDate
-
-import common.RegistrationId
-import common.exceptions.MissingRegDocument
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models.VatThreshold
-import models.api._
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import org.mockito.ArgumentMatchers.{any, anyString}
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
-import play.api.http.Status
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import repositories.RegistrationMongoRepository
-import services.{SubmissionService, VatRegistrationService}
-import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.http.HeaderCarrier
-import services._
 
 import scala.concurrent.Future
 

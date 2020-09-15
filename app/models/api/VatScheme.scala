@@ -17,12 +17,12 @@
 package models.api
 
 import auth.CryptoSCRS
-import common.{RegistrationId, TransactionId}
+import common.TransactionId
 import enums.VatRegStatus
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class VatScheme(id: RegistrationId,
+case class VatScheme(id: String,
                      internalId: String,
                      transactionId: Option[TransactionId] = None,
                      tradingDetails: Option[TradingDetails] = None,
@@ -41,29 +41,29 @@ case class VatScheme(id: RegistrationId,
 
 object VatScheme {
 
-  val apiWrites: OWrites[VatScheme] = (
-    (__ \ "registrationId").write[RegistrationId] and
-      (__ \ "internalId").write[String] and
-      (__ \ "transactionId").writeNullable[TransactionId] and
-      (__ \ "tradingDetails").writeNullable[TradingDetails] and
-      (__ \ "returns").writeNullable[Returns] and
-      (__ \ "sicAndCompliance").writeNullable[SicAndCompliance] and
-      (__ \ "businessContact").writeNullable[BusinessContact] and
-      (__ \ "turnoverEstimates").writeNullable[TurnoverEstimates] and
-      (__ \ "bankAccount").writeNullable[BankAccount] and
-      (__ \ "threshold").writeNullable[Threshold] and
-      (__ \ "acknowledgementReference").writeNullable[String] and
-      (__ \ "flatRateScheme").writeNullable[FlatRateScheme] and
-      (__ \ "status").write[VatRegStatus.Value] and
-      (__ \ "eligibilityData").writeNullable[JsObject]
-    ) (unlift(VatScheme.unapply))
+  val apiWrites : OWrites[VatScheme] = (
+    (__ \ "registrationId").write[String] and
+    (__ \ "internalId").write[String] and
+    (__ \ "transactionId").writeNullable[TransactionId] and
+    (__ \ "tradingDetails").writeNullable[TradingDetails] and
+    (__ \ "returns").writeNullable[Returns] and
+    (__ \ "sicAndCompliance").writeNullable[SicAndCompliance] and
+    (__ \ "businessContact").writeNullable[BusinessContact] and
+    (__ \ "turnoverEstimates").writeNullable[TurnoverEstimates] and
+    (__ \ "bankAccount").writeNullable[BankAccount] and
+    (__ \ "threshold").writeNullable[Threshold] and
+    (__ \ "acknowledgementReference").writeNullable[String] and
+    (__ \ "flatRateScheme").writeNullable[FlatRateScheme] and
+    (__ \ "status").write[VatRegStatus.Value] and
+    (__ \ "eligibilityData").writeNullable[JsObject]
+  )(unlift(VatScheme.unapply))
 
   def mongoFormat(crypto: CryptoSCRS): OFormat[VatScheme] = (
-    (__ \ "registrationId").format[RegistrationId] and
+      (__ \ "registrationId").format[String] and
       (__ \ "internalId").format[String] and
       (__ \ "transactionId").formatNullable[TransactionId] and
       (__ \ "tradingDetails").formatNullable[TradingDetails] and
-      //      (__ \ "lodgingOfficer").formatNullable[LodgingOfficer] and
+//      (__ \ "lodgingOfficer").formatNullable[LodgingOfficer] and
       (__ \ "returns").formatNullable[Returns] and
       (__ \ "sicAndCompliance").formatNullable[SicAndCompliance] and
       (__ \ "businessContact").formatNullable[BusinessContact] and
@@ -74,5 +74,5 @@ object VatScheme {
       (__ \ "flatRateScheme").formatNullable[FlatRateScheme] and
       (__ \ "status").format[VatRegStatus.Value] and
       (__ \ "eligibilityData").formatNullable[JsObject]
-    ) (VatScheme.apply, unlift(VatScheme.unapply))
+    )(VatScheme.apply, unlift(VatScheme.unapply))
 }

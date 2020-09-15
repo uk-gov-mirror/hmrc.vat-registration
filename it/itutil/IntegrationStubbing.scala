@@ -19,7 +19,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor
 import models.api.{DailyQuota, RegistrationInformation, VatScheme}
 import play.api.test.Helpers._
 import reactivemongo.api.commands.WriteResult
-import repositories.trafficmanagement.RegistrationInformationRepository
+import repositories.trafficmanagement.TrafficManagementRepository
 import uk.gov.hmrc.auth.core.AuthenticateHeaderParser
 
 import scala.concurrent.Future

@@ -19,7 +19,8 @@ package repositories.trafficmanagement
 import java.time.LocalDate
 
 import auth.AuthorisationResource
-import javax.inject.Inject
+import config.BackendConfig
+import javax.inject.{Inject, Singleton}
 import models.api.DailyQuota
 import play.api.libs.json.{JsString, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
@@ -28,12 +29,16 @@ import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.TimeMachine
 
 import scala.concurrent.{ExecutionContext, Future}
 
-
-class DailyQuotaRepository @Inject()(mongo: ReactiveMongoComponent, timeMachine: TimeMachine)(implicit ec: ExecutionContext)
+@Singleton
+class DailyQuotaRepository @Inject()(mongo: ReactiveMongoComponent,
+                                     timeMachine: TimeMachine,
+                                     config: BackendConfig)
+                                    (implicit ec: ExecutionContext)
   extends ReactiveRepository[DailyQuota, BSONObjectID](
     collectionName = "daily-quota",
     mongo = mongo.mongoConnector.db,
@@ -42,7 +47,7 @@ class DailyQuotaRepository @Inject()(mongo: ReactiveMongoComponent, timeMachine:
 
   override def indexes: Seq[Index] = Seq(
     Index(
-      name = Some("quoateDate"),
+      name = Some("quotaDate"),
       key = Seq("date" -> IndexType.Ascending),
       unique = true
     )
@@ -50,10 +55,15 @@ class DailyQuotaRepository @Inject()(mongo: ReactiveMongoComponent, timeMachine:
 
   private def today: LocalDate = timeMachine.today
 
-  def getCurrentTotal(implicit hc: HeaderCarrier): Future[Int] = find("date" -> JsString(today.toString))
-    .map(_.headOption.getOrElse(DailyQuota(today)).currentTotal)
+  def quotaReached(implicit hc: HeaderCarrier): Future[Boolean] =
+    find("date" -> JsString(today.toString))
+      .map(_.headOption.getOrElse {
+        incrementTotal
+        DailyQuota(today)
+      })
+      .map(_.currentTotal >= config.dailyQuota)
 
-  def updateCurrentTotal(implicit hc: HeaderCarrier): Future[Int] = {
+  def incrementTotal(implicit hc: HeaderCarrier): Future[Int] = {
     val selector = Json.obj("date" -> today.toString)
     val modifier = Json.obj("$inc" -> Json.obj("currentTotal" -> 1))
 

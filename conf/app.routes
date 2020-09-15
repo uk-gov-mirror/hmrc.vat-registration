@@ -3,13 +3,11 @@
 POST         /new                                   controllers.VatRegistrationController.newVatRegistration
 POST         /incorporation-data                    controllers.ProcessIncorporationsController.processIncorp
 
-GET          /traffic-management/daily-total        controllers.DailyQuotaController.canAllocate
-PATCH        /traffic-management/daily-total        controllers.DailyQuotaController.updateDailyTotal
-GET          /traffic-management/reg-info           controllers.RegistrationInformationController.getRegistrationInformation
-PATCH        /traffic-management/reg-info           controllers.RegistrationInformationController.upsertRegistrationInformation
+GET          /traffic-management/reg-info           controllers.TrafficManagementController.getRegistrationInformation
+PATCH        /traffic-management/reg-info           controllers.TrafficManagementController.upsertRegistrationInformation
 
 GET          /scheme                                controllers.VatRegistrationController.retrieveVatSchemeByInternalId()
-GET          /:regId/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regId: RegistrationId)
+GET          /:regId/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regId: String)
 
 GET          /:regId/trading-details                controllers.TradingDetailsController.fetchTradingDetails(regId)
 PATCH        /:regId/trading-details                controllers.TradingDetailsController.updateTradingDetails(regId)
@@ -21,16 +19,16 @@ DELETE       /:regId/flat-rate-scheme               controllers.FlatRateSchemeCo
 GET          /:regId/returns                        controllers.VatRegistrationController.fetchReturns(regId)
 PATCH        /:regId/returns                        controllers.VatRegistrationController.updateReturns(regId)
 
-GET          /:regId/acknowledgement-reference      controllers.VatRegistrationController.getAcknowledgementReference(regId: RegistrationId)
+GET          /:regId/acknowledgement-reference      controllers.VatRegistrationController.getAcknowledgementReference(regId: String)
 
 DELETE       /:regId/delete-scheme                  controllers.VatRegistrationController.deleteVatScheme(regId: String)
 PATCH        /:transId/clear-scheme                 controllers.VatRegistrationController.clearDownDocument(transId: String)
 
 PATCH        /:regId/transaction-id                 controllers.VatRegistrationController.saveTransId(regId: String)
 
-PUT          /:regID/submit-registration            controllers.VatRegistrationController.submitVATRegistration(regID : RegistrationId)
+PUT          /:regID/submit-registration            controllers.VatRegistrationController.submitVATRegistration(regID : String)
 
-GET          /:regId/status                         controllers.VatRegistrationController.getDocumentStatus(regId: RegistrationId)
+GET          /:regId/status                         controllers.VatRegistrationController.getDocumentStatus(regId: String)
 
 GET          /:regId/bank-account                   controllers.VatRegistrationController.fetchBankAccountDetails(regId)
 PATCH        /:regId/bank-account                   controllers.VatRegistrationController.updateBankAccountDetails(regId)

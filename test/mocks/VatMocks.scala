@@ -18,7 +18,6 @@ package mocks
 
 import auth.AuthorisationResource
 import cats.data.EitherT
-import common.RegistrationId
 import common.exceptions._
 import connectors._
 import enums.VatRegStatus
@@ -116,15 +115,15 @@ trait VatMocks extends HttpClientMock {
       EitherT[Future, LeftState, B](Future.successful(Left(a)))
     }
 
-    def mockRetrieveVatSchemeThrowsException(id: RegistrationId): Unit = {
+    def mockRetrieveVatSchemeThrowsException(id: String): Unit = {
       val exception = new Exception("Exception")
-      val idMatcher: RegistrationId = RegistrationId(anyString())
+      val idMatcher: String = anyString()
       when(mockVatRegistrationService.retrieveVatScheme(idMatcher)(any()))
         .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
     }
 
-    def mockRetrieveVatScheme(id: RegistrationId, vatScheme: VatScheme): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(anyString())
+    def mockRetrieveVatScheme(id: String, vatScheme: VatScheme): Unit = {
+      val idMatcher: String = anyString()
       when(mockVatRegistrationService.retrieveVatScheme(idMatcher)(any()))
         .thenReturn(serviceResult(vatScheme))
     }
@@ -145,42 +144,42 @@ trait VatMocks extends HttpClientMock {
     }
 
 
-    def mockSuccessfulCreateNewRegistration(registrationId: RegistrationId, internalId: String): Unit = {
+    def mockSuccessfulCreateNewRegistration(registrationId: String, internalId: String): Unit = {
       when(mockVatRegistrationService.createNewRegistration(Matchers.eq(internalId))(any[HeaderCarrier]()))
         .thenReturn(serviceResult(VatScheme(registrationId, internalId, None, None, None, status = VatRegStatus.draft)))
     }
 
-    def mockFailedCreateNewRegistration(registrationId: RegistrationId, internalId: String): Unit = {
+    def mockFailedCreateNewRegistration(registrationId: String, internalId: String): Unit = {
       when(mockVatRegistrationService.createNewRegistration(Matchers.eq(internalId))(any[HeaderCarrier]()))
         .thenReturn(serviceError[VatScheme](GenericError(new RuntimeException("something went wrong"))))
     }
 
-    def mockFailedCreateNewRegistrationWithDbError(registrationId: RegistrationId, internalId: String): Unit = {
+    def mockFailedCreateNewRegistrationWithDbError(registrationId: String, internalId: String): Unit = {
       val exception = new Exception("Exception")
       when(mockVatRegistrationService.createNewRegistration(Matchers.eq(internalId))(any[HeaderCarrier]()))
         .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
     }
 
     def mockGetAcknowledgementReference(ackRef: String): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(anyString())
+      val idMatcher: String = anyString()
       when(mockSubmissionService.getAcknowledgementReference(idMatcher)(any()))
         .thenReturn(serviceResult(ackRef))
     }
 
     def mockGetAcknowledgementReferenceServiceUnavailable(exception: Exception): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(anyString())
+      val idMatcher: String = anyString()
       when(mockSubmissionService.getAcknowledgementReference(idMatcher)(any()))
         .thenReturn(serviceError[String](GenericDatabaseError(exception, Some("regId"))))
     }
 
     def mockGetDocumentStatus(json: JsValue): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(anyString())
+      val idMatcher: String = anyString()
       when(mockVatRegistrationService.getStatus(idMatcher)(any()))
         .thenReturn(Future.successful(json))
     }
 
     def mockGetAcknowledgementReferenceExistsError(): Unit = {
-      val idMatcher: RegistrationId = RegistrationId(anyString())
+      val idMatcher: String = anyString()
       when(mockSubmissionService.getAcknowledgementReference(idMatcher)(any()))
         .thenReturn(serviceError[String](AcknowledgementReferenceExists("regId")))
     }

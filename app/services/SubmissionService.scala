@@ -19,8 +19,8 @@ package services
 import java.time.LocalDate
 
 import cats.instances.FutureInstances
+import common.TransactionId
 import common.exceptions._
-import common.{RegistrationId, TransactionId}
 import connectors.DESConnector
 import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
@@ -39,7 +39,7 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
                                   val registrationRepository: RegistrationMongoRepository,
                                   val desConnector: DESConnector) extends FutureInstances {
 
-  def submitVatRegistration(regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String] = {
+  def submitVatRegistration(regId: String)(implicit hc: HeaderCarrier): Future[String] = {
     for {
       status <- getValidDocumentStatus(regId)
       ackRefs <- ensureAcknowledgementReference(regId, status)
@@ -52,7 +52,7 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
         Some(Address(line1 = "line1", line2 = "line2", postcode = Some("A11 11A"), country = Some("GB"))),
         Some(true)
       )
-      _ <- desConnector.submitToDES(fakeSubmission, regId.toString)
+      _ <- desConnector.submitToDES(fakeSubmission, regId)
       _ <- updateSubmissionStatus(regId)
     } yield {
       ackRefs
@@ -70,20 +70,20 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     } yield true
   }
 
-  private[services] def getRegistrationIDByTxId(transactionId: String)(implicit hc: HeaderCarrier): Future[RegistrationId] = {
+  private[services] def getRegistrationIDByTxId(transactionId: String)(implicit hc: HeaderCarrier): Future[String] = {
     registrationRepository.fetchRegByTxId(transactionId) map {
       case Some(vs) => vs.id
       case None => throw NoVatSchemeWithTransId(TransactionId(transactionId))
     }
   }
 
-  def getAcknowledgementReference(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[String] =
+  def getAcknowledgementReference(id: String)(implicit hc: HeaderCarrier): ServiceResult[String] =
     vatRegistrationService.retrieveAcknowledgementReference(id)
 
   private[services] def generateAcknowledgementReference(implicit hc: HeaderCarrier): Future[String] =
     sequenceMongoRepository.getNext("AcknowledgementID").map(ref => f"BRVT$ref%011d")
 
-  private[services] def ensureAcknowledgementReference(regId: RegistrationId, status: VatRegStatus.Value)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[String] = {
+  private[services] def ensureAcknowledgementReference(regId: String, status: VatRegStatus.Value)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[String] = {
     registrationRepository.retrieveVatScheme(regId) flatMap {
       case Some(vs) => vs.acknowledgementReference.fold(
         for {
@@ -95,14 +95,14 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     }
   }
 
-  private[services] def retrieveVatStartDate(vatScheme: VatScheme, regId: RegistrationId): Option[LocalDate] = {
+  private[services] def retrieveVatStartDate(vatScheme: VatScheme, regId: String): Option[LocalDate] = {
     vatScheme.returns match {
       case Some(returns) => returns.start.date
       case None => throw NoReturns()
     }
   }
 
-  private[services] def buildDesSubmission(regId: RegistrationId, ackRef: String)
+  private[services] def buildDesSubmission(regId: String, ackRef: String)
                                           (implicit hc: HeaderCarrier): Future[DESSubmission] = {
     registrationRepository.retrieveVatScheme(regId) map {
       case Some(vs) =>
@@ -114,7 +114,7 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     }
   }
 
-  def buildTopUpSubmission(regId: RegistrationId, ackRef: String, status: String)
+  def buildTopUpSubmission(regId: String, ackRef: String, status: String)
                           (implicit hc: HeaderCarrier): Future[TopUpSubmission] = {
     registrationRepository.retrieveVatScheme(regId) map {
       case Some(vs) =>
@@ -129,7 +129,7 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
 
   }
 
-  private[services] def getValidDocumentStatus(regID: RegistrationId)(implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
+  private[services] def getValidDocumentStatus(regID: String)(implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
     registrationRepository.retrieveVatScheme(regID) map {
       case Some(registration) => registration.status match {
         case VatRegStatus.draft | VatRegStatus.locked => registration.status
@@ -139,7 +139,7 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     }
   }
 
-  private[services] def getValidDocumentTopupStatus(regID: RegistrationId)(implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
+  private[services] def getValidDocumentTopupStatus(regID: String)(implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
     registrationRepository.retrieveVatScheme(regID) map {
       case Some(registration) => registration.status match {
         case VatRegStatus.held => registration.status
@@ -149,7 +149,7 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     }
   }
 
-  private[services] def updateSubmissionStatus(regId: RegistrationId)
+  private[services] def updateSubmissionStatus(regId: String)
                                               (implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
     registrationRepository.finishRegistrationSubmission(
       regId,
@@ -157,7 +157,7 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     )
   }
 
-  private[services] def updateTopUpSubmissionStatus(regId: RegistrationId, status: String)
+  private[services] def updateTopUpSubmissionStatus(regId: String, status: String)
                                                    (implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
     registrationRepository.finishRegistrationSubmission(
       regId,

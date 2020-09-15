@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-package common
+package utils
 
-import play.api.libs.json._
+import java.time.LocalDate
 
-case class RegistrationId(value: String) extends AnyVal {
-  override def toString: String = value
-}
-
-object RegistrationId {
-  implicit val rs = Reads.of[String].map(RegistrationId.apply)
-
-  implicit val ws = Writes[RegistrationId](id => JsString(id.value))
+class FakeTimeMachine extends TimeMachine {
+  override def today: LocalDate = LocalDate.parse("2020-01-01")
 }

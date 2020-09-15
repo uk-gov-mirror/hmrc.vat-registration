@@ -16,9 +16,11 @@
 
 package repositories.trafficmanagement
 
+import java.time.LocalDate
+
 import auth.AuthorisationResource
-import javax.inject.Inject
-import models.api.{IncomingRegistrationInformation, RegistrationChannel, RegistrationInformation, RegistrationStatus}
+import javax.inject.{Inject, Singleton}
+import models.api.{RegistrationChannel, RegistrationInformation, RegistrationStatus}
 import play.api.libs.json.{JsString, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
@@ -27,8 +29,10 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 import utils.TimeMachine
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Success
 
-class RegistrationInformationRepository @Inject()(mongo: ReactiveMongoComponent, timeMachine: TimeMachine)(implicit ec: ExecutionContext)
+@Singleton
+class TrafficManagementRepository @Inject()(mongo: ReactiveMongoComponent)(implicit ec: ExecutionContext)
   extends ReactiveRepository(
     collectionName = "traffic-management",
     mongo = mongo.mongoConnector.db,
@@ -49,18 +53,23 @@ class RegistrationInformationRepository @Inject()(mongo: ReactiveMongoComponent,
       .map(_.headOption)
 
   def upsertRegistrationInformation(internalId: String,
-                                    regInfo: IncomingRegistrationInformation)
+                                    regId: String,
+                                    status: RegistrationStatus,
+                                    regStartDate: Option[LocalDate],
+                                    channel: RegistrationChannel)
                                    (implicit hc: HeaderCarrier): Future[RegistrationInformation] = {
-    val selector = Json.obj("internalId" -> internalId)
+
     val newRecord = RegistrationInformation(
       internalId = internalId,
-      registrationId = regInfo.registrationId,
-      status = regInfo.status,
-      regStartDate = timeMachine.today,
-      channel = regInfo.channel
+      registrationId = regId,
+      status = status,
+      regStartDate = regStartDate,
+      channel = channel
     )
 
+    val selector = Json.obj("internalId" -> internalId)
     val modifier = Json.obj("$set" -> Json.toJson(newRecord))
+
     findAndUpdate(selector, modifier, fetchNewObject = true, upsert = true)
       .map(_.result[RegistrationInformation] match {
         case Some(regInfo) => regInfo

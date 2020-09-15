@@ -16,27 +16,28 @@
 
 package mocks
 
+import models.api.VatScheme
 import org.mockito.ArgumentMatchers
-import org.mockito.Mockito._
+import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.Suite
 import org.scalatestplus.mockito.MockitoSugar
-import repositories.trafficmanagement.DailyQuotaRepository
+import repositories.RegistrationMongoRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-trait MockDailyQuotaRepository extends MockitoSugar {
+trait MockRegistrationRepository extends MockitoSugar {
   self: Suite =>
 
-  val mockDailyQuotaRepository = mock[DailyQuotaRepository]
+  lazy val mockRegistrationRepository: RegistrationMongoRepository = mock[RegistrationMongoRepository]
 
-  def mockQuotaReached(response: Boolean): OngoingStubbing[Future[Boolean]] =
-    when(mockDailyQuotaRepository.quotaReached(ArgumentMatchers.any[HeaderCarrier]))
-      .thenReturn(Future.successful(response))
-
-  def mockIncrementTotal(response: Int): OngoingStubbing[Future[Int]] =
-    when(mockDailyQuotaRepository.incrementTotal(ArgumentMatchers.any[HeaderCarrier]))
-      .thenReturn(Future.successful(response))
+  def mockCreateRegistration(regId: String, internalId: String)(response: VatScheme): OngoingStubbing[Future[VatScheme]] =
+    when(mockRegistrationRepository.createNewVatScheme(
+      ArgumentMatchers.eq(regId),
+      ArgumentMatchers.eq(internalId)
+    )(
+      ArgumentMatchers.any[HeaderCarrier])
+    ).thenReturn(Future.successful(response))
 
 }

@@ -4,13 +4,13 @@ package controllers
 import java.time.LocalDate
 
 import itutil.IntegrationStubbing
-import models.api.{Draft, IncomingRegistrationInformation, OTRS, RegistrationInformation, Submitted, VatReg}
+import models.api.{Draft, OTRS, RegistrationInformation, Submitted, VatReg}
 import play.api.libs.json.Json
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.test.Helpers._
 
-class RegistrationInformationControllerISpec extends IntegrationStubbing {
+class TrafficManagementControllerISpec extends IntegrationStubbing {
 
   class Setup extends SetupHelper
 
@@ -20,7 +20,7 @@ class RegistrationInformationControllerISpec extends IntegrationStubbing {
     internalId = internalid,
     registrationId = testRegId,
     status = Draft,
-    regStartDate = LocalDate.parse(testDate),
+    regStartDate = Some(LocalDate.parse(testDate)),
     channel = VatReg
   )
 
@@ -28,9 +28,9 @@ class RegistrationInformationControllerISpec extends IntegrationStubbing {
     "return OK with reg info when a record exists for the internal ID" in new Setup {
       given
         .user.isAuthorised
-        .regInfoRepo.insertIntoDb(testRegInfo, regInfoRepo.insert)
+        .regInfoRepo.insertIntoDb(testRegInfo, trafficManagementRepo.insert)
 
-      val res = await(client(controllers.routes.RegistrationInformationController.getRegistrationInformation.url).get)
+      val res = await(client(controllers.routes.TrafficManagementController.getRegistrationInformation.url).get)
 
       res.status mustBe OK
       res.json mustBe Json.toJson(testRegInfo)
@@ -39,7 +39,7 @@ class RegistrationInformationControllerISpec extends IntegrationStubbing {
     "return NOT_FOUND when no record exists for the internal ID" in new Setup {
       given.user.isAuthorised
 
-      val res = await(client(controllers.routes.RegistrationInformationController.getRegistrationInformation.url).get)
+      val res = await(client(controllers.routes.TrafficManagementController.getRegistrationInformation.url).get)
 
       res.status mustBe NOT_FOUND
     }
@@ -47,7 +47,7 @@ class RegistrationInformationControllerISpec extends IntegrationStubbing {
     "return FORBIDDEN if the user is not authenticated" in new Setup {
       given.user.isNotAuthorised
 
-      val res = await(client(controllers.routes.RegistrationInformationController.getRegistrationInformation.url).get)
+      val res = await(client(controllers.routes.TrafficManagementController.getRegistrationInformation.url).get)
 
       res.status mustBe FORBIDDEN
     }
@@ -57,16 +57,17 @@ class RegistrationInformationControllerISpec extends IntegrationStubbing {
     "return OK with reg info when provided with valid JSON" in new Setup {
       given
         .user.isAuthorised
-        .regInfoRepo.insertIntoDb(testRegInfo, regInfoRepo.insert)
+        .regInfoRepo.insertIntoDb(testRegInfo, trafficManagementRepo.insert)
 
-      val updateData = IncomingRegistrationInformation(
+      val updateData = RegistrationInformation(
+        internalId = internalid,
         registrationId = testRegId,
         status = Submitted,
         channel = OTRS
       )
 
       val res = await(
-        client(controllers.routes.RegistrationInformationController.upsertRegistrationInformation().url)
+        client(controllers.routes.TrafficManagementController.upsertRegistrationInformation().url)
           .patch(Json.toJson(updateData))
       )
 
@@ -77,31 +78,44 @@ class RegistrationInformationControllerISpec extends IntegrationStubbing {
     "return BAD_REQUEST when provided with invalid JSON" in new Setup {
       given
         .user.isAuthorised
-        .regInfoRepo.insertIntoDb(testRegInfo, regInfoRepo.insert)
+        .regInfoRepo.insertIntoDb(testRegInfo, trafficManagementRepo.insert)
 
       val updateData = Json.obj()
 
       val res = await(
-        client(controllers.routes.RegistrationInformationController.upsertRegistrationInformation().url)
+        client(controllers.routes.TrafficManagementController.upsertRegistrationInformation().url)
           .patch(updateData)
       )
 
       res.status mustBe BAD_REQUEST
     }
 
+    "return UNPROCESSABLE_ENTITY if the json contains a regStartDate" in new Setup {
+      given
+        .user.isAuthorised
+
+      val res = await(
+        client(controllers.routes.TrafficManagementController.upsertRegistrationInformation().url)
+          .patch(Json.toJson(testRegInfo))
+      )
+
+      res.status mustBe UNPROCESSABLE_ENTITY
+    }
+
     "return FORBIDDEN when the user is not authenticated" in new Setup {
       given
         .user.isNotAuthorised
-        .regInfoRepo.insertIntoDb(testRegInfo, regInfoRepo.insert)
+        .regInfoRepo.insertIntoDb(testRegInfo, trafficManagementRepo.insert)
 
-      val updateData = IncomingRegistrationInformation(
+      val updateData = RegistrationInformation(
+        internalId = internalid,
         registrationId = testRegId,
         status = Submitted,
         channel = OTRS
       )
 
       val res = await(
-        client(controllers.routes.RegistrationInformationController.upsertRegistrationInformation().url)
+        client(controllers.routes.TrafficManagementController.upsertRegistrationInformation().url)
           .patch(Json.toJson(updateData))
       )
 

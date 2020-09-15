@@ -18,22 +18,14 @@ package models.api
 
 import java.time.LocalDate
 
-import play.api.libs.json.{Format, Json, Reads}
+import play.api.libs.json.{Format, Json}
 
 case class RegistrationInformation(internalId: String,
                                    registrationId: String,
                                    status: RegistrationStatus,
-                                   regStartDate: LocalDate,
+                                   regStartDate: Option[LocalDate] = None,
                                    channel: RegistrationChannel)
 
 object RegistrationInformation {
   implicit val format: Format[RegistrationInformation] = Json.format[RegistrationInformation]
-}
-
-case class IncomingRegistrationInformation(registrationId: String,
-                                           status: RegistrationStatus,
-                                           channel: RegistrationChannel)
-
-object IncomingRegistrationInformation {
-  implicit val format: Format[IncomingRegistrationInformation] = Json.format[IncomingRegistrationInformation]
 }

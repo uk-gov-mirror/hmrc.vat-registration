@@ -73,6 +73,6 @@ lazy val microservice = Project(appName, file("."))
     retrieveManaged                  := true,
     cancelable             in Global := true,
     evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
-    routesImport                     ++= Seq("config.CustomPathBinder._", "common.{RegistrationId, TransactionId}", "models.ElementPath"),
+    routesImport                     ++= Seq("config.CustomPathBinder._", "common.TransactionId", "models.ElementPath"),
     resolvers                        ++= Seq(Resolver.bintrayRepo("hmrc", "releases"), Resolver.jcenterRepo)
   )
