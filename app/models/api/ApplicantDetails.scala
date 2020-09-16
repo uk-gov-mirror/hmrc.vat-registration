@@ -22,42 +22,42 @@ import deprecated.DeprecatedConstants
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class LodgingOfficerDetails(currentAddress: Address,
+case class ApplicantDetailsDetails(currentAddress: Address,
                                  changeOfName: Option[FormerName],
                                  previousAddress : Option[Address],
                                  contact: DigitalContactOptional)
 
-object LodgingOfficerDetails {
+object ApplicantDetailsDetails {
   implicit val format = (
     (__ \ "currentAddress").format[Address] and
     (__ \ "changeOfName").formatNullable[FormerName] and
     (__ \ "previousAddress").formatNullable[Address] and
     (__ \ "contact").format[DigitalContactOptional]
-  )(LodgingOfficerDetails.apply, unlift(LodgingOfficerDetails.unapply))
+  )(ApplicantDetailsDetails.apply, unlift(ApplicantDetailsDetails.unapply))
 }
 
-case class LodgingOfficer(nino: String,
-                          role: String,
-                          name: Name,
-                          details: Option[LodgingOfficerDetails],
-                          isOfficerApplying: Boolean = true)
+case class ApplicantDetails(nino: String,
+                            role: String,
+                            name: Name,
+                            details: Option[ApplicantDetailsDetails],
+                            isApplicantApplying: Boolean = true)
 
-object LodgingOfficer extends VatLodgingOfficerValidator{
+object ApplicantDetails extends VatApplicantDetailsValidator{
 
-  val reads: Reads[LodgingOfficer] = (
+  val reads: Reads[ApplicantDetails] = (
     (__ \ "nino").read[String](ninoValidator) and
     (__ \ "role").read[String](roleValidator) and
     (__ \ "name").read[Name] and
-    (__ \ "details").readNullable[LodgingOfficerDetails] and
-    ((__ \ "isOfficerApplying").read[Boolean] or Reads.pure(true))
-  )(LodgingOfficer.apply _)
+    (__ \ "details").readNullable[ApplicantDetailsDetails] and
+    ((__ \ "isApplicantApplying").read[Boolean] or Reads.pure(true))
+  )(ApplicantDetails.apply _)
 
-  implicit val format: OFormat[LodgingOfficer] = OFormat(reads, Json.writes[LodgingOfficer])
+  implicit val format: OFormat[ApplicantDetails] = OFormat(reads, Json.writes[ApplicantDetails])
 
   val patchJsonReads: Reads[JsObject] = {
-    def apply(details: Option[LodgingOfficerDetails]): JsObject =
+    def apply(details: Option[ApplicantDetailsDetails]): JsObject =
       details.fold(Json.obj())(d => Json.obj("details" -> d))
-    (__ \ "details").readNullable[LodgingOfficerDetails].map(apply _)
+    (__ \ "details").readNullable[ApplicantDetailsDetails].map(apply _)
   }
 
   val eligibilityDataJsonReads: Reads[(String, Name, String, Boolean)] = new Reads[(String, Name, String, Boolean)] {
@@ -67,21 +67,21 @@ object LodgingOfficer extends VatLodgingOfficerValidator{
     )(Tuple2[Name, String] _)
 
     override def reads(json: JsValue): JsResult[(String, Name, String, Boolean)] = {
-      JsSuccess((DeprecatedConstants.fakeNino, DeprecatedConstants.fakeOfficerName, "director", true))
+      JsSuccess((DeprecatedConstants.fakeNino, DeprecatedConstants.fakeApplicantName, "director", true))
     }
   }
 
-  val mongoReads: Reads[LodgingOfficer] = new Reads[LodgingOfficer] {
-    override def reads(json: JsValue): JsResult[LodgingOfficer] = {
-      val officerDetails = (json \ "lodgingOfficer" \ "details").validateOpt[LodgingOfficerDetails].get
+  val mongoReads: Reads[ApplicantDetails] = new Reads[ApplicantDetails] {
+    override def reads(json: JsValue): JsResult[ApplicantDetails] = {
+      val officerDetails = (json \ "applicantDetails" \ "details").validateOpt[ApplicantDetailsDetails].get
 
       json.validate[(String, Name, String, Boolean)](eligibilityDataJsonReads) map { tuple =>
-        val (niNumber: String, officerName: Name, officerRole: String, isOfficerApplying: Boolean) = tuple
-        LodgingOfficer(
+        val (niNumber: String, officerName: Name, officerRole: String, isApplicantApplying: Boolean) = tuple
+        ApplicantDetails(
           nino = niNumber,
           role = officerRole,
           name = officerName,
-          isOfficerApplying = isOfficerApplying,
+          isApplicantApplying = isApplicantApplying,
           details = officerDetails
         )
       }

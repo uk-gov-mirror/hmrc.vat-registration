@@ -16,7 +16,7 @@
 
 package utils
 
-import models.api.{LodgingOfficer, Name, Threshold, TurnoverEstimates}
+import models.api.{ApplicantDetails, Name, Threshold, TurnoverEstimates}
 import play.api.libs.json._
 
 object EligibilityDataJsonUtils {
@@ -35,9 +35,9 @@ object EligibilityDataJsonUtils {
 
       val turnover        = clearedJson.validate[TurnoverEstimates](TurnoverEstimates.eligibilityDataJsonReads)
       val threshold       = clearedJson.validate[Threshold](Threshold.eligibilityDataJsonReads)
-      val lodgingOfficer  = clearedJson.validate[(String, Name, String, Boolean)](LodgingOfficer.eligibilityDataJsonReads)
+      val applicantDetails  = clearedJson.validate[(String, Name, String, Boolean)](ApplicantDetails.eligibilityDataJsonReads)
 
-      val allBlocks = turnover :: threshold :: lodgingOfficer :: Nil
+      val allBlocks = turnover :: threshold :: applicantDetails :: Nil
 
       allBlocks.map(jsRes => jsRes.map(_ => Json.obj())).find(_.isError).getOrElse(JsSuccess(clearedJson.as[JsObject]))
     }

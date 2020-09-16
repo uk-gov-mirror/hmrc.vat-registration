@@ -23,7 +23,7 @@ case class Name(first: Option[String],
                 middle: Option[String],
                 last: String)
 
-object Name extends VatLodgingOfficerValidator {
+object Name extends VatApplicantDetailsValidator {
   implicit val format: Format[Name] = (
     (__ \ "first").formatNullable[String](nameValidator) and
     (__ \ "middle").formatNullable[String](nameValidator) and

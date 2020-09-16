@@ -19,38 +19,38 @@ package controllers
 import auth.{Authorisation, AuthorisationResource}
 import common.exceptions.MissingRegDocument
 import javax.inject.{Inject, Singleton}
-import models.api.LodgingOfficer
+import models.api.ApplicantDetails
 import play.api.libs.json.{JsBoolean, JsObject, JsValue}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import services.LodgingOfficerService
+import services.ApplicantDetailsService
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class LodgingOfficerController @Inject()(val lodgingOfficerService: LodgingOfficerService,
-                                             val authConnector: AuthConnector,
+class ApplicantDetailsController @Inject()(val applicantDetailsService: ApplicantDetailsService,
+                                         val authConnector: AuthConnector,
                                          controllerComponents: ControllerComponents) extends BackendController(controllerComponents) with Authorisation {
 
-  val resourceConn: AuthorisationResource = lodgingOfficerService.registrationRepository
+  val resourceConn: AuthorisationResource = applicantDetailsService.registrationRepository
 
-  def getLodgingOfficerData(regId: String): Action[AnyContent] = Action.async {
+  def getApplicantDetailsData(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
       isAuthorised(regId) { authResult =>
-        authResult.ifAuthorised(regId, "LodgingOfficerController", "getLodgingOfficerData") {
-          lodgingOfficerService.getLodgingOfficerData(regId) sendResult("getLodgingOfficerData", regId)
+        authResult.ifAuthorised(regId, "ApplicantDetailsController", "getApplicantDetailsData") {
+          applicantDetailsService.getApplicantDetailsData(regId) sendResult("getApplicantDetailsData", regId)
         }
       }
   }
 
-  def updateLodgingOfficerData(regId: String): Action[JsValue] = Action.async[JsValue](parse.json) {
+  def updateApplicantDetailsData(regId: String): Action[JsValue] = Action.async[JsValue](parse.json) {
     implicit request =>
       isAuthorised(regId) { authResult =>
-        authResult.ifAuthorised(regId, "LodgingOfficerController", "updateLodgingOfficerData") {
-          implicit val reads = LodgingOfficer.patchJsonReads
-          withJsonBody[JsObject] { officer =>
-            lodgingOfficerService.updateLodgingOfficerData(regId, officer) sendResult("updateLodgingOfficerData",regId)
+        authResult.ifAuthorised(regId, "ApplicantDetailsController", "updateApplicantDetailsData") {
+          implicit val reads = ApplicantDetails.patchJsonReads
+          withJsonBody[JsObject] { applicantDetails =>
+            applicantDetailsService.updateApplicantDetailsData(regId, applicantDetails) sendResult("updateApplicantDetailsData",regId)
           }
         }
       }

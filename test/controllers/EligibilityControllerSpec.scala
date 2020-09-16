@@ -91,7 +91,7 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
   "updateEligibilityData" should {
     val thresholdPreviousThirtyDays = LocalDate.of(2017, 5, 23)
     val thresholdInTwelveMonths = LocalDate.of(2017, 7, 16)
-    val officer = Json.obj("role" -> "director", "name" -> Json.obj(
+    val applicantDetails = Json.obj("role" -> "director", "name" -> Json.obj(
       "forename" -> "First Name Test",
       "other_forenames" -> "Middle Name Test",
       "surname" -> "Last Name Test"
@@ -113,7 +113,7 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
          |     "data": [
          |       {"questionId": "applicantUKNino", "question": "Some Question 11", "answer": "Some Answer 11", "answerValue": "SR123456C"},
          |       {"questionId": "turnoverEstimate", "question": "Some Question 11", "answer": "Some Answer 11", "answerValue": 2024},
-         |       {"questionId": "completionCapacity", "question": "Some Question 11", "answer": "Some Answer 11", "answerValue": $officer},
+         |       {"questionId": "completionCapacity", "question": "Some Question 11", "answer": "Some Answer 11", "answerValue": $applicantDetails},
          |       {"questionId":"fooDirectorDetails3","question": "Date of birth", "answer": "1 January 2000", "answerValue": true}
          |     ]
          |   }

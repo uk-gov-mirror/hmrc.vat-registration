@@ -19,7 +19,7 @@ package services
 import common.exceptions.MissingRegDocument
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import models.api.{DigitalContactOptional, LodgingOfficer, LodgingOfficerDetails}
+import models.api.{DigitalContactOptional, ApplicantDetails, ApplicantDetailsDetails}
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
@@ -29,10 +29,10 @@ import play.api.test.Helpers._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
+class ApplicantDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   class Setup {
-    val service: LodgingOfficerService = new LodgingOfficerService(
+    val service: ApplicantDetailsService = new ApplicantDetailsService(
       registrationRepository = mockRegistrationMongoRepository
     )
 
@@ -46,7 +46,7 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
       .thenReturn(Future.failed(MissingRegDocument(regId)))
   }
 
-  val upsertLodgingOfficerModel: LodgingOfficer = Json.parse(
+  val upsertApplicantDetailsModel: ApplicantDetails = Json.parse(
     s"""
       |{
       | "name": {
@@ -64,11 +64,11 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
       |     "email" : "skylake@vilikariet.com"
       |   }
       | },
-      | "isOfficerApplying": true
+      | "isApplicantApplying": true
       |}
-    """.stripMargin).as[LodgingOfficer]
+    """.stripMargin).as[ApplicantDetails]
 
-  val validLodgingOfficerModel: LodgingOfficer = Json.parse(
+  val validApplicantDetailsModel: ApplicantDetails = Json.parse(
     s"""
        |{
        | "name": {
@@ -77,30 +77,30 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
        | },
        | "nino" : "AB123456A",
        | "role" : "secretary",
-       | "isOfficerApplying": true
+       | "isApplicantApplying": true
        |}
-    """.stripMargin).as[LodgingOfficer]
+    """.stripMargin).as[ApplicantDetails]
 
-  "getLodgingOfficerData" should {
-    "return an Lodging Officer if found" in new Setup {
-      when(mockRegistrationMongoRepository.getCombinedLodgingOfficer(any())(any()))
-        .thenReturn(Future.successful(Some(validLodgingOfficerPreIV)))
+  "getApplicantDetailsData" should {
+    "return an applicant if found" in new Setup {
+      when(mockRegistrationMongoRepository.getCombinedApplicantDetails(any())(any()))
+        .thenReturn(Future.successful(Some(validApplicantDetailsPreIV)))
 
-      val result: Option[LodgingOfficer] = await(service.getLodgingOfficerData("regId"))
-      result mustBe Some(validLodgingOfficerModel)
+      val result: Option[ApplicantDetails] = await(service.getApplicantDetailsData("regId"))
+      result mustBe Some(validApplicantDetailsModel)
     }
 
     "return None if none found matching regId" in new Setup {
-      when(mockRegistrationMongoRepository.getCombinedLodgingOfficer(any())(any()))
+      when(mockRegistrationMongoRepository.getCombinedApplicantDetails(any())(any()))
         .thenReturn(Future.successful(None))
 
-      val result: Option[LodgingOfficer] = await(service.getLodgingOfficerData("regId"))
+      val result: Option[ApplicantDetails] = await(service.getApplicantDetailsData("regId"))
       result mustBe None
     }
   }
 
-  "updateLodgingOfficerData" should {
-    val lodgingOfficerDetails = Json.toJson(LodgingOfficerDetails(
+  "updateApplicantDetailsData" should {
+    val applicantDetailsDetails = Json.toJson(ApplicantDetailsDetails(
       currentAddress = scrsAddress,
       changeOfName = None,
       previousAddress = None,
@@ -110,32 +110,32 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
         mobile = None
       )
     ))
-    val lodgeOfficerJson = Json.parse(
+    val applicantJson = Json.parse(
       s"""{
-         | "details": $lodgingOfficerDetails
+         | "details": $applicantDetailsDetails
          |}
         """.stripMargin).as[JsObject]
 
     "return the data that is being inputted" in new Setup {
-      when(mockRegistrationMongoRepository.patchLodgingOfficer(any(),any())(any()))
-        .thenReturn(Future.successful(lodgeOfficerJson))
+      when(mockRegistrationMongoRepository.patchApplicantDetails(any(),any())(any()))
+        .thenReturn(Future.successful(applicantJson))
 
-      val result: JsObject = await(service.updateLodgingOfficerData("regId", lodgeOfficerJson))
-      result mustBe lodgeOfficerJson
+      val result: JsObject = await(service.updateApplicantDetailsData("regId", applicantJson))
+      result mustBe applicantJson
     }
 
     "encounter an exception if an error occurs" in new Setup {
-      when(mockRegistrationMongoRepository.patchLodgingOfficer(any(),any())(any()))
+      when(mockRegistrationMongoRepository.patchApplicantDetails(any(),any())(any()))
         .thenReturn(Future.failed(new Exception("")))
 
-      intercept[Exception](await(service.updateLodgingOfficerData("regId", lodgeOfficerJson)))
+      intercept[Exception](await(service.updateApplicantDetailsData("regId", applicantJson)))
     }
 
     "encounter an MissingRegDocument Exception if no document is found" in new Setup {
-      when(mockRegistrationMongoRepository.patchLodgingOfficer(any(),any())(any()))
+      when(mockRegistrationMongoRepository.patchApplicantDetails(any(),any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(regId)))
 
-      intercept[MissingRegDocument](await(service.updateLodgingOfficerData("regId", lodgeOfficerJson)))
+      intercept[MissingRegDocument](await(service.updateApplicantDetailsData("regId", applicantJson)))
     }
   }
 }

@@ -65,8 +65,8 @@ trait VatRegistrationFixture {
   val currentAddress = Address("12 Lukewarm", "Oriental lane")
   val skylakeValiarm = Name(first = Some("Skylake"), middle = None, last = "Valiarm")
   val skylakeDigitalContact = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
-  val lodgingOfficerDetails = LodgingOfficerDetails(currentAddress = currentAddress, None, None, contact = skylakeDigitalContact)
-  val validLodgingOfficerPreIV = LodgingOfficer(
+  val applicantDetailsDetails = ApplicantDetailsDetails(currentAddress = currentAddress, None, None, contact = skylakeDigitalContact)
+  val validApplicantDetailsPreIV = ApplicantDetails(
     nino = "AB123456A",
     role = "secretary",
     name = skylakeValiarm,

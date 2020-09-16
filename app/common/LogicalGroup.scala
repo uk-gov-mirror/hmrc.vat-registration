@@ -30,6 +30,6 @@ object LogicalGroup {
   }
 
   implicit val tradingDetails       = LogicalGroup[TradingDetails]("tradingDetails")
-  implicit val vatLodgingOfficer    = LogicalGroup[LodgingOfficer]("lodgingOfficer")
+  implicit val vatApplicantDetails    = LogicalGroup[ApplicantDetails]("applicantDetails")
   implicit val returns              = LogicalGroup[Returns]("returns")
 }

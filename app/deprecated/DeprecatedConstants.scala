@@ -23,5 +23,5 @@ object DeprecatedConstants {
   val fakeNino = "AA123456A"
 
   @Deprecated
-  val fakeOfficerName: Name = Name(first = Some("FAKE_FIRST_NAME"), middle = Some("FAKE_MIDDLE_NAME"), last = "[OFFICER_NAME_REMOVED]")
+  val fakeApplicantName: Name = Name(first = Some("FAKE_FIRST_NAME"), middle = Some("FAKE_MIDDLE_NAME"), last = "[OFFICER_NAME_REMOVED]")
 }

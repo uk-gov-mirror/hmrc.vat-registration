@@ -60,7 +60,7 @@ trait VatDigitalContactValidator extends Validation {
   val mobileValidator: Format[String] = readToFmt(pattern("^(\\d){1,20}$".r))
 }
 
-trait VatLodgingOfficerValidator extends Validation {
+trait VatApplicantDetailsValidator extends Validation {
   val ninoValidator: Format[String]   = readToFmt(pattern("[[A-Z]&&[^DFIQUV]][[A-Z]&&[^DFIQUVO]] ?\\d{2} ?\\d{2} ?\\d{2} ?[A-D]{1}".r))
   val roleValidator: Format[String]   = acceptOnly("director", "secretary")
   val nameRegex                       = """^[A-Za-z 0-9\-';]{1,100}$""".r

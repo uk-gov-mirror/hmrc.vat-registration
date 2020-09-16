@@ -62,7 +62,7 @@ trait ITFixtures {
 
   val name = Name(first = Some("Forename"), middle = None, last = "Surname")
   val formerName = FormerName(Some("Bob Smith"), Some(date), name = Some(oldName), change = Some(date))
-  val vatLodgingOfficer = LodgingOfficer(
+  val vatApplicantDetails = ApplicantDetails(
     nino = "NB686868C",
     role = "director",
     name = name,

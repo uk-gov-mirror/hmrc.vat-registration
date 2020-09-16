@@ -63,7 +63,7 @@ class EligibilityDataJsonUtilsSpec extends JsonFormatValidation {
     val thresholdInTwelveMonths = LocalDate.of(2017, 7, 16)
 
     "return a JsSuccess" in {
-      val officer = Json.obj("role" -> "director", "name" -> Json.obj(
+      val applicantDetails = Json.obj("role" -> "director", "name" -> Json.obj(
         "forename" -> "First Name Test",
         "other_forenames" -> "Middle Name Test",
         "surname" -> "Last Name Test"
@@ -85,7 +85,7 @@ class EligibilityDataJsonUtilsSpec extends JsonFormatValidation {
           |     "data": [
           |       {"questionId": "applicantUKNino-optionalData", "question": "Some Question 11", "answer": "Some Answer 11", "answerValue": "SR123456C"},
           |       {"questionId": "turnoverEstimate-value", "question": "Some Question 11", "answer": "Some Answer 11", "answerValue": 1234},
-          |       {"questionId": "completionCapacity", "question": "Some Question 11", "answer": "Some Answer 11", "answerValue": $officer},
+          |       {"questionId": "completionCapacity", "question": "Some Question 11", "answer": "Some Answer 11", "answerValue": $applicantDetails},
           |       {"questionId":"fooDirectorDetails3","question": "Date of birth", "answer": "1 January 2000", "answerValue": true}
           |     ]
           |   }
@@ -99,7 +99,7 @@ class EligibilityDataJsonUtilsSpec extends JsonFormatValidation {
         "thresholdInTwelveMonths" -> thresholdInTwelveMonths,
         "applicantUKNino-optionalData" -> "SR123456C",
         "turnoverEstimate-value" -> 1234,
-        "completionCapacity" -> officer,
+        "completionCapacity" -> applicantDetails,
         "fooDirectorDetails3" -> true
       )
 

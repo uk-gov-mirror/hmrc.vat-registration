@@ -47,5 +47,5 @@ PATCH       /:regId/eligibility-data                controllers.EligibilityContr
 GET         /:regId/threshold-data                  controllers.VatRegistrationController.getThreshold(regId: String)
 GET         /:regId/turnover-estimates-data         controllers.VatRegistrationController.getTurnoverEstimates(regId: String)
 
-GET         /:regId/officer-data                    controllers.LodgingOfficerController.getLodgingOfficerData(regId: String)
-PATCH       /:regId/officer-data                    controllers.LodgingOfficerController.updateLodgingOfficerData(regId: String)
+GET         /:regId/applicant-details                    controllers.ApplicantDetailsController.getApplicantDetailsData(regId: String)
+PATCH       /:regId/applicant-details                    controllers.ApplicantDetailsController.updateApplicantDetailsData(regId: String)
