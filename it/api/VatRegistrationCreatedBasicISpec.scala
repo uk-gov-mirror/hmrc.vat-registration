@@ -16,10 +16,8 @@
 
 package api
 
-import common.RegistrationId
 import connectors.stubs.BusinessRegConnectorStub._
 import connectors.stubs.VatSubmissionStub._
-import controllers.routes.VatRegistrationController
 import enums.VatRegStatus
 import featureswitch.core.config.{FeatureSwitching, StubSubmission}
 import itutil.IntegrationStubbing
@@ -30,7 +28,7 @@ import play.api.test.Helpers._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class VatRegistrationBasicISpec extends IntegrationStubbing with FeatureSwitching {
+class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureSwitching {
 
   class Setup extends SetupHelper
 
@@ -46,7 +44,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with FeatureSwitchin
         given.user.isAuthorised
         stubBusinessReg(OK)(Some(validBusinessRegistrationResponse))
 
-        val res: WSResponse = await(client(VatRegistrationController.newVatRegistration().url).post("test"))
+        val res: WSResponse = await(client(controllers.routes.VatRegistrationController.newVatRegistration().url).post("test"))
 
         res.status mustBe CREATED
         //TODO - test body by injecting journey id generator
@@ -70,7 +68,7 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with FeatureSwitchin
         given.user.isNotAuthorised
         stubBusinessReg(OK)(Some(validBusinessRegistrationResponse))
 
-        val res: WSResponse = await(client(VatRegistrationController.newVatRegistration().url).post("test"))
+        val res: WSResponse = await(client(controllers.routes.VatRegistrationController.newVatRegistration().url).post("test"))
 
         res.status mustBe FORBIDDEN
       }
@@ -87,15 +85,15 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with FeatureSwitchin
       given.user.isAuthorised
       stubVatSubmission(ACCEPTED)()
 
-      repo.createNewVatScheme(RegistrationId(registrationID), internalid).flatMap(_ => repo.updateReturns(registrationID, returns))
+      repo.createNewVatScheme(registrationID, internalid).flatMap(_ => repo.updateReturns(registrationID, returns))
 
       val result: WSResponse = await(client(
-        VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
+        controllers.routes.VatRegistrationController.submitVATRegistration(registrationID).url).put("")
       )
 
       result.status mustBe OK
 
-      val reg: Option[VatScheme] = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
+      val reg: Option[VatScheme] = await(repo.retrieveVatScheme(registrationID))
       reg.get.status mustBe VatRegStatus.submitted
 
       await(repo.remove("registrationId" -> registrationID))
@@ -106,10 +104,10 @@ class VatRegistrationBasicISpec extends IntegrationStubbing with FeatureSwitchin
       given.user.isAuthorised
       stubVatSubmission(ACCEPTED)()
 
-      repo.createNewVatScheme(RegistrationId(registrationID), internalid).flatMap(_ => repo.updateReturns(registrationID, returns))
+      repo.createNewVatScheme(registrationID, internalid).flatMap(_ => repo.updateReturns(registrationID, returns))
 
       val result: WSResponse = await(client(
-        VatRegistrationController.submitVATRegistration(RegistrationId(registrationID)).url).put("")
+        controllers.routes.VatRegistrationController.submitVATRegistration(registrationID).url).put("")
       )
 
       result.status mustBe OK

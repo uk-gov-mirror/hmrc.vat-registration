@@ -16,7 +16,6 @@
 
 package services
 
-import common.RegistrationId
 import common.exceptions.MissingRegDocument
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
@@ -25,7 +24,6 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import play.api.test.Helpers._
-import repositories.RegistrationMongoRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -60,12 +58,12 @@ class BusinessContactServiceSpec extends VatRegSpec with VatRegistrationFixture 
       await(service.updateBusinessContact("ImARegId",validBusinessContact.get)) mustBe validBusinessContact.get
     }
     "return a missingRegDocument when no reg Document exists for the reg id when an update takes place" in new Setup {
-      updateMongo(Future.failed(MissingRegDocument(RegistrationId("testId"))))
-      intercept[MissingRegDocument](await(service.updateBusinessContact("testId",validBusinessContact.get))) mustBe MissingRegDocument(RegistrationId("testId"))
+      updateMongo(Future.failed(MissingRegDocument(regId)))
+      intercept[MissingRegDocument](await(service.updateBusinessContact(regId, validBusinessContact.get))) mustBe MissingRegDocument(regId)
     }
     "return new Exception when an exception is returned from the repo during an update" in new Setup {
       updateMongo(Future.failed(new Exception("foo Bar Wizz Bang")))
-      intercept[Exception](await(service.updateBusinessContact("testId",validBusinessContact.get)))
+      intercept[Exception](await(service.updateBusinessContact(regId, validBusinessContact.get)))
     }
   }
 }

@@ -18,7 +18,6 @@ package controllers
 
 import auth.{Authorisation, AuthorisationResource}
 import cats.instances.FutureInstances
-import common.RegistrationId
 import common.exceptions.{InvalidSubmissionStatus, LeftState}
 import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
@@ -38,6 +37,7 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
                                           val submissionService: SubmissionService,
                                           val registrationRepository: RegistrationMongoRepository,
                                           val authConnector: AuthConnector,
+                                          val newRegistrationService: NewRegistrationService,
                                           controllerComponents: ControllerComponents
                                          ) extends BackendController(controllerComponents) with Authorisation with FutureInstances {
 
@@ -49,15 +49,24 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
     implicit request =>
       isAuthenticated { internalId =>
         implicit val writes = VatScheme.apiWrites
-        registrationService.createNewRegistration(internalId)
-          .fold(errorHandler, vatScheme => Created(Json.toJson(vatScheme)))
+
+        newRegistrationService.newRegistration(internalId) map {
+          case RegistrationCreated(vatScheme) =>
+            Created(Json.toJson(vatScheme))
+          case QuotaReached =>
+            TooManyRequests
+        } recover {
+          case _ => InternalServerError(
+            "[VatRegistrationController][newVatRegistration] Unexpected error when creating new registration"
+          )
+        }
       }
   }
 
-  def retrieveVatScheme(id: RegistrationId): Action[AnyContent] = Action.async {
+  def retrieveVatScheme(id: String): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthorised(id.value) { authResult =>
-        authResult.ifAuthorised(id.value, "VatRegistrationController", "retrieveVatScheme") {
+      isAuthorised(id) { authResult =>
+        authResult.ifAuthorised(id, "VatRegistrationController", "retrieveVatScheme") {
           implicit val writes = VatScheme.apiWrites
           registrationService.retrieveVatScheme(id).fold(errorHandler, vatScheme => Ok(Json.toJson(vatScheme)))
         }
@@ -97,11 +106,11 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
       }
   }
 
-  def submitVATRegistration(id: RegistrationId): Action[AnyContent] = Action.async {
+  def submitVATRegistration(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthorised(id.value) { authResult =>
-        authResult.ifAuthorised(id.value, "VatRegistrationController", "submitVATRegistration") {
-            submissionService.submitVatRegistration(id).map { ackRefs =>
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "VatRegistrationController", "submitVATRegistration") {
+            submissionService.submitVatRegistration(regId).map { ackRefs =>
               Ok(Json.toJson(ackRefs))
             } recover {
               case ex =>
@@ -112,11 +121,11 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
       }
   }
 
-  def getAcknowledgementReference(id: RegistrationId): Action[AnyContent] = Action.async {
+  def getAcknowledgementReference(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthorised(id.value) { authResult =>
-        authResult.ifAuthorised(id.value, "VatRegistrationController", "getAcknowledgementReference") {
-            submissionService.getAcknowledgementReference(id).fold(errorHandler, ackRefNumber => Ok(Json.toJson(ackRefNumber)))
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "VatRegistrationController", "getAcknowledgementReference") {
+            submissionService.getAcknowledgementReference(regId).fold(errorHandler, ackRefNumber => Ok(Json.toJson(ackRefNumber)))
         }
       }
   }
@@ -187,20 +196,20 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
       }
   }
 
-  def getDocumentStatus(id: RegistrationId): Action[AnyContent] = Action.async {
+  def getDocumentStatus(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      isAuthorised(id.value) { authResult =>
-        authResult.ifAuthorised(id.value, "VatRegistrationController", "getDocumentStatus") {
-          registrationService.getStatus(id).sendResult("getDocumentStatus", id.value)
+      isAuthorised(regId) { authResult =>
+        authResult.ifAuthorised(regId, "VatRegistrationController", "getDocumentStatus") {
+          registrationService.getStatus(regId).sendResult("getDocumentStatus", regId)
         }
       }
   }
 
-  def saveTransId(id: String): Action[JsValue] = Action.async(parse.json) {
+  def saveTransId(regId: String): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
       withJsonBody[JsValue] { json =>
         val transId: String = (json \ "transactionID").as[String]
-        registrationRepository.saveTransId(transId, RegistrationId(id)) map { _ =>
+        registrationRepository.saveTransId(transId, regId) map { _ =>
           Ok
         }
       }

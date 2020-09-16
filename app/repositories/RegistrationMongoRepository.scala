@@ -19,7 +19,6 @@ package repositories
 import auth.{AuthorisationResource, CryptoSCRS}
 import cats.data.OptionT
 import cats.instances.future._
-import common.RegistrationId
 import common.exceptions._
 import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
@@ -40,6 +39,7 @@ import utils.EligibilityDataJsonUtils
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
+// scalastyle:off
 @Singleton
 class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypto: CryptoSCRS)
   extends ReactiveRepository[VatScheme, BSONObjectID](
@@ -79,23 +79,23 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
   )
 
   //TODO: should be written with $set to not use vatscheme writes
-  def createNewVatScheme(id: RegistrationId, intId: String)(implicit hc: HeaderCarrier): Future[VatScheme] = {
+  def createNewVatScheme(regId: String, intId: String)(implicit hc: HeaderCarrier): Future[VatScheme] = {
     val set = Json.obj(
-      "registrationId" -> Json.toJson[String](id.value),
+      "registrationId" -> Json.toJson[String](regId),
       "status" -> Json.toJson(VatRegStatus.draft),
       "internalId" -> Json.toJson[String](intId)
     )
     collection.insert(set).map { _ =>
-      VatScheme(id, internalId = intId, status = VatRegStatus.draft)
+      VatScheme(regId, internalId = intId, status = VatRegStatus.draft)
     }.recover {
       case e: Exception =>
-        Logger.error(s"[RegistrationMongoRepository] [createNewVatScheme] threw an exception when attempting to create a new record with exception: ${e.getMessage} for regId: $id and internalid: $intId")
-        throw new InsertFailed(id, "VatScheme")
+        Logger.error(s"[RegistrationMongoRepository] [createNewVatScheme] threw an exception when attempting to create a new record with exception: ${e.getMessage} for regId: $regId and internalid: $intId")
+        throw new InsertFailed(regId, "VatScheme")
     }
   }
 
-  def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
-    collection.find(ridSelector(id)).one[JsObject] map { doc =>
+  def retrieveVatScheme(regId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
+    collection.find(regIdSelector(regId)).one[JsObject] map { doc =>
       doc map { json =>
         val jsonWithoutElData = json - "threshold" - "lodgingOfficer" - "turnoverEstimates"
         val eligibilityData = (json \ "eligibilityData").validateOpt[JsObject](EligibilityDataJsonUtils.readsOfFullJson).get
@@ -134,39 +134,39 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     }
   }
 
-  def updateByElement(id: RegistrationId, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String] =
-    setElement(id, elementPath.path, value)
+  def updateByElement(regId: String, elementPath: ElementPath, value: String)(implicit hc: HeaderCarrier): Future[String] =
+    setElement(regId, elementPath.path, value)
 
-  private def setElement(id: RegistrationId, element: String, value: String)(implicit hc: HeaderCarrier): Future[String] =
-    OptionT(collection.findAndUpdate(ridSelector(id), BSONDocument("$set" -> BSONDocument(element -> value)))
+  private def setElement(regId: String, element: String, value: String)(implicit hc: HeaderCarrier): Future[String] =
+    OptionT(collection.findAndUpdate(regIdSelector(regId), BSONDocument("$set" -> BSONDocument(element -> value)))
       .map(_.value)).map(_ => value).getOrElse {
-      logger.error(s"[setElement] - There was a problem setting element $element for regId ${id.value}")
-      throw UpdateFailed(id, element)
+      logger.error(s"[setElement] - There was a problem setting element $element for regId ${regId}")
+      throw UpdateFailed(regId, element)
     }
 
-  def prepareRegistrationSubmission(id: RegistrationId, ackRef: String, status: VatRegStatus.Value)(implicit hc: HeaderCarrier): Future[Boolean] = {
+  def prepareRegistrationSubmission(regId: String, ackRef: String, status: VatRegStatus.Value)(implicit hc: HeaderCarrier): Future[Boolean] = {
     val modifier = toBSON(Json.obj(
       AcknowledgementReferencePath.path -> ackRef,
       VatStatusPath.path -> (if (status == VatRegStatus.draft) VatRegStatus.locked else status)
     )).get
 
-    collection.update(ridSelector(id), BSONDocument("$set" -> modifier)).map(_.ok)
+    collection.update(regIdSelector(regId), BSONDocument("$set" -> modifier)).map(_.ok)
   }
 
-  def finishRegistrationSubmission(id: RegistrationId, status: VatRegStatus.Value)(implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
+  def finishRegistrationSubmission(regId: String, status: VatRegStatus.Value)(implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
     val modifier = toBSON(Json.obj(
       VatStatusPath.path -> status
     )).get
 
-    collection.update(ridSelector(id), BSONDocument("$set" -> modifier)).map(_ => status)
+    collection.update(regIdSelector(regId), BSONDocument("$set" -> modifier)).map(_ => status)
   }
 
-  def saveTransId(transId: String, regId: RegistrationId)(implicit hc: HeaderCarrier): Future[String] = {
+  def saveTransId(transId: String, regId: String)(implicit hc: HeaderCarrier): Future[String] = {
     val modifier = toBSON(Json.obj(
       VatTransIdPath.path -> transId
     )).get
 
-    collection.update(ridSelector(regId), BSONDocument("$set" -> modifier)).map(_ => transId)
+    collection.update(regIdSelector(regId), BSONDocument("$set" -> modifier)).map(_ => transId)
   }
 
   def fetchRegByTxId(transId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
@@ -182,7 +182,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     collection.update(querySelect, setDoc) map { updateResult =>
       if (updateResult.n == 0) {
         Logger.warn(s"[LodgingOfficer] updating ivPassed for regId : $regId - No document found or the document does not have lodgingOfficer defined")
-        throw new MissingRegDocument(RegistrationId(regId))
+        throw new MissingRegDocument(regId)
       } else {
         Logger.info(s"[LodgingOfficer] updating ivPassed for regId : $regId - documents modified : ${updateResult.nModified}")
         ivStatus
@@ -259,7 +259,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
       "lodgingOfficer" -> 1,
       "_id" -> 0)
     collection.find(regIdSelector(regId), projection).one[JsObject].map { doc =>
-      doc.fold(throw new MissingRegDocument(RegistrationId(regId))) { js =>
+      doc.fold(throw new MissingRegDocument(regId)) { js =>
 
         val jsonOfficer = (js - "eligibilityData") ++ EligibilityDataJsonUtils.toJsObject(js)
         if (jsonOfficer == Json.obj()) {
@@ -283,7 +283,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     collection.update(querySelect, setDoc) map { updateResult =>
       if (updateResult.n == 0) {
         Logger.warn(s"[LodgingOfficer] [patchLodgingOfficer] patch LodgingOfficer for regId : $regId - No document found or the document does not have lodgingOfficer defined")
-        throw new MissingRegDocument(RegistrationId(regId))
+        throw new MissingRegDocument(regId)
       } else {
         Logger.info(s"[LodgingOfficer] [patchLodgingOfficer] patch LodgingOfficer for regId : $regId - documents modified : ${updateResult.nModified}")
         lodgingOfficer
@@ -307,7 +307,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     collection.update(regIdSelector(regId), setDoc) map { updateResult =>
       if (updateResult.n == 0) {
         Logger.warn(s"[${data.getClass.getSimpleName}] updating for regId : $regId - No document found")
-        throw MissingRegDocument(RegistrationId(regId))
+        throw MissingRegDocument(regId)
       } else {
         Logger.info(s"[${data.getClass.getSimpleName}] updating for regId : $regId - documents modified : ${updateResult.nModified}")
         data
@@ -331,7 +331,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
   private def fetchBlock[T](regId: String, key: String)(implicit ec: ExecutionContext, rds: Reads[T]): Future[Option[T]] = {
     val projection = Json.obj(key -> 1)
     collection.find(regIdSelector(regId), projection).one[JsObject].map { doc =>
-      doc.fold(throw new MissingRegDocument(RegistrationId(regId))) { js =>
+      doc.fold(throw new MissingRegDocument(regId)) { js =>
         (js \ key).validateOpt[T].get
       }
     }
@@ -351,7 +351,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     collection.update(selector, update) map { updateResult =>
       if (updateResult.n == 0) {
         Logger.warn(s"[RegistrationMongoRepository][removeFlatRateScheme] removing for regId : $regId - No document found")
-        throw MissingRegDocument(RegistrationId(regId))
+        throw MissingRegDocument(regId)
       } else {
         Logger.info(s"[RegistrationMongoRepository][removeFlatRateScheme] removing for regId : $regId - documents modified : ${updateResult.nModified}")
         true
@@ -376,12 +376,11 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
   def updateEligibilityData(regId: String, eligibilityData: JsObject)(implicit ec: ExecutionContext): Future[JsObject] =
     updateBlock(regId, eligibilityData, "eligibilityData")
 
-  private def unsetElement(id: RegistrationId, element: String)(implicit ex: ExecutionContext): Future[Boolean] =
-    OptionT(collection.findAndUpdate(ridSelector(id), BSONDocument("$unset" -> BSONDocument(element -> "")))
+  private def unsetElement(regId: String, element: String)(implicit ex: ExecutionContext): Future[Boolean] =
+    OptionT(collection.findAndUpdate(regIdSelector(regId), BSONDocument("$unset" -> BSONDocument(element -> "")))
       .map(_.value)).map(_ => true).getOrElse {
-      logger.error(s"[unsetElement] - There was a problem unsetting element $element for regId ${id.value}")
-      throw UpdateFailed(id, element)
+      logger.error(s"[unsetElement] - There was a problem unsetting element $element for regId ${regId}")
+      throw UpdateFailed(regId, element)
     }
 
-  private[repositories] def ridSelector(id: RegistrationId) = BSONDocument("registrationId" -> BSONString(id.value))
 }

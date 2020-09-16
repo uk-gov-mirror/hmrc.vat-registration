@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package common
+package models.api
 
-import play.api.libs.json._
+import java.time.LocalDate
 
-case class RegistrationId(value: String) extends AnyVal {
-  override def toString: String = value
-}
+import play.api.libs.json.Json
 
-object RegistrationId {
-  implicit val rs = Reads.of[String].map(RegistrationId.apply)
+case class DailyQuota(date: LocalDate, currentTotal: Int = 0)
 
-  implicit val ws = Writes[RegistrationId](id => JsString(id.value))
+object DailyQuota {
+  implicit val format = Json.format[DailyQuota]
 }

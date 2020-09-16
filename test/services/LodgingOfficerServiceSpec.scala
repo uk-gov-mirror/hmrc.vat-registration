@@ -16,9 +16,6 @@
 
 package services
 
-import java.time.LocalDate
-
-import common.RegistrationId
 import common.exceptions.MissingRegDocument
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
@@ -28,10 +25,9 @@ import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
-import repositories.RegistrationMongoRepository
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
@@ -47,7 +43,7 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
       .thenReturn(Future.failed(new Exception("")))
 
     def updateIVPassedToMongoNoRegDoc(): OngoingStubbing[Future[Boolean]] = when(mockRegistrationMongoRepository.updateIVStatus(any(),any())(any()))
-      .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
+      .thenReturn(Future.failed(MissingRegDocument(regId)))
   }
 
   val upsertLodgingOfficerModel: LodgingOfficer = Json.parse(
@@ -137,7 +133,7 @@ class LodgingOfficerServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
     "encounter an MissingRegDocument Exception if no document is found" in new Setup {
       when(mockRegistrationMongoRepository.patchLodgingOfficer(any(),any())(any()))
-        .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
+        .thenReturn(Future.failed(MissingRegDocument(regId)))
 
       intercept[MissingRegDocument](await(service.updateLodgingOfficerData("regId", lodgeOfficerJson)))
     }

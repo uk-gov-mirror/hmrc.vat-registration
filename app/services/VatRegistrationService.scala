@@ -21,7 +21,6 @@ import java.util.UUID
 import cats.data.{EitherT, OptionT}
 import cats.instances.FutureInstances
 import cats.syntax.ApplicativeSyntax
-import common.RegistrationId
 import common.exceptions._
 import config.BackendConfig
 import connectors._
@@ -50,80 +49,67 @@ class VatRegistrationService @Inject()(registrationRepository: RegistrationMongo
   lazy val vatCancelUrl: String = backendConfig.servicesConfig.getString("api.vatCancelURL")
 
   private val cancelStatuses: Seq[VatRegStatus.Value] = Seq(VatRegStatus.draft, VatRegStatus.invalid)
-
   private val logger = LoggerFactory.getLogger(getClass)
 
   private def repositoryErrorHandler[T]: PartialFunction[Throwable, Either[LeftState, T]] = {
     case e: MissingRegDocument  => Left(ResourceNotFound(s"No registration found for registration ID: ${e.id}"))
-    case dbe: DBExceptions      => Left(GenericDatabaseError(dbe, Some(dbe.id.value)))
+    case dbe: DBExceptions      => Left(GenericDatabaseError(dbe, Some(dbe.id)))
     case t: Throwable           => Left(GenericError(t))
   }
 
   private def getOrCreateVatScheme(registrationId: String, internalId:String)(implicit hc: HeaderCarrier): Future[Either[LeftState, VatScheme]] =
-    registrationRepository.retrieveVatScheme(RegistrationId(registrationId)).flatMap {
+    registrationRepository.retrieveVatScheme(registrationId).flatMap {
       case Some(vatScheme) => Future.successful(Right(vatScheme))
-      case None => registrationRepository.createNewVatScheme(RegistrationId(registrationId),internalId)
+      case None => registrationRepository.createNewVatScheme(registrationId,internalId)
         .map(Right(_)).recover(repositoryErrorHandler)
     }
 
   import cats.syntax.either._
 
-  def saveAcknowledgementReference(id: RegistrationId, ackRef: String)(implicit hc: HeaderCarrier): ServiceResult[String] =
-    OptionT(registrationRepository.retrieveVatScheme(id)).toRight(ResourceNotFound(s"VatScheme ID: $id missing"))
+  def saveAcknowledgementReference(regID: String, ackRef: String)(implicit hc: HeaderCarrier): ServiceResult[String] =
+    OptionT(registrationRepository.retrieveVatScheme(regID)).toRight(ResourceNotFound(s"VatScheme ID: $regID missing"))
       .flatMap(vs => vs.acknowledgementReference match {
         case Some(ar) =>
-          Left[LeftState, String](AcknowledgementReferenceExists(s"""Registration ID $id already has an acknowledgement reference of: $ar""")).toEitherT
+          Left[LeftState, String](AcknowledgementReferenceExists(s"""Registration ID $regID already has an acknowledgement reference of: $ar""")).toEitherT
         case None =>
-          EitherT.liftT[Future, LeftState, String](registrationRepository.updateByElement(id, AcknowledgementReferencePath, ackRef))
+          EitherT.liftT[Future, LeftState, String](registrationRepository.updateByElement(regID, AcknowledgementReferencePath, ackRef))
       })
 
-  def getStatus(regId: RegistrationId)(implicit hc: HeaderCarrier): Future[JsValue] = {
+  def getStatus(regId: String)(implicit hc: HeaderCarrier): Future[JsValue] = {
     registrationRepository.retrieveVatScheme(regId) map {
       case Some(registration) =>
-        //TODO: Refactor with API changes
-        val lastUpdate = registration.status match {
-          case VatRegStatus.held                                 => "TIMESTAMP" //Partial timestamp
-          case VatRegStatus.submitted                            => "TIMESTAMP" //Full timestamp
-          case VatRegStatus.cancelled                            => "TIMESTAMP" //Last modified
-          case VatRegStatus.acknowledged | VatRegStatus.rejected => "TIMESTAMP" //Acknowledged timestamp
-          case _                                                 => "TIMESTAMP" //Form creation timestamp
-        }
-
         val base = Json.obj(
           "status"     -> registration.status
         )
 
         val ackRef = registration.acknowledgementReference.fold(Json.obj())(ref => Json.obj("ackRef" -> ref))
-
-        val vrn = Json.obj() //Placeholder for VRN
-
         val restartUrl = if(registration.status.equals(VatRegStatus.rejected)) Json.obj("restartURL" -> vatRestartUrl) else Json.obj()
-        val cancelUrl  = if(cancelStatuses.contains(registration.status)) Json.obj("cancelURL" -> vatCancelUrl.replace(":regID", regId.value)) else Json.obj()
+        val cancelUrl  = if(cancelStatuses.contains(registration.status)) Json.obj("cancelURL" -> vatCancelUrl.replace(":regID", regId)) else Json.obj()
 
         base ++ ackRef ++ restartUrl ++ cancelUrl
       case None =>
-        logger.warn(s"[getStatus] - No VAT registration document found for ${regId.value}")
+        logger.warn(s"[getStatus] - No VAT registration document found for ${regId}")
         throw new MissingRegDocument(regId)
     }
   }
 
   //TODO - confirm if this is correct
-  def generateRegistrationId():String = UUID.randomUUID().toString
+  def generateRegistrationId(): String = UUID.randomUUID().toString
 
-  def createNewRegistration(intId:String)(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme] =
-    EitherT(getOrCreateVatScheme(generateRegistrationId(),intId))
+  def createNewRegistration(intId: String)(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme] =
+    EitherT(getOrCreateVatScheme(generateRegistrationId(), intId))
 
-  def retrieveVatScheme(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[VatScheme] =
-    OptionT(registrationRepository.retrieveVatScheme(id)).toRight(ResourceNotFound(id.value))
+  def retrieveVatScheme(regId: String)(implicit hc: HeaderCarrier): ServiceResult[VatScheme] =
+    OptionT(registrationRepository.retrieveVatScheme(regId)).toRight(ResourceNotFound(regId))
 
   def retrieveVatSchemeByInternalId(internalId: String)(implicit hc: HeaderCarrier): ServiceResult[VatScheme] =
     OptionT(registrationRepository.retrieveVatSchemeByInternalId(internalId)).toRight(ResourceNotFound(internalId))
 
   def deleteVatScheme(regId: String, validStatuses: VatRegStatus.Value*)(implicit hc: HeaderCarrier): Future[Boolean] = {
     for {
-      someDocument <- registrationRepository.retrieveVatScheme(RegistrationId(regId))
-      document     <- someDocument.fold(throw new MissingRegDocument(RegistrationId(regId)))(doc => Future.successful(doc))
-      deleted      <- if(validStatuses.contains(document.status)) {
+      someDocument <- registrationRepository.retrieveVatScheme(regId)
+      document     <- someDocument.fold(throw new MissingRegDocument(regId))(doc => Future.successful(doc))
+      deleted      <- if (validStatuses.contains(document.status)) {
         registrationRepository.deleteVatScheme(regId)
       } else {
         throw new InvalidSubmissionStatus(s"[deleteVatScheme] - VAT reg doc for regId $regId was not deleted as the status was ${document.status}; not ${validStatuses.toString}")
@@ -135,8 +121,8 @@ class VatRegistrationService @Inject()(registrationRepository: RegistrationMongo
     registrationRepository.clearDownDocument(transId)
   }
 
-  def retrieveAcknowledgementReference(id: RegistrationId)(implicit hc: HeaderCarrier): ServiceResult[String] = {
-    retrieveVatScheme(id).subflatMap(_.acknowledgementReference.toRight(ResourceNotFound("AcknowledgementId")))
+  def retrieveAcknowledgementReference(regId: String)(implicit hc: HeaderCarrier): ServiceResult[String] = {
+    retrieveVatScheme(regId).subflatMap(_.acknowledgementReference.toRight(ResourceNotFound("AcknowledgementId")))
   }
 
   def getBlockFromEligibilityData[T](regId: String)(implicit ex: ExecutionContext, r: Reads[T]): Future[Option[T]] = {

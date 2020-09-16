@@ -16,7 +16,6 @@
 
 package services
 
-import common.RegistrationId
 import common.exceptions.MissingRegDocument
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
@@ -25,7 +24,6 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
 import play.api.test.Helpers._
-import repositories.RegistrationMongoRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -61,9 +59,9 @@ class SicAndComplianceServiceSpec extends VatRegSpec with VatRegistrationFixture
       await(service.updateSicAndCompliance("ImARegId",validSicAndCompliance.get)) mustBe validSicAndCompliance.get
     }
     "return a missingRegDocument when no reg Document exists for the reg id when an update takes place" in new Setup {
-      updateMongo(Future.failed(MissingRegDocument(RegistrationId("testId"))))
+      updateMongo(Future.failed(MissingRegDocument("testId")))
       intercept[MissingRegDocument](await(
-        service.updateSicAndCompliance("testId",validSicAndCompliance.get))) mustBe MissingRegDocument(RegistrationId("testId"))
+        service.updateSicAndCompliance("testId",validSicAndCompliance.get))) mustBe MissingRegDocument("testId")
     }
     "return new Exception when an exception is returned from the repo during an update" in new Setup {
       updateMongo(Future.failed(new Exception("foo Bar Wizz Bang")))

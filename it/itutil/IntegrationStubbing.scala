@@ -16,9 +16,10 @@
 package itutil
 
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor, urlMatching}
-import models.api.VatScheme
+import models.api.{DailyQuota, RegistrationInformation, VatScheme}
 import play.api.test.Helpers._
 import reactivemongo.api.commands.WriteResult
+import repositories.trafficmanagement.TrafficManagementRepository
 import uk.gov.hmrc.auth.core.AuthenticateHeaderParser
 
 import scala.concurrent.Future
@@ -29,17 +30,34 @@ trait IntegrationStubbing extends IntegrationSpecBase with ITFixtures {
     implicit val builder: PreconditionBuilder = this
 
     def user: User = User()
-    def regRepo:RegRepo = RegRepo()
+    def regRepo: RegRepo = RegRepo()
+    def dailyQuotaRepo: DailyQuotaRepo = DailyQuotaRepo()
+    def regInfoRepo: RegInfoRepo = RegInfoRepo()
   }
 
   def given: PreconditionBuilder = new PreconditionBuilder
 
   case class RegRepo()(implicit builder: PreconditionBuilder) {
-    def insertIntoDb(v:VatScheme,f:VatScheme => Future[WriteResult]): PreconditionBuilder = {
+    def insertIntoDb(v: VatScheme, f: VatScheme => Future[WriteResult]): PreconditionBuilder = {
      await(f(v))
       builder
     }
   }
+
+  case class DailyQuotaRepo()(implicit builder: PreconditionBuilder) {
+    def insertIntoDb(v: DailyQuota, f: DailyQuota => Future[WriteResult]): PreconditionBuilder = {
+      await(f(v))
+      builder
+    }
+  }
+
+  case class RegInfoRepo()(implicit builder: PreconditionBuilder) {
+    def insertIntoDb(v: RegistrationInformation, f: RegistrationInformation => Future[WriteResult]): PreconditionBuilder = {
+      await(f(v))
+      builder
+    }
+  }
+
   case class User()(implicit builder: PreconditionBuilder) {
     val authoriseData =
       s"""{

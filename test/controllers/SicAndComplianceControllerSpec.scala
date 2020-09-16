@@ -16,7 +16,6 @@
 
 package controllers
 
-import common.RegistrationId
 import common.exceptions.MissingRegDocument
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
@@ -30,6 +29,7 @@ import play.api.test.FakeRequest
 import repositories.RegistrationMongoRepository
 
 import scala.concurrent.Future
+
 class SicAndComplianceControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
   import play.api.test.Helpers._
@@ -48,61 +48,61 @@ class SicAndComplianceControllerSpec extends VatRegSpec with VatRegistrationFixt
 
   "getSicAndCompliance" should {
     "return valid Json if record returned from service" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      AuthorisationMocks.mockAuthorised(regId,internalid)
       mockGetSicAndComplianceFromService(Future.successful(validSicAndCompliance))
 
-      val result: Future[Result] = controller.getSicAndCompliance(regId.value)(FakeRequest())
+      val result: Future[Result] = controller.getSicAndCompliance(regId)(FakeRequest())
       status(result) mustBe 200
       contentAsJson(result) mustBe validSicAndComplianceJson
 
     }
     "return 204 when nothing is returned but document exists" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      AuthorisationMocks.mockAuthorised(regId,internalid)
       mockGetSicAndComplianceFromService(Future.successful(None))
 
-      val result: Future[Result] = controller.getSicAndCompliance(regId.value)(FakeRequest())
+      val result: Future[Result] = controller.getSicAndCompliance(regId)(FakeRequest())
       status(result) mustBe 204
     }
     "returns 404 if none found" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      mockGetSicAndComplianceFromService(Future.failed(MissingRegDocument(RegistrationId("foo"))))
+      AuthorisationMocks.mockAuthorised(regId,internalid)
+      mockGetSicAndComplianceFromService(Future.failed(MissingRegDocument("foo")))
 
-      val result: Future[Result] = controller.getSicAndCompliance(regId.value)(FakeRequest())
+      val result: Future[Result] = controller.getSicAndCompliance(regId)(FakeRequest())
       status(result) mustBe 404
     }
     "returns 403 if not authorised" in new Setup {
-      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
+      AuthorisationMocks.mockNotAuthorised(regId,internalid)
 
-      val result: Future[Result] = controller.getSicAndCompliance(regId.value)(FakeRequest())
+      val result: Future[Result] = controller.getSicAndCompliance(regId)(FakeRequest())
       status(result) mustBe 403
     }
   }
   "updateSicAndCompliance" should {
     "return 200 and the updated model as json when a record exists and the update is successful" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      AuthorisationMocks.mockAuthorised(regId,internalid)
       mockUpdateSicAndComplianceFromService(Future.successful(validSicAndCompliance.get))
 
-      val result: Future[Result] = controller.updateSicAndCompliance(regId.value)(FakeRequest().withBody[JsObject](validSicAndComplianceJson))
+      val result: Future[Result] = controller.updateSicAndCompliance(regId)(FakeRequest().withBody[JsObject](validSicAndComplianceJson))
       contentAsJson(result) mustBe validSicAndComplianceJson
     }
     "returns 404 if regId not found" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      mockUpdateSicAndComplianceFromService(Future.failed(MissingRegDocument(RegistrationId("testId"))))
+      AuthorisationMocks.mockAuthorised(regId,internalid)
+      mockUpdateSicAndComplianceFromService(Future.failed(MissingRegDocument(regId)))
 
-      val result: Future[Result] = controller.updateSicAndCompliance(regId.value)(FakeRequest().withBody[JsObject](validSicAndComplianceJson))
+      val result: Future[Result] = controller.updateSicAndCompliance(regId)(FakeRequest().withBody[JsObject](validSicAndComplianceJson))
       status(result) mustBe 404
     }
     "returns 500 if an error occurs" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      AuthorisationMocks.mockAuthorised(regId,internalid)
       mockUpdateSicAndComplianceFromService(Future.failed(new Exception))
 
-      val result: Future[Result] = controller.updateSicAndCompliance(regId.value)(FakeRequest().withBody[JsObject](validSicAndComplianceJson))
+      val result: Future[Result] = controller.updateSicAndCompliance(regId)(FakeRequest().withBody[JsObject](validSicAndComplianceJson))
       status(result) mustBe 500
     }
     "returns 403 if the user is not authorised" in new Setup {
-      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
+      AuthorisationMocks.mockNotAuthorised(regId,internalid)
 
-      val result: Future[Result] = controller.updateSicAndCompliance(regId.value)(FakeRequest().withBody[JsObject](validSicAndComplianceJson))
+      val result: Future[Result] = controller.updateSicAndCompliance(regId)(FakeRequest().withBody[JsObject](validSicAndComplianceJson))
       status(result) mustBe 403
     }
   }

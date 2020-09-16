@@ -17,7 +17,7 @@ package itutil
 
 import java.time.LocalDate
 
-import common.{RegistrationId, TransactionId}
+import common.TransactionId
 import enums.VatRegStatus
 import models.api._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -28,7 +28,7 @@ trait ITFixtures {
 
   val date: LocalDate = LocalDate.of(2017, 1, 1)
   val startDate = StartDate(Some(date))
-  val regId = RegistrationId("regId")
+  val regId = "regId"
   val internalid = "INT-123-456-789"
   val transactionId = "transId"
   val vatScheme = VatScheme(regId, internalId = internalid, status = VatRegStatus.draft)
@@ -95,7 +95,7 @@ trait ITFixtures {
     )
 
   def emptyVatScheme(regId: String): VatScheme = VatScheme(
-    id = RegistrationId(regId),
+    id = regId,
     internalId = internalid,
     status = VatRegStatus.draft
   )

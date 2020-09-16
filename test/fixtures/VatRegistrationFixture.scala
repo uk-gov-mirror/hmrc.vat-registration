@@ -18,14 +18,14 @@ package fixtures
 
 import java.time.{LocalDate, ZoneId}
 
-import common.{RegistrationId, TransactionId}
+import common.TransactionId
 import enums.VatRegStatus
 import models.api._
 import models.external.{IncorpStatusEvent, IncorpSubscription, IncorporationStatus}
 import play.api.libs.json.{JsObject, Json}
 
 trait VatRegistrationFixture {
-  val regId = RegistrationId("testId")
+  val regId = "testRegId"
   val internalid = "INT-123-456-789"
   val txId: TransactionId = TransactionId("1")
   val regime = "vat"

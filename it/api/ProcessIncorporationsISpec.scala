@@ -16,10 +16,8 @@
 
 package api
 
-import common.RegistrationId
 import connectors.stubs.AuditStub._
 import connectors.stubs.BusinessRegConnectorStub._
-import controllers.routes.ProcessIncorporationsController
 import enums.VatRegStatus
 import itutil.IntegrationStubbing
 import models.api.VatScheme
@@ -40,7 +38,7 @@ class ProcessIncorporationsISpec extends IntegrationStubbing {
     val transactionId: String = "transId"
     val incorpDate: DateTime = DateTime.now
     val registrationID = "regId"
-    val regIDCase = RegistrationId(registrationID)
+    val regIDCase = registrationID
 
     def prepareHeldSubmission(repo : RegistrationMongoRepository): Future[Unit] = {
       for {
@@ -77,12 +75,12 @@ class ProcessIncorporationsISpec extends IntegrationStubbing {
 
       await(prepareHeldSubmission(repo))
 
-      val result: WSResponse = await(client(ProcessIncorporationsController.processIncorp().url)
+      val result: WSResponse = await(client(controllers.routes.ProcessIncorporationsController.processIncorp().url)
         .post(topUpJson("accepted")))
 
       result.status mustBe OK
 
-      val reg: Option[VatScheme] = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
+      val reg: Option[VatScheme] = await(repo.retrieveVatScheme(registrationID))
       reg.get.status mustBe VatRegStatus.submitted
 
       await(repo.remove("registrationId" -> registrationID))
@@ -95,12 +93,12 @@ class ProcessIncorporationsISpec extends IntegrationStubbing {
 
       await(prepareHeldSubmission(repo))
 
-      val result: WSResponse = await(client(ProcessIncorporationsController.processIncorp().url)
+      val result: WSResponse = await(client(controllers.routes.ProcessIncorporationsController.processIncorp().url)
         .post(topUpJson("rejected")))
 
       result.status mustBe OK
 
-      val reg: Option[VatScheme] = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
+      val reg: Option[VatScheme] = await(repo.retrieveVatScheme(registrationID))
       reg.get.status mustBe VatRegStatus.rejected
 
       await(repo.remove("registrationId" -> registrationID))
@@ -113,12 +111,12 @@ class ProcessIncorporationsISpec extends IntegrationStubbing {
 
       await(prepareHeldSubmission(repo))
 
-      val result: WSResponse = await(client(ProcessIncorporationsController.processIncorp().url)
+      val result: WSResponse = await(client(controllers.routes.ProcessIncorporationsController.processIncorp().url)
         .post(topUpJson("accepted")))
 
       result.status mustBe BAD_REQUEST
 
-      val reg: Option[VatScheme] = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
+      val reg: Option[VatScheme] = await(repo.retrieveVatScheme(registrationID))
       reg.get.status mustBe VatRegStatus.held
 
       await(repo.remove("registrationId" -> registrationID))
@@ -131,12 +129,12 @@ class ProcessIncorporationsISpec extends IntegrationStubbing {
 
       await(prepareHeldSubmission(repo))
 
-      val result: WSResponse = await(client(ProcessIncorporationsController.processIncorp().url)
+      val result: WSResponse = await(client(controllers.routes.ProcessIncorporationsController.processIncorp().url)
         .post(topUpJson("accepted")))
 
       result.status mustBe SERVICE_UNAVAILABLE
 
-      val reg: Option[VatScheme] = await(repo.retrieveVatScheme(RegistrationId(registrationID)))
+      val reg: Option[VatScheme] = await(repo.retrieveVatScheme(registrationID))
       reg.get.status mustBe VatRegStatus.held
 
       await(repo.remove("registrationId" -> registrationID))
