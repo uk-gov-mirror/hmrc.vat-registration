@@ -17,7 +17,6 @@
 package services
 
 import javax.inject.{Inject, Singleton}
-import models.api.Eligibility
 import play.api.libs.json.{JsObject, JsResultException}
 import repositories.RegistrationMongoRepository
 import utils.EligibilityDataJsonUtils
@@ -27,20 +26,12 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class EligibilityService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
-  @deprecated("Use upsertEligibilityData instead", "SCRS-11579")
-  def upsertEligibility(regId: String, eligibility: Eligibility)(implicit ex: ExecutionContext): Future[Eligibility] =
-    registrationRepository.updateEligibility(regId, eligibility)
-
-  @deprecated("Use getEligibilityData instead", "SCRS-11579")
-  def getEligibility(regId: String)(implicit ex: ExecutionContext): Future[Option[Eligibility]] =
-    registrationRepository.getEligibility(regId)
-
   def getEligibilityData(regId: String)(implicit ex: ExecutionContext): Future[Option[JsObject]] =
     registrationRepository.getEligibilityData(regId)
 
   def updateEligibilityData(regId: String, eligibilityData: JsObject)(implicit ex: ExecutionContext): Future[JsObject] = {
     eligibilityData.validate[JsObject](EligibilityDataJsonUtils.readsOfFullJson).fold(
-      invalid => throw new JsResultException(invalid),
+      invalid => throw JsResultException(invalid),
       _ => registrationRepository.updateEligibilityData(regId, eligibilityData)
     )
   }

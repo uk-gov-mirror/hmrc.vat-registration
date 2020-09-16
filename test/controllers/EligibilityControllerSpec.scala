@@ -22,10 +22,8 @@ import common.RegistrationId
 import common.exceptions.MissingRegDocument
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import models.api.Eligibility
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
-import org.mockito.stubbing.OngoingStubbing
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
@@ -38,27 +36,9 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
   import play.api.test.Helpers._
 
   class Setup {
-    val controller: EligibilityController = new EligibilityController (mockEligibilityService, mockAuthConnector, stubControllerComponents()){
+    val controller: EligibilityController = new EligibilityController(mockEligibilityService, mockAuthConnector, stubControllerComponents()) {
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
     }
-
-    def getEligibilityData(): OngoingStubbing[Future[Option[Eligibility]]] = when(mockEligibilityService.getEligibility(any())(any()))
-      .thenReturn(Future.successful(Some(validEligibility)))
-
-    def getEligibilityDataNotFound(): OngoingStubbing[Future[Option[Eligibility]]] = when(mockEligibilityService.getEligibility(any())(any()))
-      .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
-
-    def getNoEligibilityData(): OngoingStubbing[Future[Option[Eligibility]]] = when(mockEligibilityService.getEligibility(any())(any()))
-      .thenReturn(Future.successful(None))
-
-    def updateEligibility(): OngoingStubbing[Future[Eligibility]] = when(mockEligibilityService.upsertEligibility(any(), any())(any()))
-      .thenReturn(Future.successful(upsertEligibility))
-
-    def updateEligibilityFails(): OngoingStubbing[Future[Eligibility]] = when(mockEligibilityService.upsertEligibility(any(), any())(any()))
-      .thenReturn(Future.failed(new Exception))
-
-    def updateEligibilityNotFound(): OngoingStubbing[Future[Eligibility]] = when(mockEligibilityService.upsertEligibility(any(), any())(any()))
-      .thenReturn(Future.failed(new MissingRegDocument(RegistrationId("testId"))))
   }
 
   val validEligibilityJson: JsObject = Json.parse(
@@ -84,82 +64,6 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
       |}
     """.stripMargin).as[JsObject]
 
-  "getEligibility" should {
-    "returns a valid json if found for id" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      getEligibilityData()
-
-      val result: Future[Result] = controller.getEligibility("testId")(FakeRequest())
-      status(result) mustBe 200
-      contentAsJson(result) mustBe validEligibilityJson
-    }
-
-    "returns 204 if none found" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      getNoEligibilityData()
-
-      val result: Future[Result] = controller.getEligibility("testId")(FakeRequest())
-      status(result) mustBe 204
-    }
-
-    "returns 404 if none found" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      getEligibilityDataNotFound()
-
-      val result: Future[Result] = controller.getEligibility("testId")(FakeRequest())
-      status(result) mustBe 404
-    }
-
-    "returns 403 if user is not authorised" in new Setup {
-      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
-
-      val result: Future[Result] = controller.getEligibility("testId")(FakeRequest())
-      status(result) mustBe 403
-    }
-  }
-
-  "Upsert Eligibility" should {
-
-    "returns 403 if user is not authorised" in new Setup {
-      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
-
-      val result: Future[Result] = controller.updateEligibility("testId")(FakeRequest().withBody[JsObject](upsertEligibilityJson))
-      status(result) mustBe 403
-    }
-
-    "returns 200 if successful" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      updateEligibility()
-
-      val result: Future[Result] = controller.updateEligibility("testId")(FakeRequest().withBody[JsObject](upsertEligibilityJson))
-      status(result) mustBe 200
-      contentAsJson(result) mustBe upsertEligibilityJson
-    }
-
-    "returns 400 if json received is invalid" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      updateEligibilityFails()
-
-      val result: Future[Result] = controller.updateEligibility("testId")(FakeRequest().withBody[JsObject](invalidUpsertJson))
-      status(result) mustBe 400
-    }
-
-    "returns 404 if the registration is not found" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      updateEligibilityNotFound()
-
-      val result: Future[Result] = controller.updateEligibility("testId")(FakeRequest().withBody[JsObject](upsertEligibilityJson))
-      status(result) mustBe 404
-    }
-
-    "returns 500 if an error occurs" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
-      updateEligibilityFails()
-
-      val result: Future[Result] = controller.updateEligibility("testId")(FakeRequest().withBody[JsObject](upsertEligibilityJson))
-      status(result) mustBe 500
-    }
-  }
   "getEligibilityData" should {
     val json = Json.obj("foo" -> "bar")
     "return 200 and a JsObject" in new Setup {
@@ -179,12 +83,13 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
     }
     "return 404 when no reg doc exists" in new Setup {
       AuthorisationMocks.mockAuthorised(regId.value, internalid)
-      when(mockEligibilityService.getEligibilityData(any())(any())).thenReturn(Future.failed(new MissingRegDocument(RegistrationId("foo"))))
+      when(mockEligibilityService.getEligibilityData(any())(any())).thenReturn(Future.failed(MissingRegDocument(RegistrationId("foo"))))
 
       val res: Future[Result] = controller.getEligibilityData(regId.value)(FakeRequest())
       status(res) mustBe 404
     }
   }
+
   "updateEligibilityData" should {
     val thresholdPreviousThirtyDays = LocalDate.of(2017, 5, 23)
     val thresholdInTwelveMonths = LocalDate.of(2017, 7, 16)
@@ -225,7 +130,7 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
       status(result) mustBe 200
     }
     "returns 403 if user is not authorised" in new Setup {
-      AuthorisationMocks.mockNotAuthorised(regId.value,internalid)
+      AuthorisationMocks.mockNotAuthorised(regId.value, internalid)
 
       val result: Future[Result] = controller.updateEligibilityData("testId")(FakeRequest().withBody[JsValue](json))
       status(result) mustBe 403
@@ -251,23 +156,23 @@ class EligibilityControllerSpec extends VatRegSpec with VatRegistrationFixture {
            |   }
            |]
         """.stripMargin)
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      AuthorisationMocks.mockAuthorised(regId.value, internalid)
 
       val result: Future[Result] = controller.updateEligibilityData("testId")(FakeRequest().withBody[JsValue](invalidJson))
       status(result) mustBe 400
     }
 
     "returns 404 if the registration is not found" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      AuthorisationMocks.mockAuthorised(regId.value, internalid)
       when(mockEligibilityService.updateEligibilityData(any(), any())(any()))
-        .thenReturn(Future.failed(new MissingRegDocument(RegistrationId("testId"))))
+        .thenReturn(Future.failed(MissingRegDocument(RegistrationId("testId"))))
 
       val result: Future[Result] = controller.updateEligibilityData("testId")(FakeRequest().withBody[JsValue](json))
       status(result) mustBe 404
     }
 
     "returns 500 if an error occurs" in new Setup {
-      AuthorisationMocks.mockAuthorised(regId.value,internalid)
+      AuthorisationMocks.mockAuthorised(regId.value, internalid)
       when(mockEligibilityService.updateEligibilityData(any(), any())(any()))
         .thenReturn(Future.failed(new Exception))
 

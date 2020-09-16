@@ -2,35 +2,38 @@
 package controllers
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import itutil.IntegrationStubbing
-import models.api.{Eligibility, VatScheme}
-import play.api.libs.json.{JsObject, Json}
-import play.api.test.Helpers._
 import controllers.routes.EligibilityController
+import itutil.IntegrationStubbing
+import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 import play.api.libs.ws.WSResponse
+import play.api.test.Helpers._
 
 class EligibilityControllerISpec extends IntegrationStubbing {
 
   class Setup extends SetupHelper {
-    def writeAudit: StubMapping = stubPost("/write/audit/merged",OK,"")
+    def writeAudit: StubMapping = stubPost("/write/audit/merged", OK, "")
   }
 
-  def vatScheme(regId: String): VatScheme = emptyVatScheme(regId).copy(eligibility = Some(Eligibility(1,"success")))
+  val completionCapacity: JsObject = Json.obj("role" -> "director", "name" -> Json.obj(
+    "forename" -> "First Name Test",
+    "other_forenames" -> "Middle Name Test",
+    "surname" -> "Last Name Test"
+  ))
+  val questions1 = Seq(
+    Json.obj("questionId" -> "completionCapacity", "question" -> "Some Question 11", "answer" -> "Some Answer 11", "answerValue" -> completionCapacity),
+    Json.obj("questionId" -> "testQId12", "question" -> "Some Question 12", "answer" -> "Some Answer 12", "answerValue" -> "val12")
+  )
+  val questions2 = Seq(
+    Json.obj("questionId" -> "applicantUKNino-optionalData", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "JW778877A"),
+    Json.obj("questionId" -> "turnoverEstimate-value", "question" -> "Some Question 21", "answer" -> "Some Answer 21", "answerValue" -> 12345),
+    Json.obj("questionId" -> "testQId22", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "val22")
+  )
+  val section1: JsObject = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions1))
+  val section2: JsObject = Json.obj("title" -> "test TITLE 2", "data" -> JsArray(questions2))
+  val sections: JsArray = JsArray(Seq(section1, section2))
+  val validEligibilityJson: JsObject = Json.obj("sections" -> sections)
 
-  val validEligibilityJson: JsObject = Json.parse(
-    """
-      |{
-      | "version": 1,
-      | "result": "success"
-      |}
-    """.stripMargin).as[JsObject]
-
-  val invalidEligibilityJson: JsObject = Json.parse(
-    """
-      |{
-      | "result": "success"
-      |}
-    """.stripMargin).as[JsObject]
+  val invalidEligibilityJson: JsValue = Json.obj("invalid" -> "json")
 
   "updatingEligibility" should {
     "return OK with an eligibility json body" in new Setup {
@@ -38,7 +41,7 @@ class EligibilityControllerISpec extends IntegrationStubbing {
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      val response: WSResponse = await(client(EligibilityController.updateEligibility("regId").url)
+      val response: WSResponse = await(client(EligibilityController.updateEligibilityData("regId").url)
         .patch(validEligibilityJson))
 
       response.status mustBe OK
@@ -50,36 +53,25 @@ class EligibilityControllerISpec extends IntegrationStubbing {
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      val response: WSResponse = await(client(EligibilityController.updateEligibility("regId").url)
+      val response: WSResponse = await(client(EligibilityController.updateEligibilityData("regId").url)
         .patch(invalidEligibilityJson))
 
-      response.status mustBe BAD_REQUEST
+      response.status mustBe INTERNAL_SERVER_ERROR
     }
 
     "return NOT_FOUND if no reg document is found" in new Setup {
       given.user.isAuthorised
 
-      val response: WSResponse = await(client(EligibilityController.updateEligibility("regId").url)
+      val response: WSResponse = await(client(EligibilityController.updateEligibilityData("regId").url)
         .patch(validEligibilityJson))
 
       response.status mustBe NOT_FOUND
     }
 
-    "return OK if no data updated because data is same" in new Setup {
-      given.user.isAuthorised
-
-      insertIntoDb(vatScheme("regId"))
-
-      val response: WSResponse = await(client(EligibilityController.updateEligibility("regId").url)
-        .patch(validEligibilityJson))
-
-      response.status mustBe OK
-    }
-
     "return FORBIDDEN if user is not authorised obtained" in new Setup {
       given.user.isNotAuthorised
 
-      val response: WSResponse = await(client(EligibilityController.updateEligibility("regId").url)
+      val response: WSResponse = await(client(EligibilityController.updateEligibilityData("regId").url)
         .patch(validEligibilityJson))
 
       response.status mustBe FORBIDDEN

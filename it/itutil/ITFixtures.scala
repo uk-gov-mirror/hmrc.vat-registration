@@ -42,10 +42,10 @@ trait ITFixtures {
     start = startDate
   )
   val frsDetails = FRSDetails(
-    businessGoods             = Some(BusinessGoods(12345678L,true)),
-    startDate                 = Some(date),
-    categoryOfBusiness        = "testCategory",
-    percent                   = 15
+    businessGoods = Some(BusinessGoods(12345678L, true)),
+    startDate = Some(date),
+    categoryOfBusiness = "testCategory",
+    percent = 15
   )
 
 
@@ -57,27 +57,25 @@ trait ITFixtures {
   val EstimateValue: Long = 1000L
   val zeroRatedTurnoverEstimate: Long = 1000L
 
-  val scrsAddress               = Address("line1", "line2", None, None, Some("XX XX"), Some("UK"))
-  val digitalContact            = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
+  val scrsAddress = Address("line1", "line2", None, None, Some("XX XX"), Some("UK"))
+  val digitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
 
-  val name                      = Name(first = Some("Forename"), middle = None, last = "Surname")
-  val formerName                = FormerName(Some("Bob Smith"), Some(date), name = Some(oldName), change = Some(date))
-  val vatLodgingOfficer         = LodgingOfficer(
-    nino                      = "NB686868C",
-    role                      = "director",
-    name                      = name,
-    details                   = None
+  val name = Name(first = Some("Forename"), middle = None, last = "Surname")
+  val formerName = FormerName(Some("Bob Smith"), Some(date), name = Some(oldName), change = Some(date))
+  val vatLodgingOfficer = LodgingOfficer(
+    nino = "NB686868C",
+    role = "director",
+    name = name,
+    details = None
   )
-  val businessContact         = BusinessContact(digitalContact = digitalContact, website = None, ppob = scrsAddress)
-  val sicAndCompliance        = SicAndCompliance("businessDesc", Some(ComplianceLabour(1, Some(true), Some(true))), SicCode("12345678","sicDesc","sicDetail"), List(SicCode("12345678","sicDesc","sicDetail")))
+  val businessContact = BusinessContact(digitalContact = digitalContact, website = None, ppob = scrsAddress)
+  val sicAndCompliance = SicAndCompliance("businessDesc", Some(ComplianceLabour(1, Some(true), Some(true))), SicCode("12345678", "sicDesc", "sicDetail"), List(SicCode("12345678", "sicDesc", "sicDetail")))
 
-  val eligibility             = Eligibility(1, "result")
+  val vatTurnoverEstimates = TurnoverEstimates(12345678L)
 
-  val vatTurnoverEstimates       = TurnoverEstimates(12345678L)
+  val vatBankAccount = BankAccount(true, None)
 
-  val vatBankAccount             = BankAccount(true, None)
-
-  val threshold               = Threshold(true, None, None, None, None)
+  val threshold = Threshold(true, None, None, None, None)
 
   val fullVatScheme =
     VatScheme(
@@ -88,7 +86,6 @@ trait ITFixtures {
       Some(returns),
       Some(sicAndCompliance),
       Some(businessContact),
-      Some(eligibility),
       Some(vatTurnoverEstimates),
       Some(vatBankAccount),
       Some(threshold),

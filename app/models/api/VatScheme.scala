@@ -22,8 +22,6 @@ import enums.VatRegStatus
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-import scala.util.control.NoStackTrace
-
 case class VatScheme(id: RegistrationId,
                      internalId: String,
                      transactionId: Option[TransactionId] = None,
@@ -31,7 +29,6 @@ case class VatScheme(id: RegistrationId,
                      returns: Option[Returns] = None,
                      sicAndCompliance: Option[SicAndCompliance] = None,
                      businessContact: Option[BusinessContact] = None,
-                     eligibility: Option[Eligibility] = None,
                      @deprecated("Use eligibilityData instead", "SCRS-11579")
                      turnoverEstimates: Option[TurnoverEstimates] = None,
                      bankAccount: Option[BankAccount] = None,
@@ -44,34 +41,32 @@ case class VatScheme(id: RegistrationId,
 
 object VatScheme {
 
-  val apiWrites : OWrites[VatScheme] = (
+  val apiWrites: OWrites[VatScheme] = (
     (__ \ "registrationId").write[RegistrationId] and
-    (__ \ "internalId").write[String] and
-    (__ \ "transactionId").writeNullable[TransactionId] and
-    (__ \ "tradingDetails").writeNullable[TradingDetails] and
-    (__ \ "returns").writeNullable[Returns] and
-    (__ \ "sicAndCompliance").writeNullable[SicAndCompliance] and
-    (__ \ "businessContact").writeNullable[BusinessContact] and
-    (__ \ "eligibility").writeNullable[Eligibility] and
-    (__ \ "turnoverEstimates").writeNullable[TurnoverEstimates] and
-    (__ \ "bankAccount").writeNullable[BankAccount] and
-    (__ \ "threshold").writeNullable[Threshold] and
-    (__ \ "acknowledgementReference").writeNullable[String] and
-    (__ \ "flatRateScheme").writeNullable[FlatRateScheme] and
-    (__ \ "status").write[VatRegStatus.Value] and
-    (__ \ "eligibilityData").writeNullable[JsObject]
-  )(unlift(VatScheme.unapply))
+      (__ \ "internalId").write[String] and
+      (__ \ "transactionId").writeNullable[TransactionId] and
+      (__ \ "tradingDetails").writeNullable[TradingDetails] and
+      (__ \ "returns").writeNullable[Returns] and
+      (__ \ "sicAndCompliance").writeNullable[SicAndCompliance] and
+      (__ \ "businessContact").writeNullable[BusinessContact] and
+      (__ \ "turnoverEstimates").writeNullable[TurnoverEstimates] and
+      (__ \ "bankAccount").writeNullable[BankAccount] and
+      (__ \ "threshold").writeNullable[Threshold] and
+      (__ \ "acknowledgementReference").writeNullable[String] and
+      (__ \ "flatRateScheme").writeNullable[FlatRateScheme] and
+      (__ \ "status").write[VatRegStatus.Value] and
+      (__ \ "eligibilityData").writeNullable[JsObject]
+    ) (unlift(VatScheme.unapply))
 
   def mongoFormat(crypto: CryptoSCRS): OFormat[VatScheme] = (
-      (__ \ "registrationId").format[RegistrationId] and
+    (__ \ "registrationId").format[RegistrationId] and
       (__ \ "internalId").format[String] and
       (__ \ "transactionId").formatNullable[TransactionId] and
       (__ \ "tradingDetails").formatNullable[TradingDetails] and
-//      (__ \ "lodgingOfficer").formatNullable[LodgingOfficer] and
+      //      (__ \ "lodgingOfficer").formatNullable[LodgingOfficer] and
       (__ \ "returns").formatNullable[Returns] and
       (__ \ "sicAndCompliance").formatNullable[SicAndCompliance] and
       (__ \ "businessContact").formatNullable[BusinessContact] and
-      (__ \ "eligibility").formatNullable[Eligibility] and
       (__ \ "turnoverEstimates").formatNullable[TurnoverEstimates] and
       (__ \ "bankAccount").formatNullable[BankAccount](BankAccountMongoFormat.encryptedFormat(crypto)) and
       (__ \ "threshold").formatNullable[Threshold] and
@@ -79,5 +74,5 @@ object VatScheme {
       (__ \ "flatRateScheme").formatNullable[FlatRateScheme] and
       (__ \ "status").format[VatRegStatus.Value] and
       (__ \ "eligibilityData").formatNullable[JsObject]
-    )(VatScheme.apply, unlift(VatScheme.unapply))
+    ) (VatScheme.apply, unlift(VatScheme.unapply))
 }

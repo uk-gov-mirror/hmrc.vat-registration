@@ -18,13 +18,10 @@ package services
 
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import models.api.Eligibility
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
-import org.mockito.stubbing.OngoingStubbing
 import play.api.libs.json.{JsArray, JsObject, JsResultException, Json}
 import play.api.test.Helpers._
-import repositories.RegistrationMongoRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -35,62 +32,7 @@ class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
     val service: EligibilityService = new EligibilityService(
       registrationRepository = mockRegistrationMongoRepository
     )
-
-    def upsertToMongo(): OngoingStubbing[Future[Eligibility]] = when(mockRegistrationMongoRepository.updateEligibility(any(), any())(any()))
-      .thenReturn(Future.successful(upsertEligibility))
-
-    def upsertToMongoFail(): OngoingStubbing[Future[Eligibility]] = when(mockRegistrationMongoRepository.updateEligibility(any(), any())(any()))
-      .thenReturn(Future.failed(new Exception("")))
-
-    def getsFromMongo(): OngoingStubbing[Future[Option[Eligibility]]] = when(mockRegistrationMongoRepository.getEligibility(any())(any()))
-      .thenReturn(Future.successful(Some(validEligibility)))
-
-    def getsNothingFromMongo(): OngoingStubbing[Future[Option[Eligibility]]] = when(mockRegistrationMongoRepository.getEligibility(any())(any()))
-      .thenReturn(Future.successful(None))
   }
-
-  val upsertEligibilityModel: Eligibility = Json.parse(
-    """
-      |{
-      | "version": 1,
-      | "result": "thisIsAnUpsert"
-      |}
-    """.stripMargin).as[Eligibility]
-
-  val validEligibilityModel: Eligibility = Json.parse(
-    """
-      |{
-      | "version": 1,
-      | "result": "thisIsAValidReason"
-      |}
-    """.stripMargin).as[Eligibility]
-
-  "upsertEligibility" should {
-    "return the data that is being inputted" in new Setup {
-      upsertToMongo()
-      val result = await(service.upsertEligibility("regId", upsertEligibilityModel))
-      result mustBe upsertEligibilityModel
-    }
-
-    "encounter an exception if an error occurs" in new Setup {
-      upsertToMongoFail()
-      intercept[Exception](await(service.upsertEligibility("regId", upsertEligibilityModel)))
-    }
-  }
-  "getEligibility" should {
-    "return an eligibility if found" in new Setup {
-      getsFromMongo()
-      val result: Option[Eligibility] = await(service.getEligibility("regId"))
-      result mustBe Some(validEligibilityModel)
-    }
-
-    "return None if none found matching regId" in new Setup {
-      getsNothingFromMongo()
-      val result: Option[Eligibility] = await(service.getEligibility("regId"))
-      result mustBe None
-    }
-  }
-
 
   val json: JsObject = Json.obj("test" -> "value test")
 

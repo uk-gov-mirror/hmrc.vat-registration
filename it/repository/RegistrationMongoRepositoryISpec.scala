@@ -187,12 +187,12 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
     "update Element object when one exists" in new Setup {
       val schemeWithAckRefNumber: VatScheme = vatScheme.copy(acknowledgementReference = Some(ACK_REF_NUM))
       repository.insert(schemeWithAckRefNumber).flatMap(_ => repository.updateByElement(vatScheme.id,
-                                                             AcknowledgementReferencePath, ACK_REF_NUM)) returns ACK_REF_NUM
+        AcknowledgementReferencePath, ACK_REF_NUM)) returns ACK_REF_NUM
     }
 
     "return a None when there is no corresponding VatScheme object" in new Setup {
       repository.insert(vatScheme).flatMap(_ => repository.updateByElement(RegistrationId("0"),
-                                                AcknowledgementReferencePath, ACK_REF_NUM)) failedWith classOf[UpdateFailed]
+        AcknowledgementReferencePath, ACK_REF_NUM)) failedWith classOf[UpdateFailed]
     }
   }
 
@@ -205,7 +205,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
         Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
       } yield (updatedScheme.status, updatedScheme.acknowledgementReference)
 
-      await(result) mustBe (VatRegStatus.locked, Some(testAckRef))
+      await(result) mustBe(VatRegStatus.locked, Some(testAckRef))
     }
 
     "update the vat scheme with the provided ackref on a topup" in new Setup {
@@ -215,7 +215,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
         Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
       } yield (updatedScheme.status, updatedScheme.acknowledgementReference)
 
-      await(result) mustBe (VatRegStatus.held, Some(testAckRef))
+      await(result) mustBe(VatRegStatus.held, Some(testAckRef))
     }
   }
 
@@ -490,142 +490,60 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
     }
   }
 
-  // TODO: look at removing the deprecated methods and tests
-//  "Calling getEligibility" should {
-//    val eligibility = Eligibility(version = 1, result = "testResult")
-//
-//    "return eligibility data from an existing registration containing data" in new Setup {
-//      val result = for {
-//        _ <- repository.insert(vatScheme.copy(eligibility = Some(eligibility)))
-//        res <- repository.getEligibility(vatScheme.id.value)
-//      } yield res
-//
-//      await(result) shouldBe Some(eligibility)
-//    }
-//
-//    "return None from an existing registration containing no data" in new Setup {
-//      val result = for {
-//        _ <- repository.insert(vatScheme)
-//        res <- repository.getEligibility(vatScheme.id.value)
-//      } yield res
-//
-//      await(result) shouldBe None
-//    }
-//
-//    "throw a MissingRegDocument for a none existing registration" in new Setup {
-//      val result = for {
-//        _ <- repository.insert(vatScheme.copy(eligibility = Some(eligibility)))
-//        res <- repository.getEligibility("wrongRegId")
-//      } yield res
-//
-//      a[MissingRegDocument] shouldBe thrownBy(await(result))
-//    }
-//
-//    "return an exception if there is no version in eligibility block in repository" in new Setup {
-//      val regId = "reg-123"
-//      val json: JsObject = Json.parse(
-//        s"""
-//           |{
-//           |  "registrationId": "$regId",
-//           |  "status": "${VatRegStatus.draft}",
-//           |  "eligibility": {
-//           |    "result": "test result"
-//           |  }
-//           |}
-//         """.stripMargin).as[JsObject]
-//
-//      insert(json)
-//
-//      an[Exception] shouldBe thrownBy(await(repository.getEligibility(regId)))
-//    }
-//  }
-//
-//  "Calling updateEligibility" should {
-//    val eligibility = Eligibility(version = 1, result = "testResult")
-//
-//    "update eligibility block in registration when there is no eligibility data" in new Setup {
-//      val result = for {
-//        _ <- repository.insert(vatScheme)
-//        _ <- repository.updateEligibility(vatScheme.id.value, eligibility)
-//        Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
-//      } yield updatedScheme.eligibility
-//
-//      await(result) shouldBe Some(eligibility)
-//    }
-//
-//    "update eligibility block in registration when there is already eligibility data" in new Setup {
-//      val otherEligibility = Eligibility(version = 2, result = "oldResult")
-//      val result = for {
-//        _ <- repository.insert(vatScheme.copy(eligibility = Some(otherEligibility)))
-//        _ <- repository.updateEligibility(vatScheme.id.value, eligibility)
-//        Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
-//      } yield updatedScheme.eligibility
-//
-//      await(result) shouldBe Some(eligibility)
-//    }
-//
-//    "not update or insert eligibility if registration does not exist" in new Setup {
-//      await(repository.insert(vatScheme))
-//
-//      count shouldBe 1
-//      await(repository.findAll()).head shouldBe vatScheme
-//
-//      a[MissingRegDocument] shouldBe thrownBy(await(repository.updateEligibility("wrongRegId", eligibility)))
-//    }
-//  }
-//
-//  "Calling getThreshold" should {
-//    val threshold = Threshold(mandatoryRegistration = false,
-//      voluntaryReason = Some("a reason"),
-//      overThresholdDateThirtyDays = Some(LocalDate.of(2017, 12, 28)),
-//      pastOverThresholdDateThirtyDays = Some(LocalDate.of(2017, 6, 15)),
-//      overThresholdOccuredTwelveMonth = Some(LocalDate.of(2018, 1, 31)))
-//
-//    "return threshold data from an existing registration containing data" in new Setup {
-//      val result = for {
-//        _ <- repository.insert(vatScheme.copy(threshold = Some(threshold)))
-//        res <- repository.getThreshold(vatScheme.id.value)
-//      } yield res
-//
-//      await(result) shouldBe Some(threshold)
-//    }
-//
-//    "return None from an existing registration containing no data" in new Setup {
-//      val result = for {
-//        _ <- repository.insert(vatScheme)
-//        res <- repository.getThreshold(vatScheme.id.value)
-//      } yield res
-//
-//      await(result) shouldBe None
-//    }
-//
-//    "throw a MissingRegDocument for a none existing registration" in new Setup {
-//      val result = for {
-//        _ <- repository.insert(vatScheme.copy(threshold = Some(threshold)))
-//        res <- repository.getThreshold("wrongRegId")
-//      } yield res
-//
-//      a[MissingRegDocument] shouldBe thrownBy(await(result))
-//    }
-//
-//    "return an exception if there is no mandatory registration in threshold block in repository" in new Setup {
-//      val regId = "reg-123"
-//      val json: JsObject = Json.parse(
-//        s"""
-//           |{
-//           |  "registrationId": "$regId",
-//           |  "status": "${VatRegStatus.draft}",
-//           |  "threshold": {
-//           |    "voluntaryReason": "test reason"
-//           |  }
-//           |}
-//         """.stripMargin).as[JsObject]
-//
-//      insert(json)
-//
-//      an[Exception] shouldBe thrownBy(await(repository.getThreshold(regId)))
-//    }
-//  }
+  //TODO: look at removing the deprecated methods and tests
+  //
+  //  "Calling getThreshold" should {
+  //    val threshold = Threshold(mandatoryRegistration = false,
+  //      voluntaryReason = Some("a reason"),
+  //      overThresholdDateThirtyDays = Some(LocalDate.of(2017, 12, 28)),
+  //      pastOverThresholdDateThirtyDays = Some(LocalDate.of(2017, 6, 15)),
+  //      overThresholdOccuredTwelveMonth = Some(LocalDate.of(2018, 1, 31)))
+  //
+  //    "return threshold data from an existing registration containing data" in new Setup {
+  //      val result = for {
+  //        _ <- repository.insert(vatScheme.copy(threshold = Some(threshold)))
+  //        res <- repository.getThreshold(vatScheme.id.value)
+  //      } yield res
+  //
+  //      await(result) shouldBe Some(threshold)
+  //    }
+  //
+  //    "return None from an existing registration containing no data" in new Setup {
+  //      val result = for {
+  //        _ <- repository.insert(vatScheme)
+  //        res <- repository.getThreshold(vatScheme.id.value)
+  //      } yield res
+  //
+  //      await(result) shouldBe None
+  //    }
+  //
+  //    "throw a MissingRegDocument for a none existing registration" in new Setup {
+  //      val result = for {
+  //        _ <- repository.insert(vatScheme.copy(threshold = Some(threshold)))
+  //        res <- repository.getThreshold("wrongRegId")
+  //      } yield res
+  //
+  //      a[MissingRegDocument] shouldBe thrownBy(await(result))
+  //    }
+  //
+  //    "return an exception if there is no mandatory registration in threshold block in repository" in new Setup {
+  //      val regId = "reg-123"
+  //      val json: JsObject = Json.parse(
+  //        s"""
+  //           |{
+  //           |  "registrationId": "$regId",
+  //           |  "status": "${VatRegStatus.draft}",
+  //           |  "threshold": {
+  //           |    "voluntaryReason": "test reason"
+  //           |  }
+  //           |}
+  //         """.stripMargin).as[JsObject]
+  //
+  //      insert(json)
+  //
+  //      an[Exception] shouldBe thrownBy(await(repository.getThreshold(regId)))
+  //    }
+  //  }
 
   "calling getSicAndCompliance" should {
     val validSicAndCompliance = Some(SicAndCompliance(

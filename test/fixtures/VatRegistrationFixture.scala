@@ -16,15 +16,13 @@
 
 package fixtures
 
-import java.time.ZoneId
-
-import models.api._
-import models.external.{IncorpStatusEvent, IncorpSubscription, IncorporationStatus}
-import java.time.LocalDate
+import java.time.{LocalDate, ZoneId}
 
 import common.{RegistrationId, TransactionId}
 import enums.VatRegStatus
-import play.api.libs.json.{JsObject, JsValue, Json}
+import models.api._
+import models.external.{IncorpStatusEvent, IncorpSubscription, IncorporationStatus}
+import play.api.libs.json.{JsObject, Json}
 
 trait VatRegistrationFixture {
   val regId = RegistrationId("testId")
@@ -62,15 +60,13 @@ trait VatRegistrationFixture {
       )
     )
 
-  val validEligibility          = Eligibility(1,"thisIsAValidReason")
-  val upsertEligibility         = Eligibility(1,"thisIsAnUpsert")
-  val voluntaryThreshold        = Threshold(false, Some("voluntaryReason"), Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
-  val mandatoryThreshold        = Threshold(true, None, Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
-  val currentAddress            = Address("12 Lukewarm","Oriental lane")
-  val skylakeValiarm            = Name(first = Some("Skylake"), middle = None, last = "Valiarm")
-  val skylakeDigitalContact     = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
-  val lodgingOfficerDetails     = LodgingOfficerDetails(currentAddress = currentAddress, None, None, contact = skylakeDigitalContact)
-  val validLodgingOfficerPreIV  = LodgingOfficer(
+  val voluntaryThreshold = Threshold(false, Some("voluntaryReason"), Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
+  val mandatoryThreshold = Threshold(true, None, Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
+  val currentAddress = Address("12 Lukewarm", "Oriental lane")
+  val skylakeValiarm = Name(first = Some("Skylake"), middle = None, last = "Valiarm")
+  val skylakeDigitalContact = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
+  val lodgingOfficerDetails = LodgingOfficerDetails(currentAddress = currentAddress, None, None, contact = skylakeDigitalContact)
+  val validLodgingOfficerPreIV = LodgingOfficer(
     nino = "AB123456A",
     role = "secretary",
     name = skylakeValiarm,
@@ -78,19 +74,19 @@ trait VatRegistrationFixture {
   )
 
   val otherBusinessActivitiesSicAndCompiliance =
-    SicCode("00998","otherBusiness desc 1","fooBar 1") :: SicCode("00889","otherBusiness desc 2", "fooBar 2") :: Nil
+    SicCode("00998", "otherBusiness desc 1", "fooBar 1") :: SicCode("00889", "otherBusiness desc 2", "fooBar 2") :: Nil
 
   val validSicAndCompliance = Some(SicAndCompliance(
     "this is my business description",
-    Some(ComplianceLabour(1000,Some(true),Some(true))),
-    SicCode("12345","the flu","sic details"),
+    Some(ComplianceLabour(1000, Some(true), Some(true))),
+    SicCode("12345", "the flu", "sic details"),
     otherBusinessActivitiesSicAndCompiliance
   ))
 
-  val validBusinessContact  = Some(BusinessContact(
-    digitalContact = DigitalContact("email@email.com",Some("12345"),Some("54321")),
+  val validBusinessContact = Some(BusinessContact(
+    digitalContact = DigitalContact("email@email.com", Some("12345"), Some("54321")),
     website = Some("www.foo.com"),
-    ppob = Address("line1","line2",None,None,None,Some("foo"))
+    ppob = Address("line1", "line2", None, None, None, Some("foo"))
   ))
 
   val validBusinessContactJson = Json.parse(
