@@ -97,15 +97,15 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
   def retrieveVatScheme(regId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
     collection.find(regIdSelector(regId)).one[JsObject] map { doc =>
       doc map { json =>
-        val jsonWithoutElData = json - "threshold" - "lodgingOfficer" - "turnoverEstimates"
+        val jsonWithoutElData = json - "threshold" - "applicantDetails" - "turnoverEstimates"
         val eligibilityData = (json \ "eligibilityData").validateOpt[JsObject](EligibilityDataJsonUtils.readsOfFullJson).get
         val thresholdData = eligibilityData.fold(Json.obj())(js => Json.obj("threshold" -> Json.toJson(js.validate[Threshold](Threshold.eligibilityDataJsonReads).get).as[JsObject]))
-        val lodgingOfficer = (json \ "lodgingOfficer").validateOpt[JsObject].get.fold(Json.obj())(identity)
-        val combinedLodgingOfficer = eligibilityData.map(_ ++ Json.obj("lodgingOfficer" -> lodgingOfficer)).getOrElse(Json.obj())
-        val lodgingOfficerData = eligibilityData.fold(Json.obj())(js => Json.obj("lodgingOfficer" -> Json.toJson(combinedLodgingOfficer.validate[LodgingOfficer](LodgingOfficer.mongoReads).get).as[JsObject]))
+        val applicantDetails = (json \ "applicantDetails").validateOpt[JsObject].get.fold(Json.obj())(identity)
+        val combinedApplicantDetails = eligibilityData.map(_ ++ Json.obj("applicantDetails" -> applicantDetails)).getOrElse(Json.obj())
+        val applicantDetailsData = eligibilityData.fold(Json.obj())(js => Json.obj("applicantDetails" -> Json.toJson(combinedApplicantDetails.validate[ApplicantDetails](ApplicantDetails.mongoReads).get).as[JsObject]))
         val turnoverEstimatesData = eligibilityData.fold(Json.obj())(js => Json.obj("turnoverEstimates" -> Json.toJson(js.validate[TurnoverEstimates](TurnoverEstimates.eligibilityDataJsonReads).get).as[JsObject]))
 
-        (jsonWithoutElData ++ thresholdData ++ lodgingOfficerData ++ turnoverEstimatesData).as[VatScheme]
+        (jsonWithoutElData ++ thresholdData ++ applicantDetailsData ++ turnoverEstimatesData).as[VatScheme]
       }
     }
   }
@@ -113,15 +113,15 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
   def retrieveVatSchemeByInternalId(id: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
     collection.find(Json.obj("internalId" -> id)).one[JsObject] map { doc =>
       doc map { json =>
-        val jsonWithoutElData = json - "threshold" - "lodgingOfficer" - "turnoverEstimates"
+        val jsonWithoutElData = json - "threshold" - "applicantDetails" - "turnoverEstimates"
         val eligibilityData = (json \ "eligibilityData").validateOpt[JsObject](EligibilityDataJsonUtils.readsOfFullJson).get
         val thresholdData = eligibilityData.fold(Json.obj())(js => Json.obj("threshold" -> Json.toJson(js.validate[Threshold](Threshold.eligibilityDataJsonReads).get).as[JsObject]))
-        val lodgingOfficer = (json \ "lodgingOfficer").validateOpt[JsObject].get.fold(Json.obj())(identity)
-        val combinedLodgingOfficer = eligibilityData.map(_ ++ Json.obj("lodgingOfficer" -> lodgingOfficer)).getOrElse(Json.obj())
-        val lodgingOfficerData = eligibilityData.fold(Json.obj())(js => Json.obj("lodgingOfficer" -> Json.toJson(combinedLodgingOfficer.validate[LodgingOfficer](LodgingOfficer.mongoReads).get).as[JsObject]))
+        val applicantDetails = (json \ "applicantDetails").validateOpt[JsObject].get.fold(Json.obj())(identity)
+        val combinedApplicantDetails = eligibilityData.map(_ ++ Json.obj("applicantDetails" -> applicantDetails)).getOrElse(Json.obj())
+        val applicantDetailsData = eligibilityData.fold(Json.obj())(js => Json.obj("applicantDetails" -> Json.toJson(combinedApplicantDetails.validate[ApplicantDetails](ApplicantDetails.mongoReads).get).as[JsObject]))
         val turnoverEstimatesData = eligibilityData.fold(Json.obj())(js => Json.obj("turnoverEstimates" -> Json.toJson(js.validate[TurnoverEstimates](TurnoverEstimates.eligibilityDataJsonReads).get).as[JsObject]))
 
-        (jsonWithoutElData ++ thresholdData ++ lodgingOfficerData ++ turnoverEstimatesData).as[VatScheme]
+        (jsonWithoutElData ++ thresholdData ++ applicantDetailsData ++ turnoverEstimatesData).as[VatScheme]
       }
     }
   }
@@ -176,20 +176,20 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
   private[repositories] def tidSelector(id: String) = BSONDocument("transactionId" -> id)
 
   def updateIVStatus(regId: String, ivStatus: Boolean)(implicit ex: ExecutionContext): Future[Boolean] = {
-    val querySelect = Json.obj("registrationId" -> regId, "lodgingOfficer" -> Json.obj("$exists" -> true))
-    val setDoc = Json.obj("$set" -> Json.obj("lodgingOfficer.ivPassed" -> ivStatus))
+    val querySelect = Json.obj("registrationId" -> regId, "applicantDetails" -> Json.obj("$exists" -> true))
+    val setDoc = Json.obj("$set" -> Json.obj("applicantDetails.ivPassed" -> ivStatus))
 
     collection.update(querySelect, setDoc) map { updateResult =>
       if (updateResult.n == 0) {
-        Logger.warn(s"[LodgingOfficer] updating ivPassed for regId : $regId - No document found or the document does not have lodgingOfficer defined")
+        Logger.warn(s"[ApplicantDetails] updating ivPassed for regId : $regId - No document found or the document does not have applicantDetails defined")
         throw new MissingRegDocument(regId)
       } else {
-        Logger.info(s"[LodgingOfficer] updating ivPassed for regId : $regId - documents modified : ${updateResult.nModified}")
+        Logger.info(s"[ApplicantDetails] updating ivPassed for regId : $regId - documents modified : ${updateResult.nModified}")
         ivStatus
       }
     } recover {
       case e =>
-        Logger.warn(s"Unable to update ivPassed in LodgingOfficer for regId: $regId, Error: ${e.getMessage}")
+        Logger.warn(s"Unable to update ivPassed in ApplicantDetails for regId: $regId, Error: ${e.getMessage}")
         throw e
     }
   }
@@ -253,44 +253,44 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
   def updateThreshold(regId: String, threshold: Threshold)(implicit ec: ExecutionContext): Future[Threshold] =
     updateBlock(regId, threshold)
 
-  def getCombinedLodgingOfficer(regId: String)(implicit ec: ExecutionContext): Future[Option[LodgingOfficer]] = {
+  def getCombinedApplicantDetails(regId: String)(implicit ec: ExecutionContext): Future[Option[ApplicantDetails]] = {
     val projection = Json.obj("eligibilityData.sections.data.questionId" -> 1,
       "eligibilityData.sections.data.answerValue" -> 1,
-      "lodgingOfficer" -> 1,
+      "applicantDetails" -> 1,
       "_id" -> 0)
     collection.find(regIdSelector(regId), projection).one[JsObject].map { doc =>
       doc.fold(throw new MissingRegDocument(regId)) { js =>
 
-        val jsonOfficer = (js - "eligibilityData") ++ EligibilityDataJsonUtils.toJsObject(js)
-        if (jsonOfficer == Json.obj()) {
+        val applcantJson = (js - "eligibilityData") ++ EligibilityDataJsonUtils.toJsObject(js)
+        if (applcantJson == Json.obj()) {
           None
         } else {
-          jsonOfficer.validateOpt[LodgingOfficer](LodgingOfficer.mongoReads) fold(invalid => {
-            Logger.warn(s"[LodgingOfficer] [getCombinedLodgingOfficer] get LodgingOfficer for regId: $regId, Error: ${invalid}")
+          applcantJson.validateOpt[ApplicantDetails](ApplicantDetails.mongoReads) fold(invalid => {
+            Logger.warn(s"[ApplicantDetails] [getCombinedApplicantDetails] get ApplicantDetails for regId: $regId, Error: ${invalid}")
             throw new JsResultException(invalid)
-          }, identity[Option[LodgingOfficer]])
+          }, identity[Option[ApplicantDetails]])
         }
       }
     }
   }
 
-  def patchLodgingOfficer(regId: String, lodgingOfficer: JsObject)(implicit ec: ExecutionContext): Future[JsObject] = {
-    val details = (lodgingOfficer \ "details").validateOpt[LodgingOfficerDetails].get
+  def patchApplicantDetails(regId: String, applicantDetails: JsObject)(implicit ec: ExecutionContext): Future[JsObject] = {
+    val details = (applicantDetails \ "details").validateOpt[ApplicantDetailsDetails].get
     val querySelect = Json.obj("registrationId" -> regId)
-    val data = details.fold(Json.obj())(v => Json.obj("lodgingOfficer.details" -> v))
+    val data = details.fold(Json.obj())(v => Json.obj("applicantDetails.details" -> v))
     val setDoc = Json.obj("$set" -> data)
 
     collection.update(querySelect, setDoc) map { updateResult =>
       if (updateResult.n == 0) {
-        Logger.warn(s"[LodgingOfficer] [patchLodgingOfficer] patch LodgingOfficer for regId : $regId - No document found or the document does not have lodgingOfficer defined")
+        Logger.warn(s"[ApplicantDetails] [patchApplicantDetails] patch ApplicantDetails for regId : $regId - No document found or the document does not have applicantDetails defined")
         throw new MissingRegDocument(regId)
       } else {
-        Logger.info(s"[LodgingOfficer] [patchLodgingOfficer] patch LodgingOfficer for regId : $regId - documents modified : ${updateResult.nModified}")
-        lodgingOfficer
+        Logger.info(s"[ApplicantDetails] [patchApplicantDetails] patch ApplicantDetails for regId : $regId - documents modified : ${updateResult.nModified}")
+        applicantDetails
       }
     } recover {
       case e =>
-        Logger.warn(s"[LodgingOfficer] [patchLodgingOfficer] patch LodgingOfficer for regId: $regId, Error: ${e.getMessage}")
+        Logger.warn(s"[ApplicantDetails] [patchApplicantDetails] patch ApplicantDetails for regId: $regId, Error: ${e.getMessage}")
         throw e
     }
   }

@@ -748,7 +748,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
       await(repository.getInternalId(vatScheme.id)) mustBe None
     }
   }
-  "getCombinedLodgingOfficer" should {
+  "getCombinedApplicantDetails" should {
     val completionCapacity: JsObject = Json.obj("role" -> "director", "name" -> Json.obj(
       "forename" -> "First Name Test",
       "other_forenames" -> "Middle Name Test",
@@ -773,16 +773,16 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
       await(repository.insert(vatScheme))
       await(repository.count) mustBe 1
 
-      await(repository.getCombinedLodgingOfficer(vatScheme.id)) mustBe None
+      await(repository.getCombinedApplicantDetails(vatScheme.id)) mustBe None
     }
 
     "return an exception if no vatscheme doc exists" in new Setup {
-      intercept[MissingRegDocument](await(repository.getCombinedLodgingOfficer("1")))
+      intercept[MissingRegDocument](await(repository.getCombinedApplicantDetails("1")))
     }
   }
 
-  "patchLodgingOfficer" should {
-    val lodgingOfficerDetails: JsValue = Json.toJson(LodgingOfficerDetails(
+  "patchApplicantDetails" should {
+    val applicantDetailsDetails: JsValue = Json.toJson(ApplicantDetailsDetails(
       currentAddress = scrsAddress,
       changeOfName = None,
       previousAddress = None,
@@ -793,18 +793,18 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
       )
     ))
     "patch with details only" in new Setup {
-      val lodgeOfficerJson: JsObject = Json.parse(
+      val applicantDeetailsJson: JsObject = Json.parse(
         s"""{
-           | "details": $lodgingOfficerDetails
+           | "details": $applicantDetailsDetails
            |}
         """.stripMargin).as[JsObject]
 
 
       await(repository.insert(vatScheme))
       await(repository.count) mustBe 1
-      val res: JsObject = await(repository.patchLodgingOfficer(vatScheme.id, lodgeOfficerJson))
+      val res: JsObject = await(repository.patchApplicantDetails(vatScheme.id, applicantDeetailsJson))
       await(repository.count) mustBe 1
-      (fetchAll.get \ "lodgingOfficer").as[JsObject] mustBe lodgeOfficerJson
+      (fetchAll.get \ "applicantDetails").as[JsObject] mustBe applicantDeetailsJson
     }
   }
 

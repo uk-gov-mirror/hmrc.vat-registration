@@ -63,7 +63,7 @@ object VatScheme {
       (__ \ "internalId").format[String] and
       (__ \ "transactionId").formatNullable[TransactionId] and
       (__ \ "tradingDetails").formatNullable[TradingDetails] and
-//      (__ \ "lodgingOfficer").formatNullable[LodgingOfficer] and
+//      (__ \ "applicantDetails").formatNullable[ApplicantDetails] and
       (__ \ "returns").formatNullable[Returns] and
       (__ \ "sicAndCompliance").formatNullable[SicAndCompliance] and
       (__ \ "businessContact").formatNullable[BusinessContact] and

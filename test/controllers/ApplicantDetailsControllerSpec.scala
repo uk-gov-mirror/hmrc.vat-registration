@@ -30,24 +30,24 @@ import repositories.RegistrationMongoRepository
 
 import scala.concurrent.Future
 
-class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixture {
+class ApplicantDetailsControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
   class Setup {
-    val controller: LodgingOfficerController = new LodgingOfficerController(mockLodgingOfficerService, mockAuthConnector, stubControllerComponents()){
+    val controller: ApplicantDetailsController = new ApplicantDetailsController(mockApplicantDetailsService, mockAuthConnector, stubControllerComponents()){
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
     }
 
-    def updateIVStatusSuccess(): OngoingStubbing[Future[Boolean]] = when(mockLodgingOfficerService.updateIVStatus(any(), any())(any()))
+    def updateIVStatusSuccess(): OngoingStubbing[Future[Boolean]] = when(mockApplicantDetailsService.updateIVStatus(any(), any())(any()))
       .thenReturn(Future.successful(true))
 
-    def updateIVStatusFails(): OngoingStubbing[Future[Boolean]] = when(mockLodgingOfficerService.updateIVStatus(any(), any())(any()))
+    def updateIVStatusFails(): OngoingStubbing[Future[Boolean]] = when(mockApplicantDetailsService.updateIVStatus(any(), any())(any()))
       .thenReturn(Future.failed(new Exception))
 
-    def updateIVStatusNotFound(): OngoingStubbing[Future[Boolean]] = when(mockLodgingOfficerService.updateIVStatus(any(), any())(any()))
+    def updateIVStatusNotFound(): OngoingStubbing[Future[Boolean]] = when(mockApplicantDetailsService.updateIVStatus(any(), any())(any()))
       .thenReturn(Future.failed(MissingRegDocument(regId)))
   }
 
-  val upsertLodgingOfficerJson: JsObject = Json.parse(
+  val upsertApplicantDetailsJson: JsObject = Json.parse(
     s"""
        |{
        | "name": {
@@ -65,11 +65,11 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
        |     "email" : "skylake@vilikariet.com"
        |   }
        | },
-       | "isOfficerApplying": true
+       | "isApplicantApplying": true
        |}
     """.stripMargin).as[JsObject]
 
-  val validLodgingOfficerJson: JsObject = Json.parse(
+  val validApplicantDetailsJson: JsObject = Json.parse(
     s"""
        |{
        | "name": {
@@ -78,11 +78,11 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
        | },
        | "nino" : "AB123456A",
        | "role" : "secretary",
-       | "isOfficerApplying": true
+       | "isApplicantApplying": true
        |}
     """.stripMargin).as[JsObject]
 
-  val invalidLodgingOfficerJson: JsObject = Json.parse(
+  val invalidApplicantDetailsJson: JsObject = Json.parse(
     s"""
        |{
        | "nino" : "AB123456A",
@@ -90,78 +90,78 @@ class LodgingOfficerControllerSpec extends VatRegSpec with VatRegistrationFixtur
        |}
     """.stripMargin).as[JsObject]
 
-  "getLodgingOfficerData" should {
+  "getApplicantDetailsData" should {
     "returns a valid json if found for id" in new Setup {
       AuthorisationMocks.mockAuthorised(regId,internalid)
-      when(mockLodgingOfficerService.getLodgingOfficerData(any())(any()))
-        .thenReturn(Future.successful(Some(validLodgingOfficerPreIV)))
+      when(mockApplicantDetailsService.getApplicantDetailsData(any())(any()))
+        .thenReturn(Future.successful(Some(validApplicantDetailsPreIV)))
 
-      val result: Future[Result] = controller.getLodgingOfficerData(regId)(FakeRequest())
+      val result: Future[Result] = controller.getApplicantDetailsData(regId)(FakeRequest())
       status(result) mustBe 200
-      contentAsJson(result) mustBe validLodgingOfficerJson
+      contentAsJson(result) mustBe validApplicantDetailsJson
     }
 
     "returns 204 if none found" in new Setup {
       AuthorisationMocks.mockAuthorised(regId,internalid)
-      when(mockLodgingOfficerService.getLodgingOfficerData(any())(any()))
+      when(mockApplicantDetailsService.getApplicantDetailsData(any())(any()))
         .thenReturn(Future.successful(None))
 
-      val result: Future[Result] = controller.getLodgingOfficerData(regId)(FakeRequest())
+      val result: Future[Result] = controller.getApplicantDetailsData(regId)(FakeRequest())
 
       status(result) mustBe 204
     }
 
     "returns 404 if none found" in new Setup {
       AuthorisationMocks.mockAuthorised(regId,internalid)
-      when(mockLodgingOfficerService.getLodgingOfficerData(any())(any()))
+      when(mockApplicantDetailsService.getApplicantDetailsData(any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(regId)))
 
-      val result: Future[Result] = controller.getLodgingOfficerData(regId)(FakeRequest())
+      val result: Future[Result] = controller.getApplicantDetailsData(regId)(FakeRequest())
       status(result) mustBe 404
     }
 
     "returns 403 if user is not authorised" in new Setup {
       AuthorisationMocks.mockNotAuthorised(regId,internalid)
 
-      val result: Future[Result] = controller.getLodgingOfficerData(regId)(FakeRequest())
+      val result: Future[Result] = controller.getApplicantDetailsData(regId)(FakeRequest())
       status(result) mustBe 403
     }
   }
 
-  "updateLodgingOfficerData" should {
+  "updateApplicantDetailsData" should {
 
     "returns 403 if user is not authorised" in new Setup {
       AuthorisationMocks.mockNotAuthorised(regId,internalid)
 
-      val result: Future[Result] = controller.updateLodgingOfficerData(regId)(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
+      val result: Future[Result] = controller.updateApplicantDetailsData(regId)(FakeRequest().withBody[JsObject](upsertApplicantDetailsJson))
       status(result) mustBe 403
     }
 
     "returns 200 if successful" in new Setup {
       AuthorisationMocks.mockAuthorised(regId,internalid)
-      when(mockLodgingOfficerService.updateLodgingOfficerData(any(), any())(any()))
-        .thenReturn(Future.successful(upsertLodgingOfficerJson))
+      when(mockApplicantDetailsService.updateApplicantDetailsData(any(), any())(any()))
+        .thenReturn(Future.successful(upsertApplicantDetailsJson))
 
-      val result: Future[Result] = controller.updateLodgingOfficerData(regId)(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
+      val result: Future[Result] = controller.updateApplicantDetailsData(regId)(FakeRequest().withBody[JsObject](upsertApplicantDetailsJson))
       status(result) mustBe 200
-      contentAsJson(result) mustBe upsertLodgingOfficerJson
+      contentAsJson(result) mustBe upsertApplicantDetailsJson
     }
 
     "returns 404 if the registration is not found" in new Setup {
       AuthorisationMocks.mockAuthorised(regId,internalid)
-      when(mockLodgingOfficerService.updateLodgingOfficerData(any(), any())(any()))
+      when(mockApplicantDetailsService.updateApplicantDetailsData(any(), any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(regId)))
 
-      val result: Future[Result] = controller.updateLodgingOfficerData(regId)(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
+      val result: Future[Result] = controller.updateApplicantDetailsData(regId)(FakeRequest().withBody[JsObject](upsertApplicantDetailsJson))
       status(result) mustBe 404
     }
 
     "returns 500 if an error occurs" in new Setup {
       AuthorisationMocks.mockAuthorised(regId,internalid)
-      when(mockLodgingOfficerService.updateLodgingOfficerData(any(), any())(any()))
+      when(mockApplicantDetailsService.updateApplicantDetailsData(any(), any())(any()))
         .thenReturn(Future.failed(new Exception))
 
-      val result: Future[Result] = controller.updateLodgingOfficerData(regId)(FakeRequest().withBody[JsObject](upsertLodgingOfficerJson))
+      val result: Future[Result] = controller.updateApplicantDetailsData(regId)(FakeRequest().withBody[JsObject](upsertApplicantDetailsJson))
       status(result) mustBe 500
     }
   }

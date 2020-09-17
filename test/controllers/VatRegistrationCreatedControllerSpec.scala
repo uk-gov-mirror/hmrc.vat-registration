@@ -40,7 +40,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
 
   import play.api.test.Helpers._
 
-  val vatLodgingOfficer: LodgingOfficer = LodgingOfficer(
+  val vatApplicantDetails: ApplicantDetails = ApplicantDetails(
     nino = "NB666666C",
     role = "director",
     name = name,

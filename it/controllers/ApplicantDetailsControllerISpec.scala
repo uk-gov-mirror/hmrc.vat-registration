@@ -8,12 +8,12 @@ import itutil.IntegrationStubbing
 import models.api._
 import play.api.libs.json.{JsArray, JsBoolean, JsObject, Json}
 import play.api.test.Helpers._
-import controllers.routes.LodgingOfficerController
+import controllers.routes.ApplicantDetailsController
 import play.api.libs.ws.WSResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class LodgingOfficerControllerISpec extends IntegrationStubbing {
+class ApplicantDetailsControllerISpec extends IntegrationStubbing {
 
   class Setup extends SetupHelper {
     def writeAudit: StubMapping = stubPost("/write/audit/merged",200,"")
@@ -22,17 +22,17 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
   val currentAddress: Address                       = Address("12 Lukewarm","Oriental lane")
   val skylakeValiarm: Name                          = Name(first = Some("Skylake"), middle = None, last = "Valiarm")
   val skylakeDigitalContact: DigitalContactOptional = DigitalContactOptional(None, Some("123456789012345678"), None)
-  val lodgingOfficerDetails: LodgingOfficerDetails  = LodgingOfficerDetails(currentAddress = currentAddress, None, None, contact = skylakeDigitalContact)
-  val validLodgingOfficer: LodgingOfficer           = LodgingOfficer(
+  val applicantDetailsDetails: ApplicantDetailsDetails  = ApplicantDetailsDetails(currentAddress = currentAddress, None, None, contact = skylakeDigitalContact)
+  val validApplicantDetails: ApplicantDetails           = ApplicantDetails(
     nino = "AB123456A",
     role = "secretary",
     name = skylakeValiarm,
     details = None)
-  val validLodgingOfficerPostIv: LodgingOfficer = validLodgingOfficer.copy(details = Some(lodgingOfficerDetails))
+  val validApplicantDetailsPostIv: ApplicantDetails = validApplicantDetails.copy(details = Some(applicantDetailsDetails))
 
   def vatScheme(regId: String): VatScheme = emptyVatScheme(regId)
 
-  val upsertLodgingOfficerJson: JsObject = Json.parse(
+  val upsertApplicantDetailsJson: JsObject = Json.parse(
     s"""
        |{
        | "name": {
@@ -50,11 +50,11 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
        |     "email" : "skylake@vilikariet.com"
        |   }
        | },
-       | "isOfficerApplying": true
+       | "isApplicantApplying": true
        |}
     """.stripMargin).as[JsObject]
 
-  val validLodgingOfficerJson: JsObject = Json.parse(
+  val validApplicantDetailsJson: JsObject = Json.parse(
     s"""
        |{
        | "name": {
@@ -63,11 +63,11 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
        | },
        | "nino" : "AB123456A",
        | "role" : "secretary",
-       | "isOfficerApplying": true
+       | "isApplicantApplying": true
        |}
     """.stripMargin).as[JsObject]
 
-  val invalidLodgingOfficerJson: JsObject = Json.parse(
+  val invalidApplicantDetailsJson: JsObject = Json.parse(
     s"""
        |{
        | "nino" : "AB123456A",
@@ -94,16 +94,16 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
   val eligibilityData: JsObject = Json.obj("sections" -> sections)
 
   //TODO - remove when applicant data is recorded as part of other services
-  "getLodgingOfficerData" ignore {
+  "getApplicantDetailsData" ignore {
     "return OK" in new Setup {
       given.user.isAuthorised
 
       insertIntoDb(vatScheme("regId").copy(eligibilityData = Some(eligibilityData)))
 
-      val response: WSResponse = await(client(LodgingOfficerController.getLodgingOfficerData("regId").url).get())
+      val response: WSResponse = await(client(ApplicantDetailsController.getApplicantDetailsData("regId").url).get())
 
       response.status mustBe OK
-      response.json mustBe validLodgingOfficerJson
+      response.json mustBe validApplicantDetailsJson
     }
 
     "return NO_CONTENT" in new Setup {
@@ -111,7 +111,7 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      val response: WSResponse = await(client(LodgingOfficerController.getLodgingOfficerData("regId").url).get())
+      val response: WSResponse = await(client(ApplicantDetailsController.getApplicantDetailsData("regId").url).get())
 
       response.status mustBe NO_CONTENT
     }
@@ -119,7 +119,7 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
     "return NOT_FOUND if no document found" in new Setup {
       given.user.isAuthorised
 
-      val response: WSResponse = await(client(LodgingOfficerController.getLodgingOfficerData("regId").url).get())
+      val response: WSResponse = await(client(ApplicantDetailsController.getApplicantDetailsData("regId").url).get())
 
       response.status mustBe NOT_FOUND
     }
@@ -127,21 +127,21 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
     "return FORBIDDEN if user is not authorised" in new Setup {
       given.user.isNotAuthorised
 
-      val response: WSResponse = await(client(LodgingOfficerController.getLodgingOfficerData("regId").url).get())
+      val response: WSResponse = await(client(ApplicantDetailsController.getApplicantDetailsData("regId").url).get())
 
       response.status mustBe FORBIDDEN
     }
   }
 
   //TODO - remove when applicant data is recorded as part of other services
-  "updateLodgingOfficerData" ignore {
-    "return OK with a lodgingOfficer json body" in new Setup {
+  "updateApplicantDetailsData" ignore {
+    "return OK with a applicantDetails json body" in new Setup {
       given.user.isAuthorised
 
       insertIntoDb(emptyVatScheme("regId").copy(eligibilityData = Some(eligibilityData)))
 
-      val response: WSResponse = await(client(LodgingOfficerController.updateLodgingOfficerData("regId").url)
-        .patch(validLodgingOfficerJson))
+      val response: WSResponse = await(client(ApplicantDetailsController.updateApplicantDetailsData("regId").url)
+        .patch(validApplicantDetailsJson))
 
       response.status mustBe OK
       response.json mustBe Json.parse("""{}""".stripMargin)
@@ -152,8 +152,8 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
 
       insertIntoDb(emptyVatScheme("regId"))
 
-      val response: WSResponse = await(client(LodgingOfficerController.updateLodgingOfficerData("regId").url)
-        .patch(invalidLodgingOfficerJson))
+      val response: WSResponse = await(client(ApplicantDetailsController.updateApplicantDetailsData("regId").url)
+        .patch(invalidApplicantDetailsJson))
 
       response.status mustBe BAD_REQUEST
     }
@@ -161,8 +161,8 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
     "return NOT_FOUND if no reg document is found" in new Setup {
       given.user.isAuthorised
 
-      val response: WSResponse = await(client(LodgingOfficerController.updateLodgingOfficerData("regId").url)
-        .patch(validLodgingOfficerJson))
+      val response: WSResponse = await(client(ApplicantDetailsController.updateApplicantDetailsData("regId").url)
+        .patch(validApplicantDetailsJson))
 
       response.status mustBe NOT_FOUND
     }
@@ -172,8 +172,8 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
 
       insertIntoDb(vatScheme("regId").copy(eligibilityData = Some(eligibilityData)))
 
-      val response: WSResponse = await(client(LodgingOfficerController.updateLodgingOfficerData("regId").url)
-        .patch(validLodgingOfficerJson))
+      val response: WSResponse = await(client(ApplicantDetailsController.updateApplicantDetailsData("regId").url)
+        .patch(validApplicantDetailsJson))
 
       response.status mustBe OK
     }
@@ -181,8 +181,8 @@ class LodgingOfficerControllerISpec extends IntegrationStubbing {
     "return FORBIDDEN if user is not authorised obtained" in new Setup {
       given.user.isNotAuthorised
 
-      val response: WSResponse = await(client(LodgingOfficerController.updateLodgingOfficerData("regId").url)
-        .patch(validLodgingOfficerJson))
+      val response: WSResponse = await(client(ApplicantDetailsController.updateApplicantDetailsData("regId").url)
+        .patch(validApplicantDetailsJson))
 
       response.status mustBe FORBIDDEN
     }
