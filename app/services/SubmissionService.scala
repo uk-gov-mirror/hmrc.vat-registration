@@ -25,8 +25,7 @@ import connectors.DESConnector
 import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
 import models.api.{Address, VatScheme, VatSubmission}
-import models.external.IncorpStatus
-import models.submission.{DESSubmission, TopUpSubmission}
+import models.submission.DESSubmission
 import repositories._
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -56,24 +55,6 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
       _ <- updateSubmissionStatus(regId)
     } yield {
       ackRefs
-    }
-  }
-
-  def submitTopUpVatRegistration(incorpUpdate: IncorpStatus)(implicit hc: HeaderCarrier): Future[Boolean] = {
-    for {
-      regId <- getRegistrationIDByTxId(incorpUpdate.transactionId)
-      status <- getValidDocumentTopupStatus(regId)
-      ackRefs <- ensureAcknowledgementReference(regId, status)
-      submission <- buildTopUpSubmission(regId, ackRefs, incorpUpdate.status)
-      _ <- desConnector.submitTopUpToDES(submission, regId.toString)
-      _ <- updateTopUpSubmissionStatus(regId, incorpUpdate.status)
-    } yield true
-  }
-
-  private[services] def getRegistrationIDByTxId(transactionId: String)(implicit hc: HeaderCarrier): Future[String] = {
-    registrationRepository.fetchRegByTxId(transactionId) map {
-      case Some(vs) => vs.id
-      case None => throw NoVatSchemeWithTransId(TransactionId(transactionId))
     }
   }
 
@@ -114,21 +95,6 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     }
   }
 
-  def buildTopUpSubmission(regId: String, ackRef: String, status: String)
-                          (implicit hc: HeaderCarrier): Future[TopUpSubmission] = {
-    registrationRepository.retrieveVatScheme(regId) map {
-      case Some(vs) =>
-        val startDate = retrieveVatStartDate(vs, regId)
-        status match {
-          case "accepted" => TopUpSubmission(ackRef, status, startDate)
-          case "rejected" => TopUpSubmission(ackRef, status)
-          case _ => throw UnknownIncorpStatus(s"Status of $status did not match recognised status for building a top up submission")
-        }
-      case None => throw MissingRegDocument(regId)
-    }
-
-  }
-
   private[services] def getValidDocumentStatus(regID: String)(implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
     registrationRepository.retrieveVatScheme(regID) map {
       case Some(registration) => registration.status match {
@@ -139,29 +105,11 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     }
   }
 
-  private[services] def getValidDocumentTopupStatus(regID: String)(implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
-    registrationRepository.retrieveVatScheme(regID) map {
-      case Some(registration) => registration.status match {
-        case VatRegStatus.held => registration.status
-        case _ => throw InvalidSubmissionStatus(s"VAT topup submission status was in a ${registration.status} state")
-      }
-      case None => throw new MissingRegDocument(regID)
-    }
-  }
-
   private[services] def updateSubmissionStatus(regId: String)
                                               (implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
     registrationRepository.finishRegistrationSubmission(
       regId,
       VatRegStatus.submitted //TODO - Confirm if this is correct, state should always be submitted as we're not doing pre-incorp VAT reg
-    )
-  }
-
-  private[services] def updateTopUpSubmissionStatus(regId: String, status: String)
-                                                   (implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
-    registrationRepository.finishRegistrationSubmission(
-      regId,
-      if (status == "accepted") VatRegStatus.submitted else VatRegStatus.rejected
     )
   }
 

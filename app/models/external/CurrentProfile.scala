@@ -18,12 +18,6 @@ package models.external
 
 import play.api.libs.json.Json
 
-case class BusinessRegistrationRequest(language: String)
-
-object BusinessRegistrationRequest {
-  implicit val formats = Json.format[BusinessRegistrationRequest]
-}
-
 case class CurrentProfile(registrationID: String,
                           completionCapacity : Option[String],
                           language: String)

@@ -16,12 +16,10 @@
 
 package connectors
 
-import java.time.LocalDate
-
 import config.BackendConfig
 import helpers.VatRegSpec
 import models.api.{Address, VatSubmission}
-import models.submission.{DESSubmission, TopUpSubmission}
+import models.submission.DESSubmission
 import org.mockito.ArgumentMatchers.{any, anyString, contains}
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
@@ -59,8 +57,6 @@ class DesConnectorSpec extends PlaySpec with VatRegSpec with MockitoSugar with H
     Some(Address(line1 = "line1", line2 = "line2", postcode = Some("A11 11A"), country = Some("GB"))),
     Some(true)
   )
-  val validTopUpAcceptedSubmission: TopUpSubmission = TopUpSubmission("AckRef", "accepted", Some(LocalDate.of(2017, 1, 1)))
-  val validTopUpRejectedSubmission: TopUpSubmission = TopUpSubmission("AckRef", "rejected")
   val upstream4xx: Upstream4xxResponse = Upstream4xxResponse("400", 400, 400)
 
   def mockHttpPOST[I, O](url: String, thenReturn: O): OngoingStubbing[Future[O]] = {
@@ -89,24 +85,6 @@ class DesConnectorSpec extends PlaySpec with VatRegSpec with MockitoSugar with H
       intercept[Upstream4xxResponse](await(connector.submitToDES(validVatSubmission, "regId")))
     }
   }
-
-  "submitTopUpDES" should {
-    "successfully POST with an accepted DES TopUpSubmission Model" in new SetupWithProxy {
-      mockHttpPOST[TopUpSubmission, HttpResponse](s"${connector.config.desStubTopUpUrl}/${connector.config.desStubTopUpURI}", HttpResponse(202))
-      await(connector.submitTopUpToDES(validTopUpAcceptedSubmission, "regId"))
-    }
-
-    "successfully POST with a rejected DES TopUpSubmission Model" in new SetupWithProxy {
-      mockHttpPOST[TopUpSubmission, HttpResponse](s"${connector.config.desStubTopUpUrl}/${connector.config.desStubTopUpURI}", HttpResponse(202))
-      await(connector.submitTopUpToDES(validTopUpRejectedSubmission, "regId"))
-    }
-
-    "handle a failed POST" in new SetupWithProxy {
-      mockHttpFailedPOST[TopUpSubmission, HttpResponse](s"${connector.config.desStubTopUpUrl}/${connector.config.desStubTopUpURI}", upstream4xx)
-      intercept[Upstream4xxResponse](await(connector.submitTopUpToDES(validTopUpAcceptedSubmission, "regId")))
-    }
-  }
-
 
   "customDesRead" should {
     "successfully convert 409 from DES to 202" in new SetupWithProxy {

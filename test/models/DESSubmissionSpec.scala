@@ -19,7 +19,6 @@ package models
 import java.time.LocalDate
 
 import helpers.BaseSpec
-import models.submission.DESSubmission
 import play.api.libs.json.{JsValue, Json}
 
 class DESSubmissionSpec extends BaseSpec with JsonFormatValidation {
@@ -43,22 +42,4 @@ class DESSubmissionSpec extends BaseSpec with JsonFormatValidation {
         """.stripMargin
   )
 
-  val testDesSubmission: DESSubmission = DESSubmission(
-    acknowledgementReference = "ackRef",
-    vatStartDate = Some(date)
-  )
-
-  val testDesPartialSubmission: DESSubmission = DESSubmission(
-    acknowledgementReference = "ackRef"
-  )
-
-  "Converting a DESSubmission model into JSON" should {
-    "complete successfully from a model" in {
-      Json.toJson[DESSubmission](testDesSubmission) mustBe fullJson
-    }
-
-    "complete successfully from a partial model" in {
-      Json.toJson[DESSubmission](testDesPartialSubmission) mustBe partialJson
-    }
-  }
 }

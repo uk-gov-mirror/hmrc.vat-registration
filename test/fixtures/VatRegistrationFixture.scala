@@ -21,7 +21,6 @@ import java.time.{LocalDate, ZoneId}
 import common.TransactionId
 import enums.VatRegStatus
 import models.api._
-import models.external.{IncorpStatusEvent, IncorpSubscription, IncorporationStatus}
 import play.api.libs.json.{JsObject, Json}
 
 trait VatRegistrationFixture {
@@ -43,22 +42,6 @@ trait VatRegistrationFixture {
   val formerName = FormerName(Some("Bob Smith"), Some(date), name = Some(oldName), change = Some(date))
   val vatScheme: VatScheme = VatScheme(regId, internalId = internalid, status = VatRegStatus.draft)
   val exception = new Exception("Exception")
-
-  def incorporationStatus(status: String = "accepted", incorpDate: LocalDate = LocalDate.now()): IncorporationStatus =
-    IncorporationStatus(
-      subscription = IncorpSubscription(
-        transactionId = txId.value,
-        regime = "vat",
-        subscriber = "scrs",
-        callbackUrl = "callbackUrl"
-      ),
-      statusEvent = IncorpStatusEvent(
-        status = status,
-        crn = Some("CRN"),
-        incorporationDate = Some(incorpDate),
-        description = Some("description")
-      )
-    )
 
   val voluntaryThreshold = Threshold(false, Some("voluntaryReason"), Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
   val mandatoryThreshold = Threshold(true, None, Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))

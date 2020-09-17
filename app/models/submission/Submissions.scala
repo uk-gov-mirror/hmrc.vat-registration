@@ -34,16 +34,3 @@ object DESSubmission {
         (__ \ "vatStartDate").writeNullable[LocalDate]
       )(unlift(DESSubmission.unapply))
 }
-
-case class TopUpSubmission(acknowledgementReference: String,
-                         status: String,
-                         vatStartDate: Option[LocalDate] = None)
-
-object TopUpSubmission {
-  implicit val writes: Writes[TopUpSubmission] =
-    (
-      (__ \ "acknowledgementReference").write[String] and
-        (__ \ "status").write[String] and
-        (__ \ "vatStartDate").writeNullable[LocalDate]
-      )(unlift(TopUpSubmission.unapply))
-}

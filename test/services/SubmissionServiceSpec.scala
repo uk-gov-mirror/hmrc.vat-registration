@@ -20,14 +20,13 @@ import java.time.LocalDate
 
 import cats.instances.FutureInstances
 import cats.syntax.ApplicativeSyntax
-import common.exceptions._
 import common.TransactionId
+import common.exceptions._
 import enums.VatRegStatus
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models.api._
-import models.submission.{DESSubmission, TopUpSubmission}
-import org.joda.time.DateTime
+import models.submission.DESSubmission
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
@@ -98,33 +97,6 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
 
       service.getAcknowledgementReference(regId) returnsLeft resourceNotFound
     }
-  }
-
-  "getRegByTxId" should {
-    val vatScheme = VatScheme(
-      regId,
-      internalId = internalid,
-      transactionId = Some(TransactionId("testTransId")),
-      acknowledgementReference = Some("testref"),
-      status = VatRegStatus.draft
-    )
-
-    val foVatScheme = Future.successful(Some(vatScheme))
-
-    "return a vat scheme when provided with a transaction id of a document" in new Setup {
-      when(mockRegistrationMongoRepository.fetchRegByTxId(ArgumentMatchers.any())(ArgumentMatchers.any()))
-        .thenReturn(foVatScheme)
-
-      await(service.getRegistrationIDByTxId("testTransId")) mustBe regId
-    }
-
-    "throw a NoVatSchemeWithTransId exception if the vat scheme was not found for the provided transaction id" in new Setup {
-      when(mockRegistrationMongoRepository.fetchRegByTxId(ArgumentMatchers.any())(ArgumentMatchers.any()))
-        .thenReturn(Future.successful(None))
-
-      intercept[NoVatSchemeWithTransId](await(service.getRegistrationIDByTxId("testRegId")))
-    }
-
   }
 
   "ensureAcknowledgementReference" should {
@@ -198,22 +170,6 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
     }
   }
 
-  "updateTopUpSubmissionStatus" should {
-    "update the submission to submitted if there is an incorp date" in new Setup {
-      when(mockRegistrationMongoRepository.finishRegistrationSubmission(ArgumentMatchers.eq(regId), ArgumentMatchers.any())
-      (ArgumentMatchers.any())).thenReturn(Future.successful(VatRegStatus.submitted))
-
-      await(service.updateTopUpSubmissionStatus(regId, "accepted")) mustBe VatRegStatus.submitted
-    }
-
-    "update the submission to held if there is no incorp date" in new Setup {
-      when(mockRegistrationMongoRepository.finishRegistrationSubmission(ArgumentMatchers.eq(regId), ArgumentMatchers.any())
-      (ArgumentMatchers.any())).thenReturn(Future.successful(VatRegStatus.rejected))
-
-      await(service.updateTopUpSubmissionStatus(regId, "rejected")) mustBe VatRegStatus.rejected
-    }
-  }
-
   "Calling buildDesSubmission" should {
 
     val schemeReturns = Returns(true, "monthly", None, StartDate(date = Some(date)))
@@ -250,53 +206,6 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
         .thenReturn(Future.successful(Some(vatSchemeNoTradingDetails)))
 
       intercept[NoReturns](await(service.buildDesSubmission(regId, "ackRef")))
-    }
-  }
-
-  "Calling buildTopUpDesSubmission" should {
-
-    val someLocalDateNow = Some(LocalDate.now())
-    val someDateTimeNow = Some(DateTime.now())
-
-    val schemeReturns = Returns(true, "monthly", None, StartDate(date = someLocalDateNow))
-    val vatScheme = VatScheme(regId, internalid, Some(TransactionId("1")), returns = Some(schemeReturns), status = VatRegStatus.draft)
-    val vatSchemeNoTradingDetails = VatScheme(regId, internalid, None, None, None, status = VatRegStatus.draft)
-    val topUpAccepted = TopUpSubmission("ackRef", "accepted", someLocalDateNow)
-    val topUpRejected = TopUpSubmission("ackRef", "rejected")
-
-    "successfully create an accepted top up DES submission" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
-        .thenReturn(Future.successful(Some(vatScheme)))
-
-      await(service.buildTopUpSubmission(regId, "ackRef", "accepted")) mustBe topUpAccepted
-    }
-
-    "successfully create a rejected top up DES submission" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
-        .thenReturn(Future.successful(Some(vatScheme)))
-
-      await(service.buildTopUpSubmission(regId, "ackRef", "rejected")) mustBe topUpRejected
-    }
-
-    "throw a UnknownIncorpStatus exception if the status does not match to an valid status" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
-        .thenReturn(Future.successful(Some(vatScheme)))
-
-      intercept[UnknownIncorpStatus](await(service.buildTopUpSubmission(regId, "ackRef", "unknownStatus")))
-    }
-
-    "throw a MissingRegDocument exception when there is no registration in mongo" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
-        .thenReturn(Future.successful(None))
-
-      intercept[MissingRegDocument](await(service.buildTopUpSubmission(regId, "ackRef", "accepted")))
-    }
-
-    "throw a NoReturns exception when the vat scheme doesn't contain returns" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
-        .thenReturn(Future.successful(Some(vatSchemeNoTradingDetails)))
-
-      intercept[NoReturns](await(service.buildTopUpSubmission(regId, "ackRef", "accepted")))
     }
   }
 
