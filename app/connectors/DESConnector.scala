@@ -19,7 +19,6 @@ package connectors
 import config.BackendConfig
 import javax.inject.{Inject, Singleton}
 import models.api.VatSubmission
-import models.submission.TopUpSubmission
 import play.api.Logger
 import play.api.libs.json.{OWrites, Writes}
 import uk.gov.hmrc.http._
@@ -58,13 +57,6 @@ class DESConnector @Inject()(val config: BackendConfig,
   def submitToDES(submission: VatSubmission, regId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     implicit val writes: OWrites[VatSubmission] = VatSubmission.submissionFormat
     vatPOST[VatSubmission](config.desUrl, submission) map { resp =>
-      resp
-    }
-  }
-
-  def submitTopUpToDES(submission: TopUpSubmission, regId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    val url = s"${config.desStubTopUpUrl}/${config.desStubTopUpURI}"
-    vatPOST[TopUpSubmission](url, submission) map { resp =>
       resp
     }
   }

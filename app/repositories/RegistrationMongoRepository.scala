@@ -98,12 +98,18 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     collection.find(regIdSelector(regId)).one[JsObject] map { doc =>
       doc map { json =>
         val jsonWithoutElData = json - "threshold" - "applicantDetails" - "turnoverEstimates"
-        val eligibilityData = (json \ "eligibilityData").validateOpt[JsObject](EligibilityDataJsonUtils.readsOfFullJson).get
-        val thresholdData = eligibilityData.fold(Json.obj())(js => Json.obj("threshold" -> Json.toJson(js.validate[Threshold](Threshold.eligibilityDataJsonReads).get).as[JsObject]))
-        val applicantDetails = (json \ "applicantDetails").validateOpt[JsObject].get.fold(Json.obj())(identity)
-        val combinedApplicantDetails = eligibilityData.map(_ ++ Json.obj("applicantDetails" -> applicantDetails)).getOrElse(Json.obj())
-        val applicantDetailsData = eligibilityData.fold(Json.obj())(js => Json.obj("applicantDetails" -> Json.toJson(combinedApplicantDetails.validate[ApplicantDetails](ApplicantDetails.mongoReads).get).as[JsObject]))
-        val turnoverEstimatesData = eligibilityData.fold(Json.obj())(js => Json.obj("turnoverEstimates" -> Json.toJson(js.validate[TurnoverEstimates](TurnoverEstimates.eligibilityDataJsonReads).get).as[JsObject]))
+        val eligibilityData = (json \ "eligibilityData")
+          .validateOpt[JsObject](EligibilityDataJsonUtils.readsOfFullJson).get
+        val thresholdData = eligibilityData
+          .fold(Json.obj())(js => Json.obj("threshold" -> Json.toJson(js.validate[Threshold](Threshold.eligibilityDataJsonReads).get).as[JsObject]))
+        val applicantDetails = (json \ "applicantDetails")
+          .validateOpt[JsObject].get.fold(Json.obj())(identity)
+        val combinedApplicantDetails = eligibilityData
+          .map(_ ++ Json.obj("applicantDetails" -> applicantDetails)).getOrElse(Json.obj())
+        val applicantDetailsData = eligibilityData
+          .fold(Json.obj())(js => Json.obj("applicantDetails" -> Json.toJson(combinedApplicantDetails.validate[ApplicantDetails](ApplicantDetails.mongoReads).get).as[JsObject]))
+        val turnoverEstimatesData = eligibilityData
+          .fold(Json.obj())(js => Json.obj("turnoverEstimates" -> Json.toJson(js.validate[TurnoverEstimates](TurnoverEstimates.eligibilityDataJsonReads).get).as[JsObject]))
 
         (jsonWithoutElData ++ thresholdData ++ applicantDetailsData ++ turnoverEstimatesData).as[VatScheme]
       }

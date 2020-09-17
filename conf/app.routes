@@ -1,7 +1,6 @@
 # microservice specific routes
 
 POST         /new                                   controllers.VatRegistrationController.newVatRegistration
-POST         /incorporation-data                    controllers.ProcessIncorporationsController.processIncorp
 
 GET          /traffic-management/reg-info           controllers.TrafficManagementController.getRegistrationInformation
 PATCH        /traffic-management/reg-info           controllers.TrafficManagementController.upsertRegistrationInformation
