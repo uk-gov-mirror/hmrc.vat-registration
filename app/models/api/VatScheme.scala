@@ -29,15 +29,14 @@ case class VatScheme(id: String,
                      returns: Option[Returns] = None,
                      sicAndCompliance: Option[SicAndCompliance] = None,
                      businessContact: Option[BusinessContact] = None,
-                     @deprecated("Use eligibilityData instead", "SCRS-11579")
                      turnoverEstimates: Option[TurnoverEstimates] = None,
                      bankAccount: Option[BankAccount] = None,
-                     @deprecated("Use eligibilityData instead", "SCRS-11579")
                      threshold: Option[Threshold] = None,
                      acknowledgementReference: Option[String] = None,
                      flatRateScheme: Option[FlatRateScheme] = None,
                      status: VatRegStatus.Value,
-                     eligibilityData: Option[JsObject] = None)
+                     eligibilityData: Option[JsObject] = None,
+                     applicantDetails: Option[ApplicantDetails] = None)
 
 object VatScheme {
 
@@ -55,7 +54,8 @@ object VatScheme {
     (__ \ "acknowledgementReference").writeNullable[String] and
     (__ \ "flatRateScheme").writeNullable[FlatRateScheme] and
     (__ \ "status").write[VatRegStatus.Value] and
-    (__ \ "eligibilityData").writeNullable[JsObject]
+    (__ \ "eligibilityData").writeNullable[JsObject] and
+    (__ \ "applicantDetails").writeNullable[ApplicantDetails]
   )(unlift(VatScheme.unapply))
 
   def mongoFormat(crypto: CryptoSCRS): OFormat[VatScheme] = (
@@ -63,7 +63,6 @@ object VatScheme {
       (__ \ "internalId").format[String] and
       (__ \ "transactionId").formatNullable[TransactionId] and
       (__ \ "tradingDetails").formatNullable[TradingDetails] and
-//      (__ \ "applicantDetails").formatNullable[ApplicantDetails] and
       (__ \ "returns").formatNullable[Returns] and
       (__ \ "sicAndCompliance").formatNullable[SicAndCompliance] and
       (__ \ "businessContact").formatNullable[BusinessContact] and
@@ -73,6 +72,7 @@ object VatScheme {
       (__ \ "acknowledgementReference").formatNullable[String] and
       (__ \ "flatRateScheme").formatNullable[FlatRateScheme] and
       (__ \ "status").format[VatRegStatus.Value] and
-      (__ \ "eligibilityData").formatNullable[JsObject]
+      (__ \ "eligibilityData").formatNullable[JsObject] and
+      (__ \ "applicantDetails").formatNullable[ApplicantDetails]
     )(VatScheme.apply, unlift(VatScheme.unapply))
 }

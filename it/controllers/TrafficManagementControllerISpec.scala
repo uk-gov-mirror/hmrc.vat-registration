@@ -1,26 +1,22 @@
 
 package controllers
 
-import java.time.LocalDate
-
 import itutil.IntegrationStubbing
-import models.api.{Draft, OTRS, RegistrationInformation, Submitted, VatReg}
+import models.api._
 import play.api.libs.json.Json
+import play.api.test.Helpers._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import play.api.test.Helpers._
 
 class TrafficManagementControllerISpec extends IntegrationStubbing {
 
   class Setup extends SetupHelper
 
-  val testRegId = "testRegId"
-
   val testRegInfo = RegistrationInformation(
-    internalId = internalid,
+    internalId = testInternalid,
     registrationId = testRegId,
     status = Draft,
-    regStartDate = Some(LocalDate.parse(testDate)),
+    regStartDate = Some(testDate),
     channel = VatReg
   )
 
@@ -60,7 +56,7 @@ class TrafficManagementControllerISpec extends IntegrationStubbing {
         .regInfoRepo.insertIntoDb(testRegInfo, trafficManagementRepo.insert)
 
       val updateData = RegistrationInformation(
-        internalId = internalid,
+        internalId = testInternalid,
         registrationId = testRegId,
         status = Submitted,
         channel = OTRS
@@ -108,7 +104,7 @@ class TrafficManagementControllerISpec extends IntegrationStubbing {
         .regInfoRepo.insertIntoDb(testRegInfo, trafficManagementRepo.insert)
 
       val updateData = RegistrationInformation(
-        internalId = internalid,
+        internalId = testInternalid,
         registrationId = testRegId,
         status = Submitted,
         channel = OTRS

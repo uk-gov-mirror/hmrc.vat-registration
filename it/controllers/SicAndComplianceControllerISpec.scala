@@ -84,7 +84,7 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
        |}
      """.stripMargin).as[JsObject]
 
-  def vatScheme(regId: String): VatScheme = emptyVatScheme(regId).copy(sicAndCompliance = validSicAndCompliance)
+  def vatScheme(regId: String): VatScheme = testEmptyVatScheme(regId).copy(sicAndCompliance = validSicAndCompliance)
 
   class Setup extends SetupHelper
 
@@ -100,7 +100,7 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
     }
     "return NO_CONTENT when no SicAndComplianceRecord is found but reg doc exists" in new Setup {
       given.user.isAuthorised
-        .regRepo.insertIntoDb(emptyVatScheme("foo"), repo.insert)
+        .regRepo.insertIntoDb(testEmptyVatScheme("foo"), repo.insert)
 
       val response: WSResponse = await(client(SicAndComplianceController.getSicAndCompliance("foo").url).get())
 
@@ -134,7 +134,7 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
     }
     "return OK during update to vat doc whereby no sicAndCompliance existed before" in new Setup {
       given.user.isAuthorised
-        .regRepo.insertIntoDb(emptyVatScheme("fooBar"), repo.insert)
+        .regRepo.insertIntoDb(testEmptyVatScheme("fooBar"), repo.insert)
 
       val response: WSResponse = await(client(SicAndComplianceController.updateSicAndCompliance("fooBar").url)
         .patch(validSicAndComplianceJson))

@@ -1,17 +1,12 @@
 
 package controllers
 
-import java.time.LocalDate
-
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import itutil.IntegrationStubbing
 import models.api._
-import play.api.libs.json.{JsArray, JsBoolean, JsObject, Json}
-import play.api.test.Helpers._
-import controllers.routes.ApplicantDetailsController
+import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
-
-import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.test.Helpers._
 
 class ApplicantDetailsControllerISpec extends IntegrationStubbing {
 
@@ -19,99 +14,31 @@ class ApplicantDetailsControllerISpec extends IntegrationStubbing {
     def writeAudit: StubMapping = stubPost("/write/audit/merged",200,"")
   }
 
-  val currentAddress: Address                       = Address("12 Lukewarm","Oriental lane")
-  val skylakeValiarm: Name                          = Name(first = Some("Skylake"), middle = None, last = "Valiarm")
-  val skylakeDigitalContact: DigitalContactOptional = DigitalContactOptional(None, Some("123456789012345678"), None)
-  val applicantDetailsDetails: ApplicantDetailsDetails  = ApplicantDetailsDetails(currentAddress = currentAddress, None, None, contact = skylakeDigitalContact)
-  val validApplicantDetails: ApplicantDetails           = ApplicantDetails(
-    nino = "AB123456A",
-    role = "secretary",
-    name = skylakeValiarm,
-    details = None)
-  val validApplicantDetailsPostIv: ApplicantDetails = validApplicantDetails.copy(details = Some(applicantDetailsDetails))
+  val testApplicantDetailsJson = Json.toJson(testApplicantDetails)
 
-  def vatScheme(regId: String): VatScheme = emptyVatScheme(regId)
-
-  val upsertApplicantDetailsJson: JsObject = Json.parse(
-    s"""
-       |{
-       | "name": {
-       |   "first" : "Skylake",
-       |   "last" : "Valiarm"
-       | },
-       | "nino" : "AB123456A",
-       | "role" : "secretary",
-       | "details" : {
-       |   "currentAddress" : {
-       |     "line1" : "12 Lukewarm",
-       |     "line2"  : "Oriental lane"
-       |   },
-       |   "contact" : {
-       |     "email" : "skylake@vilikariet.com"
-       |   }
-       | },
-       | "isApplicantApplying": true
-       |}
-    """.stripMargin).as[JsObject]
-
-  val validApplicantDetailsJson: JsObject = Json.parse(
-    s"""
-       |{
-       | "name": {
-       |   "first" : "Skylake",
-       |   "last" : "Valiarm"
-       | },
-       | "nino" : "AB123456A",
-       | "role" : "secretary",
-       | "isApplicantApplying": true
-       |}
-    """.stripMargin).as[JsObject]
-
-  val invalidApplicantDetailsJson: JsObject = Json.parse(
-    s"""
-       |{
-       | "nino" : "AB123456A",
-       | "role" : "secretary"
-       |}
-    """.stripMargin).as[JsObject]
-
-  val completionCapacity: JsObject = Json.obj("role" -> "secretary", "name" -> Json.obj(
-    "forename" -> "Skylake",
-    "surname" -> "Valiarm"
-  ))
-  val questions1 = Seq(
-    Json.obj("questionId" -> "completionCapacity", "question" -> "Some Question 11", "answer" -> "Some Answer 11", "answerValue" -> completionCapacity),
-    Json.obj("questionId" -> "testQId12", "question" -> "Some Question 12", "answer" -> "Some Answer 12", "answerValue" -> "val12")
+  val invalidTestApplicantDetailsJson = Json.obj(
+    "nino" -> testNino,
+    "role" -> testRole
   )
-  val questions2 = Seq(
-    Json.obj("questionId" -> "applicantUKNino-optionalData", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "AB123456A"),
-    Json.obj("questionId" -> "testQId21", "question" -> "Some Question 21", "answer" -> "Some Answer 21", "answerValue" -> "val21"),
-    Json.obj("questionId" -> "testQId22", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "val22")
-  )
-  val section1: JsObject = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions1))
-  val section2: JsObject = Json.obj("title" -> "test TITLE 2", "data" -> JsArray(questions2))
-  val sections: JsArray = JsArray(Seq(section1, section2))
-  val eligibilityData: JsObject = Json.obj("sections" -> sections)
 
-  //TODO - remove when applicant data is recorded as part of other services
-  "getApplicantDetailsData" ignore {
+  "getApplicantDetailsData" must {
     "return OK" in new Setup {
       given.user.isAuthorised
 
-      insertIntoDb(vatScheme("regId").copy(eligibilityData = Some(eligibilityData)))
+      insertIntoDb(testEmptyVatScheme(testRegId).copy(applicantDetails = Some(testApplicantDetails)))
 
-      val response: WSResponse = await(client(ApplicantDetailsController.getApplicantDetailsData("regId").url).get())
+      val response: WSResponse = await(client(routes.ApplicantDetailsController.getApplicantDetailsData(testRegId).url).get())
 
       response.status mustBe OK
-      response.json mustBe validApplicantDetailsJson
+      response.json mustBe testApplicantDetailsJson
     }
 
     "return NO_CONTENT" in new Setup {
       given.user.isAuthorised
 
-      insertIntoDb(emptyVatScheme("regId"))
+      insertIntoDb(testEmptyVatScheme(testRegId))
 
-      val response: WSResponse = await(client(ApplicantDetailsController.getApplicantDetailsData("regId").url).get())
+      val response: WSResponse = await(client(routes.ApplicantDetailsController.getApplicantDetailsData(testRegId).url).get())
 
       response.status mustBe NO_CONTENT
     }
@@ -119,7 +46,7 @@ class ApplicantDetailsControllerISpec extends IntegrationStubbing {
     "return NOT_FOUND if no document found" in new Setup {
       given.user.isAuthorised
 
-      val response: WSResponse = await(client(ApplicantDetailsController.getApplicantDetailsData("regId").url).get())
+      val response: WSResponse = await(client(routes.ApplicantDetailsController.getApplicantDetailsData(testRegId).url).get())
 
       response.status mustBe NOT_FOUND
     }
@@ -127,33 +54,30 @@ class ApplicantDetailsControllerISpec extends IntegrationStubbing {
     "return FORBIDDEN if user is not authorised" in new Setup {
       given.user.isNotAuthorised
 
-      val response: WSResponse = await(client(ApplicantDetailsController.getApplicantDetailsData("regId").url).get())
+      val response: WSResponse = await(client(routes.ApplicantDetailsController.getApplicantDetailsData(testRegId).url).get())
 
       response.status mustBe FORBIDDEN
     }
   }
 
-  //TODO - remove when applicant data is recorded as part of other services
-  "updateApplicantDetailsData" ignore {
+  "updateApplicantDetailsData" must {
     "return OK with a applicantDetails json body" in new Setup {
       given.user.isAuthorised
+      insertIntoDb(testEmptyVatScheme(testRegId))
 
-      insertIntoDb(emptyVatScheme("regId").copy(eligibilityData = Some(eligibilityData)))
-
-      val response: WSResponse = await(client(ApplicantDetailsController.updateApplicantDetailsData("regId").url)
-        .patch(validApplicantDetailsJson))
+      val response: WSResponse = await(client(routes.ApplicantDetailsController.updateApplicantDetailsData(testRegId).url)
+        .patch(testApplicantDetailsJson))
 
       response.status mustBe OK
-      response.json mustBe Json.parse("""{}""".stripMargin)
+      response.json mustBe testApplicantDetailsJson
     }
 
     "return BAD_REQUEST if an invalid json body is posted" in new Setup {
       given.user.isAuthorised
+      insertIntoDb(testEmptyVatScheme(testRegId))
 
-      insertIntoDb(emptyVatScheme("regId"))
-
-      val response: WSResponse = await(client(ApplicantDetailsController.updateApplicantDetailsData("regId").url)
-        .patch(invalidApplicantDetailsJson))
+      val response: WSResponse = await(client(routes.ApplicantDetailsController.updateApplicantDetailsData(testRegId).url)
+        .patch(invalidTestApplicantDetailsJson))
 
       response.status mustBe BAD_REQUEST
     }
@@ -161,19 +85,19 @@ class ApplicantDetailsControllerISpec extends IntegrationStubbing {
     "return NOT_FOUND if no reg document is found" in new Setup {
       given.user.isAuthorised
 
-      val response: WSResponse = await(client(ApplicantDetailsController.updateApplicantDetailsData("regId").url)
-        .patch(validApplicantDetailsJson))
+      val response: WSResponse = await(client(routes.ApplicantDetailsController.updateApplicantDetailsData(testRegId).url)
+        .patch(testApplicantDetailsJson))
 
       response.status mustBe NOT_FOUND
     }
 
     "return OK if no data updated because data is same" in new Setup {
       given.user.isAuthorised
+      val scheme = testEmptyVatScheme(testRegId).copy(applicantDetails = Some(testApplicantDetails))
+      insertIntoDb(scheme)
 
-      insertIntoDb(vatScheme("regId").copy(eligibilityData = Some(eligibilityData)))
-
-      val response: WSResponse = await(client(ApplicantDetailsController.updateApplicantDetailsData("regId").url)
-        .patch(validApplicantDetailsJson))
+      val response: WSResponse = await(client(routes.ApplicantDetailsController.updateApplicantDetailsData(testRegId).url)
+        .patch(testApplicantDetailsJson))
 
       response.status mustBe OK
     }
@@ -181,8 +105,8 @@ class ApplicantDetailsControllerISpec extends IntegrationStubbing {
     "return FORBIDDEN if user is not authorised obtained" in new Setup {
       given.user.isNotAuthorised
 
-      val response: WSResponse = await(client(ApplicantDetailsController.updateApplicantDetailsData("regId").url)
-        .patch(validApplicantDetailsJson))
+      val response: WSResponse = await(client(routes.ApplicantDetailsController.updateApplicantDetailsData(testRegId).url)
+        .patch(testApplicantDetailsJson))
 
       response.status mustBe FORBIDDEN
     }

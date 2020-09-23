@@ -17,6 +17,7 @@
 package connectors
 
 import config.BackendConfig
+import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models.api.{Address, VatSubmission}
 import models.submission.DESSubmission
@@ -26,14 +27,14 @@ import org.mockito.stubbing.OngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
-import play.api.libs.json.Writes
+import play.api.libs.json.{Json, Writes}
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.Future
 
-class DesConnectorSpec extends PlaySpec with VatRegSpec with MockitoSugar with HttpErrorFunctions {
+class DesConnectorSpec extends PlaySpec with VatRegSpec with MockitoSugar with HttpErrorFunctions with VatRegistrationFixture {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -54,9 +55,16 @@ class DesConnectorSpec extends PlaySpec with VatRegSpec with MockitoSugar with H
     Some("3"),
     Some("50"),
     Some("12345678901234567890"),
-    Some(Address(line1 = "line1", line2 = "line2", postcode = Some("A11 11A"), country = Some("GB"))),
-    Some(true)
+    Some(true),
+    Some("testCrn"),
+    validApplicantDetails,
+    Some(testBankDetails),
+    testSicAndCompliance.get,
+    testBusinessContact.get,
+    validFullTradingDetails,
+    Some(validFullFRSDetails)
   )
+
   val upstream4xx: Upstream4xxResponse = Upstream4xxResponse("400", 400, 400)
 
   def mockHttpPOST[I, O](url: String, thenReturn: O): OngoingStubbing[Future[O]] = {

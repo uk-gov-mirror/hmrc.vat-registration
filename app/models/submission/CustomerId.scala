@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package models.api
+package models.submission
 
 import java.time.LocalDate
 
-import play.api.libs.json._
-import play.api.libs.functional.syntax._
+import play.api.libs.json.Json
 
-case class FormerName(name: Option[Name],
-                      change: Option[LocalDate])
+case class CustomerId(idValue: String,
+                      idType: IdType,
+                      IDsVerificationStatus: Option[IdVerificationStatus] = Some(IdVerified),
+                      countryOfIncorporation: Option[String] = None,
+                      date: Option[LocalDate] = None,
+                      safeIDBPFound: Option[String] = None,
+                      partyType: Option[PartyType] = None
+                     )
 
-object FormerName {
-  implicit val format = Json.format[FormerName]
-
-  val submissionFormat: OFormat[FormerName] = (
-    (__ \ "declaration" \ "applicantDetails" \ "prevName").formatNullable[Name] and
-    (__ \ "declaration" \ "applicantDetails" \ "prevName" \ "nameChangeDate").formatNullable[LocalDate]
-  )(FormerName.apply, unlift(FormerName.unapply))
+object CustomerId {
+  implicit val format = Json.format[CustomerId]
 }
+
+

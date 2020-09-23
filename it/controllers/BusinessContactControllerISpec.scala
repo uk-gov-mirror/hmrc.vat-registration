@@ -7,7 +7,6 @@ import models.api.{Address, BusinessContact, DigitalContact, VatScheme}
 import play.api.libs.json.{JsObject, Json}
 import play.api.libs.ws.WSResponse
 import play.api.test.Helpers._
-import play.api.test.Helpers.stubControllerComponents
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -60,7 +59,7 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
   ).as[JsObject]
 
 
-  def vatScheme(regId: String): VatScheme = emptyVatScheme(regId).copy(businessContact = validBusinessContact)
+  def vatScheme(regId: String): VatScheme = testEmptyVatScheme(regId).copy(businessContact = validBusinessContact)
 
   "getBusinessContact" should {
     "return OK" in new Setup {
@@ -74,7 +73,7 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
     }
     "return NO_CONTENT when no BusinessContact Record is found but reg doc exists" in new Setup {
       given.user.isAuthorised
-        .regRepo.insertIntoDb(emptyVatScheme("foo"), repo.insert)
+        .regRepo.insertIntoDb(testEmptyVatScheme("foo"), repo.insert)
 
       val response: WSResponse = await(client(routes.BusinessContactController.getBusinessContact("foo").url).get())
 
@@ -108,7 +107,7 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
     }
     "return OK during update to vat doc whereby no BusinessContact existed before" in new Setup {
       given.user.isAuthorised
-        .regRepo.insertIntoDb(emptyVatScheme("fooBar"),repo.insert)
+        .regRepo.insertIntoDb(testEmptyVatScheme("fooBar"),repo.insert)
 
       val response: WSResponse = await(client(routes.BusinessContactController.updateBusinessContact("fooBar").url)
         .patch(validBusinessContactJson))

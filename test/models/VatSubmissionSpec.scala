@@ -16,75 +16,43 @@
 
 package models
 
+import fixtures.{VatRegistrationFixture, VatSubmissionFixture}
 import helpers.BaseSpec
-import models.api.{Address, VatSubmission}
-import play.api.libs.json.{JsSuccess, JsValue, Json}
+import models.api.{SicAndCompliance, SicCode, VatSubmission}
+import play.api.libs.json.{JsSuccess, Json}
 
-class VatSubmissionSpec extends BaseSpec with JsonFormatValidation {
+class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegistrationFixture with VatSubmissionFixture {
 
   val testMessageType = "SubmissionCreate"
   val testCustomerStatus = "3"
   val testTradersPartyType = "50"
   val testSafeID = "12345678901234567890"
+  val testCrn = "testCrn"
   val testLine1 = "line1"
   val testLine2 = "line2"
   val testPostCode = "A11 11A"
   val testCountry = "GB"
-  val testAddress: Address = Address(
-    line1 = testLine1,
-    line2 = testLine2,
-    postcode = Some(testPostCode),
-    country = Some(testCountry)
-  )
+
   val testVatSubmission: VatSubmission = VatSubmission(
     testMessageType,
     Some(testCustomerStatus),
     Some(testTradersPartyType),
     Some(testSafeID),
-    Some(testAddress),
-    Some(true)
-  )
-
-  val submissionJson: JsValue = Json.obj(
-    "messageType" -> testMessageType,
-    "admin" -> Json.obj(
-      "additionalInformation" -> Json.obj(
-        "customerStatus" -> testCustomerStatus
-      )
-    ),
-    "customerIdentification" -> Json.obj(
-      "tradersPartyType" -> testTradersPartyType,
-      "primeBPSafeId" -> testSafeID
-    ),
-    "contact" -> Json.obj(
-      "address" -> Json.obj(
-        "line1" -> testLine1,
-        "line2" -> testLine2,
-        "postCode" -> testPostCode,
-        "countryCode" -> testCountry
-      )
-    ),
-    "declaration" -> Json.obj(
-      "declarationSigning" -> Json.obj(
-        "confirmInformationDeclaration" -> true
-      )
-    )
-  )
-
-  val mongoJson: JsValue = Json.obj(
-    "messageType" -> testMessageType,
-    "customerStatus" -> testCustomerStatus,
-    "tradersPartyType" -> testTradersPartyType,
-    "primeBPSafeId" -> testSafeID,
-    "address" -> testAddress,
-    "confirmInformationDeclaration" -> true
+    Some(true),
+    Some(testCrn),
+    validApplicantDetails,
+    Some(testBankDetails),
+    testSicAndCompliance.get,
+    testBusinessContact.get,
+    validFullTradingDetails,
+    Some(validFullFRSDetails)
   )
 
   "converting a VatSubmission model into Json" should {
     "produce a valid Json for a DES submission" in {
       val json = Json.toJson(testVatSubmission)(VatSubmission.submissionFormat)
 
-      json mustBe submissionJson
+      json mustBe vatSubmissionJson
     }
 
     "produce a Json to store it in a Mongo DB" in {
@@ -99,6 +67,28 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation {
       val model = Json.fromJson[VatSubmission](mongoJson)
 
       model mustBe JsSuccess(testVatSubmission)
+    }
+  }
+
+  "validating Json" should {
+    "successfully validate a valid json submission" in {
+      val expectedSic = SicAndCompliance(
+        businessDescription = "this is my business description",
+        labourCompliance = None,
+        mainBusinessActivity = SicCode("12345", "", ""),
+        otherBusinessActivities = List(SicCode("00998", "", ""), SicCode("00889", "", ""))
+      )
+
+      val expectedFrs = validFullFRSDetails.copy(businessGoods = None)
+
+      val expected = testVatSubmission.copy(
+        sicAndCompliance = expectedSic,
+        flatRateScheme = Some(expectedFrs)
+      )
+
+      val result = Json.fromJson[VatSubmission](vatSubmissionJson)(VatSubmission.submissionFormat)
+
+      result mustBe JsSuccess(expected)
     }
   }
 }

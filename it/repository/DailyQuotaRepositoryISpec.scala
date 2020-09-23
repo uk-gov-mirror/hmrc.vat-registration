@@ -1,8 +1,6 @@
 
 package repository
 
-import java.time.LocalDate
-
 import itutil.IntegrationStubbing
 import models.api.DailyQuota
 import play.api.libs.json.JsString
@@ -14,12 +12,12 @@ class DailyQuotaRepositoryISpec extends IntegrationStubbing {
 
   class Setup extends SetupHelper
 
-  val testQuota = DailyQuota(LocalDate.parse(testDate), 10)
+  val testQuota = DailyQuota(testDate, 10)
 
   "quotaReached" must {
     "return true if the quota has been reached" in new Setup {
       given.user.isAuthorised
-      await(dailyQuotaRepo.insert(DailyQuota(LocalDate.parse(testDate), 10)))
+      await(dailyQuotaRepo.insert(DailyQuota(testDate, 10)))
 
       val res = await(dailyQuotaRepo.quotaReached)
 
@@ -27,7 +25,7 @@ class DailyQuotaRepositoryISpec extends IntegrationStubbing {
     }
     "return false if the quota has not been reached" in new Setup {
       given.user.isAuthorised
-      await(dailyQuotaRepo.insert(DailyQuota(LocalDate.parse(testDate), 9)))
+      await(dailyQuotaRepo.insert(DailyQuota(testDate, 9)))
 
       val res = await(dailyQuotaRepo.quotaReached)
 
@@ -39,8 +37,8 @@ class DailyQuotaRepositoryISpec extends IntegrationStubbing {
     "increment the quota for the day" in new Setup {
       given.user.isAuthorised
       await(dailyQuotaRepo.bulkInsert(Seq(
-        DailyQuota(LocalDate.parse(testDate).minusDays(1), 15),
-        DailyQuota(LocalDate.parse(testDate), 9)))
+        DailyQuota(testDate.minusDays(1), 15),
+        DailyQuota(testDate, 9)))
       )
 
       val res = await(dailyQuotaRepo.incrementTotal)
@@ -51,10 +49,10 @@ class DailyQuotaRepositoryISpec extends IntegrationStubbing {
       given.user.isAuthorised
 
       val res = await(dailyQuotaRepo.incrementTotal)
-      val data = await(dailyQuotaRepo.find("date" -> JsString(testDate)).map(_.headOption))
+      val data = await(dailyQuotaRepo.find("date" -> JsString(testDate.toString)).map(_.headOption))
 
       res mustBe 1
-      data mustBe Some(DailyQuota(LocalDate.parse(testDate), 1))
+      data mustBe Some(DailyQuota(testDate, 1))
     }
   }
 

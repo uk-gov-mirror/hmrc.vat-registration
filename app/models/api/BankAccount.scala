@@ -33,6 +33,12 @@ object BankAccount {
 
 object BankAccountDetails extends VatBankAccountValidator {
   implicit val format: Format[BankAccountDetails] = Json.format[BankAccountDetails]
+
+  val submissionFormat: OFormat[BankAccountDetails] = (
+    (__ \ "accountName").format[String] and
+    (__ \ "sortCode").format[String] and
+    (__ \ "accountNumber").format[String]
+  )(BankAccountDetails.apply, unlift(BankAccountDetails.unapply))
 }
 
 object BankAccountDetailsMongoFormat extends VatBankAccountValidator {

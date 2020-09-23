@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-package models.api
+package utils
 
-import play.api.libs.json.Json
+import play.api.libs.json.{JsPath, JsonValidationError}
 
-case class TradingName(selection: Boolean, tradingName: Option[String])
+trait JsonErrorUtil {
 
-object TradingName {
-  implicit val format = Json.format[TradingName]
+  type PlayJsonErrorSeq = Seq[(JsPath, Seq[JsonValidationError])]
+
+  def jsonErrorLogMessage(thrownBy: String, errors: PlayJsonErrorSeq): String = {
+    val invalidKeys = errors.map { case (key, _) => key.toString.replace("/", "") }
+
+    s"[$thrownBy] Missing or invalid fields: ${invalidKeys.mkString(", ")}"
+  }
+
 }

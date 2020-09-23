@@ -17,10 +17,9 @@
 package controllers
 
 import auth.{Authorisation, AuthorisationResource}
-import common.exceptions.MissingRegDocument
 import javax.inject.{Inject, Singleton}
 import models.api.ApplicantDetails
-import play.api.libs.json.{JsBoolean, JsObject, JsValue}
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.ApplicantDetailsService
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -44,13 +43,12 @@ class ApplicantDetailsController @Inject()(val applicantDetailsService: Applican
       }
   }
 
-  def updateApplicantDetailsData(regId: String): Action[JsValue] = Action.async[JsValue](parse.json) {
+  def updateApplicantDetailsData(regId: String): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
       isAuthorised(regId) { authResult =>
         authResult.ifAuthorised(regId, "ApplicantDetailsController", "updateApplicantDetailsData") {
-          implicit val reads = ApplicantDetails.patchJsonReads
-          withJsonBody[JsObject] { applicantDetails =>
-            applicantDetailsService.updateApplicantDetailsData(regId, applicantDetails) sendResult("updateApplicantDetailsData",regId)
+          withJsonBody[ApplicantDetails] { applicantDetails =>
+            applicantDetailsService.updateApplicantDetailsData(regId, applicantDetails) sendResult("updateApplicantDetailsData", regId)
           }
         }
       }

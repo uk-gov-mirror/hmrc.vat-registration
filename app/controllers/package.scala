@@ -41,7 +41,9 @@ package object controllers {
   implicit class HandleResultToSendJson[T](f: Future[T])(implicit writes: Writes[T], ec: ExecutionContext) extends SendResult {
     override def sendResult(method:String,regId:String):Future[Result] = {
       f.map {
-        data => Ok(Json.toJson(data))
+        data => {
+          Ok(Json.toJson(data))
+        }
       } recover {
         case _: MissingRegDocument => missingDoc(method,regId)
         case e:Exception => unexpectedException(method,regId,e.getMessage)

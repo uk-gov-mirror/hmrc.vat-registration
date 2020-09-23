@@ -27,7 +27,7 @@ import connectors._
 import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
 import models.AcknowledgementReferencePath
-import models.api.VatScheme
+import models.api.{Threshold, VatScheme}
 import models.external.CurrentProfile
 import org.slf4j.LoggerFactory
 import play.api.libs.json._

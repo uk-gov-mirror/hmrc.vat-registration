@@ -1,8 +1,6 @@
 
 package controllers
 
-import java.time.LocalDate
-
 import featureswitch.core.config.{FeatureSwitching, TrafficManagement}
 import itutil.IntegrationStubbing
 import models.api.DailyQuota
@@ -22,7 +20,7 @@ class VatRegistrationControllerISpec extends IntegrationStubbing with FeatureSwi
 
         given
           .user.isAuthorised
-          .dailyQuotaRepo.insertIntoDb(DailyQuota(LocalDate.parse(testDate), 2), dailyQuotaRepo.insert)
+          .dailyQuotaRepo.insertIntoDb(DailyQuota(testDate, 2), dailyQuotaRepo.insert)
 
         val res = await(client(controllers.routes.VatRegistrationController.newVatRegistration().url)
           .post(Json.obj())
@@ -35,7 +33,7 @@ class VatRegistrationControllerISpec extends IntegrationStubbing with FeatureSwi
 
         given
           .user.isAuthorised
-          .dailyQuotaRepo.insertIntoDb(DailyQuota(LocalDate.parse(testDate), 10), dailyQuotaRepo.insert)
+          .dailyQuotaRepo.insertIntoDb(DailyQuota(testDate, 10), dailyQuotaRepo.insert)
 
         val res = await(client(controllers.routes.VatRegistrationController.newVatRegistration().url)
           .post(Json.obj())

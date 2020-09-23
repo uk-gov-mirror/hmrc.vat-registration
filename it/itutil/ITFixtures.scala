@@ -20,83 +20,84 @@ import java.time.LocalDate
 import common.TransactionId
 import enums.VatRegStatus
 import models.api._
+import models.submission.DateOfBirth
 import uk.gov.hmrc.http.HeaderCarrier
 
 trait ITFixtures {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val date: LocalDate = LocalDate.of(2017, 1, 1)
-  val startDate = StartDate(Some(date))
-  val regId = "regId"
-  val internalid = "INT-123-456-789"
-  val transactionId = "transId"
-  val vatScheme = VatScheme(regId, internalId = internalid, status = VatRegStatus.draft)
-  val tradingName = TradingName(selection = true, Some("some-trading-name"))
+  val testDate: LocalDate = LocalDate.of(2017, 1, 1)
+  val startDate = StartDate(Some(testDate))
+  val testRegId = "regId"
+  val testInternalid = "INT-123-456-789"
+  val testTransactionId = "transId"
+  val vatScheme = VatScheme(testRegId, internalId = testInternalid, status = VatRegStatus.draft)
   val oldName = Name(first = Some("Bob"), middle = None, last = "Smith")
-  val tradingDetails = TradingDetails(Some("test-name"), true)
-  val returns = Returns(
+  val testTradingDetails = TradingDetails(Some("test-name"), true)
+
+  val testReturns = Returns(
     reclaimVatOnMostReturns = true,
     frequency = "quarterly",
     staggerStart = Some("jan"),
     start = startDate
   )
+
   val frsDetails = FRSDetails(
     businessGoods = Some(BusinessGoods(12345678L, true)),
-    startDate = Some(date),
+    startDate = Some(testDate),
     categoryOfBusiness = "testCategory",
     percent = 15
   )
 
-
-  val flatRateScheme = FlatRateScheme(
-    joinFrs = true,
-    Some(frsDetails)
-  )
-
+  val testFlatRateScheme = FlatRateScheme(joinFrs = true, Some(frsDetails))
   val EstimateValue: Long = 1000L
   val zeroRatedTurnoverEstimate: Long = 1000L
+  val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some("UK"))
+  val testContactDetails = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
+  val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
+  val testNino = "NB686868C"
+  val testRole = "secretary"
+  val testName = Name(first = Some("Forename"), middle = None, last = "Surname")
+  val testFormerName = FormerName(name = Some(oldName), change = Some(testDate))
 
-  val scrsAddress = Address("line1", "line2", None, None, Some("XX XX"), Some("UK"))
-  val digitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
-
-  val name = Name(first = Some("Forename"), middle = None, last = "Surname")
-  val formerName = FormerName(Some("Bob Smith"), Some(date), name = Some(oldName), change = Some(date))
-  val vatApplicantDetails = ApplicantDetails(
-    nino = "NB686868C",
-    role = "director",
-    name = name,
-    details = None
+  val testApplicantDetails = ApplicantDetails(
+    nino = testNino,
+    role = testRole,
+    name = testName,
+    dateOfBirth = DateOfBirth(testDate),
+    currentAddress = testAddress,
+    contact = testDigitalContactOptional,
+    changeOfName = None,
+    previousAddress = None
   )
-  val businessContact = BusinessContact(digitalContact = digitalContact, website = None, ppob = scrsAddress)
-  val sicAndCompliance = SicAndCompliance("businessDesc", Some(ComplianceLabour(1, Some(true), Some(true))), SicCode("12345678", "sicDesc", "sicDetail"), List(SicCode("12345678", "sicDesc", "sicDetail")))
 
-  val vatTurnoverEstimates = TurnoverEstimates(12345678L)
+  val testBusinessContactDetails = BusinessContact(digitalContact = testContactDetails, website = None, ppob = testAddress)
+  val testSicAndCompliance = SicAndCompliance("businessDesc", Some(ComplianceLabour(1, Some(true), Some(true))), SicCode("12345678", "sicDesc", "sicDetail"), List(SicCode("12345678", "sicDesc", "sicDetail")))
+  val testTurnoverEstimates = TurnoverEstimates(12345678L)
+  val testBankDetails = BankAccount(true, None)
+  val testThreshold = Threshold(true, None, None, None, None)
 
-  val vatBankAccount = BankAccount(true, None)
-
-  val threshold = Threshold(true, None, None, None, None)
-
-  val fullVatScheme =
+  val testFullVatScheme =
     VatScheme(
-      regId,
-      internalid,
-      Some(TransactionId(transactionId)),
-      Some(tradingDetails),
-      Some(returns),
-      Some(sicAndCompliance),
-      Some(businessContact),
-      Some(vatTurnoverEstimates),
-      Some(vatBankAccount),
-      Some(threshold),
+      testRegId,
+      testInternalid,
+      Some(TransactionId(testTransactionId)),
+      Some(testTradingDetails),
+      Some(testReturns),
+      Some(testSicAndCompliance),
+      Some(testBusinessContactDetails),
+      Some(testTurnoverEstimates),
+      Some(testBankDetails),
+      Some(testThreshold),
       Some("ackRef"),
-      Some(flatRateScheme),
+      Some(testFlatRateScheme),
       VatRegStatus.draft
     )
 
-  def emptyVatScheme(regId: String): VatScheme = VatScheme(
+  def testEmptyVatScheme(regId: String): VatScheme = VatScheme(
     id = regId,
-    internalId = internalid,
+    internalId = testInternalid,
     status = VatRegStatus.draft
   )
 }
