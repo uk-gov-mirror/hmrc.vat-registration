@@ -77,8 +77,6 @@ trait IntegrationSpecBase extends PlaySpec
     "constants.daily-quota" -> "10"
   )
 
-  val testDate = "2020-01-01"
-
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
     .configure(config)
     .configure("application.router" -> "testOnlyDoNotUseInAppConf.Routes")

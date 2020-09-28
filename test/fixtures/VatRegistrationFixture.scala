@@ -16,57 +16,59 @@
 
 package fixtures
 
-import java.time.{LocalDate, ZoneId}
+import java.time.LocalDate
 
 import common.TransactionId
 import enums.VatRegStatus
 import models.api._
+import models.submission.DateOfBirth
 import play.api.libs.json.{JsObject, Json}
 
 trait VatRegistrationFixture {
-  val regId = "testRegId"
-  val internalid = "INT-123-456-789"
-  val txId: TransactionId = TransactionId("1")
-  val regime = "vat"
-  val subscriber = "scrs"
-  val now = LocalDate.now(ZoneId.systemDefault())
-  val userId = "userId"
-  val ackRefNumber = "BRPY000000000001"
-  val date: LocalDate = LocalDate.of(2018, 1, 1)
-  val scrsAddress = Address("line1", "line2", None, None, Some("XX XX"), Some("UK"))
-  val sicCode = SicCode("88888", "description", "displayDetails")
-  val digitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
-
-  val name = Name(first = Some("Forename"), middle = None, last = "Surname")
-  val oldName = Name(first = Some("Bob"), middle = None, last = "Smith")
-  val formerName = FormerName(Some("Bob Smith"), Some(date), name = Some(oldName), change = Some(date))
-  val vatScheme: VatScheme = VatScheme(regId, internalId = internalid, status = VatRegStatus.draft)
+  val testNino = "AB123456A"
+  val testRole = "secretary"
+  val testRegId = "testRegId"
+  val testInternalid = "INT-123-456-789"
+  val testTxId: TransactionId = TransactionId("1")
+  val testAckReference = "BRPY000000000001"
+  val testDate: LocalDate = LocalDate.of(2018, 1, 1)
+  val testDateOfBirth = DateOfBirth(testDate)
+  val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some("UK"))
+  val testSicCode = SicCode("88888", "description", "displayDetails")
+  val testName = Name(first = Some("Forename"), middle = None, last = "Surname")
+  val testOldName = Name(first = Some("Bob"), middle = None, last = "Smith")
+  val testPreviousName = FormerName(name = Some(testOldName), change = Some(testDate))
+  val testVatScheme: VatScheme = VatScheme(testRegId, internalId = testInternalid, status = VatRegStatus.draft)
   val exception = new Exception("Exception")
-
-  val voluntaryThreshold = Threshold(false, Some("voluntaryReason"), Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
-  val mandatoryThreshold = Threshold(true, None, Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
+  val testVoluntaryThreshold = Threshold(false, Some("voluntaryReason"), Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
+  val testMandatoryThreshold = Threshold(true, None, Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
   val currentAddress = Address("12 Lukewarm", "Oriental lane")
-  val skylakeValiarm = Name(first = Some("Skylake"), middle = None, last = "Valiarm")
-  val skylakeDigitalContact = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
-  val applicantDetailsDetails = ApplicantDetailsDetails(currentAddress = currentAddress, None, None, contact = skylakeDigitalContact)
-  val validApplicantDetailsPreIV = ApplicantDetails(
-    nino = "AB123456A",
-    role = "secretary",
-    name = skylakeValiarm,
-    details = None
+  val testDigitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
+  val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
+  val testBankDetails = BankAccountDetails("Test Bank Account", "010203", "01023456")
+
+  val validApplicantDetails = ApplicantDetails(
+    nino = testNino,
+    role = testRole,
+    name = testName,
+    dateOfBirth = DateOfBirth(testDate),
+    currentAddress = testAddress,
+    contact = testDigitalContactOptional,
+    changeOfName = None,
+    previousAddress = None
   )
 
   val otherBusinessActivitiesSicAndCompiliance =
     SicCode("00998", "otherBusiness desc 1", "fooBar 1") :: SicCode("00889", "otherBusiness desc 2", "fooBar 2") :: Nil
 
-  val validSicAndCompliance = Some(SicAndCompliance(
+  val testSicAndCompliance = Some(SicAndCompliance(
     "this is my business description",
     Some(ComplianceLabour(1000, Some(true), Some(true))),
     SicCode("12345", "the flu", "sic details"),
     otherBusinessActivitiesSicAndCompiliance
   ))
 
-  val validBusinessContact = Some(BusinessContact(
+  val testBusinessContact = Some(BusinessContact(
     digitalContact = DigitalContact("email@email.com", Some("12345"), Some("54321")),
     website = Some("www.foo.com"),
     ppob = Address("line1", "line2", None, None, None, Some("foo"))
@@ -135,7 +137,7 @@ trait VatRegistrationFixture {
   val validFullFRSDetails: FRSDetails =
     FRSDetails(
       businessGoods = Some(BusinessGoods(1234567891011L, true)),
-      startDate = Some(date),
+      startDate = Some(testDate),
       categoryOfBusiness = "testCategory",
       percent = 15
     )
@@ -150,7 +152,7 @@ trait VatRegistrationFixture {
        |    "overTurnover": true,
        |    "estimatedTotalSales": 1234567891011
        |  },
-       |  "startDate": "$date",
+       |  "startDate": "$testDate",
        |  "categoryOfBusiness":"testCategory",
        |  "percent":15.00
        |}
@@ -159,7 +161,7 @@ trait VatRegistrationFixture {
   val validFRSDetailsJsonWithoutBusinessGoods: JsObject = Json.parse(
     s"""
        |{
-       |  "startDate": "$date",
+       |  "startDate": "$testDate",
        |  "categoryOfBusiness":"testCategory",
        |  "percent":15.00
        |}
@@ -172,7 +174,7 @@ trait VatRegistrationFixture {
        |    "overTurnover": true,
        |    "estimatedTotalSales": 1234567891011
        |  },
-       |  "startDate": "$date",
+       |  "startDate": "$testDate",
        |  "categoryOfBusiness":"testCategory",
        |  "percent":15.00
        |}

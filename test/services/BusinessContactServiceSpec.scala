@@ -44,8 +44,8 @@ class BusinessContactServiceSpec extends VatRegSpec with VatRegistrationFixture 
 
   "getBusinessContact" should {
     "return a BusinessContact Model when an entry exists in mongo for the specified regId" in new Setup {
-      getFromMongo(Future.successful(validBusinessContact))
-      await(service.getBusinessContact("fooBarAndWizz")) mustBe validBusinessContact
+      getFromMongo(Future.successful(testBusinessContact))
+      await(service.getBusinessContact("fooBarAndWizz")) mustBe testBusinessContact
     }
     "return None when no entry exists in the dataBase for the specified regId" in new Setup {
       getFromMongo(Future.successful(None))
@@ -54,16 +54,16 @@ class BusinessContactServiceSpec extends VatRegSpec with VatRegistrationFixture 
   }
   "updateBusinessContact" should {
     "return an updated BusinessContact Model when an update successfully takes place in mongo" in new Setup {
-      updateMongo(Future.successful(validBusinessContact.get))
-      await(service.updateBusinessContact("ImARegId",validBusinessContact.get)) mustBe validBusinessContact.get
+      updateMongo(Future.successful(testBusinessContact.get))
+      await(service.updateBusinessContact("ImARegId",testBusinessContact.get)) mustBe testBusinessContact.get
     }
     "return a missingRegDocument when no reg Document exists for the reg id when an update takes place" in new Setup {
-      updateMongo(Future.failed(MissingRegDocument(regId)))
-      intercept[MissingRegDocument](await(service.updateBusinessContact(regId, validBusinessContact.get))) mustBe MissingRegDocument(regId)
+      updateMongo(Future.failed(MissingRegDocument(testRegId)))
+      intercept[MissingRegDocument](await(service.updateBusinessContact(testRegId, testBusinessContact.get))) mustBe MissingRegDocument(testRegId)
     }
     "return new Exception when an exception is returned from the repo during an update" in new Setup {
       updateMongo(Future.failed(new Exception("foo Bar Wizz Bang")))
-      intercept[Exception](await(service.updateBusinessContact(regId, validBusinessContact.get)))
+      intercept[Exception](await(service.updateBusinessContact(testRegId, testBusinessContact.get)))
     }
   }
 }

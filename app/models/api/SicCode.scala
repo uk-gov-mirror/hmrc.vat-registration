@@ -45,4 +45,27 @@ object SicCode extends SicCodeValidator {
 
   val apiFormat = Format(apiReads,writes)
   val mongoFormat = Format(mongoReads,writes)
+
+  val sicCodeListReads = Reads[List[SicCode]] { json =>
+    (
+      (__ \ "mainCode2").readNullable[String] and
+      (__ \ "mainCode3").readNullable[String] and
+      (__ \ "mainCode4").readNullable[String]
+    ) ((code1, code2, code3) => (code1 ++ code2 ++ code3).toList.map(c => SicCode(c, "", ""))).reads(json)
+  }
+
+  val sicCodeListWrites = Writes[List[SicCode]] { codes =>
+    Json.obj(
+      "mainCode2" -> codes.lift(0).map(_.id),
+      "mainCode3" -> codes.lift(1).map(_.id),
+      "mainCode4" -> codes.lift(2).map(_.id)
+    ) match {
+      case JsObject(fieldSet) => JsObject(fieldSet.flatMap {
+        case (_, JsNull) => None
+        case _@value => Some(value)
+      })
+      case obj => obj
+    }
+  }
+
 }

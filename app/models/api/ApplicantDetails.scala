@@ -16,75 +16,41 @@
 
 package models.api
 
-import java.time.LocalDate
-
-import deprecated.DeprecatedConstants
+import models.submission.{CustomerId, DateOfBirth, NinoIdType}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-
-case class ApplicantDetailsDetails(currentAddress: Address,
-                                 changeOfName: Option[FormerName],
-                                 previousAddress : Option[Address],
-                                 contact: DigitalContactOptional)
-
-object ApplicantDetailsDetails {
-  implicit val format = (
-    (__ \ "currentAddress").format[Address] and
-    (__ \ "changeOfName").formatNullable[FormerName] and
-    (__ \ "previousAddress").formatNullable[Address] and
-    (__ \ "contact").format[DigitalContactOptional]
-  )(ApplicantDetailsDetails.apply, unlift(ApplicantDetailsDetails.unapply))
-}
 
 case class ApplicantDetails(nino: String,
                             role: String,
                             name: Name,
-                            details: Option[ApplicantDetailsDetails],
-                            isApplicantApplying: Boolean = true)
+                            dateOfBirth: DateOfBirth,
+                            currentAddress: Address,
+                            contact: DigitalContactOptional,
+                            changeOfName: Option[FormerName] = None,
+                            previousAddress : Option[Address] = None)
 
-object ApplicantDetails extends VatApplicantDetailsValidator{
+object ApplicantDetails extends VatApplicantDetailsValidator {
 
-  val reads: Reads[ApplicantDetails] = (
-    (__ \ "nino").read[String](ninoValidator) and
-    (__ \ "role").read[String](roleValidator) and
-    (__ \ "name").read[Name] and
-    (__ \ "details").readNullable[ApplicantDetailsDetails] and
-    ((__ \ "isApplicantApplying").read[Boolean] or Reads.pure(true))
-  )(ApplicantDetails.apply _)
+  implicit val format: Format[ApplicantDetails] = (
+    (__ \ "nino").format[String] and
+    (__ \ "role").format[String] and
+    (__ \ "name").format[Name] and
+    (__ \ "dateOfBirth").format[DateOfBirth] and
+    (__ \ "currentAddress").format[Address] and
+    (__ \ "contact").format[DigitalContactOptional] and
+    (__ \ "changeOfName").formatNullable[FormerName] and
+    (__ \ "previousAddress").formatNullable[Address]
+  )(ApplicantDetails.apply, unlift(ApplicantDetails.unapply))
 
-  implicit val format: OFormat[ApplicantDetails] = OFormat(reads, Json.writes[ApplicantDetails])
+  val submissionFormat: Format[ApplicantDetails] = (
+    (__ \ "customerIdentification" \ "customerID").format[CustomerId].inmap[String](_.idValue, nino => CustomerId(nino, NinoIdType)) and
+    (__ \ "declaration" \ "applicantDetails" \ "roleInBusiness").format[String] and
+    (__).format[Name](Name.submissionFormat) and
+    (__).format[DateOfBirth](DateOfBirth.submissionFormat) and
+    (__ \ "declaration" \ "applicantDetails" \ "currAddress").format[Address](Address.submissionFormat) and
+    (__ \ "declaration" \ "applicantDetails" \ "commDetails").format[DigitalContactOptional](DigitalContactOptional.submissionFormat) and
+    (__ \ "declaration" \ "applicantDetails" \ "prevName").formatNullable[FormerName](FormerName.submissionFormat) and
+    (__ \ "declaration" \ "applicantDetails" \ "prevAddress").formatNullable[Address](Address.submissionFormat)
+  )(ApplicantDetails.apply, unlift(ApplicantDetails.unapply))
 
-  val patchJsonReads: Reads[JsObject] = {
-    def apply(details: Option[ApplicantDetailsDetails]): JsObject =
-      details.fold(Json.obj())(d => Json.obj("details" -> d))
-    (__ \ "details").readNullable[ApplicantDetailsDetails].map(apply _)
-  }
-
-  val eligibilityDataJsonReads: Reads[(String, Name, String, Boolean)] = new Reads[(String, Name, String, Boolean)] {
-    def nameRoleReads: Reads[(Name, String)] = (
-      (__ \ "name").read[Name](Name.nameReadsFromElData) and
-      (__ \ "role").read[String](roleValidator)
-    )(Tuple2[Name, String] _)
-
-    override def reads(json: JsValue): JsResult[(String, Name, String, Boolean)] = {
-      JsSuccess((DeprecatedConstants.fakeNino, DeprecatedConstants.fakeApplicantName, "director", true))
-    }
-  }
-
-  val mongoReads: Reads[ApplicantDetails] = new Reads[ApplicantDetails] {
-    override def reads(json: JsValue): JsResult[ApplicantDetails] = {
-      val officerDetails = (json \ "applicantDetails" \ "details").validateOpt[ApplicantDetailsDetails].get
-
-      json.validate[(String, Name, String, Boolean)](eligibilityDataJsonReads) map { tuple =>
-        val (niNumber: String, officerName: Name, officerRole: String, isApplicantApplying: Boolean) = tuple
-        ApplicantDetails(
-          nino = niNumber,
-          role = officerRole,
-          name = officerName,
-          isApplicantApplying = isApplicantApplying,
-          details = officerDetails
-        )
-      }
-    }
-  }
 }

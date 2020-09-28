@@ -85,7 +85,7 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
       given.user.isAuthorised
       stubVatSubmission(ACCEPTED)()
 
-      repo.createNewVatScheme(registrationID, internalid).flatMap(_ => repo.updateReturns(registrationID, returns))
+      repo.createNewVatScheme(registrationID, testInternalid).flatMap(_ => repo.updateReturns(registrationID, testReturns))
 
       val result: WSResponse = await(client(
         controllers.routes.VatRegistrationController.submitVATRegistration(registrationID).url).put("")
@@ -104,7 +104,7 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
       given.user.isAuthorised
       stubVatSubmission(ACCEPTED)()
 
-      repo.createNewVatScheme(registrationID, internalid).flatMap(_ => repo.updateReturns(registrationID, returns))
+      repo.createNewVatScheme(registrationID, testInternalid).flatMap(_ => repo.updateReturns(registrationID, testReturns))
 
       val result: WSResponse = await(client(
         controllers.routes.VatRegistrationController.submitVATRegistration(registrationID).url).put("")

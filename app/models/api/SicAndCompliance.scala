@@ -55,5 +55,21 @@ object SicAndCompliance {
 
   implicit val apiFormats: Format[SicAndCompliance] = Format(apiReads,writes)
   val mongoFormats: Format[SicAndCompliance] = Format(mongoReads,writes)
-  }
 
+  val submissionReads: Reads[SicAndCompliance] = (
+    (__ \ "description").read[String] and
+    Reads.pure(None) and
+    (__ \ "SICCodes" \ "primaryMainCode").read[String].fmap(code => SicCode(code, "", "")) and
+    (__ \ "SICCodes").read[List[SicCode]](SicCode.sicCodeListReads)
+  )(apply(_, _, _, _))
+
+  val submissionWrites: Writes[SicAndCompliance] = (
+    (__ \ "description").write[String] and
+    (__).writeNullable[ComplianceLabour].contramap[Option[ComplianceLabour]](_ => None) and
+    (__ \ "SICCodes" \ "primaryMainCode").write[String].contramap[SicCode](code => code.id) and
+    (__ \ "SICCodes").write[List[SicCode]](SicCode.sicCodeListWrites)
+  )(unlift(unapply))
+
+  val submissionFormat: Format[SicAndCompliance] = Format[SicAndCompliance](submissionReads, submissionWrites)
+
+}

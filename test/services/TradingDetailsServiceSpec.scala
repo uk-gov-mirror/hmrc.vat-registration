@@ -44,7 +44,7 @@ class TradingDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {
       when(mockRegistrationMongoRepository.retrieveTradingDetails(any())(any()))
         .thenReturn(Future.successful(Some(validFullTradingDetails)))
 
-      val result: Option[TradingDetails] = await(service.retrieveTradingDetails(regId))
+      val result: Option[TradingDetails] = await(service.retrieveTradingDetails(testRegId))
 
       result mustBe Some(validFullTradingDetails)
     }
@@ -53,7 +53,7 @@ class TradingDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {
       when(mockRegistrationMongoRepository.retrieveTradingDetails(any())(any()))
         .thenReturn(Future.successful(None))
 
-      val result: Option[TradingDetails] = await(service.retrieveTradingDetails(regId))
+      val result: Option[TradingDetails] = await(service.retrieveTradingDetails(testRegId))
 
       result mustBe None
     }
@@ -64,7 +64,7 @@ class TradingDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {
       when(mockRegistrationMongoRepository.updateTradingDetails(any(),any())(any()))
         .thenReturn(Future.successful(validFullTradingDetails))
 
-      val result: TradingDetails = await(service.updateTradingDetails(regId, validFullTradingDetails))
+      val result: TradingDetails = await(service.updateTradingDetails(testRegId, validFullTradingDetails))
 
       result mustBe validFullTradingDetails
     }
@@ -73,14 +73,14 @@ class TradingDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {
       when(mockRegistrationMongoRepository.updateTradingDetails(any(),any())(any()))
         .thenReturn(Future.failed(new Exception))
 
-      intercept[Exception](await(service.updateTradingDetails(regId, validFullTradingDetails)))
+      intercept[Exception](await(service.updateTradingDetails(testRegId, validFullTradingDetails)))
     }
 
     "encounter a MissingRegDocument if no document is found" in new Setup {
       when(mockRegistrationMongoRepository.updateTradingDetails(any(), any())(any()))
-        .thenReturn(Future.failed(MissingRegDocument(regId)))
+        .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
-      intercept[MissingRegDocument](await(service.updateTradingDetails(regId, validFullTradingDetails)))
+      intercept[MissingRegDocument](await(service.updateTradingDetails(testRegId, validFullTradingDetails)))
     }
   }
 

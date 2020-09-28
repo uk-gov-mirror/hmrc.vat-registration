@@ -28,7 +28,9 @@ case class Address(line1: String,
 
 object Address {
 
-  val submissionFormat: OFormat[Address] = (
+  implicit val format: Format[Address] = Json.format[Address]
+
+  val submissionFormat: Format[Address] = (
     (__ \ "line1").format[String] and
       (__ \ "line2").format[String] and
       (__ \ "line3").formatNullable[String] and
@@ -37,5 +39,4 @@ object Address {
       (__ \ "countryCode").formatNullable[String]
     ) (Address.apply, unlift(Address.unapply))
 
-  implicit val format: OFormat[Address] = Json.format[Address]
 }

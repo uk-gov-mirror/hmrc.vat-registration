@@ -19,12 +19,12 @@ package services
 import java.time.LocalDate
 
 import cats.instances.FutureInstances
-import common.TransactionId
 import common.exceptions._
 import connectors.DESConnector
+import deprecated.DeprecatedConstants
 import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
-import models.api.{Address, VatScheme, VatSubmission}
+import models.api.VatScheme
 import models.submission.DESSubmission
 import repositories._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -42,16 +42,8 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     for {
       status <- getValidDocumentStatus(regId)
       ackRefs <- ensureAcknowledgementReference(regId, status)
-      submission <- buildDesSubmission(regId, ackRefs)
-      fakeSubmission = VatSubmission(
-        "SubmissionCreate",
-        Some("3"),
-        Some("50"),
-        Some("12345678901234567890"),
-        Some(Address(line1 = "line1", line2 = "line2", postcode = Some("A11 11A"), country = Some("GB"))),
-        Some(true)
-      )
-      _ <- desConnector.submitToDES(fakeSubmission, regId)
+      _ <- buildDesSubmission(regId, ackRefs)
+      _ <- desConnector.submitToDES(DeprecatedConstants.fakeSubmission, regId)
       _ <- updateSubmissionStatus(regId)
     } yield {
       ackRefs
@@ -64,7 +56,8 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
   private[services] def generateAcknowledgementReference(implicit hc: HeaderCarrier): Future[String] =
     sequenceMongoRepository.getNext("AcknowledgementID").map(ref => f"BRVT$ref%011d")
 
-  private[services] def ensureAcknowledgementReference(regId: String, status: VatRegStatus.Value)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[String] = {
+  private[services] def ensureAcknowledgementReference(regId: String, status: VatRegStatus.Value)
+                                                      (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[String] = {
     registrationRepository.retrieveVatScheme(regId) flatMap {
       case Some(vs) => vs.acknowledgementReference.fold(
         for {

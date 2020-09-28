@@ -20,15 +20,21 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class BusinessContact(digitalContact: DigitalContact,
-                           website:Option[String],
-                           ppob:Address)
+                           website: Option[String],
+                           ppob: Address)
 
 object BusinessContact {
 
-  implicit val formats:OFormat[BusinessContact] = (
+  implicit val formats: OFormat[BusinessContact] = (
     (__ \ "digitalContact").format[DigitalContact] and
     (__ \ "website").formatNullable[String] and
     (__ \ "ppob").format[Address]
+  )(BusinessContact.apply, unlift(BusinessContact.unapply))
+
+  val submissionFormat: Format[BusinessContact] = (
+    (__ \ "commDetails").format[DigitalContact] and
+    (__ \ "commDetails" \ "webAddress").formatNullable[String] and
+    (__ \ "address").format[Address](Address.submissionFormat)
   )(BusinessContact.apply, unlift(BusinessContact.unapply))
 
 }

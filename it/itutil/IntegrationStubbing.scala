@@ -19,7 +19,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor
 import models.api.{DailyQuota, RegistrationInformation, VatScheme}
 import play.api.test.Helpers._
 import reactivemongo.api.commands.WriteResult
-import repositories.trafficmanagement.TrafficManagementRepository
 import uk.gov.hmrc.auth.core.AuthenticateHeaderParser
 
 import scala.concurrent.Future
@@ -61,7 +60,7 @@ trait IntegrationStubbing extends IntegrationSpecBase with ITFixtures {
   case class User()(implicit builder: PreconditionBuilder) {
     val authoriseData =
       s"""{
-         | "internalId": "$internalid",
+         | "internalId": "$testInternalid",
          | "externalId": "Ext-xxx",
          | "credentials": {
          |   "providerId": "xxx2",
@@ -77,7 +76,7 @@ trait IntegrationStubbing extends IntegrationSpecBase with ITFixtures {
     }
 
     def isNotAuthorised: PreconditionBuilder = {
-      stubFor(post(urlMatching("/auth/authorise")).willReturn(aResponse().withStatus(401).withBody(s"""{"internalId": "$internalid"}""").withHeader(AuthenticateHeaderParser.WWW_AUTHENTICATE,s"""MDTP detail="InvalidBearerToken"""")))
+      stubFor(post(urlMatching("/auth/authorise")).willReturn(aResponse().withStatus(401).withBody(s"""{"internalId": "$testInternalid"}""").withHeader(AuthenticateHeaderParser.WWW_AUTHENTICATE,s"""MDTP detail="InvalidBearerToken"""")))
 
       stubPost("/write/audit", OK, """{"x":2}""")
       stubPost("/write/audit/merged", OK, """{"x":2}""")

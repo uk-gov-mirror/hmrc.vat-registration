@@ -19,11 +19,10 @@ package services
 import common.exceptions.MissingRegDocument
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import models.api.{DigitalContactOptional, ApplicantDetails, ApplicantDetailsDetails}
+import models.api.ApplicantDetails
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
-import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -43,55 +42,20 @@ class ApplicantDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture
       .thenReturn(Future.failed(new Exception("")))
 
     def updateIVPassedToMongoNoRegDoc(): OngoingStubbing[Future[Boolean]] = when(mockRegistrationMongoRepository.updateIVStatus(any(),any())(any()))
-      .thenReturn(Future.failed(MissingRegDocument(regId)))
+      .thenReturn(Future.failed(MissingRegDocument(testRegId)))
   }
-
-  val upsertApplicantDetailsModel: ApplicantDetails = Json.parse(
-    s"""
-      |{
-      | "name": {
-      |   "first" : "Skylake",
-      |   "last" : "Valiarm"
-      | },
-      | "nino" : "AB123456A",
-      | "role" : "secretary",
-      | "details" : {
-      |   "currentAddress" : {
-      |     "line1" : "12 Lukewarm",
-      |     "line2"  : "Oriental lane"
-      |   },
-      |   "contact" : {
-      |     "email" : "skylake@vilikariet.com"
-      |   }
-      | },
-      | "isApplicantApplying": true
-      |}
-    """.stripMargin).as[ApplicantDetails]
-
-  val validApplicantDetailsModel: ApplicantDetails = Json.parse(
-    s"""
-       |{
-       | "name": {
-       |   "first" : "Skylake",
-       |   "last" : "Valiarm"
-       | },
-       | "nino" : "AB123456A",
-       | "role" : "secretary",
-       | "isApplicantApplying": true
-       |}
-    """.stripMargin).as[ApplicantDetails]
 
   "getApplicantDetailsData" should {
     "return an applicant if found" in new Setup {
-      when(mockRegistrationMongoRepository.getCombinedApplicantDetails(any())(any()))
-        .thenReturn(Future.successful(Some(validApplicantDetailsPreIV)))
+      when(mockRegistrationMongoRepository.getApplicantDetails(any())(any()))
+        .thenReturn(Future.successful(Some(validApplicantDetails)))
 
       val result: Option[ApplicantDetails] = await(service.getApplicantDetailsData("regId"))
-      result mustBe Some(validApplicantDetailsModel)
+      result mustBe Some(validApplicantDetails)
     }
 
     "return None if none found matching regId" in new Setup {
-      when(mockRegistrationMongoRepository.getCombinedApplicantDetails(any())(any()))
+      when(mockRegistrationMongoRepository.getApplicantDetails(any())(any()))
         .thenReturn(Future.successful(None))
 
       val result: Option[ApplicantDetails] = await(service.getApplicantDetailsData("regId"))
@@ -100,42 +64,37 @@ class ApplicantDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture
   }
 
   "updateApplicantDetailsData" should {
-    val applicantDetailsDetails = Json.toJson(ApplicantDetailsDetails(
-      currentAddress = scrsAddress,
-      changeOfName = None,
-      previousAddress = None,
-      contact = DigitalContactOptional(
-        email = Some("test@t.com"),
-        tel = None,
-        mobile = None
-      )
-    ))
-    val applicantJson = Json.parse(
-      s"""{
-         | "details": $applicantDetailsDetails
-         |}
-        """.stripMargin).as[JsObject]
+    val applicantDetails = ApplicantDetails(
+      nino = testNino,
+      role = testRole,
+      name = testName,
+      dateOfBirth = testDateOfBirth,
+      currentAddress = testAddress,
+      contact = testDigitalContactOptional,
+      changeOfName = Some(testPreviousName),
+      previousAddress = Some(testAddress)
+    )
 
     "return the data that is being inputted" in new Setup {
       when(mockRegistrationMongoRepository.patchApplicantDetails(any(),any())(any()))
-        .thenReturn(Future.successful(applicantJson))
+        .thenReturn(Future.successful(applicantDetails))
 
-      val result: JsObject = await(service.updateApplicantDetailsData("regId", applicantJson))
-      result mustBe applicantJson
+      val result = await(service.updateApplicantDetailsData("regId", applicantDetails))
+      result mustBe applicantDetails
     }
 
     "encounter an exception if an error occurs" in new Setup {
       when(mockRegistrationMongoRepository.patchApplicantDetails(any(),any())(any()))
         .thenReturn(Future.failed(new Exception("")))
 
-      intercept[Exception](await(service.updateApplicantDetailsData("regId", applicantJson)))
+      intercept[Exception](await(service.updateApplicantDetailsData("regId", applicantDetails)))
     }
 
     "encounter an MissingRegDocument Exception if no document is found" in new Setup {
       when(mockRegistrationMongoRepository.patchApplicantDetails(any(),any())(any()))
-        .thenReturn(Future.failed(MissingRegDocument(regId)))
+        .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
-      intercept[MissingRegDocument](await(service.updateApplicantDetailsData("regId", applicantJson)))
+      intercept[MissingRegDocument](await(service.updateApplicantDetailsData("regId", applicantDetails)))
     }
   }
 }

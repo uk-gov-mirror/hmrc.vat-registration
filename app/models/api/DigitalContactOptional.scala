@@ -20,11 +20,13 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 
-case class DigitalContactOptional(email: Option[String], tel: Option[String], mobile: Option[String])
+case class DigitalContactOptional(email: Option[String] = None,
+                                  tel: Option[String] = None,
+                                  mobile: Option[String] = None)
 
 object DigitalContactOptional extends VatDigitalContactValidator {
-  implicit val format: OFormat[DigitalContactOptional] = new OFormat[DigitalContactOptional] {
-    val defaultFormat: OFormat[DigitalContactOptional] = (
+  implicit val format: Format[DigitalContactOptional] = new Format[DigitalContactOptional] {
+    val defaultFormat: Format[DigitalContactOptional] = (
       (__ \ "email").formatNullable[String](readToFmt(maxLength[String](70) keepAnd email)) and
         (__ \ "tel").formatNullable[String](telValidator) and
         (__ \ "mobile").formatNullable[String](mobileValidator)
@@ -40,4 +42,10 @@ object DigitalContactOptional extends VatDigitalContactValidator {
 
     override def writes(o: DigitalContactOptional): JsObject = Json.toJson(o)(defaultFormat).as[JsObject]
   }
+
+  val submissionFormat: Format[DigitalContactOptional] = (
+    (__ \ "email").formatNullable[String] and
+    (__ \ "telephone").formatNullable[String] and
+    (__ \ "mobileNumber").formatNullable[String]
+  )(DigitalContactOptional.apply, unlift(DigitalContactOptional.unapply))
 }

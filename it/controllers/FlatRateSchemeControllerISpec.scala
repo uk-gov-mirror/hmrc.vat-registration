@@ -18,7 +18,7 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing {
 
   val dateNow: LocalDate = LocalDate.of(2018, 1, 1)
 
-  def vatScheme(regId: String): VatScheme = emptyVatScheme(regId).copy(
+  def vatScheme(regId: String): VatScheme = testEmptyVatScheme(regId).copy(
       flatRateScheme = Some(FlatRateScheme(joinFrs = true, Some(frsDetails.copy(startDate = Some(dateNow)))))
   )
 
@@ -61,7 +61,7 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing {
     "return NO_CONTENT if successfully obtained" in new Setup {
       given.user.isAuthorised
 
-      insertIntoDb(emptyVatScheme("regId"))
+      insertIntoDb(testEmptyVatScheme("regId"))
 
       val response: WSResponse = await(client(FlatRateSchemeController.fetchFlatRateScheme("regId").url).get())
 
@@ -89,7 +89,7 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing {
     "return OK with a valid threshold json body" in new Setup {
       given.user.isAuthorised
 
-      insertIntoDb(emptyVatScheme("regId"))
+      insertIntoDb(testEmptyVatScheme("regId"))
 
       val response: WSResponse = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url)
         .patch(validFullFlatRateSchemeJson))
@@ -101,7 +101,7 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing {
     "return BAD_REQUEST if an invalid json body is posted" in new Setup {
       given.user.isAuthorised
 
-      insertIntoDb(emptyVatScheme("regId"))
+      insertIntoDb(testEmptyVatScheme("regId"))
 
       val response: WSResponse = await(client(FlatRateSchemeController.updateFlatRateScheme("regId").url)
         .patch(invalidFlatRateSchemeJson))

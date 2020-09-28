@@ -25,7 +25,7 @@ case class ComplianceLabour(numberOfWorkers:Int,
 
 object ComplianceLabour{
 
-  implicit val formats:OFormat[ComplianceLabour] = (
+  implicit val formats: OFormat[ComplianceLabour] = (
       (__ \"numberOfWorkers").format[Int] and
       (__ \"temporaryContracts").formatNullable[Boolean] and
       (__ \"skilledWorkers").formatNullable[Boolean]

@@ -40,7 +40,7 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
       when(mockRegistrationMongoRepository.fetchFlatRateScheme(any())(any()))
         .thenReturn(Future.successful(Some(validFullFlatRateScheme)))
 
-      val result: Option[FlatRateScheme] = await(service.retrieveFlatRateScheme(regId))
+      val result: Option[FlatRateScheme] = await(service.retrieveFlatRateScheme(testRegId))
 
       result mustBe Some(validFullFlatRateScheme)
     }
@@ -49,7 +49,7 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
       when(mockRegistrationMongoRepository.fetchFlatRateScheme(any())(any()))
         .thenReturn(Future.successful(None))
 
-      val result: Option[FlatRateScheme] = await(service.retrieveFlatRateScheme(regId))
+      val result: Option[FlatRateScheme] = await(service.retrieveFlatRateScheme(testRegId))
 
       result mustBe None
     }
@@ -60,7 +60,7 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
       when(mockRegistrationMongoRepository.updateFlatRateScheme(any(),any())(any()))
         .thenReturn(Future.successful(validFullFlatRateScheme))
 
-      val result: FlatRateScheme = await(service.updateFlatRateScheme(regId, validFullFlatRateScheme))
+      val result: FlatRateScheme = await(service.updateFlatRateScheme(testRegId, validFullFlatRateScheme))
 
       result mustBe validFullFlatRateScheme
     }
@@ -69,14 +69,14 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
       when(mockRegistrationMongoRepository.updateFlatRateScheme(any(),any())(any()))
         .thenReturn(Future.failed(new Exception))
 
-      intercept[Exception](await(service.updateFlatRateScheme(regId, validFullFlatRateScheme)))
+      intercept[Exception](await(service.updateFlatRateScheme(testRegId, validFullFlatRateScheme)))
     }
 
     "encounter a MissingRegDocument if no document is found" in new Setup {
       when(mockRegistrationMongoRepository.updateFlatRateScheme(any(), any())(any()))
-        .thenReturn(Future.failed(MissingRegDocument(regId)))
+        .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
-      intercept[MissingRegDocument](await(service.updateFlatRateScheme(regId, validFullFlatRateScheme)))
+      intercept[MissingRegDocument](await(service.updateFlatRateScheme(testRegId, validFullFlatRateScheme)))
     }
   }
 
@@ -85,7 +85,7 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
       when(mockRegistrationMongoRepository.removeFlatRateScheme(any())(any()))
         .thenReturn(Future.successful(true))
 
-      val result: Boolean = await(service.removeFlatRateScheme(regId))
+      val result: Boolean = await(service.removeFlatRateScheme(testRegId))
 
       result mustBe true
     }
@@ -94,14 +94,14 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
       when(mockRegistrationMongoRepository.removeFlatRateScheme(any())(any()))
         .thenReturn(Future.failed(new Exception))
 
-      intercept[Exception](await(service.removeFlatRateScheme(regId)))
+      intercept[Exception](await(service.removeFlatRateScheme(testRegId)))
     }
 
     "encounter a MissingRegDocument if no document is found" in new Setup {
       when(mockRegistrationMongoRepository.removeFlatRateScheme(any())(any()))
-        .thenReturn(Future.failed(MissingRegDocument(regId)))
+        .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
-      intercept[MissingRegDocument](await(service.removeFlatRateScheme(regId)))
+      intercept[MissingRegDocument](await(service.removeFlatRateScheme(testRegId)))
     }
   }
 }

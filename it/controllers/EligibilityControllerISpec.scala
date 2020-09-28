@@ -39,7 +39,7 @@ class EligibilityControllerISpec extends IntegrationStubbing {
     "return OK with an eligibility json body" in new Setup {
       given.user.isAuthorised
 
-      insertIntoDb(emptyVatScheme("regId"))
+      insertIntoDb(testEmptyVatScheme("regId"))
 
       val response: WSResponse = await(client(EligibilityController.updateEligibilityData("regId").url)
         .patch(validEligibilityJson))
@@ -51,7 +51,7 @@ class EligibilityControllerISpec extends IntegrationStubbing {
     "return BAD_REQUEST if an invalid json body is posted" in new Setup {
       given.user.isAuthorised
 
-      insertIntoDb(emptyVatScheme("regId"))
+      insertIntoDb(testEmptyVatScheme("regId"))
 
       val response: WSResponse = await(client(EligibilityController.updateEligibilityData("regId").url)
         .patch(invalidEligibilityJson))

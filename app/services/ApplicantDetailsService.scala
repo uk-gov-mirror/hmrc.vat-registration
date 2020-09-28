@@ -18,7 +18,6 @@ package services
 
 import javax.inject.{Inject, Singleton}
 import models.api.ApplicantDetails
-import play.api.libs.json.JsObject
 import repositories.RegistrationMongoRepository
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,10 +30,11 @@ class ApplicantDetailsService @Inject()(val registrationRepository: Registration
   }
 
   def getApplicantDetailsData(regId: String)(implicit ex: ExecutionContext): Future[Option[ApplicantDetails]] = {
-    registrationRepository.getCombinedApplicantDetails(regId)
+    registrationRepository.getApplicantDetails(regId)
   }
 
-  def updateApplicantDetailsData(regId: String, applicantDetails: JsObject)(implicit ex: ExecutionContext): Future[JsObject] = {
+  def updateApplicantDetailsData(regId: String, applicantDetails: ApplicantDetails)(implicit ex: ExecutionContext): Future[ApplicantDetails] = {
     registrationRepository.patchApplicantDetails(regId, applicantDetails)
   }
+
 }

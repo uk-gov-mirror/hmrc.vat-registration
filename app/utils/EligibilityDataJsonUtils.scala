@@ -35,9 +35,8 @@ object EligibilityDataJsonUtils {
 
       val turnover        = clearedJson.validate[TurnoverEstimates](TurnoverEstimates.eligibilityDataJsonReads)
       val threshold       = clearedJson.validate[Threshold](Threshold.eligibilityDataJsonReads)
-      val applicantDetails  = clearedJson.validate[(String, Name, String, Boolean)](ApplicantDetails.eligibilityDataJsonReads)
 
-      val allBlocks = turnover :: threshold :: applicantDetails :: Nil
+      val allBlocks = turnover :: threshold :: Nil
 
       allBlocks.map(jsRes => jsRes.map(_ => Json.obj())).find(_.isError).getOrElse(JsSuccess(clearedJson.as[JsObject]))
     }

@@ -52,7 +52,7 @@ class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegi
         val json = Json.parse(
           s"""
              |{
-             |  "startDate":"$date",
+             |  "startDate":"$testDate",
              |  "percent":15.00
              |}
          """.stripMargin)
@@ -63,7 +63,7 @@ class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegi
         val json = Json.parse(
           s"""
              |{
-             |  "startDate":"$date",
+             |  "startDate":"$testDate",
              |  "categoryOfBusiness":"testCategory"
              |}
          """.stripMargin)
