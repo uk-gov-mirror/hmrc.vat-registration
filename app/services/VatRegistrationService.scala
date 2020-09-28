@@ -23,12 +23,10 @@ import cats.instances.FutureInstances
 import cats.syntax.ApplicativeSyntax
 import common.exceptions._
 import config.BackendConfig
-import connectors._
 import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
 import models.AcknowledgementReferencePath
-import models.api.{Threshold, VatScheme}
-import models.external.CurrentProfile
+import models.api.{Threshold, TurnoverEstimates, VatScheme}
 import org.slf4j.LoggerFactory
 import play.api.libs.json._
 import repositories.RegistrationMongoRepository
@@ -36,8 +34,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import utils.EligibilityDataJsonUtils
-
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -52,15 +48,15 @@ class VatRegistrationService @Inject()(registrationRepository: RegistrationMongo
   private val logger = LoggerFactory.getLogger(getClass)
 
   private def repositoryErrorHandler[T]: PartialFunction[Throwable, Either[LeftState, T]] = {
-    case e: MissingRegDocument  => Left(ResourceNotFound(s"No registration found for registration ID: ${e.id}"))
-    case dbe: DBExceptions      => Left(GenericDatabaseError(dbe, Some(dbe.id)))
-    case t: Throwable           => Left(GenericError(t))
+    case e: MissingRegDocument => Left(ResourceNotFound(s"No registration found for registration ID: ${e.id}"))
+    case dbe: DBExceptions => Left(GenericDatabaseError(dbe, Some(dbe.id)))
+    case t: Throwable => Left(GenericError(t))
   }
 
-  private def getOrCreateVatScheme(registrationId: String, internalId:String)(implicit hc: HeaderCarrier): Future[Either[LeftState, VatScheme]] =
+  private def getOrCreateVatScheme(registrationId: String, internalId: String)(implicit hc: HeaderCarrier): Future[Either[LeftState, VatScheme]] =
     registrationRepository.retrieveVatScheme(registrationId).flatMap {
       case Some(vatScheme) => Future.successful(Right(vatScheme))
-      case None => registrationRepository.createNewVatScheme(registrationId,internalId)
+      case None => registrationRepository.createNewVatScheme(registrationId, internalId)
         .map(Right(_)).recover(repositoryErrorHandler)
     }
 
@@ -79,12 +75,12 @@ class VatRegistrationService @Inject()(registrationRepository: RegistrationMongo
     registrationRepository.retrieveVatScheme(regId) map {
       case Some(registration) =>
         val base = Json.obj(
-          "status"     -> registration.status
+          "status" -> registration.status
         )
 
         val ackRef = registration.acknowledgementReference.fold(Json.obj())(ref => Json.obj("ackRef" -> ref))
-        val restartUrl = if(registration.status.equals(VatRegStatus.rejected)) Json.obj("restartURL" -> vatRestartUrl) else Json.obj()
-        val cancelUrl  = if(cancelStatuses.contains(registration.status)) Json.obj("cancelURL" -> vatCancelUrl.replace(":regID", regId)) else Json.obj()
+        val restartUrl = if (registration.status.equals(VatRegStatus.rejected)) Json.obj("restartURL" -> vatRestartUrl) else Json.obj()
+        val cancelUrl = if (cancelStatuses.contains(registration.status)) Json.obj("cancelURL" -> vatCancelUrl.replace(":regID", regId)) else Json.obj()
 
         base ++ ackRef ++ restartUrl ++ cancelUrl
       case None =>
@@ -108,8 +104,8 @@ class VatRegistrationService @Inject()(registrationRepository: RegistrationMongo
   def deleteVatScheme(regId: String, validStatuses: VatRegStatus.Value*)(implicit hc: HeaderCarrier): Future[Boolean] = {
     for {
       someDocument <- registrationRepository.retrieveVatScheme(regId)
-      document     <- someDocument.fold(throw new MissingRegDocument(regId))(doc => Future.successful(doc))
-      deleted      <- if (validStatuses.contains(document.status)) {
+      document <- someDocument.fold(throw new MissingRegDocument(regId))(doc => Future.successful(doc))
+      deleted <- if (validStatuses.contains(document.status)) {
         registrationRepository.deleteVatScheme(regId)
       } else {
         throw new InvalidSubmissionStatus(s"[deleteVatScheme] - VAT reg doc for regId $regId was not deleted as the status was ${document.status}; not ${validStatuses.toString}")
@@ -125,15 +121,11 @@ class VatRegistrationService @Inject()(registrationRepository: RegistrationMongo
     retrieveVatScheme(regId).subflatMap(_.acknowledgementReference.toRight(ResourceNotFound("AcknowledgementId")))
   }
 
-  def getBlockFromEligibilityData[T](regId: String)(implicit ex: ExecutionContext, r: Reads[T]): Future[Option[T]] = {
-    registrationRepository.getEligibilityData(regId) map {
-      _.map { js =>
-        Json.fromJson[T](js)(EligibilityDataJsonUtils.mongoReads[T]).fold(invalid => {
-          val errorMsg = s"Error converting EligibilityData to model ${r.asInstanceOf[T].getClass.getSimpleName} for regId: $regId, msg: $invalid"
-          logger.warn(s"[VatRegistrationService] [getBlockFromEligibilityData] $errorMsg")
-          throw new InvalidEligibilityDataToConvertModel(errorMsg)
-        }, identity)
-      }
-    }
+  def getThreshold(regId: String)(implicit ex: ExecutionContext): Future[Option[Threshold]] = {
+    registrationRepository.fetchEligibilitySubmissionData(regId).map(_.map(_.threshold))
+  }
+
+  def getTurnoverEstimates(regId: String)(implicit ex: ExecutionContext): Future[Option[TurnoverEstimates]] = {
+    registrationRepository.fetchEligibilitySubmissionData(regId).map(_.map(_.estimates))
   }
 }

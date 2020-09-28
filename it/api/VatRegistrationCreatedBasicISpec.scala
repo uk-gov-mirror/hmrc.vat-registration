@@ -70,10 +70,6 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
   }
 
   "/vatreg/:regId/submit-registration (submit registration)" should {
-    val registrationID = "testRegId"
-    val regime = "vat"
-    val subscriber = "scrs"
-
     "return an Ok if the submission is successful for the regID" in new Setup() {
       disable(StubSubmission)
       given.user.isAuthorised

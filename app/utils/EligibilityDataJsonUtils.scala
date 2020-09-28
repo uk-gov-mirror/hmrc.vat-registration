@@ -16,7 +16,7 @@
 
 package utils
 
-import models.api.{ApplicantDetails, Name, Threshold, TurnoverEstimates}
+import models.api.{CustomerStatus, Threshold, TurnoverEstimates}
 import play.api.libs.json._
 
 object EligibilityDataJsonUtils {
@@ -33,10 +33,11 @@ object EligibilityDataJsonUtils {
     override def reads(json: JsValue): JsResult[JsObject] = {
       val clearedJson = toJsObject(json)
 
-      val turnover        = clearedJson.validate[TurnoverEstimates](TurnoverEstimates.eligibilityDataJsonReads)
-      val threshold       = clearedJson.validate[Threshold](Threshold.eligibilityDataJsonReads)
+      val turnover = clearedJson.validate[TurnoverEstimates](TurnoverEstimates.eligibilityDataJsonReads)
+      val threshold = clearedJson.validate[Threshold](Threshold.eligibilityDataJsonReads)
+      val customerStatus = clearedJson.validate[CustomerStatus](CustomerStatus.eligibilityDataJsonReads)
 
-      val allBlocks = turnover :: threshold :: Nil
+      val allBlocks = turnover :: threshold :: customerStatus :: Nil
 
       allBlocks.map(jsRes => jsRes.map(_ => Json.obj())).find(_.isError).getOrElse(JsSuccess(clearedJson.as[JsObject]))
     }

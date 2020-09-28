@@ -37,7 +37,7 @@ class BusinessContactServiceSpec extends VatRegSpec with VatRegistrationFixture 
   }
 
   def getFromMongo(res: Future[Option[BusinessContact]]): OngoingStubbing[Future[Option[BusinessContact]]] =
-    when(mockRegistrationMongoRepository.getBusinessContact(any())(any())).thenReturn(res)
+    when(mockRegistrationMongoRepository.fetchBusinessContact(any())(any())).thenReturn(res)
 
   def updateMongo(res: Future[BusinessContact]): OngoingStubbing[Future[BusinessContact]] =
     when(mockRegistrationMongoRepository.updateBusinessContact(any(), any())(any())).thenReturn(res)

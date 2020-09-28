@@ -26,7 +26,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class BusinessContactService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
   def getBusinessContact(regId: String)(implicit ec: ExecutionContext): Future[Option[BusinessContact]] =
-    registrationRepository.getBusinessContact(regId)
+    registrationRepository.fetchBusinessContact(regId)
 
   def updateBusinessContact(regId: String, businessCont: BusinessContact)(implicit ec: ExecutionContext): Future[BusinessContact] =
     registrationRepository.updateBusinessContact(regId,businessCont)

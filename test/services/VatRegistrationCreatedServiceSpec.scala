@@ -23,7 +23,7 @@ import enums.VatRegStatus
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models._
-import models.api._
+import models.api.{Threshold, _}
 import models.external.CurrentProfile
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
@@ -229,65 +229,66 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
     }
   }
 
-  "call to getBlockFromEligibilityData" should {
+  "call to getThresholds" should {
     val thresholdPreviousThirtyDays = LocalDate.of(2017, 5, 23)
     val thresholdInTwelveMonths = LocalDate.of(2017, 7, 16)
 
     "return nothing if nothing in EligibilityData" in new Setup {
-      when(mockRegistrationMongoRepository.getEligibilityData(any())(any())).thenReturn(Future.successful(None))
+      when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any())(any())).thenReturn(Future.successful(None))
 
-      await(service.getBlockFromEligibilityData[Threshold]("regId")) mustBe None
+      await(service.getThreshold("regId")) mustBe None
     }
 
     "return correct Threshold model" in new Setup {
-      val questions = Seq(
-        Json.obj("questionId" -> "thresholdPreviousThirtyDays-optionalData", "question" -> "Some Question 12", "answer" -> "Some Answer 12",
-          "answerValue" -> thresholdPreviousThirtyDays.toString),
-        Json.obj("questionId" -> "thresholdInTwelveMonths-optionalData", "question" -> "Some Question 12", "answer" -> "Some Answer 12",
-          "answerValue" -> thresholdInTwelveMonths.toString)
+      val eligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
+        threshold = Threshold(
+          mandatoryRegistration = true,
+          thresholdInTwelveMonths = Some(thresholdInTwelveMonths),
+          thresholdNextThirtyDays = None,
+          thresholdPreviousThirtyDays = Some(thresholdPreviousThirtyDays)
+        ),
+        estimates = TurnoverEstimates(123456),
+        customerStatus = MTDfB
       )
-      val section: JsObject = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions))
-      val jsonThresholdInEligibilityDataFormat: JsObject = Json.obj("sections" -> section)
 
       val expected: Threshold = Threshold(
         mandatoryRegistration = true,
         thresholdPreviousThirtyDays = Some(thresholdPreviousThirtyDays),
-        thresholdInTwelveMonths = Some(thresholdInTwelveMonths)
+        thresholdInTwelveMonths = Some(thresholdInTwelveMonths),
+        thresholdNextThirtyDays = None
       )
 
-      when(mockRegistrationMongoRepository.getEligibilityData(any())(any())).thenReturn(Future.successful(Some(jsonThresholdInEligibilityDataFormat)))
+      when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any())(any())).thenReturn(Future.successful(Some(eligibilitySubmissionData)))
 
       implicit val read: Reads[Threshold] = Threshold.eligibilityDataJsonReads
 
-      await(service.getBlockFromEligibilityData[Threshold]("regId")) mustBe Some(expected)
+      await(service.getThreshold("regId")) mustBe Some(expected)
+    }
+  }
+
+  "call to getTurnoverEstimates" should {
+    "return nothing if nothing in EligibilityData" in new Setup {
+      when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any())(any())).thenReturn(Future.successful(None))
+
+      await(service.getTurnoverEstimates("regId")) mustBe None
     }
 
     "return correct TurnoverEstimates model when turnover estimate is provided with a number" in new Setup {
-      val questions = Seq(
-        Json.obj("questionId" -> "turnoverEstimate-value", "question" -> "Some Question 11", "answer" -> "£10,001", "answerValue" -> 10001)
+      val eligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
+        threshold = Threshold(
+          mandatoryRegistration = false
+        ),
+        estimates = TurnoverEstimates(10001),
+        customerStatus = MTDfB
       )
-      val section: JsObject = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions))
-      val jsonTurnoverEstimatesDataFormat: JsObject = Json.obj("sections" -> section)
 
       val expected: TurnoverEstimates = TurnoverEstimates(turnoverEstimate = 10001)
 
-      when(mockRegistrationMongoRepository.getEligibilityData(any())(any())).thenReturn(Future.successful(Some(jsonTurnoverEstimatesDataFormat)))
+      when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any())(any())).thenReturn(Future.successful(Some(eligibilitySubmissionData)))
 
       implicit val read: Reads[TurnoverEstimates] = TurnoverEstimates.eligibilityDataJsonReads
 
-      await(service.getBlockFromEligibilityData[TurnoverEstimates]("regId")) mustBe Some(expected)
-    }
-
-    "return error when json is not correct to return a model" in new Setup {
-      val questions = Seq(
-        Json.obj("questionId" -> "fooNotaRealQuestionID", "question" -> "Some Question 11", "answer" -> "Some Answer 11", "answerValue" -> 2024)
-      )
-      val section: JsObject = Json.obj("title" -> "test TITLE 1", "data" -> JsArray(questions))
-      val jsonThresholdDataFormat: JsObject = Json.obj("sections" -> section)
-
-      when(mockRegistrationMongoRepository.getEligibilityData(any())(any())).thenReturn(Future.successful(Some(jsonThresholdDataFormat)))
-
-      an[InvalidEligibilityDataToConvertModel] mustBe thrownBy(await(service.getBlockFromEligibilityData[Threshold]("regId")))
+      await(service.getTurnoverEstimates("regId")) mustBe Some(expected)
     }
   }
 }

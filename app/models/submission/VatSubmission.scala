@@ -51,10 +51,11 @@ object VatSubmission {
   implicit val mongoFormat: OFormat[VatSubmission] = Json.format[VatSubmission]
 
   def fromVatScheme(scheme: VatScheme): VatSubmission = {
-    (scheme.applicantDetails, scheme.bankAccount, scheme.sicAndCompliance, scheme.businessContact, scheme.tradingDetails, scheme.flatRateScheme) match {
-      case (Some(applicant), bankAcc, Some(sicAndCompliance), Some(contact), Some(trading), frs) =>
+    (scheme.eligibilitySubmissionData, scheme.applicantDetails, scheme.bankAccount,
+      scheme.sicAndCompliance, scheme.businessContact, scheme.tradingDetails, scheme.flatRateScheme) match {
+      case (Some(eligibilityData), Some(applicant), bankAcc, Some(sicAndCompliance), Some(contact), Some(trading), frs) =>
         VatSubmission(
-          customerStatus = Some("STATUS"),
+          customerStatus = Some(eligibilityData.customerStatus.value),
           tradersPartyType = None,
           primeBPSafeId = None,
           confirmInformationDeclaration = Some(true),

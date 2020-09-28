@@ -18,7 +18,7 @@ package models
 
 import fixtures.{VatRegistrationFixture, VatSubmissionFixture}
 import helpers.BaseSpec
-import models.api.{BankAccount, SicAndCompliance, SicCode, VatSubmission}
+import models.api.{BankAccount, MTDfB, SicAndCompliance, SicCode, VatSubmission}
 import play.api.libs.json.{JsSuccess, Json}
 
 class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegistrationFixture with VatSubmissionFixture {
@@ -100,13 +100,14 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
         bankAccount = Some(BankAccount(true, Some(testBankDetails))),
         sicAndCompliance = testSicAndCompliance,
         flatRateScheme = Some(validFullFlatRateScheme),
-        tradingDetails = Some(validFullTradingDetails)
+        tradingDetails = Some(validFullTradingDetails),
+        eligibilitySubmissionData = Some(testEligibilitySubmissionData)
       )
 
       val res = VatSubmission.fromVatScheme(scheme)
 
       res mustBe VatSubmission(
-        customerStatus = Some("STATUS"),
+        customerStatus = Some(MTDfB.value),
         tradersPartyType = None,
         primeBPSafeId = None,
         confirmInformationDeclaration = Some(true),

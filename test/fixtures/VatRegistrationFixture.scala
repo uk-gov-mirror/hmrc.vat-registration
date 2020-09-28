@@ -40,14 +40,20 @@ trait VatRegistrationFixture {
   val testPreviousName = FormerName(name = Some(testOldName), change = Some(testDate))
   val testVatScheme: VatScheme = VatScheme(testRegId, internalId = testInternalid, status = VatRegStatus.draft)
   val exception = new Exception("Exception")
-  val testVoluntaryThreshold = Threshold(false, Some("voluntaryReason"), Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
-  val testMandatoryThreshold = Threshold(true, None, Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
+  val testVoluntaryThreshold = Threshold(mandatoryRegistration = false, None, None, None)
+  val testMandatoryThreshold = Threshold(mandatoryRegistration = true, Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
   val currentAddress = Address("12 Lukewarm", "Oriental lane")
   val testDigitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
   val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
   val testBankDetails = BankAccountDetails("Test Bank Account", "010203", "01023456")
 
-  val validApplicantDetails = ApplicantDetails(
+  val testEligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
+    threshold = testMandatoryThreshold,
+    estimates = TurnoverEstimates(123456),
+    customerStatus = MTDfB
+  )
+
+  val validApplicantDetails: ApplicantDetails = ApplicantDetails(
     nino = testNino,
     role = testRole,
     name = testName,
@@ -88,17 +94,18 @@ trait VatRegistrationFixture {
   val validEmptyFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = false, None)
   val invalidEmptyFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = true, None)
 
-  val testFullVatScheme = testVatScheme.copy(
+  val testFullVatScheme: VatScheme = testVatScheme.copy(
     tradingDetails = Some(validFullTradingDetails),
     sicAndCompliance = testSicAndCompliance,
     businessContact = testBusinessContact,
     bankAccount = Some(testBankAccount),
     flatRateScheme = Some(validFullFlatRateScheme),
-    applicantDetails = Some(validApplicantDetails)
+    applicantDetails = Some(validApplicantDetails),
+    eligibilitySubmissionData = Some(testEligibilitySubmissionData)
   )
 
-  val testFullSubmission = VatSubmission(
-    customerStatus = Some("STATUS"),
+  val testFullSubmission: VatSubmission = VatSubmission(
+    customerStatus = Some(MTDfB.value),
     tradersPartyType = None,
     primeBPSafeId = None,
     confirmInformationDeclaration = Some(true),

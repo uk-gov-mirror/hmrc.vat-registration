@@ -29,13 +29,12 @@ case class VatScheme(id: String,
                      returns: Option[Returns] = None,
                      sicAndCompliance: Option[SicAndCompliance] = None,
                      businessContact: Option[BusinessContact] = None,
-                     turnoverEstimates: Option[TurnoverEstimates] = None,
                      bankAccount: Option[BankAccount] = None,
-                     threshold: Option[Threshold] = None,
                      acknowledgementReference: Option[String] = None,
                      flatRateScheme: Option[FlatRateScheme] = None,
                      status: VatRegStatus.Value,
                      eligibilityData: Option[JsObject] = None,
+                     eligibilitySubmissionData: Option[EligibilitySubmissionData] = None,
                      applicantDetails: Option[ApplicantDetails] = None)
 
 object VatScheme {
@@ -48,13 +47,12 @@ object VatScheme {
     (__ \ "returns").writeNullable[Returns] and
     (__ \ "sicAndCompliance").writeNullable[SicAndCompliance] and
     (__ \ "businessContact").writeNullable[BusinessContact] and
-    (__ \ "turnoverEstimates").writeNullable[TurnoverEstimates] and
     (__ \ "bankAccount").writeNullable[BankAccount] and
-    (__ \ "threshold").writeNullable[Threshold] and
     (__ \ "acknowledgementReference").writeNullable[String] and
     (__ \ "flatRateScheme").writeNullable[FlatRateScheme] and
     (__ \ "status").write[VatRegStatus.Value] and
     (__ \ "eligibilityData").writeNullable[JsObject] and
+    (__ \ "eligibilitySubmissionData").writeNullable[EligibilitySubmissionData] and
     (__ \ "applicantDetails").writeNullable[ApplicantDetails]
   )(unlift(VatScheme.unapply))
 
@@ -66,13 +64,12 @@ object VatScheme {
       (__ \ "returns").formatNullable[Returns] and
       (__ \ "sicAndCompliance").formatNullable[SicAndCompliance] and
       (__ \ "businessContact").formatNullable[BusinessContact] and
-      (__ \ "turnoverEstimates").formatNullable[TurnoverEstimates] and
       (__ \ "bankAccount").formatNullable[BankAccount](BankAccountMongoFormat.encryptedFormat(crypto)) and
-      (__ \ "threshold").formatNullable[Threshold] and
       (__ \ "acknowledgementReference").formatNullable[String] and
       (__ \ "flatRateScheme").formatNullable[FlatRateScheme] and
       (__ \ "status").format[VatRegStatus.Value] and
       (__ \ "eligibilityData").formatNullable[JsObject] and
+      (__ \ "eligibilitySubmissionData").formatNullable[EligibilitySubmissionData] and
       (__ \ "applicantDetails").formatNullable[ApplicantDetails]
     )(VatScheme.apply, unlift(VatScheme.unapply))
 }

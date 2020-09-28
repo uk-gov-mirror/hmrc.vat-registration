@@ -38,7 +38,7 @@ class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   "getEligibilityData" should {
     "return an eligibility data json if found" in new Setup {
-      when(mockRegistrationMongoRepository.getEligibilityData(any())(any()))
+      when(mockRegistrationMongoRepository.fetchEligibilityData(any())(any()))
         .thenReturn(Future.successful(Some(json)))
 
       val result: Option[JsObject] = await(service.getEligibilityData("regId"))
@@ -46,7 +46,7 @@ class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
     }
 
     "return None if none found matching regId" in new Setup {
-      when(mockRegistrationMongoRepository.getEligibilityData(any())(any()))
+      when(mockRegistrationMongoRepository.fetchEligibilityData(any())(any()))
         .thenReturn(Future.successful(None))
 
       val result: Option[JsObject] = await(service.getEligibilityData("regId"))

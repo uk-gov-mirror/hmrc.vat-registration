@@ -371,7 +371,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
   "call to getTurnoverEstimates" should {
     "return a 200 and TurnoverEstimates json when it is returned from the repository" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-      when(mockVatRegistrationService.getBlockFromEligibilityData[TurnoverEstimates](any())(any(), any()))
+      when(mockVatRegistrationService.getTurnoverEstimates(any())(any()))
         .thenReturn(Future.successful(Some(TurnoverEstimates(2024))))
 
       val result: Future[Result] = controller.getTurnoverEstimates(testRegId)(FakeRequest())
@@ -383,7 +383,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
 
     "return a 204 and no json when a None is returned from the repository" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-      when(mockVatRegistrationService.getBlockFromEligibilityData[TurnoverEstimates](any())(any(), any()))
+      when(mockVatRegistrationService.getTurnoverEstimates(any())(any()))
         .thenReturn(Future.successful(None))
 
       val result: Future[Result] = controller.getTurnoverEstimates(testRegId)(FakeRequest())
@@ -392,7 +392,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
 
     "return a 404 when a MissingRegDocument exception is thrown" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-      when(mockVatRegistrationService.getBlockFromEligibilityData[TurnoverEstimates](any())(any(), any()))
+      when(mockVatRegistrationService.getTurnoverEstimates(any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
       val result: Future[Result] = controller.getTurnoverEstimates(testRegId)(FakeRequest())
@@ -408,7 +408,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
       )
 
       AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-      when(mockVatRegistrationService.getBlockFromEligibilityData[Threshold](any())(any(), any()))
+      when(mockVatRegistrationService.getThreshold(any())(any()))
         .thenReturn(Future.successful(Some(threshold)))
 
       val result: Future[Result] = controller.getThreshold(testRegId)(FakeRequest())
@@ -422,7 +422,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
 
     "return a 204 and no json when a None is returned from the repository" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-      when(mockVatRegistrationService.getBlockFromEligibilityData[Threshold](any())(any(), any()))
+      when(mockVatRegistrationService.getThreshold(any())(any()))
         .thenReturn(Future.successful(None))
 
       val result: Future[Result] = controller.getThreshold(testRegId)(FakeRequest())
@@ -431,7 +431,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
 
     "return a 404 when a MissingRegDocument exception is thrown" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-      when(mockVatRegistrationService.getBlockFromEligibilityData[Threshold](any())(any(), any()))
+      when(mockVatRegistrationService.getThreshold(any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
       val result: Future[Result] = controller.getThreshold(testRegId)(FakeRequest())

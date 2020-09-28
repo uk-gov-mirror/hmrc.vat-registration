@@ -17,6 +17,7 @@
 package services
 
 import javax.inject.{Inject, Singleton}
+import models.api.EligibilitySubmissionData
 import play.api.libs.json.{JsObject, JsResultException}
 import repositories.RegistrationMongoRepository
 import utils.EligibilityDataJsonUtils
@@ -27,12 +28,16 @@ import scala.concurrent.{ExecutionContext, Future}
 class EligibilityService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
   def getEligibilityData(regId: String)(implicit ex: ExecutionContext): Future[Option[JsObject]] =
-    registrationRepository.getEligibilityData(regId)
+    registrationRepository.fetchEligibilityData(regId)
 
   def updateEligibilityData(regId: String, eligibilityData: JsObject)(implicit ex: ExecutionContext): Future[JsObject] = {
-    eligibilityData.validate[JsObject](EligibilityDataJsonUtils.readsOfFullJson).fold(
+    EligibilityDataJsonUtils.toJsObject(eligibilityData)
+      .validate[EligibilitySubmissionData](EligibilitySubmissionData.eligibilityReads).fold(
       invalid => throw JsResultException(invalid),
-      _ => registrationRepository.updateEligibilityData(regId, eligibilityData)
+      eligibilitySubmissionData => {
+        registrationRepository.updateEligibilitySubmissionData(regId, eligibilitySubmissionData)
+        registrationRepository.updateEligibilityData(regId, eligibilityData)
+      }
     )
   }
 }

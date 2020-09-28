@@ -25,7 +25,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class SicAndComplianceService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
   def getSicAndCompliance(regId: String)(implicit ec: ExecutionContext): Future[Option[SicAndCompliance]] = {
-    registrationRepository.getSicAndCompliance(regId)
+    registrationRepository.fetchSicAndCompliance(regId)
   }
 
   def updateSicAndCompliance(regId: String, sicAndCompliance: SicAndCompliance)(implicit ec: ExecutionContext): Future[SicAndCompliance] = {

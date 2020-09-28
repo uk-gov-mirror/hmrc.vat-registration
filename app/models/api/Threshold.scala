@@ -18,15 +18,9 @@ package models.api
 
 import java.time.LocalDate
 
-import play.api.libs.json.{JsError, JsResult, JsSuccess, JsValue, Json, OFormat, Reads}
-
-import scala.collection.Seq
+import play.api.libs.json._
 
 case class Threshold(mandatoryRegistration: Boolean,
-                     @deprecated("Not required anymore", "SCRS-11579") voluntaryReason: Option[String] = None,
-                     @deprecated("Not required anymore", "SCRS-11579") overThresholdDateThirtyDays: Option[LocalDate] = None,
-                     @deprecated("Use thresholdPreviousThirtyDays instead", "SCRS-11579") pastOverThresholdDateThirtyDays: Option[LocalDate] = None,
-                     @deprecated("Use thresholdInTwelveMonths instead", "SCRS-11579") overThresholdOccuredTwelveMonth: Option[LocalDate] = None,
                      thresholdPreviousThirtyDays: Option[LocalDate] = None,
                      thresholdInTwelveMonths: Option[LocalDate] = None,
                      thresholdNextThirtyDays: Option[LocalDate] = None)
@@ -34,27 +28,28 @@ case class Threshold(mandatoryRegistration: Boolean,
 object Threshold {
   implicit val format: OFormat[Threshold] = Json.format
 
-  val eligibilityDataJsonReads: Reads[Threshold] = new Reads[Threshold] {
-    override def reads(json: JsValue): JsResult[Threshold] = {
-      val voluntaryRegistration = (json \ "voluntaryRegistration").validateOpt[Boolean]
-      val thresholdThirtyDays = (json \ "thresholdPreviousThirtyDays-optionalData").validateOpt[LocalDate]
-      val thresholdTwelveMonths = (json \ "thresholdInTwelveMonths-optionalData").validateOpt[LocalDate]
-      val thresholdNextThirtyDays = (json \ "thresholdNextThirtyDays-optionalData").validateOpt[LocalDate]
-
-      val seqErrors = voluntaryRegistration.fold(identity, _ => Seq.empty) ++
-        thresholdThirtyDays.fold(identity, _ => Seq.empty) ++
-        thresholdTwelveMonths.fold(identity, _ => Seq.empty)
-
-      if(seqErrors.nonEmpty) {
-        JsError(seqErrors)
-      } else {
+  val eligibilityDataJsonReads: Reads[Threshold] = Reads { json =>
+    (
+      (json \ "voluntaryRegistration").validateOpt[Boolean],
+      (json \ "thresholdPreviousThirtyDays-optionalData").validateOpt[LocalDate],
+      (json \ "thresholdInTwelveMonths-optionalData").validateOpt[LocalDate],
+      (json \ "thresholdNextThirtyDays-optionalData").validateOpt[LocalDate]
+    ) match {
+      case (JsSuccess(voluntaryRegistration, _), JsSuccess(thresholdPreviousThirtyDays, _),
+      JsSuccess(thresholdInTwelveMonths, _), JsSuccess(thresholdNextThirtyDays, _)) =>
         JsSuccess(Threshold(
-          mandatoryRegistration = !voluntaryRegistration.get.contains(true) && List(thresholdThirtyDays.get, thresholdTwelveMonths.get).flatten.nonEmpty,
-          thresholdPreviousThirtyDays = thresholdThirtyDays.get,
-          thresholdInTwelveMonths = thresholdTwelveMonths.get,
-          thresholdNextThirtyDays = thresholdNextThirtyDays.get
+          !voluntaryRegistration.getOrElse(false),
+          thresholdPreviousThirtyDays,
+          thresholdInTwelveMonths,
+          thresholdNextThirtyDays
         ))
-      }
+      case (voluntaryRegistration, thresholdPreviousThirtyDays, thresholdInTwelveMonths, thresholdNextThirtyDays) =>
+        val seqErrors = voluntaryRegistration.fold(identity, _ => Seq.empty) ++
+          thresholdPreviousThirtyDays.fold(identity, _ => Seq.empty) ++
+          thresholdInTwelveMonths.fold(identity, _ => Seq.empty) ++
+          thresholdNextThirtyDays.fold(identity, _ => Seq.empty)
+
+        JsError(seqErrors)
     }
   }
 }
