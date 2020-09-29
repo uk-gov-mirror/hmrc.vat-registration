@@ -73,26 +73,27 @@ trait ITFixtures {
   )
 
   val testBusinessContactDetails = BusinessContact(digitalContact = testContactDetails, website = None, ppob = testAddress)
-  val testSicAndCompliance = SicAndCompliance("businessDesc", Some(ComplianceLabour(1, Some(true), Some(true))), SicCode("12345678", "sicDesc", "sicDetail"), List(SicCode("12345678", "sicDesc", "sicDetail")))
+  val testSicAndCompliance = SicAndCompliance("businessDesc", Some(ComplianceLabour(1, Some(true), Some(true))), SicCode("12345", "sicDesc", "sicDetail"), List(SicCode("12345", "sicDesc", "sicDetail")))
   val testTurnoverEstimates = TurnoverEstimates(12345678L)
   val testBankDetails = BankAccount(true, None)
   val testThreshold = Threshold(true, None, None, None, None)
 
   val testFullVatScheme =
     VatScheme(
-      testRegId,
-      testInternalid,
-      Some(TransactionId(testTransactionId)),
-      Some(testTradingDetails),
-      Some(testReturns),
-      Some(testSicAndCompliance),
-      Some(testBusinessContactDetails),
-      Some(testTurnoverEstimates),
-      Some(testBankDetails),
-      Some(testThreshold),
-      Some("ackRef"),
-      Some(testFlatRateScheme),
-      VatRegStatus.draft
+      id = testRegId,
+      internalId = testInternalid,
+      transactionId = Some(TransactionId(testTransactionId)),
+      tradingDetails = Some(testTradingDetails),
+      returns = Some(testReturns),
+      sicAndCompliance = Some(testSicAndCompliance),
+      businessContact = Some(testBusinessContactDetails),
+      turnoverEstimates = Some(testTurnoverEstimates),
+      bankAccount = Some(testBankDetails),
+      threshold = Some(testThreshold),
+      acknowledgementReference = Some("ackRef"),
+      flatRateScheme = Some(testFlatRateScheme),
+      status = VatRegStatus.draft,
+      applicantDetails = Some(testApplicantDetails)
     )
 
   def testEmptyVatScheme(regId: String): VatScheme = VatScheme(

@@ -53,9 +53,9 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
   "submitVatRegistration" should {
     val transactionIdJson = Json.obj("confirmationReferences" -> Json.obj("transaction-id" -> "foo"))
 
-    "successfully return a future string when mockSubmission = false" in new Setup {
+    "successfully submit and return an acknowledgment reference" in new Setup {
       when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
-        .thenReturn(Future.successful(Some(testVatScheme.copy(returns = Some(Returns(true, "", Some("foo"), StartDate(Some(LocalDate.now))))))))
+        .thenReturn(Future.successful(Some(testFullVatScheme)))
       when(mockSequenceRepository.getNext(any())(any())).thenReturn(Future.successful(100))
       when(mockRegistrationMongoRepository.prepareRegistrationSubmission(anyString(), any(), any())(any())).thenReturn(Future.successful(true))
       when(mockRegistrationMongoRepository.saveTransId(any(), anyString())(any())).thenReturn(Future.successful("transID"))
@@ -64,23 +64,10 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
 
       await(service.submitVatRegistration(testRegId)) mustBe "BRVT00000000100"
 
-    }
-    "successfully submit to des using mockSubmission = true" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
-        .thenReturn(Future.successful(Some(testVatScheme.copy(returns = Some(Returns(true, "", Some("foo"), StartDate(Some(LocalDate.now))))))))
-      when(mockSequenceRepository.getNext(any())(any())).thenReturn(Future.successful(100))
-      when(mockRegistrationMongoRepository.prepareRegistrationSubmission(anyString(), any(), any())(any())).thenReturn(Future.successful(true))
-      when(mockRegistrationMongoRepository.saveTransId(any(), anyString())(any())).thenReturn(Future.successful("transID"))
-      when(mockDesConnector.submitToDES(any[VatSubmission], any())(any())).thenReturn(Future.successful(HttpResponse(200)))
-      when(mockRegistrationMongoRepository.finishRegistrationSubmission(anyString(), any())(any())).thenReturn(Future.successful(VatRegStatus.submitted))
-
-      await(service.submitVatRegistration(testRegId)) mustBe "BRVT00000000100"
     }
   }
 
-
   "call to getAcknowledgementReference" should {
-
     val vatScheme = VatScheme(testRegId, internalId = testInternalid, None, None, None, status = VatRegStatus.draft)
 
     "return Success response " in new Setup {
@@ -171,41 +158,36 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
   }
 
   "Calling buildDesSubmission" should {
-
-    val schemeReturns = Returns(true, "monthly", None, StartDate(date = Some(testDate)))
-    val vatScheme = VatScheme(testRegId, testInternalid, Some(TransactionId("1")), returns = Some(schemeReturns), status = VatRegStatus.draft)
-    val vatSchemeNoTradingDetails = VatScheme(testRegId, testInternalid, None, None, None, status = VatRegStatus.draft)
-    val vatSchemeNoStartDate = VatScheme(testRegId, testInternalid, Some(TransactionId("1")), None, None, status = VatRegStatus.draft)
-    val fullDESSubmission = DESSubmission("ackRef", Some(testDate))
-    val partialDESSubmission = DESSubmission("ackRef", Some(testDate))
-
-    val someNow = Some(LocalDate.now())
-
     "successfully create a full DES submission" in new Setup {
       when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.eq(testRegId))(ArgumentMatchers.any()))
-        .thenReturn(Future.successful(Some(vatScheme)))
+        .thenReturn(Future.successful(Some(testFullVatScheme)))
 
-      await(service.buildDesSubmission(testRegId, "ackRef")) mustBe fullDESSubmission
+      await(service.buildSubmission(testRegId, "ackRef")) mustBe testFullSubmission
     }
 
     "successfully create a partial DES submission" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
-        .thenReturn(Future.successful(Some(vatScheme)))
+      val partialScheme = testFullVatScheme.copy(bankAccount = None, flatRateScheme = None)
+      val partialDESSubmission = testFullSubmission.copy(bankDetails = None, flatRateScheme = None)
 
-      await(service.buildDesSubmission(testRegId, "ackRef")) mustBe partialDESSubmission
+      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(Some(partialScheme)))
+
+      await(service.buildSubmission(testRegId, "ackRef")) mustBe partialDESSubmission
     }
 
     "throw a MissingRegDocument exception when there is no registration in mongo" in new Setup {
       when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
         .thenReturn(Future.successful(None))
-      intercept[MissingRegDocument](await(service.buildDesSubmission(testRegId, "ackRef")))
+      intercept[MissingRegDocument](await(service.buildSubmission(testRegId, "ackRef")))
     }
 
-    "throw a NoRetuens exception when the vat scheme doesn't contain returns" in new Setup {
+    "throw a IllegalStateException when the vat scheme doesn't contain returns" in new Setup {
+      val vatSchemeNoTradingDetails = VatScheme(testRegId, testInternalid, None, None, None, status = VatRegStatus.draft)
+
       when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
         .thenReturn(Future.successful(Some(vatSchemeNoTradingDetails)))
 
-      intercept[NoReturns](await(service.buildDesSubmission(testRegId, "ackRef")))
+      intercept[IllegalStateException](await(service.buildSubmission(testRegId, "ackRef")))
     }
   }
 

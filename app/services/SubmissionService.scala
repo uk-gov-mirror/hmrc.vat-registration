@@ -21,11 +21,10 @@ import java.time.LocalDate
 import cats.instances.FutureInstances
 import common.exceptions._
 import connectors.DESConnector
-import deprecated.DeprecatedConstants
 import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
-import models.api.VatScheme
-import models.submission.DESSubmission
+import models.api.{VatScheme, VatSubmission}
+import play.api.libs.json.Json
 import repositories._
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -42,8 +41,8 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     for {
       status <- getValidDocumentStatus(regId)
       ackRefs <- ensureAcknowledgementReference(regId, status)
-      _ <- buildDesSubmission(regId, ackRefs)
-      _ <- desConnector.submitToDES(DeprecatedConstants.fakeSubmission, regId)
+      submission <- buildSubmission(regId, ackRefs)
+      _ <- desConnector.submitToDES(submission, regId)
       _ <- updateSubmissionStatus(regId)
     } yield {
       ackRefs
@@ -72,19 +71,15 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
   private[services] def retrieveVatStartDate(vatScheme: VatScheme, regId: String): Option[LocalDate] = {
     vatScheme.returns match {
       case Some(returns) => returns.start.date
-      case None => throw NoReturns()
+      case _ => throw NoReturns()
     }
   }
 
-  private[services] def buildDesSubmission(regId: String, ackRef: String)
-                                          (implicit hc: HeaderCarrier): Future[DESSubmission] = {
+  private[services] def buildSubmission(regId: String, ackRef: String)
+                                       (implicit hc: HeaderCarrier): Future[VatSubmission] = {
     registrationRepository.retrieveVatScheme(regId) map {
-      case Some(vs) =>
-        DESSubmission(
-          ackRef,
-          retrieveVatStartDate(vs, regId)
-        )
-      case None => throw MissingRegDocument(regId)
+      case Some(vatScheme) => VatSubmission.fromVatScheme(vatScheme)
+      case _ => throw MissingRegDocument(regId)
     }
   }
 
@@ -94,7 +89,7 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
         case VatRegStatus.draft | VatRegStatus.locked => registration.status
         case _ => throw InvalidSubmissionStatus(s"VAT submission status was in a ${registration.status} state")
       }
-      case None => throw new MissingRegDocument(regID)
+      case _ => throw new MissingRegDocument(regID)
     }
   }
 

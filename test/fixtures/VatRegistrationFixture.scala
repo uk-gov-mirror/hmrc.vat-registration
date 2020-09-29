@@ -74,6 +74,43 @@ trait VatRegistrationFixture {
     ppob = Address("line1", "line2", None, None, None, Some("foo"))
   ))
 
+  val testBankAccount = BankAccount(true, Some(testBankDetails))
+
+  val validFullFRSDetails: FRSDetails =
+    FRSDetails(
+      businessGoods = Some(BusinessGoods(1234567891011L, true)),
+      startDate = Some(testDate),
+      categoryOfBusiness = "testCategory",
+      percent = 15
+    )
+
+  val validFullFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = true, Some(validFullFRSDetails))
+  val validEmptyFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = false, None)
+  val invalidEmptyFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = true, None)
+
+  val testFullVatScheme = testVatScheme.copy(
+    tradingDetails = Some(validFullTradingDetails),
+    sicAndCompliance = testSicAndCompliance,
+    businessContact = testBusinessContact,
+    bankAccount = Some(testBankAccount),
+    flatRateScheme = Some(validFullFlatRateScheme),
+    applicantDetails = Some(validApplicantDetails)
+  )
+
+  val testFullSubmission = VatSubmission(
+    customerStatus = Some("STATUS"),
+    tradersPartyType = None,
+    primeBPSafeId = None,
+    confirmInformationDeclaration = Some(true),
+    companyRegistrationNumber = Some("CRN"),
+    applicantDetails = validApplicantDetails,
+    bankDetails = Some(testBankDetails),
+    sicAndCompliance = testSicAndCompliance.get,
+    businessContact = testBusinessContact.get,
+    tradingDetails = validFullTradingDetails,
+    flatRateScheme = Some(validFullFRSDetails)
+  )
+
   val validBusinessContactJson = Json.parse(
     s"""{
        |"digitalContact":{
@@ -133,17 +170,6 @@ trait VatRegistrationFixture {
        | "eriroREf":true
        |}
      """.stripMargin).as[JsObject]
-
-  val validFullFRSDetails: FRSDetails =
-    FRSDetails(
-      businessGoods = Some(BusinessGoods(1234567891011L, true)),
-      startDate = Some(testDate),
-      categoryOfBusiness = "testCategory",
-      percent = 15
-    )
-  val validFullFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = true, Some(validFullFRSDetails))
-  val validEmptyFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = false, None)
-  val invalidEmptyFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = true, None)
 
   val validFullFRSDetailsJsonWithBusinessGoods: JsObject = Json.parse(
     s"""

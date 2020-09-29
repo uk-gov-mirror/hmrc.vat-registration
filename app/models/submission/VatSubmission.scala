@@ -41,7 +41,7 @@ object VatSubmission {
     (__ \ "declaration" \ "declarationSigning" \ "confirmInformationDeclaration").formatNullable[Boolean] and
     (__ \ "subscription" \ "corporateBodyRegistered" \ "companyRegistrationNumber").formatNullable[String] and
     (__).format[ApplicantDetails](ApplicantDetails.submissionFormat) and
-    (__ \ "bankDetails" \ "UK").formatNullable[BankAccountDetails](BankAccountDetails.submissionFormat) and
+    (__ \ "bankDetails").formatNullable[BankAccountDetails](BankAccountDetails.submissionFormat) and
     (__ \ "businessActivities").format[SicAndCompliance](SicAndCompliance.submissionFormat) and
     (__ \ "contact").format[BusinessContact](BusinessContact.submissionFormat) and
     (__).format[TradingDetails](TradingDetails.submissionFormat) and
@@ -49,4 +49,25 @@ object VatSubmission {
   )(VatSubmission.apply, unlift(VatSubmission.unapply))
 
   implicit val mongoFormat: OFormat[VatSubmission] = Json.format[VatSubmission]
+
+  def fromVatScheme(scheme: VatScheme): VatSubmission = {
+    (scheme.applicantDetails, scheme.bankAccount, scheme.sicAndCompliance, scheme.businessContact, scheme.tradingDetails, scheme.flatRateScheme) match {
+      case (Some(applicant), bankAcc, Some(sicAndCompliance), Some(contact), Some(trading), frs) =>
+        VatSubmission(
+          customerStatus = Some("STATUS"),
+          tradersPartyType = None,
+          primeBPSafeId = None,
+          confirmInformationDeclaration = Some(true),
+          companyRegistrationNumber = Some("CRN"),
+          applicantDetails = applicant,
+          bankDetails = bankAcc.flatMap(_.details),
+          sicAndCompliance = sicAndCompliance,
+          businessContact = contact,
+          tradingDetails = trading,
+          flatRateScheme = frs.flatMap(_.frsDetails)
+        )
+      case _ =>
+        throw new IllegalStateException("Vat scheme missing required sections")
+    }
+  }
 }
