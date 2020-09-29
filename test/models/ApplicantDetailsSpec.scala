@@ -29,6 +29,9 @@ class ApplicantDetailsSpec extends BaseSpec with JsonFormatValidation with VatRe
     "complete successfully" in {
       writeAndRead(validApplicantDetails) resultsIn validApplicantDetails
     }
+    "complete successfully when 'role' is missing" in {
+      writeAndRead(validApplicantDetails.copy(role = None)) resultsIn validApplicantDetails.copy(role = None)
+    }
   }
 
   "Creating a Json from an invalid VatApplicantDetails model" ignore {
@@ -39,7 +42,7 @@ class ApplicantDetailsSpec extends BaseSpec with JsonFormatValidation with VatRe
       }
 
       "Role is invalid" in {
-        val applicantDetails = validApplicantDetails.copy(role = "magician")
+        val applicantDetails = validApplicantDetails.copy(role = Some("magician"))
         writeAndRead(applicantDetails) shouldHaveErrors (JsPath() \ "role" -> JsonValidationError("error.pattern"))
       }
 

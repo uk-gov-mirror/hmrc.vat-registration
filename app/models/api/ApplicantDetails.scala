@@ -21,7 +21,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class ApplicantDetails(nino: String,
-                            role: String,
+                            role: Option[String] = None,
                             name: Name,
                             dateOfBirth: DateOfBirth,
                             currentAddress: Address,
@@ -33,7 +33,7 @@ object ApplicantDetails extends VatApplicantDetailsValidator {
 
   implicit val format: Format[ApplicantDetails] = (
     (__ \ "nino").format[String] and
-    (__ \ "role").format[String] and
+    (__ \ "role").formatNullable[String] and
     (__ \ "name").format[Name] and
     (__ \ "dateOfBirth").format[DateOfBirth] and
     (__ \ "currentAddress").format[Address] and
@@ -44,7 +44,7 @@ object ApplicantDetails extends VatApplicantDetailsValidator {
 
   val submissionFormat: Format[ApplicantDetails] = (
     (__ \ "customerIdentification" \ "customerID").format[CustomerId].inmap[String](_.idValue, nino => CustomerId(nino, NinoIdType)) and
-    (__ \ "declaration" \ "applicantDetails" \ "roleInBusiness").format[String] and
+    (__ \ "declaration" \ "applicantDetails" \ "roleInBusiness").formatNullable[String] and
     (__).format[Name](Name.submissionFormat) and
     (__).format[DateOfBirth](DateOfBirth.submissionFormat) and
     (__ \ "declaration" \ "applicantDetails" \ "currAddress").format[Address](Address.submissionFormat) and

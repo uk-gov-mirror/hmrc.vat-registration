@@ -97,6 +97,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
   def retrieveVatScheme(regId: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
     collection.find(regIdSelector(regId)).one[JsObject] map { doc =>
       doc map { json =>
+        println(Json.prettyPrint(json))
         val jsonWithoutElData = json - "threshold" - "turnoverEstimates"
         val eligibilityData = (json \ "eligibilityData")
           .validateOpt[JsObject](EligibilityDataJsonUtils.readsOfFullJson).get
