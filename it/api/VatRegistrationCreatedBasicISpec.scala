@@ -47,12 +47,6 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
         val res: WSResponse = await(client(controllers.routes.VatRegistrationController.newVatRegistration().url).post("test"))
 
         res.status mustBe CREATED
-        //TODO - test body by injecting journey id generator
-        //        res.json mustBe Json.obj(
-        //          "registrationId" -> "12345",
-        //          "internalId" -> "INT-123-456-789",
-        //          "status" -> "draft"
-        //        )
       }
       "Return NOT FOUND if the registration is missing" in new Setup {
         given.user.isAuthorised
@@ -85,18 +79,18 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
       given.user.isAuthorised
       stubVatSubmission(ACCEPTED)()
 
-      repo.createNewVatScheme(registrationID, testInternalid).flatMap(_ => repo.updateReturns(registrationID, testReturns))
+      await(repo.insert(testFullVatScheme))
 
       val result: WSResponse = await(client(
-        controllers.routes.VatRegistrationController.submitVATRegistration(registrationID).url).put("")
+        controllers.routes.VatRegistrationController.submitVATRegistration(testRegId).url).put("")
       )
 
       result.status mustBe OK
 
-      val reg: Option[VatScheme] = await(repo.retrieveVatScheme(registrationID))
+      val reg: Option[VatScheme] = await(repo.retrieveVatScheme(testRegId))
       reg.get.status mustBe VatRegStatus.submitted
 
-      await(repo.remove("registrationId" -> registrationID))
+      await(repo.remove("registrationId" -> testRegId))
     }
 
     "mock the return if the stub submission flag is on" in new Setup {
@@ -104,10 +98,10 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
       given.user.isAuthorised
       stubVatSubmission(ACCEPTED)()
 
-      repo.createNewVatScheme(registrationID, testInternalid).flatMap(_ => repo.updateReturns(registrationID, testReturns))
+      await(repo.insert(testFullVatScheme))
 
       val result: WSResponse = await(client(
-        controllers.routes.VatRegistrationController.submitVATRegistration(registrationID).url).put("")
+        controllers.routes.VatRegistrationController.submitVATRegistration(testRegId).url).put("")
       )
 
       result.status mustBe OK

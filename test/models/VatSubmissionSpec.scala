@@ -18,7 +18,7 @@ package models
 
 import fixtures.{VatRegistrationFixture, VatSubmissionFixture}
 import helpers.BaseSpec
-import models.api.{SicAndCompliance, SicCode, VatSubmission}
+import models.api.{BankAccount, SicAndCompliance, SicCode, VatSubmission}
 import play.api.libs.json.{JsSuccess, Json}
 
 class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegistrationFixture with VatSubmissionFixture {
@@ -89,6 +89,41 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
       val result = Json.fromJson[VatSubmission](vatSubmissionJson)(VatSubmission.submissionFormat)
 
       result mustBe JsSuccess(expected)
+    }
+  }
+
+  "converting from the VatScheme stored in Mongo" should {
+    "return a VatSubmission model when all required data is present" in {
+      val scheme = testVatScheme.copy(
+        applicantDetails = Some(validApplicantDetails),
+        businessContact = testBusinessContact,
+        bankAccount = Some(BankAccount(true, Some(testBankDetails))),
+        sicAndCompliance = testSicAndCompliance,
+        flatRateScheme = Some(validFullFlatRateScheme),
+        tradingDetails = Some(validFullTradingDetails)
+      )
+
+      val res = VatSubmission.fromVatScheme(scheme)
+
+      res mustBe VatSubmission(
+        customerStatus = Some("STATUS"),
+        tradersPartyType = None,
+        primeBPSafeId = None,
+        confirmInformationDeclaration = Some(true),
+        companyRegistrationNumber = Some("CRN"),
+        applicantDetails = validApplicantDetails,
+        bankDetails = Some(testBankDetails),
+        sicAndCompliance = testSicAndCompliance.get,
+        businessContact = testBusinessContact.get,
+        tradingDetails = validFullTradingDetails,
+        flatRateScheme = validFullFlatRateScheme.frsDetails
+      )
+    }
+
+    "throw an IllegalStateException when required data is missing" in {
+      intercept[IllegalStateException] {
+        VatSubmission.fromVatScheme(testVatScheme)
+      }
     }
   }
 }
