@@ -57,7 +57,7 @@ trait ITFixtures {
   val testContactDetails = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
   val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
   val testNino = "NB686868C"
-  val testRole = "secretary"
+  val testRole = Some("secretary")
   val testName = Name(first = Some("Forename"), middle = None, last = "Surname")
   val testFormerName = FormerName(name = Some(oldName), change = Some(testDate))
 

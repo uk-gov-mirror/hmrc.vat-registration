@@ -26,7 +26,7 @@ import play.api.libs.json.{JsObject, Json}
 
 trait VatRegistrationFixture {
   val testNino = "AB123456A"
-  val testRole = "secretary"
+  val testRole = Some("secretary")
   val testRegId = "testRegId"
   val testInternalid = "INT-123-456-789"
   val testTxId: TransactionId = TransactionId("1")
