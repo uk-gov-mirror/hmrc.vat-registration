@@ -20,7 +20,6 @@ import java.time.LocalDate
 
 import models.api.Threshold
 import play.api.libs.json.{JsPath, JsSuccess, Json, JsonValidationError}
-import utils.EligibilityDataJsonUtils
 
 class ThresholdSpec extends JsonFormatValidation {
   "Threshold model" should {
@@ -33,11 +32,7 @@ class ThresholdSpec extends JsonFormatValidation {
          """.stripMargin)
 
       val expectedResult = Threshold(
-        mandatoryRegistration = true,
-        voluntaryReason = None,
-        overThresholdDateThirtyDays = None,
-        pastOverThresholdDateThirtyDays = None,
-        overThresholdOccuredTwelveMonth = None
+        mandatoryRegistration = true
       )
 
       Json.fromJson[Threshold](json)(Threshold.format) mustBe JsSuccess(expectedResult)
@@ -48,19 +43,17 @@ class ThresholdSpec extends JsonFormatValidation {
         s"""
            |{
            |  "mandatoryRegistration": false,
-           |  "voluntaryReason": "test reason",
-           |  "overThresholdDateThirtyDays": "2017-12-30",
-           |  "pastOverThresholdDateThirtyDays": "2017-06-15",
-           |  "overThresholdOccuredTwelveMonth": "2017-01-21"
+           |  "thresholdPreviousThirtyDays": "2017-12-30",
+           |  "thresholdInTwelveMonths": "2017-06-15",
+           |  "thresholdNextThirtyDays": "2017-01-21"
            |}
          """.stripMargin)
 
       val expectedResult = Threshold(
         mandatoryRegistration = false,
-        voluntaryReason = Some("test reason"),
-        overThresholdDateThirtyDays = Some(LocalDate.of(2017, 12, 30)),
-        pastOverThresholdDateThirtyDays = Some(LocalDate.of(2017, 6, 15)),
-        overThresholdOccuredTwelveMonth = Some(LocalDate.of(2017, 1, 21))
+        thresholdPreviousThirtyDays = Some(LocalDate.of(2017, 12, 30)),
+        thresholdInTwelveMonths = Some(LocalDate.of(2017, 6, 15)),
+        thresholdNextThirtyDays = Some(LocalDate.of(2017, 1, 21))
       )
 
       Json.fromJson[Threshold](json)(Threshold.format) mustBe JsSuccess(expectedResult)
@@ -91,13 +84,7 @@ class ThresholdSpec extends JsonFormatValidation {
         """.stripMargin)
 
         val expectedResult = Threshold(
-          mandatoryRegistration = false,
-          voluntaryReason = None,
-          overThresholdDateThirtyDays = None,
-          pastOverThresholdDateThirtyDays = None,
-          overThresholdOccuredTwelveMonth = None,
-          thresholdPreviousThirtyDays = None,
-          thresholdInTwelveMonths = None
+          mandatoryRegistration = false
         )
 
         val result = Json.fromJson[Threshold](json)(Threshold.eligibilityDataJsonReads)
@@ -118,10 +105,6 @@ class ThresholdSpec extends JsonFormatValidation {
 
         val expectedResult = Threshold(
           mandatoryRegistration = true,
-          voluntaryReason = None,
-          overThresholdDateThirtyDays = None,
-          pastOverThresholdDateThirtyDays = None,
-          overThresholdOccuredTwelveMonth = None,
           thresholdPreviousThirtyDays = Some(LocalDate.parse(thresholdPreviousThirtyDays)),
           thresholdInTwelveMonths = Some(LocalDate.parse(thresholdInTwelveMonths))
         )
@@ -147,10 +130,6 @@ class ThresholdSpec extends JsonFormatValidation {
 
       val expectedResult = Threshold(
         mandatoryRegistration = true,
-        voluntaryReason = None,
-        overThresholdDateThirtyDays = None,
-        pastOverThresholdDateThirtyDays = None,
-        overThresholdOccuredTwelveMonth = None,
         thresholdPreviousThirtyDays = Some(LocalDate.parse(thresholdPreviousThirtyDays)),
         thresholdInTwelveMonths = Some(LocalDate.parse(thresholdInTwelveMonths)),
         thresholdNextThirtyDays = Some(LocalDate.parse(thresholdNextThirtyDays))

@@ -36,7 +36,7 @@ class SicAndComplianceServiceSpec extends VatRegSpec with VatRegistrationFixture
     )
   }
   def getFromMongo(res:Future[Option[SicAndCompliance]]): OngoingStubbing[Future[Option[SicAndCompliance]]] =
-    when(mockRegistrationMongoRepository.getSicAndCompliance(any())(any()))
+    when(mockRegistrationMongoRepository.fetchSicAndCompliance(any())(any()))
     .thenReturn(res)
 
   def updateMongo(res:Future[SicAndCompliance]): OngoingStubbing[Future[SicAndCompliance]] =

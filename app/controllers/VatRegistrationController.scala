@@ -30,7 +30,7 @@ import services._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class VatRegistrationController @Inject()(val registrationService: VatRegistrationService,
@@ -39,16 +39,17 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
                                           val authConnector: AuthConnector,
                                           val newRegistrationService: NewRegistrationService,
                                           controllerComponents: ControllerComponents
-                                         ) extends BackendController(controllerComponents) with Authorisation with FutureInstances {
+                                         )(implicit executionContext: ExecutionContext)
+  extends BackendController(controllerComponents) with Authorisation with FutureInstances {
 
 
   override val resourceConn: AuthorisationResource = submissionService.registrationRepository
-  val errorHandler: (LeftState) => Result = err => err.toResult
+  val errorHandler: LeftState => Result = err => err.toResult
 
   def newVatRegistration: Action[AnyContent] = Action.async {
     implicit request =>
       isAuthenticated { internalId =>
-        implicit val writes = VatScheme.apiWrites
+        implicit val writes: OWrites[VatScheme] = VatScheme.apiWrites
 
         newRegistrationService.newRegistration(internalId) map {
           case RegistrationCreated(vatScheme) =>
@@ -67,7 +68,8 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
     implicit request =>
       isAuthorised(id) { authResult =>
         authResult.ifAuthorised(id, "VatRegistrationController", "retrieveVatScheme") {
-          implicit val writes = VatScheme.apiWrites
+          implicit val writes: OWrites[VatScheme] = VatScheme.apiWrites
+
           registrationService.retrieveVatScheme(id).fold(errorHandler, vatScheme => Ok(Json.toJson(vatScheme)))
         }
       }
@@ -76,14 +78,14 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
   def retrieveVatSchemeByInternalId(): Action[AnyContent] = Action.async {
     implicit request =>
       isAuthenticated { internalId =>
-        implicit val writes = VatScheme.apiWrites
+        implicit val writes: OWrites[VatScheme] = VatScheme.apiWrites
 
         registrationService.retrieveVatSchemeByInternalId(internalId).fold(errorHandler, vatScheme => Ok(Json.toJson(vatScheme)))
       }
   }
 
-// TODO: this returns 404 when other methods return 204. Refactor to return 204 at some point
-  def fetchReturns(regId: String) : Action[AnyContent] = Action.async {
+  // TODO: this returns 404 when other methods return 204. Refactor to return 204 at some point
+  def fetchReturns(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
       isAuthorised(regId) { authResult =>
         authResult.ifAuthorised(regId, "VatRegistrationController", "fetchReturns") {
@@ -110,13 +112,13 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
     implicit request =>
       isAuthorised(regId) { authResult =>
         authResult.ifAuthorised(regId, "VatRegistrationController", "submitVATRegistration") {
-            submissionService.submitVatRegistration(regId).map { ackRefs =>
-              Ok(Json.toJson(ackRefs))
-            } recover {
-              case ex =>
-                Logger.warn(s"Submission failed - ${ex.getMessage}")
-                throw ex
-            }
+          submissionService.submitVatRegistration(regId).map { ackRefs =>
+            Ok(Json.toJson(ackRefs))
+          } recover {
+            case ex =>
+              Logger.warn(s"Submission failed - ${ex.getMessage}")
+              throw ex
+          }
         }
       }
   }
@@ -125,7 +127,7 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
     implicit request =>
       isAuthorised(regId) { authResult =>
         authResult.ifAuthorised(regId, "VatRegistrationController", "getAcknowledgementReference") {
-            submissionService.getAcknowledgementReference(regId).fold(errorHandler, ackRefNumber => Ok(Json.toJson(ackRefNumber)))
+          submissionService.getAcknowledgementReference(regId).fold(errorHandler, ackRefNumber => Ok(Json.toJson(ackRefNumber)))
         }
       }
   }
@@ -133,9 +135,8 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
   def getTurnoverEstimates(regId: String): Action[AnyContent] = Action.async {
     implicit request =>
       isAuthorised(regId) { authResult =>
-        authResult.ifAuthorised(regId, "VatRegistrationController", "getTurnoverEstimate") {
-          implicit val reads = TurnoverEstimates.eligibilityDataJsonReads
-          registrationService.getBlockFromEligibilityData[TurnoverEstimates](regId) sendResult("getTurnoverEstimates", regId)
+        authResult.ifAuthorised(regId, "VatRegistrationController", "getTurnoverEstimates") {
+          registrationService.getTurnoverEstimates(regId) sendResult("getTurnoverEstimates", regId)
         }
       }
   }
@@ -144,8 +145,7 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
     implicit request =>
       isAuthorised(regId) { authResult =>
         authResult.ifAuthorised(regId, "VatRegistrationController", "getThreshold") {
-          implicit val reads = Threshold.eligibilityDataJsonReads
-          registrationService.getBlockFromEligibilityData[Threshold](regId) sendResult("getThreshold", regId)
+          registrationService.getThreshold(regId) sendResult("getThreshold", regId)
         }
       }
   }
@@ -190,7 +190,7 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
         authResult.ifAuthorised(regId, "VatRegistrationController", "updateBankAccountDetails") {
           withJsonBody[BankAccount] { bankAccount =>
             registrationRepository.updateBankAccount(regId, bankAccount)
-              .sendResult("updateBackAccountDetails",regId)
+              .sendResult("updateBackAccountDetails", regId)
           }
         }
       }

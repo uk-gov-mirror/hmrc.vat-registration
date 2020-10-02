@@ -39,11 +39,10 @@ case class TurnoverEstimates(turnoverEstimate: Long)
 
 object TurnoverEstimates {
 
-  val eligibilityDataJsonReads: Reads[TurnoverEstimates] = new Reads[TurnoverEstimates] {
-    override def reads(json: JsValue): JsResult[TurnoverEstimates] = {
-      (json \ "turnoverEstimate-value").validate[Long]
-        .map(turnOverEstimateAmount => TurnoverEstimates(turnoverEstimate = turnOverEstimateAmount))
-    }
+  val eligibilityDataJsonReads: Reads[TurnoverEstimates] = Reads { json =>
+    (json \ "turnoverEstimate-value").validate[Long].map(turnOverEstimateAmount =>
+      TurnoverEstimates(turnoverEstimate = turnOverEstimateAmount)
+    )
   }
 
   implicit val format: Format[TurnoverEstimates] = Json.format

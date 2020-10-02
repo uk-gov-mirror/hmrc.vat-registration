@@ -16,17 +16,13 @@
 
 package services
 
-import java.time.LocalDate
-
 import cats.instances.FutureInstances
 import cats.syntax.ApplicativeSyntax
-import common.TransactionId
 import common.exceptions._
 import enums.VatRegStatus
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models.api._
-import models.submission.DESSubmission
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
@@ -51,8 +47,6 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "submitVatRegistration" should {
-    val transactionIdJson = Json.obj("confirmationReferences" -> Json.obj("transaction-id" -> "foo"))
-
     "successfully submit and return an acknowledgment reference" in new Setup {
       when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
         .thenReturn(Future.successful(Some(testFullVatScheme)))
@@ -117,7 +111,15 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
   }
 
   "getValidDocumentStatus" should {
-    val vatScheme = VatScheme(testRegId, testInternalid, None, None, None, status = VatRegStatus.draft)
+    val vatScheme = VatScheme(
+      testRegId,
+      testInternalid,
+      None,
+      None,
+      None,
+      status = VatRegStatus.draft,
+      eligibilitySubmissionData = Some(testEligibilitySubmissionData)
+    )
 
     "throw an exception if the document is not available" in new Setup {
       when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.eq(testRegId))(ArgumentMatchers.any()))

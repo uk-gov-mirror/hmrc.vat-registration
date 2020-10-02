@@ -76,9 +76,15 @@ trait ITFixtures {
   val testSicAndCompliance = SicAndCompliance("businessDesc", Some(ComplianceLabour(1, Some(true), Some(true))), SicCode("12345", "sicDesc", "sicDetail"), List(SicCode("12345", "sicDesc", "sicDetail")))
   val testTurnoverEstimates = TurnoverEstimates(12345678L)
   val testBankDetails = BankAccount(true, None)
-  val testThreshold = Threshold(true, None, None, None, None)
+  val testThreshold = Threshold(mandatoryRegistration = true, Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
 
-  val testFullVatScheme =
+  val testEligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
+    threshold = testThreshold,
+    estimates = TurnoverEstimates(123456),
+    customerStatus = MTDfB
+  )
+
+  val testFullVatScheme: VatScheme =
     VatScheme(
       id = testRegId,
       internalId = testInternalid,
@@ -87,13 +93,12 @@ trait ITFixtures {
       returns = Some(testReturns),
       sicAndCompliance = Some(testSicAndCompliance),
       businessContact = Some(testBusinessContactDetails),
-      turnoverEstimates = Some(testTurnoverEstimates),
       bankAccount = Some(testBankDetails),
-      threshold = Some(testThreshold),
       acknowledgementReference = Some("ackRef"),
       flatRateScheme = Some(testFlatRateScheme),
       status = VatRegStatus.draft,
-      applicantDetails = Some(testApplicantDetails)
+      applicantDetails = Some(testApplicantDetails),
+      eligibilitySubmissionData = Some(testEligibilitySubmissionData)
     )
 
   def testEmptyVatScheme(regId: String): VatScheme = VatScheme(
