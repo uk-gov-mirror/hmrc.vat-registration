@@ -16,10 +16,6 @@
 
 package fixtures
 
-import java.time.LocalDate
-
-import models.api.{Address, ApplicantDetails, DigitalContactOptional, Name}
-import models.submission.DateOfBirth
 import play.api.libs.json.Json
 
 trait VatSubmissionFixture {
@@ -39,15 +35,24 @@ trait VatSubmissionFixture {
       |  "customerIdentification": {
       |    "tradingName": "trading-name",
       |    "tradersPartyType": "50",
-      |    "customerID": {
-      |      "idValue": "AB123456A",
-      |      "idType": "NINO",
-      |      "IDsVerificationStatus": "Verified"
-      |    },
+      |    "shortOrgName": "testCompanyName",
       |    "name": {
-      |      "first": "Forename",
-      |      "last": "Surname"
+      |      "firstName": "Forename",
+      |      "lastName": "Surname"
       |    },
+      |    "customerID": [
+      |      {
+      |        "idValue": "testCtUtr",
+      |        "idType": " UTR",
+      |        "IDsVerificationStatus": "Verified"
+      |      },
+      |      {
+      |        "idValue": "testCrn",
+      |        "idType": "CRN",
+      |        "IDsVerificationStatus": "Verified",
+      |        "date": "2020-01-02"
+      |      }
+      |    ],
       |    "dateOfBirth": "2018-01-01",
       |    "primeBPSafeId": "12345678901234567890"
       |  },
@@ -56,25 +61,45 @@ trait VatSubmissionFixture {
       |      "confirmInformationDeclaration": true
       |    },
       |    "applicantDetails": {
+      |      "commDetails": {
+      |        "email": "skylake@vilikariet.com"
+      |      },
+      |      "name": {
+      |        "firstName": "Forename",
+      |        "lastName": "Surname"
+      |      },
+      |      "dateOfBirth": "2018-01-01",
+      |      "roleInBusiness": "secretary",
+      |      "identifiers": [
+      |        {
+      |          "idValue": "AB123456A",
+      |          "idType": "NINO",
+      |          "IDsVerificationStatus": "Verified",
+      |          "date": "2018-01-01"
+      |        },
+      |        {
+      |          "idValue": "testCrn",
+      |          "idType": "CRN",
+      |          "IDsVerificationStatus": "Verified",
+      |          "date": "2020-01-02"
+      |        }
+      |      ],
+      |      "prevName": {
+      |        "firstName": "Forename",
+      |        "lastName": "Surname",
+      |        "nameChangeDate": "2018-01-01"
+      |      },
       |      "currAddress": {
       |        "line1": "line1",
       |        "line2": "line2",
       |        "postCode": "XX XX",
       |        "countryCode": "UK"
-      |      },
-      |      "name": {
-      |        "first": "Forename",
-      |        "last": "Surname"
-      |      },
-      |      "commDetails": {
-      |        "email": "skylake@vilikariet.com"
-      |      },
-      |      "dateOfBirth": "2018-01-01",
-      |      "roleInBusiness": "secretary"
+      |      }
       |    }
       |  },
       |  "subscription": {
       |    "corporateBodyRegistered": {
+      |      "dateOfIncorporation": "2020-01-02",
       |      "companyRegistrationNumber": "testCrn"
       |    },
       |    "schemes": {
@@ -86,8 +111,8 @@ trait VatSubmissionFixture {
       |  "bankDetails": {
       |    "UK": {
       |      "accountName": "Test Bank Account",
-      |      "sortCode": "010203",
-      |      "accountNumber": "01023456"
+      |      "accountNumber": "01023456",
+      |      "sortCode": "010203"
       |    }
       |  },
       |  "businessActivities": {
@@ -130,6 +155,10 @@ trait VatSubmissionFixture {
       |      "last": "Surname"
       |    },
       |    "dateOfBirth": "2018-01-01",
+      |    "companyName": "testCompanyName",
+      |    "companyNumber": "testCrn",
+      |    "dateOfIncorporation": "2020-01-02",
+      |    "ctutr": "testCtUtr",
       |    "currentAddress": {
       |      "line1": "line1",
       |      "line2": "line2",
@@ -138,6 +167,13 @@ trait VatSubmissionFixture {
       |    },
       |    "contact": {
       |      "email": "skylake@vilikariet.com"
+      |    },
+      |    "changeOfName": {
+      |      "name": {
+      |        "first": "Forename",
+      |        "last": "Surname"
+      |      },
+      |      "change": "2018-01-01"
       |    }
       |  },
       |  "bankDetails": {

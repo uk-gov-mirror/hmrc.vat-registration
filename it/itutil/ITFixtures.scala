@@ -60,12 +60,20 @@ trait ITFixtures {
   val testRole = Some("secretary")
   val testName = Name(first = Some("Forename"), middle = None, last = "Surname")
   val testFormerName = FormerName(name = Some(oldName), change = Some(testDate))
+  val testCompanyName = "testCompanyName"
+  val testCrn = "testCrn"
+  val testCtUtr = Some("testCtUtr")
+  val testDateOFIncorp = LocalDate.of(2020, 1, 2)
 
   val testApplicantDetails = ApplicantDetails(
     nino = testNino,
     role = testRole,
     name = testName,
     dateOfBirth = DateOfBirth(testDate),
+    companyName = testCompanyName,
+    companyNumber = testCrn,
+    dateOfIncorporation = testDateOFIncorp,
+    ctutr = testCtUtr,
     currentAddress = testAddress,
     contact = testDigitalContactOptional,
     changeOfName = None,

@@ -16,41 +16,103 @@
 
 package models.api
 
-import models.submission.{CustomerId, DateOfBirth, NinoIdType}
+import java.time.LocalDate
+
+import helpers.ApplicantDetailsHelper
+import models.submission.DateOfBirth
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import utils.JsonUtilities
+
+import scala.util.{Failure, Success, Try}
 
 case class ApplicantDetails(nino: String,
                             role: Option[String] = None,
                             name: Name,
                             dateOfBirth: DateOfBirth,
+                            companyName: String,
+                            companyNumber: String,
+                            dateOfIncorporation: LocalDate,
+                            ctutr: Option[String],
                             currentAddress: Address,
                             contact: DigitalContactOptional,
                             changeOfName: Option[FormerName] = None,
                             previousAddress : Option[Address] = None)
 
-object ApplicantDetails extends VatApplicantDetailsValidator {
+object ApplicantDetails extends VatApplicantDetailsValidator
+  with ApplicantDetailsHelper
+  with JsonUtilities{
+
+  private val custInfoSection = JsPath \ "customerIdentification"
+  private val appDetailsSection = JsPath \ "declaration" \ "applicantDetails"
+  private val corpBodySection = JsPath \ "subscription" \ "corporateBodyRegistered"
 
   implicit val format: Format[ApplicantDetails] = (
     (__ \ "nino").format[String] and
     (__ \ "role").formatNullable[String] and
     (__ \ "name").format[Name] and
     (__ \ "dateOfBirth").format[DateOfBirth] and
+    (__ \ "companyName").format[String] and
+    (__ \ "companyNumber").format[String] and
+    (__ \ "dateOfIncorporation").format[LocalDate] and
+    (__ \ "ctutr").formatNullable[String] and
     (__ \ "currentAddress").format[Address] and
     (__ \ "contact").format[DigitalContactOptional] and
     (__ \ "changeOfName").formatNullable[FormerName] and
     (__ \ "previousAddress").formatNullable[Address]
   )(ApplicantDetails.apply, unlift(ApplicantDetails.unapply))
 
-  val submissionFormat: Format[ApplicantDetails] = (
-    (__ \ "customerIdentification" \ "customerID").format[CustomerId].inmap[String](_.idValue, nino => CustomerId(nino, NinoIdType)) and
-    (__ \ "declaration" \ "applicantDetails" \ "roleInBusiness").formatNullable[String] and
-    (__).format[Name](Name.submissionFormat) and
-    (__).format[DateOfBirth](DateOfBirth.submissionFormat) and
-    (__ \ "declaration" \ "applicantDetails" \ "currAddress").format[Address](Address.submissionFormat) and
-    (__ \ "declaration" \ "applicantDetails" \ "commDetails").format[DigitalContactOptional](DigitalContactOptional.submissionFormat) and
-    (__ \ "declaration" \ "applicantDetails" \ "prevName").formatNullable[FormerName](FormerName.submissionFormat) and
-    (__ \ "declaration" \ "applicantDetails" \ "prevAddress").formatNullable[Address](Address.submissionFormat)
-  )(ApplicantDetails.apply, unlift(ApplicantDetails.unapply))
+  val submissionReads: Reads[ApplicantDetails] = Reads[ApplicantDetails] { json =>
+    Try {
+      ApplicantDetails(
+        nino = json.nino,
+        role = json.getOptionalField[String](appDetailsSection \ "roleInBusiness"),
+        name = json.getField[Name](appDetailsSection \ "name")(Name.submissionFormat),
+        dateOfBirth = json.getField[DateOfBirth](appDetailsSection \ "dateOfBirth"),
+        companyName = json.getField[String](custInfoSection \ "shortOrgName"),
+        companyNumber = json.getField[String](corpBodySection \ "companyRegistrationNumber"),
+        dateOfIncorporation = json.getField[LocalDate](corpBodySection \ "dateOfIncorporation"),
+        ctutr = json.ctUtr,
+        currentAddress = json.getField[Address](appDetailsSection \ "currAddress")(Address.submissionFormat),
+        contact = json.getField[DigitalContactOptional](appDetailsSection \ "commDetails")(DigitalContactOptional.submissionFormat),
+        changeOfName = json.getOptionalField[FormerName](appDetailsSection \ "prevName")(FormerName.submissionFormat),
+        previousAddress = json.getOptionalField[Address](appDetailsSection \ "prevAddress")(Address.submissionFormat)
+      )
+    } match {
+      case Failure(exception) => JsError(exception.getMessage)
+      case Success(value) => JsSuccess(value)
+    }
+  }
+
+  val submissionWrites: Writes[ApplicantDetails] = Writes[ApplicantDetails] { appDetails =>
+    Json.obj(
+      "customerIdentification" -> Json.obj(
+        "name" -> Json.toJson(appDetails.name)(Name.submissionFormat),
+        "dateOfBirth" -> Json.toJson(appDetails.dateOfBirth),
+        "shortOrgName" -> appDetails.companyName,
+        "customerID" -> Json.toJson(appDetails.companyIdentifiers)
+      ),
+      "subscription" -> Json.obj(
+        "corporateBodyRegistered" -> Json.obj(
+          "companyRegistrationNumber" -> appDetails.companyNumber,
+          "dateOfIncorporation" -> appDetails.dateOfIncorporation
+        )
+      ),
+      "declaration" -> Json.obj(
+        "applicantDetails" -> Json.obj(
+          "roleInBusiness" -> appDetails.role,
+          "name" -> Json.toJson(appDetails.name)(Name.submissionFormat),
+          "prevName" -> Json.toJson(appDetails.changeOfName.map(FormerName.submissionFormat.writes)),
+          "dateOfBirth" -> Json.toJson(appDetails.dateOfBirth),
+          "currAddress" -> Json.toJson(appDetails.currentAddress)(Address.submissionFormat),
+          "prevAddress" -> Json.toJson(appDetails.previousAddress.map(Address.submissionFormat.writes)),
+          "commDetails" -> Json.toJson(appDetails.contact)(DigitalContactOptional.submissionFormat),
+          "identifiers" -> Json.toJson(appDetails.personalIdentifiers)
+        ).filterNullFields
+      )
+    )
+  }
+
+  val submissionFormat: Format[ApplicantDetails] = Format[ApplicantDetails](submissionReads, submissionWrites)
 
 }

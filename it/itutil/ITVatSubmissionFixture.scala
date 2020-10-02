@@ -1,3 +1,4 @@
+
 package itutil
 
 import play.api.libs.json.Json
@@ -19,15 +20,24 @@ trait ITVatSubmissionFixture {
       |  "customerIdentification": {
       |    "tradingName": "trading-name",
       |    "tradersPartyType": "50",
-      |    "customerID": {
-      |      "idValue": "AB123456A",
-      |      "idType": "NINO",
-      |      "IDsVerificationStatus": "Verified"
-      |    },
+      |    "shortOrgName": "testCompanyName",
       |    "name": {
-      |      "first": "Forename",
-      |      "last": "Surname"
+      |      "firstName": "Forename",
+      |      "lastName": "Surname"
       |    },
+      |    "customerID": [
+      |      {
+      |        "idValue": "testCtUtr",
+      |        "idType": " UTR",
+      |        "IDsVerificationStatus": "Verified"
+      |      },
+      |      {
+      |        "idValue": "testCrn",
+      |        "idType": "CRN",
+      |        "IDsVerificationStatus": "Verified",
+      |        "date": "2020-01-02"
+      |      }
+      |    ],
       |    "dateOfBirth": "2018-01-01",
       |    "primeBPSafeId": "12345678901234567890"
       |  },
@@ -36,23 +46,45 @@ trait ITVatSubmissionFixture {
       |      "confirmInformationDeclaration": true
       |    },
       |    "applicantDetails": {
-      |      "currAddress": {
-      |        "line1": "12 Lukewarm",
-      |        "line2": "Oriental lane"
-      |      },
-      |      "name": {
-      |        "first": "Forename",
-      |        "last": "Surname"
-      |      },
       |      "commDetails": {
       |        "email": "skylake@vilikariet.com"
       |      },
+      |      "name": {
+      |        "firstName": "Forename",
+      |        "lastName": "Surname"
+      |      },
       |      "dateOfBirth": "2018-01-01",
-      |      "roleInBusiness": "secretary"
+      |      "roleInBusiness": "secretary",
+      |      "identifiers": [
+      |        {
+      |          "idValue": "AB123456A",
+      |          "idType": "NINO",
+      |          "IDsVerificationStatus": "Verified",
+      |          "date": "2018-01-01"
+      |        },
+      |        {
+      |          "idValue": "testCrn",
+      |          "idType": "CRN",
+      |          "IDsVerificationStatus": "Verified",
+      |          "date": "2020-01-02"
+      |        }
+      |      ],
+      |      "prevName": {
+      |        "firstName": "Forename",
+      |        "lastName": "Surname",
+      |        "nameChangeDate": "2018-01-01"
+      |      },
+      |      "currAddress": {
+      |        "line1": "line1",
+      |        "line2": "line2",
+      |        "postCode": "XX XX",
+      |        "countryCode": "UK"
+      |      }
       |    }
       |  },
       |  "subscription": {
       |    "corporateBodyRegistered": {
+      |      "dateOfIncorporation": "2020-01-02",
       |      "companyRegistrationNumber": "testCrn"
       |    },
       |    "schemes": {
@@ -64,15 +96,15 @@ trait ITVatSubmissionFixture {
       |  "bankDetails": {
       |    "UK": {
       |      "accountName": "Test Bank Account",
-      |      "sortCode": "010203",
-      |      "accountNumber": "01023456"
+      |      "accountNumber": "01023456",
+      |      "sortCode": "010203"
       |    }
       |  },
       |  "businessActivities": {
       |    "description": "this is my business description",
       |    "SICCodes": {
-      |      "primaryMainCode": "12345",
       |      "mainCode2": "00998",
+      |      "primaryMainCode": "12345",
       |      "mainCode3": "00889"
       |    }
       |  },

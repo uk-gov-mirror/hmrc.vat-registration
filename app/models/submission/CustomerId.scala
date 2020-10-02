@@ -26,8 +26,7 @@ case class CustomerId(idValue: String,
                       countryOfIncorporation: Option[String] = None,
                       date: Option[LocalDate] = None,
                       safeIDBPFound: Option[String] = None,
-                      partyType: Option[PartyType] = None
-                     )
+                      partyType: Option[PartyType] = None)
 
 object CustomerId {
   implicit val format = Json.format[CustomerId]
