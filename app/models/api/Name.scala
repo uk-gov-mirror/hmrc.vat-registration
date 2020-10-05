@@ -36,23 +36,10 @@ object Name extends VatApplicantDetailsValidator {
     (__ \ "surname").read[String](nameValidator)
   )(Name.apply _)
 
-  val submissionWrites: Writes[Name] = Writes[Name] { name =>
-    Json.obj(
-      "customerIdentification" -> Json.obj(
-        "name" -> format.writes(name)
-      ),
-      "declaration" -> Json.obj(
-        "applicantDetails" -> Json.obj(
-          "name" -> format.writes(name)
-        )
-      )
-    )
-  }
-
-  val submissionReads: Reads[Name] = Reads[Name] { json =>
-    (json \ "declaration"\ "applicantDetails" \ "name").validate[Name]
-  }
-
-  val submissionFormat: Format[Name] = Format[Name](submissionReads, submissionWrites)
+  val submissionFormat: Format[Name] = (
+    (__ \ "firstName").formatNullable[String](nameValidator) and
+    (__ \ "middleName").formatNullable[String](nameValidator) and
+    (__ \ "lastName").format[String](nameValidator)
+  )(Name.apply, unlift(Name.unapply))
 
 }

@@ -33,23 +33,4 @@ object DateOfBirth {
     }
   )
 
-  val submissionWrites: Writes[DateOfBirth] = Writes[DateOfBirth] { dob =>
-    Json.obj(
-      "customerIdentification" -> Json.obj(
-        "dateOfBirth" -> dob.date.toString
-      ),
-      "declaration" -> Json.obj(
-        "applicantDetails" -> Json.obj(
-          "dateOfBirth" -> dob.date.toString
-        )
-      )
-    )
-  }
-
-  val submissionReads: Reads[DateOfBirth] = Reads[DateOfBirth] { json =>
-    (json \ "declaration" \ "applicantDetails" \ "dateOfBirth").validate[LocalDate].map(DateOfBirth(_))
-  }
-
-  val submissionFormat: Format[DateOfBirth] = Format[DateOfBirth](submissionReads, submissionWrites)
-
 }

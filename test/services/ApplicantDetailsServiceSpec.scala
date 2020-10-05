@@ -64,37 +64,26 @@ class ApplicantDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture
   }
 
   "updateApplicantDetailsData" should {
-    val applicantDetails = ApplicantDetails(
-      nino = testNino,
-      role = testRole,
-      name = testName,
-      dateOfBirth = testDateOfBirth,
-      currentAddress = testAddress,
-      contact = testDigitalContactOptional,
-      changeOfName = Some(testPreviousName),
-      previousAddress = Some(testAddress)
-    )
-
     "return the data that is being inputted" in new Setup {
       when(mockRegistrationMongoRepository.patchApplicantDetails(any(),any())(any()))
-        .thenReturn(Future.successful(applicantDetails))
+        .thenReturn(Future.successful(validApplicantDetails))
 
-      val result = await(service.updateApplicantDetailsData("regId", applicantDetails))
-      result mustBe applicantDetails
+      val result = await(service.updateApplicantDetailsData("regId", validApplicantDetails))
+      result mustBe validApplicantDetails
     }
 
     "encounter an exception if an error occurs" in new Setup {
       when(mockRegistrationMongoRepository.patchApplicantDetails(any(),any())(any()))
         .thenReturn(Future.failed(new Exception("")))
 
-      intercept[Exception](await(service.updateApplicantDetailsData("regId", applicantDetails)))
+      intercept[Exception](await(service.updateApplicantDetailsData("regId", validApplicantDetails)))
     }
 
     "encounter an MissingRegDocument Exception if no document is found" in new Setup {
       when(mockRegistrationMongoRepository.patchApplicantDetails(any(),any())(any()))
         .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
-      intercept[MissingRegDocument](await(service.updateApplicantDetailsData("regId", applicantDetails)))
+      intercept[MissingRegDocument](await(service.updateApplicantDetailsData("regId", validApplicantDetails)))
     }
   }
 }

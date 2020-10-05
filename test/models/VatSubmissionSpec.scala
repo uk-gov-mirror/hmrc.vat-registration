@@ -27,7 +27,6 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
   val testCustomerStatus = "3"
   val testTradersPartyType = "50"
   val testSafeID = "12345678901234567890"
-  val testCrn = "testCrn"
   val testLine1 = "line1"
   val testLine2 = "line2"
   val testPostCode = "A11 11A"

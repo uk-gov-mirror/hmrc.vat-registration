@@ -33,6 +33,10 @@ trait VatRegistrationFixture {
   val testAckReference = "BRPY000000000001"
   val testDate: LocalDate = LocalDate.of(2018, 1, 1)
   val testDateOfBirth = DateOfBirth(testDate)
+  val testCompanyName = "testCompanyName"
+  val testCrn = "testCrn"
+  val testCtUtr = Some("testCtUtr")
+  val testDateOFIncorp = LocalDate.of(2020, 1, 2)
   val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some("UK"))
   val testSicCode = SicCode("88888", "description", "displayDetails")
   val testName = Name(first = Some("Forename"), middle = None, last = "Surname")
@@ -46,6 +50,7 @@ trait VatRegistrationFixture {
   val testDigitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
   val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
   val testBankDetails = BankAccountDetails("Test Bank Account", "010203", "01023456")
+  val testFormerName = FormerName(Some(testName), Some(testDate))
 
   val testEligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
     threshold = testMandatoryThreshold,
@@ -58,9 +63,13 @@ trait VatRegistrationFixture {
     role = testRole,
     name = testName,
     dateOfBirth = DateOfBirth(testDate),
+    companyName = testCompanyName,
+    companyNumber = testCrn,
+    dateOfIncorporation = testDateOFIncorp,
+    ctutr = testCtUtr,
     currentAddress = testAddress,
     contact = testDigitalContactOptional,
-    changeOfName = None,
+    changeOfName = Some(testFormerName),
     previousAddress = None
   )
 
