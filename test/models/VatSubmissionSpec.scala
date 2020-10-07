@@ -67,6 +67,28 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
 
       model mustBe JsSuccess(testVatSubmission)
     }
+
+    "write a default reason why the bank account isn't provided" in {
+      val vatSubmissionWithoutBank: VatSubmission = VatSubmission(
+        testMessageType,
+        Some(testCustomerStatus),
+        Some(testTradersPartyType),
+        Some(testSafeID),
+        Some(true),
+        Some(testCrn),
+        validApplicantDetails,
+        bankDetails = None,
+        testSicAndCompliance.get,
+        testBusinessContact.get,
+        validFullTradingDetails,
+        Some(validFullFRSDetails)
+      )
+
+      val res = Json.toJson(vatSubmissionWithoutBank)(VatSubmission.submissionFormat)
+      val expectedJson = Json.obj("reasonBankAccNotProvided" -> "1").toString()
+
+      res.toString must include(expectedJson)
+    }
   }
 
   "validating Json" should {

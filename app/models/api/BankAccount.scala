@@ -39,6 +39,28 @@ object BankAccountDetails extends VatBankAccountValidator {
     (__ \ "UK" \ "sortCode").format[String] and
     (__ \ "UK" \ "accountNumber").format[String]
   )(BankAccountDetails.apply, unlift(BankAccountDetails.unapply))
+
+  def submissionWrites(optBankDetails: Option[BankAccountDetails]): JsValue =
+    optBankDetails.map( bd =>
+      Json.obj("UK" -> Json.obj(
+        "accountName" -> bd.name,
+        "sortCode" -> bd.sortCode,
+        "accountNumber" -> bd.number
+      ))
+    ) getOrElse (
+      Json.obj(
+      "UK" -> Json.obj(
+        "reasonBankAccNotProvided" -> "1"
+        )
+      )
+    )
+
+  val submissionReads: Reads[BankAccountDetails] = (
+    (__ \ "UK" \ "accountName").read[String] and
+    (__ \ "UK" \ "sortCode").read[String] and
+    (__ \ "UK" \ "accountNumber").read[String]
+  )(BankAccountDetails.apply _)
+
 }
 
 object BankAccountDetailsMongoFormat extends VatBankAccountValidator {
