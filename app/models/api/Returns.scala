@@ -39,6 +39,14 @@ case class TurnoverEstimates(turnoverEstimate: Long)
 
 object TurnoverEstimates {
 
+  val submissionReads: Reads[TurnoverEstimates] = JsPath.read[Long].map(TurnoverEstimates(_))
+
+  val submissionWrites: Writes[TurnoverEstimates] = Writes {
+    estimates: TurnoverEstimates => JsNumber(BigDecimal(estimates.turnoverEstimate))
+  }
+
+  val submissionFormat: Format[TurnoverEstimates] = Format(submissionReads, submissionWrites)
+
   val eligibilityDataJsonReads: Reads[TurnoverEstimates] = Reads { json =>
     (json \ "turnoverEstimate-value").validate[Long].map(turnOverEstimateAmount =>
       TurnoverEstimates(turnoverEstimate = turnOverEstimateAmount)

@@ -20,7 +20,6 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class VatSubmission(messageType: String = "SubscriptionCreate",
-                         customerStatus: Option[String],
                          tradersPartyType: Option[String],
                          primeBPSafeId: Option[String],
                          confirmInformationDeclaration: Option[Boolean],
@@ -30,12 +29,12 @@ case class VatSubmission(messageType: String = "SubscriptionCreate",
                          sicAndCompliance: SicAndCompliance,
                          businessContact: BusinessContact,
                          tradingDetails: TradingDetails,
-                         flatRateScheme: Option[FRSDetails])
+                         flatRateScheme: Option[FRSDetails],
+                         eligibilitySubmissionData: EligibilitySubmissionData)
 
 object VatSubmission {
   val submissionFormat: OFormat[VatSubmission] = (
     (__ \ "messageType").format[String] and
-    (__ \ "admin" \ "additionalInformation" \ "customerStatus").formatNullable[String] and
     (__ \ "customerIdentification" \ "tradersPartyType").formatNullable[String] and
     (__ \ "customerIdentification" \ "primeBPSafeId").formatNullable[String] and
     (__ \ "declaration" \ "declarationSigning" \ "confirmInformationDeclaration").formatNullable[Boolean] and
@@ -45,8 +44,9 @@ object VatSubmission {
     (__ \ "businessActivities").format[SicAndCompliance](SicAndCompliance.submissionFormat) and
     (__ \ "contact").format[BusinessContact](BusinessContact.submissionFormat) and
     (__).format[TradingDetails](TradingDetails.submissionFormat) and
-    (__ \ "subscription" \ "schemes").formatNullable[FRSDetails](FRSDetails.submissionFormat)
-  )(VatSubmission.apply, unlift(VatSubmission.unapply))
+    (__ \ "subscription" \ "schemes").formatNullable[FRSDetails](FRSDetails.submissionFormat) and
+    (__).format[EligibilitySubmissionData](EligibilitySubmissionData.submissionFormat)
+    )(VatSubmission.apply, unlift(VatSubmission.unapply))
 
   implicit val mongoFormat: OFormat[VatSubmission] = Json.format[VatSubmission]
 
@@ -55,7 +55,6 @@ object VatSubmission {
       scheme.sicAndCompliance, scheme.businessContact, scheme.tradingDetails, scheme.flatRateScheme) match {
       case (Some(eligibilityData), Some(applicant), bankAcc, Some(sicAndCompliance), Some(contact), Some(trading), frs) =>
         VatSubmission(
-          customerStatus = Some(eligibilityData.customerStatus.value),
           tradersPartyType = None,
           primeBPSafeId = None,
           confirmInformationDeclaration = Some(true),
@@ -65,7 +64,8 @@ object VatSubmission {
           sicAndCompliance = sicAndCompliance,
           businessContact = contact,
           tradingDetails = trading,
-          flatRateScheme = frs.flatMap(_.frsDetails)
+          flatRateScheme = frs.flatMap(_.frsDetails),
+          eligibilitySubmissionData = eligibilityData
         )
       case _ =>
         throw new IllegalStateException("Vat scheme missing required sections")
