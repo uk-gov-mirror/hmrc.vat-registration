@@ -70,17 +70,17 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
     "write a default reason why the bank account isn't provided" in {
       val vatSubmissionWithoutBank: VatSubmission = VatSubmission(
         testMessageType,
-        Some(testCustomerStatus),
         Some(testTradersPartyType),
         Some(testSafeID),
         Some(true),
         Some(testCrn),
         validApplicantDetails,
-        bankDetails = None,
+        None,
         testSicAndCompliance.get,
         testBusinessContact.get,
         validFullTradingDetails,
-        Some(validFullFRSDetails)
+        Some(validFullFRSDetails),
+        testEligibilitySubmissionData
       )
 
       val res = Json.toJson(vatSubmissionWithoutBank)(VatSubmission.submissionFormat)
