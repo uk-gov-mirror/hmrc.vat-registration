@@ -24,6 +24,7 @@ class EligibilityControllerISpec extends IntegrationStubbing {
     Json.obj("questionId" -> "testQId12", "question" -> "Some Question 12", "answer" -> "Some Answer 12", "answerValue" -> "val12")
   )
   val questions2 = Seq(
+    Json.obj("questionId" -> "voluntaryRegistration", "question" -> "Some Question", "answer" -> "Some Answer", "answerValue" -> true),
     Json.obj("questionId" -> "voluntaryInformation", "question" -> "Some Question", "answer" -> "Some Answer", "answerValue" -> true),
     Json.obj("questionId" -> "applicantUKNino-optionalData", "question" -> "Some Question 22", "answer" -> "Some Answer 22", "answerValue" -> "JW778877A"),
     Json.obj("questionId" -> "turnoverEstimate-value", "question" -> "Some Question 21", "answer" -> "Some Answer 21", "answerValue" -> 12345),

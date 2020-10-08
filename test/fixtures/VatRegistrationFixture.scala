@@ -45,7 +45,7 @@ trait VatRegistrationFixture {
   val testVatScheme: VatScheme = VatScheme(testRegId, internalId = testInternalid, status = VatRegStatus.draft)
   val exception = new Exception("Exception")
   val testVoluntaryThreshold = Threshold(mandatoryRegistration = false, None, None, None)
-  val testMandatoryThreshold = Threshold(mandatoryRegistration = true, Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
+  val testMandatoryThreshold = Threshold(mandatoryRegistration = true, Some(LocalDate.of(2020, 10, 7)), Some(LocalDate.of(2020, 10, 7)), Some(LocalDate.of(2020, 10, 7)))
   val currentAddress = Address("12 Lukewarm", "Oriental lane")
   val testDigitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
   val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
