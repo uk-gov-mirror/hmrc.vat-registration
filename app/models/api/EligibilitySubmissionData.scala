@@ -17,17 +17,42 @@
 package models.api
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Format, Json, Reads}
+import play.api.libs.json._
+import uk.gov.hmrc.http.InternalServerException
 
 case class EligibilitySubmissionData(threshold: Threshold,
+                                     exceptionOrExemption: String,
                                      estimates: TurnoverEstimates,
                                      customerStatus: CustomerStatus)
 
 object EligibilitySubmissionData {
 
+  val exceptionKey = "2"
+  val exemptionKey = "1"
+  val nonExceptionOrExemptionKey = "0"
+
+  val submissionFormat: Format[EligibilitySubmissionData] = (
+    (__ \ "subscription" \ "reasonForSubscription").format[Threshold](Threshold.submissionFormat) and
+    (__ \ "subscription" \ "reasonForSubscription" \ "exemptionOrException").format[String] and
+    (__ \ "subscription" \ "yourTurnover" \ "turnoverNext12Months").format[TurnoverEstimates](TurnoverEstimates.submissionFormat) and
+    (__ \ "admin" \ "additionalInformation" \ "customerStatus").format[CustomerStatus](CustomerStatus.format)
+    ) (EligibilitySubmissionData.apply, unlift(EligibilitySubmissionData.unapply))
+
   val eligibilityReads: Reads[EligibilitySubmissionData] = Reads { json =>
     (
       json.validate[Threshold](Threshold.eligibilityDataJsonReads) and
+      (
+        (json \ "vatRegistrationException").validateOpt[Boolean] and
+        (json \ "vatExemption").validateOpt[Boolean]
+      ) ((exception, exemption) =>
+        (exception.contains(true), exemption.contains(true)) match {
+          case (excepted, exempt) if !excepted && !exempt => nonExceptionOrExemptionKey
+          case (excepted, _) if excepted => exceptionKey
+          case (_, exempt) if exempt => exemptionKey
+          case (_, _) =>
+            throw new InternalServerException("[EligibilitySubmissionData][eligibilityReads] eligibility returned invalid exception/exemption data")
+        }
+      ) and
       json.validate[TurnoverEstimates](TurnoverEstimates.eligibilityDataJsonReads) and
       json.validate[CustomerStatus](CustomerStatus.eligibilityDataJsonReads)
     ) (EligibilitySubmissionData.apply _)

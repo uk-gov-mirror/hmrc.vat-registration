@@ -54,6 +54,7 @@ trait VatRegistrationFixture {
 
   val testEligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
     threshold = testMandatoryThreshold,
+    exceptionOrExemption = "0",
     estimates = TurnoverEstimates(123456),
     customerStatus = MTDfB
   )
@@ -114,7 +115,6 @@ trait VatRegistrationFixture {
   )
 
   val testFullSubmission: VatSubmission = VatSubmission(
-    customerStatus = Some(MTDfB.value),
     tradersPartyType = None,
     primeBPSafeId = None,
     confirmInformationDeclaration = Some(true),
@@ -124,7 +124,8 @@ trait VatRegistrationFixture {
     sicAndCompliance = testSicAndCompliance.get,
     businessContact = testBusinessContact.get,
     tradingDetails = validFullTradingDetails,
-    flatRateScheme = Some(validFullFRSDetails)
+    flatRateScheme = Some(validFullFRSDetails),
+    eligibilitySubmissionData = testEligibilitySubmissionData
   )
 
   val validBusinessContactJson = Json.parse(

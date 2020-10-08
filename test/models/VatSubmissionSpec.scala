@@ -24,7 +24,6 @@ import play.api.libs.json.{JsSuccess, Json}
 class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegistrationFixture with VatSubmissionFixture {
 
   val testMessageType = "SubmissionCreate"
-  val testCustomerStatus = "3"
   val testTradersPartyType = "50"
   val testSafeID = "12345678901234567890"
   val testLine1 = "line1"
@@ -34,7 +33,6 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
 
   val testVatSubmission: VatSubmission = VatSubmission(
     testMessageType,
-    Some(testCustomerStatus),
     Some(testTradersPartyType),
     Some(testSafeID),
     Some(true),
@@ -44,7 +42,8 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
     testSicAndCompliance.get,
     testBusinessContact.get,
     validFullTradingDetails,
-    Some(validFullFRSDetails)
+    Some(validFullFRSDetails),
+    testEligibilitySubmissionData
   )
 
   "converting a VatSubmission model into Json" should {
@@ -128,7 +127,6 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
       val res = VatSubmission.fromVatScheme(scheme)
 
       res mustBe VatSubmission(
-        customerStatus = Some(MTDfB.value),
         tradersPartyType = None,
         primeBPSafeId = None,
         confirmInformationDeclaration = Some(true),
@@ -138,7 +136,8 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
         sicAndCompliance = testSicAndCompliance.get,
         businessContact = testBusinessContact.get,
         tradingDetails = validFullTradingDetails,
-        flatRateScheme = validFullFlatRateScheme.frsDetails
+        flatRateScheme = validFullFlatRateScheme.frsDetails,
+        eligibilitySubmissionData = testEligibilitySubmissionData
       )
     }
 

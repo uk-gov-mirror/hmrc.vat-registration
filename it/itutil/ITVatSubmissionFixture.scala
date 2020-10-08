@@ -11,7 +11,7 @@ trait ITVatSubmissionFixture {
       |  "messageType": "SubmissionCreate",
       |  "admin": {
       |    "additionalInformation": {
-      |      "customerStatus": "3"
+      |      "customerStatus": "2"
       |    },
       |    "attachments": {
       |      "EORIRequested": true
@@ -82,15 +82,23 @@ trait ITVatSubmissionFixture {
       |      }
       |    }
       |  },
-      |  "subscription": {
+  "subscription": {
       |    "corporateBodyRegistered": {
-      |      "dateOfIncorporation": "2020-01-02",
-      |      "companyRegistrationNumber": "testCrn"
+      |        "companyRegistrationNumber": "testCrn",
+      |        "dateOfIncorporation": "2020-01-02"
+      |    },
+      |    "reasonForSubscription": {
+      |        "exemptionOrException": "0",
+      |        "registrationReason": "0016",
+      |        "relevantDate": "2020-10-07"
       |    },
       |    "schemes": {
-      |      "startDate": "2018-01-01",
-      |      "FRSCategory": "testCategory",
-      |      "FRSPercentage": 15
+      |        "FRSCategory": "testCategory",
+      |        "FRSPercentage": 15,
+      |        "startDate": "2018-01-01"
+      |    },
+      |    "yourTurnover": {
+      |        "turnoverNext12Months": 123456
       |    }
       |  },
       |  "bankDetails": {

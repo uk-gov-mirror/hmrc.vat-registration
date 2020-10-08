@@ -247,6 +247,7 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
           thresholdNextThirtyDays = None,
           thresholdPreviousThirtyDays = Some(thresholdPreviousThirtyDays)
         ),
+        exceptionOrExemption = "0",
         estimates = TurnoverEstimates(123456),
         customerStatus = MTDfB
       )
@@ -278,6 +279,7 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
         threshold = Threshold(
           mandatoryRegistration = false
         ),
+        exceptionOrExemption = "0",
         estimates = TurnoverEstimates(10001),
         customerStatus = MTDfB
       )

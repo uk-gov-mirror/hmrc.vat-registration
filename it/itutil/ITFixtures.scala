@@ -88,6 +88,7 @@ trait ITFixtures {
 
   val testEligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
     threshold = testThreshold,
+    exceptionOrExemption = "0",
     estimates = TurnoverEstimates(123456),
     customerStatus = MTDfB
   )

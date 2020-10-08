@@ -28,18 +28,4 @@ object EligibilityDataJsonUtils {
   def mongoReads[T](implicit r: Reads[T]): Reads[T] = new Reads[T] {
     override def reads(json: JsValue): JsResult[T] = toJsObject(json).validate[T]
   }
-
-  def readsOfFullJson: Reads[JsObject] = new Reads[JsObject] {
-    override def reads(json: JsValue): JsResult[JsObject] = {
-      val clearedJson = toJsObject(json)
-
-      val turnover = clearedJson.validate[TurnoverEstimates](TurnoverEstimates.eligibilityDataJsonReads)
-      val threshold = clearedJson.validate[Threshold](Threshold.eligibilityDataJsonReads)
-      val customerStatus = clearedJson.validate[CustomerStatus](CustomerStatus.eligibilityDataJsonReads)
-
-      val allBlocks = turnover :: threshold :: customerStatus :: Nil
-
-      allBlocks.map(jsRes => jsRes.map(_ => Json.obj())).find(_.isError).getOrElse(JsSuccess(clearedJson.as[JsObject]))
-    }
-  }
 }

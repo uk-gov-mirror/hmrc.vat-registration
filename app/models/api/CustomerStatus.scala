@@ -44,12 +44,9 @@ object CustomerStatus {
   def unapply(arg: CustomerStatus): Option[String] = Some(arg.value)
 
   val eligibilityDataJsonReads: Reads[CustomerStatus] = Reads { json =>
-    (json \ "customerStatus-value").validateOpt[String].map {
-      case Some(MTDfB.`value`) => MTDfB
-      case Some(MTDfBExempt.`value`) => MTDfBExempt
-      case Some(NonMTDfB.`value`) => NonMTDfB
-      case Some(NonDigital.`value`) => NonDigital
-      case _ => MTDfB //TODO Defaulted to MTDfB for now, update reads once eligibility actually passes the status to the backend
+    (json \ "voluntaryInformation").validate[Boolean].map {
+      case true => MTDfB
+      case false => NonMTDfB
     }
   }
 

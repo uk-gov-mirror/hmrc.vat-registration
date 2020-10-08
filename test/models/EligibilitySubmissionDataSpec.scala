@@ -27,6 +27,8 @@ class EligibilitySubmissionDataSpec extends JsonFormatValidation {
   "eligibilityReads" must {
     "return EligibilitySubmissionData from a valid eligibility json" in {
       val questions = Seq(
+        Json.obj("questionId" -> "voluntaryInformation", "question" -> "testQuestion", "answer" -> "testAnswer",
+          "answerValue" -> true),
         Json.obj("questionId" -> "voluntaryRegistration", "question" -> "testQuestion", "answer" -> "testAnswer",
           "answerValue" -> false),
         Json.obj("questionId" -> "thresholdPreviousThirtyDays-optionalData", "question" -> "testQuestion", "answer" -> "testAnswer",
@@ -54,6 +56,7 @@ class EligibilitySubmissionDataSpec extends JsonFormatValidation {
           thresholdNextThirtyDays = Some(LocalDate.now()),
           thresholdPreviousThirtyDays = Some(LocalDate.now())
         ),
+        exceptionOrExemption = "0",
         estimates = TurnoverEstimates(123456),
         customerStatus = MTDfB
       ))
@@ -71,6 +74,7 @@ class EligibilitySubmissionDataSpec extends JsonFormatValidation {
           "thresholdNextThirtyDays" -> LocalDate.now().toString,
           "thresholdPreviousThirtyDays" -> LocalDate.now().toString
         ),
+        "exceptionOrExemption" -> "0",
         "estimates" -> Json.obj(
           "turnoverEstimate" -> 123456
         ),
@@ -84,6 +88,7 @@ class EligibilitySubmissionDataSpec extends JsonFormatValidation {
           thresholdNextThirtyDays = Some(LocalDate.now()),
           thresholdPreviousThirtyDays = Some(LocalDate.now())
         ),
+        exceptionOrExemption = "0",
         estimates = TurnoverEstimates(123456),
         customerStatus = MTDfB
       ))
@@ -101,6 +106,7 @@ class EligibilitySubmissionDataSpec extends JsonFormatValidation {
           thresholdNextThirtyDays = Some(LocalDate.now()),
           thresholdPreviousThirtyDays = Some(LocalDate.now())
         ),
+        exceptionOrExemption = "0",
         estimates = TurnoverEstimates(123456),
         customerStatus = MTDfB
       )
@@ -112,6 +118,7 @@ class EligibilitySubmissionDataSpec extends JsonFormatValidation {
           "thresholdNextThirtyDays" -> LocalDate.now().toString,
           "thresholdPreviousThirtyDays" -> LocalDate.now().toString
         ),
+        "exceptionOrExemption" -> "0",
         "estimates" -> Json.obj(
           "turnoverEstimate" -> 123456
         ),

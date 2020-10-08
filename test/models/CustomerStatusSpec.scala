@@ -23,27 +23,41 @@ import utils.EligibilityDataJsonUtils
 class CustomerStatusSpec extends JsonFormatValidation {
 
   "eligibilityDataJsonReads" must {
-    def json(status: CustomerStatus): JsValue = Json.parse(
-      s"""{
-         |  "sections": [
-         |   {
-         |     "title": "testTitle",
-         |     "data": [
-         |       {"questionId": "customerStatus-value","question": "testQuestion", "answer": "testAnswer", "answerValue": "${status.value}"}
-         |     ]
-         |   }
-         | ]
-         | }""".stripMargin
-    )
-
     def parser(json: JsValue): JsResult[CustomerStatus] =
       Json.fromJson[CustomerStatus](EligibilityDataJsonUtils.toJsObject(json))(CustomerStatus.eligibilityDataJsonReads)
 
-    "successfully parse valid json into the right type" in {
-      parser(json(MTDfBExempt)) mustBe JsSuccess(MTDfBExempt)
-      parser(json(MTDfB)) mustBe JsSuccess(MTDfB)
-      parser(json(NonMTDfB)) mustBe JsSuccess(NonMTDfB)
-      parser(json(NonDigital)) mustBe JsSuccess(NonDigital)
+    "successfully parse valid json into the right type for MTDfB" in {
+      val json: JsValue = Json.parse(
+        s"""{
+           |  "sections": [
+           |   {
+           |     "title": "testTitle",
+           |     "data": [
+           |       {"questionId": "voluntaryInformation","question": "testQuestion", "answer": "testAnswer", "answerValue": true}
+           |     ]
+           |   }
+           | ]
+           | }""".stripMargin
+      )
+
+      parser(json) mustBe JsSuccess(MTDfB)
+    }
+
+    "successfully parse valid json into the right type for NonMTDfB" in {
+      val json: JsValue = Json.parse(
+        s"""{
+           |  "sections": [
+           |   {
+           |     "title": "testTitle",
+           |     "data": [
+           |       {"questionId": "voluntaryInformation","question": "testQuestion", "answer": "testAnswer", "answerValue": false}
+           |     ]
+           |   }
+           | ]
+           | }""".stripMargin
+      )
+
+      parser(json) mustBe JsSuccess(NonMTDfB)
     }
   }
 

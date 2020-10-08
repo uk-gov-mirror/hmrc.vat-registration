@@ -16,7 +16,7 @@
 
 package fixtures
 
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 
 trait VatSubmissionFixture {
 
@@ -26,7 +26,7 @@ trait VatSubmissionFixture {
       |  "messageType": "SubmissionCreate",
       |  "admin": {
       |    "additionalInformation": {
-      |      "customerStatus": "3"
+      |      "customerStatus": "2"
       |    },
       |    "attachments": {
       |      "EORIRequested": true
@@ -99,13 +99,21 @@ trait VatSubmissionFixture {
       |  },
       |  "subscription": {
       |    "corporateBodyRegistered": {
-      |      "dateOfIncorporation": "2020-01-02",
-      |      "companyRegistrationNumber": "testCrn"
+      |        "companyRegistrationNumber": "testCrn",
+      |        "dateOfIncorporation": "2020-01-02"
+      |    },
+      |    "reasonForSubscription": {
+      |        "exemptionOrException": "0",
+      |        "registrationReason": "0016",
+      |        "relevantDate": "2020-10-07"
       |    },
       |    "schemes": {
-      |      "startDate": "2018-01-01",
-      |      "FRSCategory": "testCategory",
-      |      "FRSPercentage": 15
+      |        "FRSCategory": "testCategory",
+      |        "FRSPercentage": 15,
+      |        "startDate": "2018-01-01"
+      |    },
+      |    "yourTurnover": {
+      |        "turnoverNext12Months": 123456
       |    }
       |  },
       |  "bankDetails": {
@@ -138,11 +146,10 @@ trait VatSubmissionFixture {
       |  }
       |}""".stripMargin)
 
-  val mongoJson = Json.parse(
+  val mongoJson: JsValue = Json.parse(
     """
       |{
       |  "messageType": "SubmissionCreate",
-      |  "customerStatus": "3",
       |  "tradersPartyType": "50",
       |  "primeBPSafeId": "12345678901234567890",
       |  "confirmInformationDeclaration": true,
@@ -231,6 +238,19 @@ trait VatSubmissionFixture {
       |    "startDate": "2018-01-01",
       |    "categoryOfBusiness": "testCategory",
       |    "percent": 15
+      |  },
+      |  "eligibilitySubmissionData": {
+      |    "customerStatus": "2",
+      |    "estimates": {
+      |        "turnoverEstimate": 123456
+      |    },
+      |    "exceptionOrExemption": "0",
+      |    "threshold": {
+      |        "mandatoryRegistration": true,
+      |        "thresholdInTwelveMonths": "2020-10-07",
+      |        "thresholdNextThirtyDays": "2020-10-07",
+      |        "thresholdPreviousThirtyDays": "2020-10-07"
+      |    }
       |  }
       |}""".stripMargin)
 
