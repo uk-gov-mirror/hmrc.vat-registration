@@ -40,7 +40,8 @@ trait ITFixtures {
     reclaimVatOnMostReturns = true,
     frequency = "quarterly",
     staggerStart = Some("jan"),
-    start = startDate
+    start = startDate,
+    zeroRatedSupplies = Some(12.99)
   )
 
   val frsDetails = FRSDetails(

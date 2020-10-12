@@ -82,7 +82,7 @@ trait ITVatSubmissionFixture {
       |      }
       |    }
       |  },
-  "subscription": {
+      |  "subscription": {
       |    "corporateBodyRegistered": {
       |        "companyRegistrationNumber": "testCrn",
       |        "dateOfIncorporation": "2020-01-02"
@@ -98,7 +98,8 @@ trait ITVatSubmissionFixture {
       |        "startDate": "2018-01-01"
       |    },
       |    "yourTurnover": {
-      |        "turnoverNext12Months": 123456
+      |        "turnoverNext12Months": 123456,
+      |        "zeroRatedSupplies": 12.99
       |    }
       |  },
       |  "bankDetails": {
@@ -130,6 +131,7 @@ trait ITVatSubmissionFixture {
       |      "countryCode": "foo"
       |    }
       |  }
-      |}""".stripMargin)
+      |}
+      |""".stripMargin)
 
 }

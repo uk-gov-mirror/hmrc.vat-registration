@@ -36,7 +36,8 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
        |  "staggerStart" : "jan",
        |  "start" : {
        |    "date" : "$dateValue"
-       |  }
+       |  },
+       |  "zeroRatedSupplies": 12.99
        |}
         """.stripMargin).as[JsObject]
 
@@ -56,35 +57,40 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
     reclaimVatOnMostReturns = true,
     "quarterly",
     Some("month"),
-    date
+    date,
+    None
   )
 
   val invalidFrequencyReturns: Returns = Returns(
     reclaimVatOnMostReturns = true,
     "whatever",
     Some("jan"),
-    date
+    date,
+    None
   )
 
   val fullReturns: Returns = Returns(
     reclaimVatOnMostReturns = true,
     "quarterly",
     Some("jan"),
-    date
+    date,
+    Some(12.99)
   )
 
   val missingOptionsReturns: Returns = Returns(
     reclaimVatOnMostReturns = true,
     "quarterly",
     None,
-    date
+    date,
+    Some(12.99)
   )
 
   val invalidValidationReturns: Returns = Returns(
     reclaimVatOnMostReturns = true,
     "whatever",
     Some("month"),
-    date
+    date,
+    None
   )
 
   "Parsing Returns" should {
@@ -103,7 +109,8 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
              |  "frequency" : "quarterly",
              |  "start" : {
              |    "date" : "$dateValue"
-             |  }
+             |  },
+             |  "zeroRatedSupplies": 12.99
              |}
         """.stripMargin)
         Json.fromJson[Returns](json) mustBe JsSuccess(fullReturns.copy(staggerStart = None))
@@ -165,6 +172,7 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
       }
     }
   }
+
   "TurnoverEstimates mongoReads" must {
     "return model successfully when turnoverEstimate-value exists" in {
       val json = Json.parse(
@@ -208,4 +216,6 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
       result.isError mustBe true
     }
   }
+
+
 }

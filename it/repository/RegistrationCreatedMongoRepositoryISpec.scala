@@ -94,7 +94,8 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
        |    "staggerStart":"jan",
        |    "start":{
        |      "date":"$testDate"
-       |    }
+       |    },
+       |    "zeroRatedSupplies": 12.99
        |  }
        |}
      """.stripMargin).as[JsObject]
@@ -418,7 +419,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
     val dateValue = LocalDate of(1990, 10, 10)
     val startDate = StartDate(Some(dateValue))
 
-    val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN), startDate)
+    val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN), startDate, Some(12.99))
 
     val vatSchemeWithReturns = Json.parse(
       s"""
@@ -431,7 +432,8 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
          |   "staggerStart":"$JAN",
          |   "start":{
          |     "date":"$dateValue"
-         |   }
+         |   },
+         |   "zeroRatedSupplies": 12.99
          | }
          |}
       """.stripMargin).as[JsObject]

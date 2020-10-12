@@ -29,7 +29,8 @@ object StartDate {
 case class Returns(reclaimVatOnMostReturns: Boolean,
                    frequency: String,
                    staggerStart: Option[String],
-                   start: StartDate)
+                   start: StartDate,
+                   zeroRatedSupplies: Option[BigDecimal])
 
 object Returns extends VatAccountingPeriodValidator {
   implicit val format: Format[Returns] = Json.format[Returns]

@@ -171,7 +171,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
     "fetchReturns" should {
       val registrationId = "reg-12345"
       val date = StartDate(Some(LocalDate.of(2017, 1, 1)))
-      val returns = Returns(true, "quarterly", Some("jan"), date)
+      val returns = Returns(true, "quarterly", Some("jan"), date, None)
 
       val expected = Json.obj(
         "reclaimVatOnMostReturns" -> true,
@@ -206,7 +206,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
 
       val registrationId = "reg-12345"
       val startDate = StartDate(Some(LocalDate of(1990, 10, 10)))
-      val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN), startDate)
+      val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN), startDate, None)
 
       "return a 200 if the update to mongo is successful" in new Setup {
         AuthorisationMocks.mockAuthorised(testRegId, testInternalid)

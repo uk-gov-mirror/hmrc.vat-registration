@@ -30,7 +30,8 @@ case class VatSubmission(messageType: String = "SubscriptionCreate",
                          businessContact: BusinessContact,
                          tradingDetails: TradingDetails,
                          flatRateScheme: Option[FRSDetails],
-                         eligibilitySubmissionData: EligibilitySubmissionData)
+                         eligibilitySubmissionData: EligibilitySubmissionData,
+                         zeroRatedSupplies: BigDecimal)
 
 object VatSubmission {
   val submissionFormat: OFormat[VatSubmission] = (
@@ -48,15 +49,16 @@ object VatSubmission {
     (__ \ "contact").format[BusinessContact](BusinessContact.submissionFormat) and
     (__).format[TradingDetails](TradingDetails.submissionFormat) and
     (__ \ "subscription" \ "schemes").formatNullable[FRSDetails](FRSDetails.submissionFormat) and
-    (__).format[EligibilitySubmissionData](EligibilitySubmissionData.submissionFormat)
+    (__).format[EligibilitySubmissionData](EligibilitySubmissionData.submissionFormat) and
+    (__ \ "subscription" \ "yourTurnover" \ "zeroRatedSupplies").format[BigDecimal]
     )(VatSubmission.apply, unlift(VatSubmission.unapply))
 
   implicit val mongoFormat: OFormat[VatSubmission] = Json.format[VatSubmission]
 
   def fromVatScheme(scheme: VatScheme): VatSubmission = {
     (scheme.eligibilitySubmissionData, scheme.applicantDetails, scheme.bankAccount,
-      scheme.sicAndCompliance, scheme.businessContact, scheme.tradingDetails, scheme.flatRateScheme) match {
-      case (Some(eligibilityData), Some(applicant), bankAcc, Some(sicAndCompliance), Some(contact), Some(trading), frs) =>
+      scheme.sicAndCompliance, scheme.businessContact, scheme.tradingDetails, scheme.flatRateScheme, scheme.returns.flatMap(_.zeroRatedSupplies)) match {
+      case (Some(eligibilityData), Some(applicant), bankAcc, Some(sac), Some(contact), Some(trading), frs, Some(zrs)) =>
         VatSubmission(
           tradersPartyType = None,
           primeBPSafeId = None,
@@ -64,11 +66,12 @@ object VatSubmission {
           companyRegistrationNumber = Some("CRN"),
           applicantDetails = applicant,
           bankDetails = bankAcc,
-          sicAndCompliance = sicAndCompliance,
+          sicAndCompliance = sac,
           businessContact = contact,
           tradingDetails = trading,
           flatRateScheme = frs.flatMap(_.frsDetails),
-          eligibilitySubmissionData = eligibilityData
+          eligibilitySubmissionData = eligibilityData,
+          zeroRatedSupplies = zrs
         )
       case _ =>
         throw new IllegalStateException("Vat scheme missing required sections")
