@@ -57,7 +57,7 @@ class DesConnectorSpec extends PlaySpec with VatRegSpec with MockitoSugar with H
     Some(true),
     Some("testCrn"),
     validApplicantDetails,
-    Some(testBankDetails),
+    Some(testBankAccount),
     testSicAndCompliance.get,
     testBusinessContact.get,
     validFullTradingDetails,

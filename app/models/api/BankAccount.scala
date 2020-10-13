@@ -29,6 +29,45 @@ case class BankAccountDetails(name: String,
 
 object BankAccount {
   implicit val format: Format[BankAccount] = Json.format[BankAccount]
+
+  def submissionReads(optJson: Option[JsValue]): Option[BankAccount] = {
+    optJson match {
+      case Some(json) =>
+        val bankNameResult = (json \ "UK" \ "accountName").validate[String]
+        val sortCodeResult = (json \ "UK" \ "sortCode").validate[String]
+        val accNumberResult = (json \ "UK" \ "accountNumber").validate[String]
+        val reasonNoAccount = (json \ "UK" \ "reasonBankAccNotProvided").validate[String]
+
+        (bankNameResult, sortCodeResult, accNumberResult) match {
+          case (JsSuccess(name, _), JsSuccess(sortCode, _), JsSuccess(accNumber, _)) =>
+            Some(BankAccount(isProvided = true, details = Some(BankAccountDetails(name, sortCode, accNumber))))
+          case _ if reasonNoAccount.isSuccess =>
+            Some(BankAccount(isProvided = false, details = None))
+          case _ =>
+            throw new Exception("Could not parse bank details")
+        }
+      case None =>
+        Some(BankAccount(isProvided = false, details = None))
+    }
+
+  }
+
+  def submissionWrites(optBankAccount: Option[BankAccount]): Option[JsValue] = {
+    optBankAccount match {
+      case Some(BankAccount(true, Some(details))) =>
+        Some(Json.obj("UK" -> Json.obj(
+          "accountName" -> details.name,
+          "sortCode" -> details.sortCode,
+          "accountNumber" -> details.number
+        )))
+      case _ =>
+        Some(Json.obj(
+          "UK" -> Json.obj(
+            "reasonBankAccNotProvided" -> "1"
+          )
+        ))
+    }
+  }
 }
 
 object BankAccountDetails extends VatBankAccountValidator {
@@ -39,21 +78,6 @@ object BankAccountDetails extends VatBankAccountValidator {
     (__ \ "UK" \ "sortCode").format[String] and
     (__ \ "UK" \ "accountNumber").format[String]
   )(BankAccountDetails.apply, unlift(BankAccountDetails.unapply))
-
-  def submissionWrites(optBankDetails: Option[BankAccountDetails]): JsValue =
-    optBankDetails.map( bd =>
-      Json.obj("UK" -> Json.obj(
-        "accountName" -> bd.name,
-        "sortCode" -> bd.sortCode,
-        "accountNumber" -> bd.number
-      ))
-    ) getOrElse (
-      Json.obj(
-      "UK" -> Json.obj(
-        "reasonBankAccNotProvided" -> "1"
-        )
-      )
-    )
 
   val submissionReads: Reads[BankAccountDetails] = (
     (__ \ "UK" \ "accountName").read[String] and
