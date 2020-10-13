@@ -184,9 +184,12 @@ trait VatSubmissionFixture {
       |    }
       |  },
       |  "bankDetails": {
-      |    "name": "Test Bank Account",
-      |    "sortCode": "010203",
-      |    "number": "01023456"
+      |    "isProvided": true,
+      |    "details": {
+      |      "name": "Test Bank Account",
+      |      "sortCode": "010203",
+      |      "number": "01023456"
+      |    }
       |  },
       |  "sicAndCompliance": {
       |    "businessDescription": "this is my business description",
@@ -240,17 +243,17 @@ trait VatSubmissionFixture {
       |    "percent": 15
       |  },
       |  "eligibilitySubmissionData": {
-      |    "customerStatus": "2",
-      |    "estimates": {
-      |        "turnoverEstimate": 123456
+      |    "threshold": {
+      |      "mandatoryRegistration": true,
+      |      "thresholdPreviousThirtyDays": "2020-10-07",
+      |      "thresholdInTwelveMonths": "2020-10-07",
+      |      "thresholdNextThirtyDays": "2020-10-07"
       |    },
       |    "exceptionOrExemption": "0",
-      |    "threshold": {
-      |        "mandatoryRegistration": true,
-      |        "thresholdInTwelveMonths": "2020-10-07",
-      |        "thresholdNextThirtyDays": "2020-10-07",
-      |        "thresholdPreviousThirtyDays": "2020-10-07"
-      |    }
+      |    "estimates": {
+      |      "turnoverEstimate": 123456
+      |    },
+      |    "customerStatus": "2"
       |  }
       |}""".stripMargin)
 

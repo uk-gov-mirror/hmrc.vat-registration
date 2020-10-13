@@ -25,7 +25,7 @@ case class VatSubmission(messageType: String = "SubscriptionCreate",
                          confirmInformationDeclaration: Option[Boolean],
                          companyRegistrationNumber: Option[String],
                          applicantDetails: ApplicantDetails,
-                         bankDetails: Option[BankAccountDetails],
+                         bankDetails: Option[BankAccount],
                          sicAndCompliance: SicAndCompliance,
                          businessContact: BusinessContact,
                          tradingDetails: TradingDetails,
@@ -40,9 +40,9 @@ object VatSubmission {
     (__ \ "declaration" \ "declarationSigning" \ "confirmInformationDeclaration").formatNullable[Boolean] and
     (__ \ "subscription" \ "corporateBodyRegistered" \ "companyRegistrationNumber").formatNullable[String] and
     (__).format[ApplicantDetails](ApplicantDetails.submissionFormat) and
-    (__ \ "bankDetails").formatNullable[JsValue].inmap[Option[BankAccountDetails]](
-      _.map(BankAccountDetails.submissionReads.reads(_).get),
-      bd => Some(BankAccountDetails.submissionWrites(bd))
+    (__ \ "bankDetails").formatNullable[JsValue].inmap[Option[BankAccount]](
+      a => BankAccount.submissionReads(a),
+      b => BankAccount.submissionWrites(b)
     ) and
     (__ \ "businessActivities").format[SicAndCompliance](SicAndCompliance.submissionFormat) and
     (__ \ "contact").format[BusinessContact](BusinessContact.submissionFormat) and
@@ -63,7 +63,7 @@ object VatSubmission {
           confirmInformationDeclaration = Some(true),
           companyRegistrationNumber = Some("CRN"),
           applicantDetails = applicant,
-          bankDetails = bankAcc.flatMap(_.details),
+          bankDetails = bankAcc,
           sicAndCompliance = sicAndCompliance,
           businessContact = contact,
           tradingDetails = trading,

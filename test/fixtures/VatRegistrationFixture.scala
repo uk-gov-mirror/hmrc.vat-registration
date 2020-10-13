@@ -91,6 +91,7 @@ trait VatRegistrationFixture {
   ))
 
   val testBankAccount = BankAccount(true, Some(testBankDetails))
+  val testBankAccountNotProvided = BankAccount(false, None)
 
   val validFullFRSDetails: FRSDetails =
     FRSDetails(
@@ -120,7 +121,7 @@ trait VatRegistrationFixture {
     confirmInformationDeclaration = Some(true),
     companyRegistrationNumber = Some("CRN"),
     applicantDetails = validApplicantDetails,
-    bankDetails = Some(testBankDetails),
+    bankDetails = Some(testBankAccount),
     sicAndCompliance = testSicAndCompliance.get,
     businessContact = testBusinessContact.get,
     tradingDetails = validFullTradingDetails,
