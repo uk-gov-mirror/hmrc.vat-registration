@@ -22,15 +22,17 @@ import play.api.libs.json.Reads._
 
 case class DigitalContactOptional(email: Option[String] = None,
                                   tel: Option[String] = None,
-                                  mobile: Option[String] = None)
+                                  mobile: Option[String] = None,
+                                  emailVerified: Option[Boolean] = None)
 
 object DigitalContactOptional extends VatDigitalContactValidator {
   implicit val format: Format[DigitalContactOptional] = new Format[DigitalContactOptional] {
     val defaultFormat: Format[DigitalContactOptional] = (
       (__ \ "email").formatNullable[String](readToFmt(maxLength[String](70) keepAnd email)) and
-        (__ \ "tel").formatNullable[String](telValidator) and
-        (__ \ "mobile").formatNullable[String](mobileValidator)
-      )(DigitalContactOptional.apply, unlift(DigitalContactOptional.unapply))
+      (__ \ "tel").formatNullable[String](telValidator) and
+      (__ \ "mobile").formatNullable[String](mobileValidator) and
+      (__ \ "emailVerified").formatNullable[Boolean]
+    )(DigitalContactOptional.apply, unlift(DigitalContactOptional.unapply))
 
     override def reads(json: JsValue): JsResult[DigitalContactOptional] = {
       if (json.equals(Json.obj())) {
@@ -46,6 +48,7 @@ object DigitalContactOptional extends VatDigitalContactValidator {
   val submissionFormat: Format[DigitalContactOptional] = (
     (__ \ "email").formatNullable[String] and
     (__ \ "telephone").formatNullable[String] and
-    (__ \ "mobileNumber").formatNullable[String]
+    (__ \ "mobileNumber").formatNullable[String] and
+    (__ \ "emailVerified").formatNullable[Boolean]
   )(DigitalContactOptional.apply, unlift(DigitalContactOptional.unapply))
 }
