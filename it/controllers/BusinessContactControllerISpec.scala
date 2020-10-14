@@ -3,7 +3,7 @@ package controllers
 
 import auth.CryptoSCRS
 import itutil.IntegrationStubbing
-import models.api.{Address, BusinessContact, DigitalContact, VatScheme}
+import models.api.{Address, BusinessContact, DigitalContact, Letter, VatScheme}
 import play.api.libs.json.{JsObject, Json}
 import play.api.libs.ws.WSResponse
 import play.api.test.Helpers._
@@ -19,7 +19,8 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
   val validBusinessContact: Option[BusinessContact] = Some(BusinessContact(
     digitalContact = DigitalContact("email@email.com",Some("12345"),Some("54321")),
     website = Some("www.foo.com"),
-    ppob = Address("line1","line2",None,None,None,Some("foo"))
+    ppob = Address("line1","line2",None,None,None,Some("foo")),
+    commsPreference = Letter
   ))
 
   val validBusinessContactJson: JsObject = Json.parse(
@@ -34,7 +35,8 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
        |"line1": "line1",
        |"line2": "line2",
        |"country": "foo"
-       | }
+       | },
+       | "commsPreference": "Letter"
        |}
        |
      """.stripMargin
@@ -52,7 +54,8 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
        |"line1": "line1a",
        |"line2": "line2b",
        |"country": "foobar"
-       | }
+       | },
+       | "commsPreference": "Email"
        |}
        |
      """.stripMargin

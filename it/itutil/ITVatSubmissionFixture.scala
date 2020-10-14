@@ -121,7 +121,8 @@ trait ITVatSubmissionFixture {
       |      "webAddress": "www.foo.com",
       |      "mobile": "54321",
       |      "tel": "12345",
-      |      "email": "email@email.com"
+      |      "email": "email@email.com",
+      |      "commsPreference": "P01"
       |    },
       |    "address": {
       |      "line1": "line1",
