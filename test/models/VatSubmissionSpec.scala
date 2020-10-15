@@ -18,7 +18,7 @@ package models
 
 import fixtures.{VatRegistrationFixture, VatSubmissionFixture}
 import helpers.BaseSpec
-import models.api.{BankAccount, MTDfB, SicAndCompliance, SicCode, VatSubmission}
+import models.api.{BankAccount, MTDfB, Returns, SicAndCompliance, SicCode, VatSubmission}
 import play.api.libs.json.{JsSuccess, Json}
 
 class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegistrationFixture with VatSubmissionFixture {
@@ -43,7 +43,8 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
     testBusinessContact.get,
     validFullTradingDetails,
     Some(validFullFRSDetails),
-    testEligibilitySubmissionData
+    testEligibilitySubmissionData,
+    zeroRatedSupplies
   )
 
   "converting a VatSubmission model into Json" should {
@@ -80,7 +81,8 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
         testBusinessContact.get,
         validFullTradingDetails,
         Some(validFullFRSDetails),
-        testEligibilitySubmissionData
+        testEligibilitySubmissionData,
+        zeroRatedSupplies
       )
 
       val res = Json.toJson(vatSubmissionWithoutBank)(VatSubmission.submissionFormat)
@@ -121,7 +123,8 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
         sicAndCompliance = testSicAndCompliance,
         flatRateScheme = Some(validFullFlatRateScheme),
         tradingDetails = Some(validFullTradingDetails),
-        eligibilitySubmissionData = Some(testEligibilitySubmissionData)
+        eligibilitySubmissionData = Some(testEligibilitySubmissionData),
+        returns = Some(testReturns.copy(zeroRatedSupplies = Some(zeroRatedSupplies)))
       )
 
       val res = VatSubmission.fromVatScheme(scheme)
@@ -137,7 +140,8 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
         businessContact = testBusinessContact.get,
         tradingDetails = validFullTradingDetails,
         flatRateScheme = validFullFlatRateScheme.frsDetails,
-        eligibilitySubmissionData = testEligibilitySubmissionData
+        eligibilitySubmissionData = testEligibilitySubmissionData,
+        zeroRatedSupplies = zeroRatedSupplies
       )
     }
 

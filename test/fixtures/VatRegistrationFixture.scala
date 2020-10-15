@@ -51,6 +51,8 @@ trait VatRegistrationFixture {
   val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
   val testBankDetails = BankAccountDetails("Test Bank Account", "010203", "01023456")
   val testFormerName = FormerName(Some(testName), Some(testDate))
+  val testReturns = Returns(false, "", None, StartDate(None), None)
+  val zeroRatedSupplies: BigDecimal = 12.99
 
   val testEligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
     threshold = testMandatoryThreshold,
@@ -113,7 +115,8 @@ trait VatRegistrationFixture {
     bankAccount = Some(testBankAccount),
     flatRateScheme = Some(validFullFlatRateScheme),
     applicantDetails = Some(validApplicantDetails),
-    eligibilitySubmissionData = Some(testEligibilitySubmissionData)
+    eligibilitySubmissionData = Some(testEligibilitySubmissionData),
+    returns = Some(testReturns.copy(zeroRatedSupplies = Some(zeroRatedSupplies)))
   )
 
   val testFullSubmission: VatSubmission = VatSubmission(
@@ -127,7 +130,8 @@ trait VatRegistrationFixture {
     businessContact = testBusinessContact.get,
     tradingDetails = validFullTradingDetails,
     flatRateScheme = Some(validFullFRSDetails),
-    eligibilitySubmissionData = testEligibilitySubmissionData
+    eligibilitySubmissionData = testEligibilitySubmissionData,
+    zeroRatedSupplies = zeroRatedSupplies
   )
 
   val validBusinessContactJson = Json.parse(

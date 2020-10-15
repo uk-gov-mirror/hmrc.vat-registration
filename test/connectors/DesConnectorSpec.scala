@@ -62,7 +62,8 @@ class DesConnectorSpec extends PlaySpec with VatRegSpec with MockitoSugar with H
     testBusinessContact.get,
     validFullTradingDetails,
     Some(validFullFRSDetails),
-    testEligibilitySubmissionData
+    testEligibilitySubmissionData,
+    19.99
   )
 
   val upstream4xx: Upstream4xxResponse = Upstream4xxResponse("400", 400, 400)

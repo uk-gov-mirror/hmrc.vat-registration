@@ -113,7 +113,8 @@ trait VatSubmissionFixture {
       |        "startDate": "2018-01-01"
       |    },
       |    "yourTurnover": {
-      |        "turnoverNext12Months": 123456
+      |        "turnoverNext12Months": 123456,
+      |        "zeroRatedSupplies": 12.99
       |    }
       |  },
       |  "bankDetails": {
@@ -256,7 +257,8 @@ trait VatSubmissionFixture {
       |      "turnoverEstimate": 123456
       |    },
       |    "customerStatus": "2"
-      |  }
+      |  },
+      |  "zeroRatedSupplies": 12.99
       |}""".stripMargin)
 
 }
