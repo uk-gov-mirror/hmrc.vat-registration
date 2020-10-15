@@ -80,7 +80,7 @@ trait ITFixtures {
     previousAddress = None
   )
 
-  val testBusinessContactDetails = BusinessContact(digitalContact = testContactDetails, website = None, ppob = testAddress)
+  val testBusinessContactDetails = BusinessContact(digitalContact = testContactDetails, website = None, ppob = testAddress, commsPreference = Email)
   val testSicAndCompliance = SicAndCompliance("businessDesc", Some(ComplianceLabour(1, Some(true), Some(true))), SicCode("12345", "sicDesc", "sicDetail"), List(SicCode("12345", "sicDesc", "sicDetail")))
   val testTurnoverEstimates = TurnoverEstimates(12345678L)
   val testBankDetails = BankAccount(true, None)

@@ -87,7 +87,8 @@ trait VatRegistrationFixture {
   val testBusinessContact = Some(BusinessContact(
     digitalContact = DigitalContact("email@email.com", Some("12345"), Some("54321")),
     website = Some("www.foo.com"),
-    ppob = Address("line1", "line2", None, None, None, Some("foo"))
+    ppob = Address("line1", "line2", None, None, None, Some("foo")),
+    commsPreference = Email
   ))
 
   val testBankAccount = BankAccount(true, Some(testBankDetails))
@@ -141,7 +142,8 @@ trait VatRegistrationFixture {
        |"line1": "line1",
        |"line2": "line2",
        |"country": "foo"
-       | }
+       | },
+       | "commsPreference": "Email"
        |}
        |
      """.stripMargin

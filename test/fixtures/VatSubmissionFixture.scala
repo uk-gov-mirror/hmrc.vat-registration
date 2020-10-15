@@ -136,7 +136,8 @@ trait VatSubmissionFixture {
       |      "webAddress": "www.foo.com",
       |      "mobile": "54321",
       |      "tel": "12345",
-      |      "email": "email@email.com"
+      |      "email": "email@email.com",
+      |      "commsPreference": "ZEL"
       |    },
       |    "address": {
       |      "line1": "line1",
@@ -227,7 +228,8 @@ trait VatSubmissionFixture {
       |      "line1": "line1",
       |      "line2": "line2",
       |      "country": "foo"
-      |    }
+      |    },
+      |    "commsPreference": "Email"
       |  },
       |  "tradingDetails": {
       |    "tradingName": "trading-name",
