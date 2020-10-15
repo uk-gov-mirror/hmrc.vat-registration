@@ -36,7 +36,7 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
        |"line2": "line2",
        |"country": "foo"
        | },
-       | "commsPreference": "Letter"
+       | "contactPreference": "Letter"
        |}
        |
      """.stripMargin
@@ -55,7 +55,7 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
        |"line2": "line2b",
        |"country": "foobar"
        | },
-       | "commsPreference": "Email"
+       | "contactPreference": "Email"
        |}
        |
      """.stripMargin

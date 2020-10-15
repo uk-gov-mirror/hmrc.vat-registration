@@ -30,8 +30,8 @@ object BusinessContact {
     (__ \ "digitalContact").format[DigitalContact] and
     (__ \ "website").formatNullable[String] and
     (__ \ "ppob").format[Address] and
-    (__ \ "commsPreference").format[ContactPreference]
-    )(BusinessContact.apply, unlift(BusinessContact.unapply))
+    (__ \ "contactPreference").format[ContactPreference]
+  )(BusinessContact.apply, unlift(BusinessContact.unapply))
 
   val submissionFormat: Format[BusinessContact] = (
     (__ \ "commDetails").format[DigitalContact] and

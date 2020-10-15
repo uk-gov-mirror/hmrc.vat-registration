@@ -143,7 +143,7 @@ trait VatRegistrationFixture {
        |"line2": "line2",
        |"country": "foo"
        | },
-       | "commsPreference": "Email"
+       | "contactPreference": "Email"
        |}
        |
      """.stripMargin

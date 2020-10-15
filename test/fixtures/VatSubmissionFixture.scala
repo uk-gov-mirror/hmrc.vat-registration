@@ -229,7 +229,7 @@ trait VatSubmissionFixture {
       |      "line2": "line2",
       |      "country": "foo"
       |    },
-      |    "commsPreference": "Email"
+      |    "contactPreference": "Email"
       |  },
       |  "tradingDetails": {
       |    "tradingName": "trading-name",
