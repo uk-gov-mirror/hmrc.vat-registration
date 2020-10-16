@@ -34,10 +34,10 @@ class EligibilityService @Inject()(val registrationRepository: RegistrationMongo
     EligibilityDataJsonUtils.toJsObject(eligibilityData)
       .validate[EligibilitySubmissionData](EligibilitySubmissionData.eligibilityReads).fold(
       invalid => throw JsResultException(invalid),
-      eligibilitySubmissionData => {
-        registrationRepository.updateEligibilitySubmissionData(regId, eligibilitySubmissionData)
-        registrationRepository.updateEligibilityData(regId, eligibilityData)
-      }
+      eligibilitySubmissionData => for {
+        _ <- registrationRepository.updateEligibilitySubmissionData(regId, eligibilitySubmissionData)
+        result <- registrationRepository.updateEligibilityData(regId, eligibilityData)
+      } yield result
     )
   }
 }

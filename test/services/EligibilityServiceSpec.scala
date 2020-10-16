@@ -77,6 +77,8 @@ class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
     val eligibilityData = Json.obj("sections" -> sections)
 
     "return the data that is being provided" in new Setup {
+      when(mockRegistrationMongoRepository.updateEligibilitySubmissionData(any(), any())(any()))
+        .thenReturn(Future.successful(testEligibilitySubmissionData))
       when(mockRegistrationMongoRepository.updateEligibilityData(any(), any())(any()))
         .thenReturn(Future.successful(eligibilityData))
 
@@ -92,7 +94,16 @@ class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
       intercept[JsResultException](await(service.updateEligibilityData("regId", incorrectEligibilityData)))
     }
 
+    "encounter an exception if an error occurs during eligibility submission data update" in new Setup {
+      when(mockRegistrationMongoRepository.updateEligibilitySubmissionData(any(), any())(any()))
+        .thenReturn(Future.failed(new Exception("")))
+
+      intercept[Exception](await(service.updateEligibilityData("regId", eligibilityData)))
+    }
+
     "encounter an exception if an error occurs" in new Setup {
+      when(mockRegistrationMongoRepository.updateEligibilitySubmissionData(any(), any())(any()))
+        .thenReturn(Future.successful(testEligibilitySubmissionData))
       when(mockRegistrationMongoRepository.updateEligibilityData(any(), any())(any()))
         .thenReturn(Future.failed(new Exception("")))
 
