@@ -24,8 +24,7 @@ trait ApplicantDetailsHelper {
 
   implicit class ApplicantDetailsWriter(applicantDetails: ApplicantDetails) {
     def personalIdentifiers: List[CustomerId] = List(
-      CustomerId(applicantDetails.nino, NinoIdType, Some(IdVerified), date = Some(applicantDetails.dateOfBirth.date)),
-      CustomerId(applicantDetails.companyNumber, CrnIdType, Some(IdVerified), date = Some(applicantDetails.dateOfIncorporation))
+      CustomerId(applicantDetails.nino, NinoIdType, Some(IdVerified), date = Some(applicantDetails.dateOfBirth.date))
     )
 
     def companyIdentifiers: List[CustomerId] = List(

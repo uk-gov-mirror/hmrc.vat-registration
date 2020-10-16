@@ -48,6 +48,8 @@ case object LtdPartnership extends PartyType
 
 case object UnincorpAssoc extends PartyType
 
+case object TaxGroups extends PartyType
+
 case object AdminDivision extends PartyType
 
 case object Individual extends PartyType
@@ -70,7 +72,8 @@ object PartyType {
     Partnership -> "61",
     LtdPartnership -> "62",
     UnincorpAssoc -> "63",
-    AdminDivision -> "64",
+    TaxGroups -> "64",
+    AdminDivision -> "65",
     Individual -> "Z1"
   )
 

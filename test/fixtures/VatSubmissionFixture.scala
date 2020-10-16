@@ -44,12 +44,12 @@ trait VatSubmissionFixture {
       |      {
       |        "idValue": "testCtUtr",
       |        "idType": " UTR",
-      |        "IDsVerificationStatus": "Verified"
+      |        "IDsVerificationStatus": "1"
       |      },
       |      {
       |        "idValue": "testCrn",
       |        "idType": "CRN",
-      |        "IDsVerificationStatus": "Verified",
+      |        "IDsVerificationStatus": "1",
       |        "date": "2020-01-02"
       |      }
       |    ],
@@ -74,14 +74,8 @@ trait VatSubmissionFixture {
       |        {
       |          "idValue": "AB123456A",
       |          "idType": "NINO",
-      |          "IDsVerificationStatus": "Verified",
+      |          "IDsVerificationStatus": "1",
       |          "date": "2018-01-01"
-      |        },
-      |        {
-      |          "idValue": "testCrn",
-      |          "idType": "CRN",
-      |          "IDsVerificationStatus": "Verified",
-      |          "date": "2020-01-02"
       |        }
       |      ],
       |      "prevName": {
@@ -100,7 +94,8 @@ trait VatSubmissionFixture {
       |  "subscription": {
       |    "corporateBodyRegistered": {
       |        "companyRegistrationNumber": "testCrn",
-      |        "dateOfIncorporation": "2020-01-02"
+      |        "dateOfIncorporation": "2020-01-02",
+      |        "countryOfIncorporation": "GB"
       |    },
       |    "reasonForSubscription": {
       |        "exemptionOrException": "0",
@@ -135,8 +130,8 @@ trait VatSubmissionFixture {
       |  "contact": {
       |    "commDetails": {
       |      "webAddress": "www.foo.com",
-      |      "mobile": "54321",
-      |      "tel": "12345",
+      |      "mobileNumber": "54321",
+      |      "telephone": "12345",
       |      "email": "email@email.com",
       |      "commsPreference": "ZEL"
       |    },
@@ -183,7 +178,8 @@ trait VatSubmissionFixture {
       |        "last": "Surname"
       |      },
       |      "change": "2018-01-01"
-      |    }
+      |    },
+      |    "countryOfIncorporation": "GB"
       |  },
       |  "bankDetails": {
       |    "isProvided": true,
@@ -221,8 +217,8 @@ trait VatSubmissionFixture {
       |  "businessContact": {
       |    "digitalContact": {
       |      "email": "email@email.com",
-      |      "tel": "12345",
-      |      "mobile": "54321"
+      |      "telephone": "12345",
+      |      "mobileNumber": "54321"
       |    },
       |    "website": "www.foo.com",
       |    "ppob": {
