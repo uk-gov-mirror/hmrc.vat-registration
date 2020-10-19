@@ -65,6 +65,7 @@ trait ITFixtures {
   val testCrn = "testCrn"
   val testCtUtr = Some("testCtUtr")
   val testDateOFIncorp = LocalDate.of(2020, 1, 2)
+  val testBpSafeId = "testBpSafeId"
 
   val testApplicantDetails = ApplicantDetails(
     nino = testNino,
@@ -78,7 +79,9 @@ trait ITFixtures {
     currentAddress = testAddress,
     contact = testDigitalContactOptional,
     changeOfName = None,
-    previousAddress = None
+    previousAddress = None,
+    businessVerification = Some(BvPass),
+    bpSafeId = Some(testBpSafeId)
   )
 
   val testBusinessContactDetails = BusinessContact(digitalContact = testContactDetails, website = None, ppob = testAddress, commsPreference = Email)

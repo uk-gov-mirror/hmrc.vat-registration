@@ -29,17 +29,17 @@ trait ITVatSubmissionFixture {
       |      {
       |        "idValue": "testCtUtr",
       |        "idType": " UTR",
-      |        "IDsVerificationStatus": "Verified"
+      |        "IDsVerificationStatus": "1"
       |      },
       |      {
       |        "idValue": "testCrn",
       |        "idType": "CRN",
-      |        "IDsVerificationStatus": "Verified",
+      |        "IDsVerificationStatus": "1",
       |        "date": "2020-01-02"
       |      }
       |    ],
       |    "dateOfBirth": "2018-01-01",
-      |    "primeBPSafeId": "12345678901234567890"
+      |    "primeBPSafeID": "12345678901234567890"
       |  },
       |  "declaration": {
       |    "declarationSigning": {
@@ -59,13 +59,13 @@ trait ITVatSubmissionFixture {
       |        {
       |          "idValue": "AB123456A",
       |          "idType": "NINO",
-      |          "IDsVerificationStatus": "Verified",
+      |          "IDsVerificationStatus": "1",
       |          "date": "2018-01-01"
       |        },
       |        {
       |          "idValue": "testCrn",
       |          "idType": "CRN",
-      |          "IDsVerificationStatus": "Verified",
+      |          "IDsVerificationStatus": "1",
       |          "date": "2020-01-02"
       |        }
       |      ],

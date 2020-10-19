@@ -44,17 +44,17 @@ trait VatSubmissionFixture {
       |      {
       |        "idValue": "testCtUtr",
       |        "idType": " UTR",
-      |        "IDsVerificationStatus": "Verified"
+      |        "IDsVerificationStatus": "1"
       |      },
       |      {
       |        "idValue": "testCrn",
       |        "idType": "CRN",
-      |        "IDsVerificationStatus": "Verified",
+      |        "IDsVerificationStatus": "1",
       |        "date": "2020-01-02"
       |      }
       |    ],
       |    "dateOfBirth": "2018-01-01",
-      |    "primeBPSafeId": "12345678901234567890"
+      |    "primeBPSafeID": "testBpSafeId"
       |  },
       |  "declaration": {
       |    "declarationSigning": {
@@ -74,14 +74,8 @@ trait VatSubmissionFixture {
       |        {
       |          "idValue": "AB123456A",
       |          "idType": "NINO",
-      |          "IDsVerificationStatus": "Verified",
+      |          "IDsVerificationStatus": "1",
       |          "date": "2018-01-01"
-      |        },
-      |        {
-      |          "idValue": "testCrn",
-      |          "idType": "CRN",
-      |          "IDsVerificationStatus": "Verified",
-      |          "date": "2020-01-02"
       |        }
       |      ],
       |      "prevName": {
@@ -153,7 +147,6 @@ trait VatSubmissionFixture {
       |{
       |  "messageType": "SubmissionCreate",
       |  "tradersPartyType": "50",
-      |  "primeBPSafeId": "12345678901234567890",
       |  "confirmInformationDeclaration": true,
       |  "companyRegistrationNumber": "testCrn",
       |  "applicantDetails": {
@@ -168,6 +161,8 @@ trait VatSubmissionFixture {
       |    "companyNumber": "testCrn",
       |    "dateOfIncorporation": "2020-01-02",
       |    "ctutr": "testCtUtr",
+      |    "businessVerification": "PASS",
+      |    "bpSafeId": "testBpSafeId",
       |    "currentAddress": {
       |      "line1": "line1",
       |      "line2": "line2",
