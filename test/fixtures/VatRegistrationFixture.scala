@@ -53,6 +53,7 @@ trait VatRegistrationFixture {
   val testFormerName = FormerName(Some(testName), Some(testDate))
   val testReturns = Returns(false, "", None, StartDate(None), None)
   val zeroRatedSupplies: BigDecimal = 12.99
+  val testBpSafeId = "testBpSafeId"
 
   val testEligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
     threshold = testMandatoryThreshold,
@@ -73,7 +74,9 @@ trait VatRegistrationFixture {
     currentAddress = testAddress,
     contact = testDigitalContactOptional,
     changeOfName = Some(testFormerName),
-    previousAddress = None
+    previousAddress = None,
+    businessVerification = Some(BvPass),
+    bpSafeId = Some(testBpSafeId)
   )
 
   val otherBusinessActivitiesSicAndCompiliance =
@@ -121,7 +124,6 @@ trait VatRegistrationFixture {
 
   val testFullSubmission: VatSubmission = VatSubmission(
     tradersPartyType = None,
-    primeBPSafeId = None,
     confirmInformationDeclaration = Some(true),
     companyRegistrationNumber = Some("CRN"),
     applicantDetails = validApplicantDetails,

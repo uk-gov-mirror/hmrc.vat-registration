@@ -30,9 +30,9 @@ case object IdVerificationFailed extends IdVerificationStatus
 object IdVerificationStatus {
 
   val stati: Map[IdVerificationStatus, String] = Map(
-    IdVerified -> "Verified",
-    IdUnverifiable -> " CannotBeVerified",
-    IdVerificationFailed -> "VerificationFailed"
+    IdVerified -> "1",
+    IdUnverifiable -> " 2",
+    IdVerificationFailed -> "3"
   )
 
   val inverseStati = stati.map(_.swap)

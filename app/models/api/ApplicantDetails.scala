@@ -33,7 +33,9 @@ case class ApplicantDetails(nino: String,
                             companyName: String,
                             companyNumber: String,
                             dateOfIncorporation: LocalDate,
-                            ctutr: Option[String],
+                            ctutr: Option[String] = None,
+                            businessVerification: Option[BusinessVerificationStatus] = None,
+                            bpSafeId: Option[String] = None,
                             currentAddress: Address,
                             contact: DigitalContactOptional,
                             changeOfName: Option[FormerName] = None,
@@ -41,7 +43,7 @@ case class ApplicantDetails(nino: String,
 
 object ApplicantDetails extends VatApplicantDetailsValidator
   with ApplicantDetailsHelper
-  with JsonUtilities{
+  with JsonUtilities {
 
   private val custInfoSection = JsPath \ "customerIdentification"
   private val appDetailsSection = JsPath \ "declaration" \ "applicantDetails"
@@ -56,6 +58,8 @@ object ApplicantDetails extends VatApplicantDetailsValidator
     (__ \ "companyNumber").format[String] and
     (__ \ "dateOfIncorporation").format[LocalDate] and
     (__ \ "ctutr").formatNullable[String] and
+    (__ \ "businessVerification").formatNullable[BusinessVerificationStatus] and
+    (__ \ "bpSafeId").formatNullable[String] and
     (__ \ "currentAddress").format[Address] and
     (__ \ "contact").format[DigitalContactOptional] and
     (__ \ "changeOfName").formatNullable[FormerName] and
@@ -73,6 +77,8 @@ object ApplicantDetails extends VatApplicantDetailsValidator
         companyNumber = json.getField[String](corpBodySection \ "companyRegistrationNumber"),
         dateOfIncorporation = json.getField[LocalDate](corpBodySection \ "dateOfIncorporation"),
         ctutr = json.ctUtr,
+        businessVerification = json.businessVerificationStatus,
+        bpSafeId = json.getOptionalField[String](custInfoSection \ "primeBPSafeID"),
         currentAddress = json.getField[Address](appDetailsSection \ "currAddress")(Address.submissionFormat),
         contact = json.getField[DigitalContactOptional](appDetailsSection \ "commDetails")(DigitalContactOptional.submissionFormat),
         changeOfName = json.getOptionalField[FormerName](appDetailsSection \ "prevName")(FormerName.submissionFormat),
@@ -90,7 +96,8 @@ object ApplicantDetails extends VatApplicantDetailsValidator
         "name" -> Json.toJson(appDetails.name)(Name.submissionFormat),
         "dateOfBirth" -> Json.toJson(appDetails.dateOfBirth),
         "shortOrgName" -> appDetails.companyName,
-        "customerID" -> Json.toJson(appDetails.companyIdentifiers)
+        "customerID" -> Json.toJson(appDetails.companyIdentifiers),
+        "primeBPSafeID" -> appDetails.bpSafeId
       ),
       "subscription" -> Json.obj(
         "corporateBodyRegistered" -> Json.obj(

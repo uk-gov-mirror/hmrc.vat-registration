@@ -53,7 +53,6 @@ class DesConnectorSpec extends PlaySpec with VatRegSpec with MockitoSugar with H
   val validVatSubmission: VatSubmission = VatSubmission(
     "SubmissionCreate",
     Some("50"),
-    Some("12345678901234567890"),
     Some(true),
     Some("testCrn"),
     validApplicantDetails,

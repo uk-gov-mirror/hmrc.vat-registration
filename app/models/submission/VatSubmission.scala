@@ -21,7 +21,6 @@ import play.api.libs.json._
 
 case class VatSubmission(messageType: String = "SubscriptionCreate",
                          tradersPartyType: Option[String],
-                         primeBPSafeId: Option[String],
                          confirmInformationDeclaration: Option[Boolean],
                          companyRegistrationNumber: Option[String],
                          applicantDetails: ApplicantDetails,
@@ -37,7 +36,6 @@ object VatSubmission {
   val submissionFormat: OFormat[VatSubmission] = (
     (__ \ "messageType").format[String] and
     (__ \ "customerIdentification" \ "tradersPartyType").formatNullable[String] and
-    (__ \ "customerIdentification" \ "primeBPSafeId").formatNullable[String] and
     (__ \ "declaration" \ "declarationSigning" \ "confirmInformationDeclaration").formatNullable[Boolean] and
     (__ \ "subscription" \ "corporateBodyRegistered" \ "companyRegistrationNumber").formatNullable[String] and
     (__).format[ApplicantDetails](ApplicantDetails.submissionFormat) and
@@ -61,7 +59,6 @@ object VatSubmission {
       case (Some(eligibilityData), Some(applicant), bankAcc, Some(sac), Some(contact), Some(trading), frs, Some(zrs)) =>
         VatSubmission(
           tradersPartyType = None,
-          primeBPSafeId = None,
           confirmInformationDeclaration = Some(true),
           companyRegistrationNumber = Some("CRN"),
           applicantDetails = applicant,

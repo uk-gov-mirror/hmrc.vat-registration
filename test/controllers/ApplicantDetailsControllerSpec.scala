@@ -19,7 +19,7 @@ package controllers
 import common.exceptions.MissingRegDocument
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import models.api.ApplicantDetails
+import models.api.{ApplicantDetails, BvPass}
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
@@ -60,7 +60,9 @@ class ApplicantDetailsControllerSpec extends VatRegSpec with VatRegistrationFixt
     currentAddress = testAddress,
     contact = testDigitalContactOptional,
     changeOfName = None,
-    previousAddress = None
+    previousAddress = None,
+    businessVerification = Some(BvPass),
+    bpSafeId = Some(testBpSafeId)
   )
 
   val upsertApplicantDetailsJson = Json.toJson(upsertApplicantDetails)

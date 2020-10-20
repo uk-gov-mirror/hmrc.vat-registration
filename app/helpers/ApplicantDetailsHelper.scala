@@ -16,21 +16,26 @@
 
 package helpers
 
-import models.api.ApplicantDetails
+import models.api.{ApplicantDetails, BvFail, BvPass, BvUnchallenged}
 import models.submission._
 import play.api.libs.json.JsValue
 
 trait ApplicantDetailsHelper {
 
   implicit class ApplicantDetailsWriter(applicantDetails: ApplicantDetails) {
+    val businessVerificationStatus = applicantDetails.businessVerification collect {
+      case BvPass => IdVerified
+      case BvFail => IdVerificationFailed
+      case BvUnchallenged => IdUnverifiable
+    }
+
     def personalIdentifiers: List[CustomerId] = List(
-      CustomerId(applicantDetails.nino, NinoIdType, Some(IdVerified), date = Some(applicantDetails.dateOfBirth.date)),
-      CustomerId(applicantDetails.companyNumber, CrnIdType, Some(IdVerified), date = Some(applicantDetails.dateOfIncorporation))
+      CustomerId(applicantDetails.nino, NinoIdType, Some(IdVerified), date = Some(applicantDetails.dateOfBirth.date))
     )
 
     def companyIdentifiers: List[CustomerId] = List(
-      applicantDetails.ctutr.map(utr => CustomerId(utr, UtrIdType)),
-      Some(CustomerId(applicantDetails.companyNumber, CrnIdType, date = Some(applicantDetails.dateOfIncorporation)))
+      applicantDetails.ctutr.map(utr => CustomerId(utr, UtrIdType, businessVerificationStatus)),
+      Some(CustomerId(applicantDetails.companyNumber, CrnIdType, businessVerificationStatus, date = Some(applicantDetails.dateOfIncorporation)))
     ).flatten
   }
 
@@ -51,7 +56,15 @@ trait ApplicantDetailsHelper {
     val ctUtr: Option[String] = getOptionalId(customerIds, UtrIdType)
     val nino: String = getId(personalIds, NinoIdType)
 
-
+    val businessVerificationStatus =
+      (for {
+        ids <- customerIds.find(_.idType == CrnIdType)
+        status <- ids.IDsVerificationStatus
+      } yield status) collect {
+        case IdVerified => BvPass
+        case IdUnverifiable => BvUnchallenged
+        case IdVerificationFailed => BvFail
+      }
   }
 
 }

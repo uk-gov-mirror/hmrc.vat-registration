@@ -47,7 +47,6 @@ object TurnoverEstimates {
   }
 
   val submissionFormat: Format[TurnoverEstimates] = Format(submissionReads, submissionWrites)
-
   val eligibilityDataJsonReads: Reads[TurnoverEstimates] = Reads { json =>
     (json \ "turnoverEstimate-value").validate[Long].map(turnOverEstimateAmount =>
       TurnoverEstimates(turnoverEstimate = turnOverEstimateAmount)
