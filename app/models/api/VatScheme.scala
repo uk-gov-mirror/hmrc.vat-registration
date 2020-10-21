@@ -72,4 +72,5 @@ object VatScheme {
       (__ \ "eligibilitySubmissionData").formatNullable[EligibilitySubmissionData] and
       (__ \ "applicantDetails").formatNullable[ApplicantDetails]
     )(VatScheme.apply, unlift(VatScheme.unapply))
+
 }

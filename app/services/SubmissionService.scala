@@ -16,15 +16,12 @@
 
 package services
 
-import java.time.LocalDate
-
 import cats.instances.FutureInstances
 import common.exceptions._
 import connectors.DESConnector
 import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
-import models.api.{VatScheme, VatSubmission}
-import play.api.libs.json.Json
+import models.api.VatSubmission
 import repositories._
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -68,13 +65,6 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     }
   }
 
-  private[services] def retrieveVatStartDate(vatScheme: VatScheme, regId: String): Option[LocalDate] = {
-    vatScheme.returns match {
-      case Some(returns) => returns.start.date
-      case _ => throw NoReturns()
-    }
-  }
-
   private[services] def buildSubmission(regId: String, ackRef: String)
                                        (implicit hc: HeaderCarrier): Future[VatSubmission] = {
     registrationRepository.retrieveVatScheme(regId) map {
@@ -97,7 +87,7 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
                                               (implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
     registrationRepository.finishRegistrationSubmission(
       regId,
-      VatRegStatus.submitted //TODO - Confirm if this is correct, state should always be submitted as we're not doing pre-incorp VAT reg
+      VatRegStatus.submitted
     )
   }
 

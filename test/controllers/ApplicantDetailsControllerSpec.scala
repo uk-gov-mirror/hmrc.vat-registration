@@ -37,15 +37,6 @@ class ApplicantDetailsControllerSpec extends VatRegSpec with VatRegistrationFixt
     val controller: ApplicantDetailsController = new ApplicantDetailsController(mockApplicantDetailsService, mockAuthConnector, stubControllerComponents()){
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
     }
-
-    def updateIVStatusSuccess(): OngoingStubbing[Future[Boolean]] = when(mockApplicantDetailsService.updateIVStatus(any(), any())(any()))
-      .thenReturn(Future.successful(true))
-
-    def updateIVStatusFails(): OngoingStubbing[Future[Boolean]] = when(mockApplicantDetailsService.updateIVStatus(any(), any())(any()))
-      .thenReturn(Future.failed(new Exception))
-
-    def updateIVStatusNotFound(): OngoingStubbing[Future[Boolean]] = when(mockApplicantDetailsService.updateIVStatus(any(), any())(any()))
-      .thenReturn(Future.failed(MissingRegDocument(testRegId)))
   }
 
   val upsertApplicantDetails = ApplicantDetails(
@@ -54,7 +45,7 @@ class ApplicantDetailsControllerSpec extends VatRegSpec with VatRegistrationFixt
     role = testRole,
     dateOfBirth = testDateOfBirth,
     companyName = testCompanyName,
-    companyNumber = testCrn,
+    companyNumber = Some(testCrn),
     dateOfIncorporation = testDateOFIncorp,
     ctutr = testCtUtr,
     currentAddress = testAddress,

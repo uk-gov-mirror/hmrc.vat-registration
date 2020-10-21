@@ -24,22 +24,10 @@ trait VatSubmissionFixture {
     """
       |{
       |  "messageType": "SubmissionCreate",
-      |  "admin": {
-      |    "additionalInformation": {
-      |      "customerStatus": "2"
-      |    },
-      |    "attachments": {
-      |      "EORIRequested": true
-      |    }
-      |  },
       |  "customerIdentification": {
       |    "tradingName": "trading-name",
       |    "tradersPartyType": "50",
       |    "shortOrgName": "testCompanyName",
-      |    "name": {
-      |      "firstName": "Forename",
-      |      "lastName": "Surname"
-      |    },
       |    "customerID": [
       |      {
       |        "idValue": "testCtUtr",
@@ -53,11 +41,15 @@ trait VatSubmissionFixture {
       |        "date": "2020-01-02"
       |      }
       |    ],
-      |    "dateOfBirth": "2018-01-01",
-      |    "primeBPSafeID": "testBpSafeId"
+      |    "name": {
+      |      "firstName": "Forename",
+      |      "lastName": "Surname"
+      |    },
+      |    "dateOfBirth": "2018-01-01"
       |  },
       |  "declaration": {
       |    "declarationSigning": {
+      |      "declarationCapacity": "01",
       |      "confirmInformationDeclaration": true
       |    },
       |    "applicantDetails": {
@@ -93,44 +85,51 @@ trait VatSubmissionFixture {
       |  },
       |  "subscription": {
       |    "corporateBodyRegistered": {
-      |        "companyRegistrationNumber": "testCrn",
-      |        "dateOfIncorporation": "2020-01-02",
-      |        "countryOfIncorporation": "GB"
+      |      "dateOfIncorporation": "2020-01-02",
+      |      "companyRegistrationNumber": "testCrn",
+      |      "countryOfIncorporation": "GB"
       |    },
       |    "reasonForSubscription": {
-      |        "exemptionOrException": "0",
-      |        "registrationReason": "0016",
-      |        "relevantDate": "2020-10-07"
-      |    },
-      |    "schemes": {
-      |        "FRSCategory": "testCategory",
-      |        "FRSPercentage": 15,
-      |        "startDate": "2018-01-01"
+      |      "voluntaryOrEarlierDate": "2018-01-01",
+      |      "relevantDate": "2020-10-07",
+      |      "registrationReason": "0016",
+      |      "exemptionOrException": "0"
       |    },
       |    "yourTurnover": {
-      |        "turnoverNext12Months": 123456,
-      |        "zeroRatedSupplies": 12.99
+      |      "VATRepaymentExpected": false,
+      |      "turnoverNext12Months": 123456,
+      |      "zeroRatedSupplies": 12.99
+      |    },
+      |    "schemes": {
+      |      "startDate": "2018-01-01",
+      |      "FRSCategory": "testCategory",
+      |      "FRSPercentage": 15
       |    }
       |  },
       |  "bankDetails": {
       |    "UK": {
       |      "accountName": "Test Bank Account",
-      |      "accountNumber": "01023456",
-      |      "sortCode": "010203"
+      |      "sortCode": "010203",
+      |      "accountNumber": "01023456"
       |    }
       |  },
+      |  "compliance": {
+      |    "numOfWorkers": 1000,
+      |    "tempWorkers": true,
+      |    "provisionOfLabour": true
+      |  },
       |  "businessActivities": {
-      |    "description": "this is my business description",
       |    "SICCodes": {
       |      "mainCode2": "00998",
       |      "primaryMainCode": "12345",
       |      "mainCode3": "00889"
-      |    }
+      |    },
+      |    "description": "this is my business description"
       |  },
       |  "contact": {
       |    "commDetails": {
-      |      "webAddress": "www.foo.com",
       |      "mobileNumber": "54321",
+      |      "webAddress": "www.foo.com",
       |      "telephone": "12345",
       |      "email": "email@email.com",
       |      "commsPreference": "ZEL"
@@ -140,6 +139,17 @@ trait VatSubmissionFixture {
       |      "line2": "line2",
       |      "countryCode": "foo"
       |    }
+      |  },
+      |  "admin": {
+      |    "additionalInformation": {
+      |      "customerStatus": "2"
+      |    },
+      |    "attachments": {
+      |      "EORIRequested": true
+      |    }
+      |  },
+      |  "periods": {
+      |    "customerPreferredPeriodicity": "MA"
       |  }
       |}""".stripMargin)
 
@@ -242,6 +252,15 @@ trait VatSubmissionFixture {
       |    "categoryOfBusiness": "testCategory",
       |    "percent": 15
       |  },
+      |  "returns": {
+      |     "reclaimVatOnMostReturns" : false,
+      |     "frequency" : "quarterly",
+      |     "staggerStart" : "jan",
+      |     "start" : {
+      |       "date" : "2018-01-01"
+      |     },
+      |     "zeroRatedSupplies": 12.99
+      |  },
       |  "eligibilitySubmissionData": {
       |    "threshold": {
       |      "mandatoryRegistration": true,
@@ -253,9 +272,9 @@ trait VatSubmissionFixture {
       |    "estimates": {
       |      "turnoverEstimate": 123456
       |    },
-      |    "customerStatus": "2"
-      |  },
-      |  "zeroRatedSupplies": 12.99
+      |    "customerStatus": "2",
+      |    "completionCapacity": "01"
+      |  }
       |}""".stripMargin)
 
 }

@@ -25,6 +25,7 @@ import helpers.VatRegSpec
 import models._
 import models.api.{Threshold, _}
 import models.external.CurrentProfile
+import models.submission.OwnerProprietor
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
@@ -249,7 +250,8 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
         ),
         exceptionOrExemption = "0",
         estimates = TurnoverEstimates(123456),
-        customerStatus = MTDfB
+        customerStatus = MTDfB,
+        completionCapacity = OwnerProprietor
       )
 
       val expected: Threshold = Threshold(
@@ -281,7 +283,8 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
         ),
         exceptionOrExemption = "0",
         estimates = TurnoverEstimates(10001),
-        customerStatus = MTDfB
+        customerStatus = MTDfB,
+        completionCapacity = OwnerProprietor
       )
 
       val expected: TurnoverEstimates = TurnoverEstimates(turnoverEstimate = 10001)

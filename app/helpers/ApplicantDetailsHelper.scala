@@ -34,8 +34,21 @@ trait ApplicantDetailsHelper {
     )
 
     def companyIdentifiers: List[CustomerId] = List(
-      applicantDetails.ctutr.map(utr => CustomerId(utr, UtrIdType, businessVerificationStatus)),
-      Some(CustomerId(applicantDetails.companyNumber, CrnIdType, businessVerificationStatus, date = Some(applicantDetails.dateOfIncorporation)))
+      applicantDetails.ctutr.map(utr =>
+        CustomerId(
+          idValue = utr,
+          idType = UtrIdType,
+          IDsVerificationStatus = businessVerificationStatus
+        )
+      ),
+      applicantDetails.companyNumber.map(crn =>
+        CustomerId(
+          idValue = crn,
+          idType = CrnIdType,
+          IDsVerificationStatus = businessVerificationStatus,
+          date = Some(applicantDetails.dateOfIncorporation)
+        )
+      )
     ).flatten
   }
 
@@ -50,9 +63,12 @@ trait ApplicantDetailsHelper {
       getOptionalId(ids, idType)
         .getOrElse(throw jsonException(idType.toString))
 
-    val customerIds: List[CustomerId] = (json \ "customerIdentification" \ "customerID").as[List[CustomerId]]
+    val customerIds: List[CustomerId] = (json \ "customerIdentification" \ "customerID")
+      .asOpt[List[CustomerId]]
+      .getOrElse(List())
+
     val personalIds : List[CustomerId] = (json \ "declaration" \ "applicantDetails" \ "identifiers").as[List[CustomerId]]
-    val crn: String = getId(customerIds, CrnIdType)
+    val crn: Option[String] = getOptionalId(customerIds, CrnIdType)
     val ctUtr: Option[String] = getOptionalId(customerIds, UtrIdType)
     val nino: String = getId(personalIds, NinoIdType)
 
