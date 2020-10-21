@@ -26,7 +26,7 @@ object DigitalContact extends VatDigitalContactValidator {
 
   implicit val format: OFormat[DigitalContact] = (
     (__ \ "email").format[String](maxLength[String](70) keepAnd emailValidator) and
-    (__ \ "tel").formatNullable[String](telValidator) and
-    (__ \ "mobile").formatNullable[String](mobileValidator)
+    (__ \ "telephone").formatNullable[String](telValidator) and
+    (__ \ "mobileNumber").formatNullable[String](mobileValidator)
   )(DigitalContact.apply, unlift(DigitalContact.unapply))
 }

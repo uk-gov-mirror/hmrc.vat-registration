@@ -39,7 +39,8 @@ case class ApplicantDetails(nino: String,
                             currentAddress: Address,
                             contact: DigitalContactOptional,
                             changeOfName: Option[FormerName] = None,
-                            previousAddress : Option[Address] = None)
+                            previousAddress : Option[Address] = None,
+                            countryOfIncorporation: String = "GB")
 
 object ApplicantDetails extends VatApplicantDetailsValidator
   with ApplicantDetailsHelper
@@ -63,7 +64,8 @@ object ApplicantDetails extends VatApplicantDetailsValidator
     (__ \ "currentAddress").format[Address] and
     (__ \ "contact").format[DigitalContactOptional] and
     (__ \ "changeOfName").formatNullable[FormerName] and
-    (__ \ "previousAddress").formatNullable[Address]
+    (__ \ "previousAddress").formatNullable[Address] and
+    (__ \ "countryOfIncorporation").format[String]
   )(ApplicantDetails.apply, unlift(ApplicantDetails.unapply))
 
   val submissionReads: Reads[ApplicantDetails] = Reads[ApplicantDetails] { json =>
@@ -102,7 +104,8 @@ object ApplicantDetails extends VatApplicantDetailsValidator
       "subscription" -> Json.obj(
         "corporateBodyRegistered" -> Json.obj(
           "companyRegistrationNumber" -> appDetails.companyNumber,
-          "dateOfIncorporation" -> appDetails.dateOfIncorporation
+          "dateOfIncorporation" -> appDetails.dateOfIncorporation,
+          "countryOfIncorporation" -> "GB"
         )
       ),
       "declaration" -> Json.obj(

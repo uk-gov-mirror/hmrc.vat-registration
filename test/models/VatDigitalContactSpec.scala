@@ -33,8 +33,8 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
           s"""
              |{
              |  "email":"test@test.com",
-             |  "tel":"12345678910",
-             |  "mobile":"12345678910"
+             |  "telephone":"12345678910",
+             |  "mobileNumber":"12345678910"
              |}
         """.stripMargin)
         val tstVatDigitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
@@ -49,8 +49,8 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
           s"""
              |{
              |  "email":"test%£@test.com",
-             |  "tel":"12345678910",
-             |  "mobile":"12345678910"
+             |  "telephone":"12345678910",
+             |  "mobileNumber":"12345678910"
              |}
         """.stripMargin)
 
@@ -63,8 +63,8 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
           s"""
              |{
              |  "email":"testtesttesttesttesttestesttesttesttestteyyyysttettesttesttesttesttesttestteuutttttt@test.com",
-             |  "tel":"12345678910",
-             |  "mobile":"12345678910"
+             |  "telephone":"12345678910",
+             |  "mobileNumber":"12345678910"
              |}
         """.stripMargin)
 
@@ -77,13 +77,13 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
           s"""
              |{
              |  "email":"test@test.com",
-             |  "tel":"ABC_12345678910",
-             |  "mobile":"12345678910"
+             |  "telephone":"ABC_12345678910",
+             |  "mobileNumber":"12345678910"
              |}
         """.stripMargin)
 
         val result = Json.fromJson[DigitalContact](json)
-        result shouldHaveErrors (JsPath() \ "tel" -> JsonValidationError("error.pattern"))
+        result shouldHaveErrors (JsPath() \ "telephone" -> JsonValidationError("error.pattern"))
       }
 
       "Json with invalid Mobile" in {
@@ -91,13 +91,13 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
           s"""
              |{
              |  "email":"test@test.com",
-             |  "tel":"12345678910",
-             |  "mobile":"ABC_12345678910"
+             |  "telephone":"12345678910",
+             |  "mobileNumber":"ABC_12345678910"
              |}
         """.stripMargin)
 
         val result = Json.fromJson[DigitalContact](json)
-        result shouldHaveErrors (JsPath() \ "mobile" -> JsonValidationError("error.pattern"))
+        result shouldHaveErrors (JsPath() \ "mobileNumber" -> JsonValidationError("error.pattern"))
       }
     }
   }

@@ -85,7 +85,8 @@ trait ITVatSubmissionFixture {
       |  "subscription": {
       |    "corporateBodyRegistered": {
       |        "companyRegistrationNumber": "testCrn",
-      |        "dateOfIncorporation": "2020-01-02"
+      |        "dateOfIncorporation": "2020-01-02",
+      |        "countryOfIncorporation": "GB"
       |    },
       |    "reasonForSubscription": {
       |        "exemptionOrException": "0",
@@ -120,8 +121,8 @@ trait ITVatSubmissionFixture {
       |  "contact": {
       |    "commDetails": {
       |      "webAddress": "www.foo.com",
-      |      "mobile": "54321",
-      |      "tel": "12345",
+      |      "mobileNumber": "54321",
+      |      "telephone": "12345",
       |      "email": "email@email.com",
       |      "commsPreference": "P01"
       |    },
