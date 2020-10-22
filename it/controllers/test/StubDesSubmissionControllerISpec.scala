@@ -15,7 +15,6 @@ class StubDesSubmissionControllerISpec extends IntegrationStubbing with ITVatSub
   val testLine1 = "line1"
   val testLine2 = "line2"
   val testPostCode = "A11 11A"
-  val testCountry = "GB"
 
   class Setup extends SetupHelper()
 

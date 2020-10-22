@@ -137,7 +137,7 @@ trait VatSubmissionFixture {
       |    "address": {
       |      "line1": "line1",
       |      "line2": "line2",
-      |      "countryCode": "foo"
+      |      "countryCode": "UK"
       |    }
       |  },
       |  "admin": {
@@ -178,7 +178,9 @@ trait VatSubmissionFixture {
       |      "line1": "line1",
       |      "line2": "line2",
       |      "postcode": "XX XX",
-      |      "country": "UK"
+      |      "country": {
+      |         "code": "UK"
+      |      }
       |    },
       |    "contact": {
       |      "email": "skylake@vilikariet.com"
@@ -235,7 +237,9 @@ trait VatSubmissionFixture {
       |    "ppob": {
       |      "line1": "line1",
       |      "line2": "line2",
-      |      "country": "foo"
+      |      "country": {
+      |         "code": "UK"
+      |      }
       |    },
       |    "contactPreference": "Email"
       |  },

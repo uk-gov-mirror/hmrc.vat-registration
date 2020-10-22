@@ -616,7 +616,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSuppo
       val amendedModel: BusinessContact = testBusinessContactDetails.copy(
         digitalContact = DigitalContact("foozle", Some("2434738"), Some("37483784")),
         website = Some("myLittleWebsite"),
-        ppob = Address("lino1", "lino2", None, None, None, Some("Funsville"))
+        ppob = Address("lino1", "lino2", None, None, None, Some(testCountry))
       )
       val result: Future[BusinessContact] = for {
         _ <- repository.insert(vatScheme.copy(businessContact = Some(testBusinessContactDetails)))

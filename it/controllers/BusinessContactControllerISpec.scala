@@ -19,7 +19,7 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
   val validBusinessContact: Option[BusinessContact] = Some(BusinessContact(
     digitalContact = DigitalContact("email@email.com",Some("12345"),Some("54321")),
     website = Some("www.foo.com"),
-    ppob = Address("line1","line2",None,None,None,Some("foo")),
+    ppob = Address("line1","line2",None,None,None,Some(testCountry)),
     commsPreference = Letter
   ))
 
@@ -32,9 +32,11 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
        |},
        |"website": "www.foo.com",
        |"ppob": {
-       |"line1": "line1",
-       |"line2": "line2",
-       |"country": "foo"
+       |  "line1": "line1",
+       |  "line2": "line2",
+       |  "country": {
+       |    "code": "UK"
+       |  }
        | },
        | "contactPreference": "Letter"
        |}
@@ -51,9 +53,11 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
        |},
        |"website": "www.foobar.com",
        |"ppob": {
-       |"line1": "line1a",
-       |"line2": "line2b",
-       |"country": "foobar"
+       |  "line1": "line1a",
+       |  "line2": "line2b",
+       |  "country": {
+       |    "code": "UK"
+       |  }
        | },
        | "contactPreference": "Email"
        |}
