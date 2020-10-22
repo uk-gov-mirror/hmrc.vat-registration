@@ -25,6 +25,8 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 class BackendConfig @Inject()(val servicesConfig: ServicesConfig,
                               val runModeConfiguration: Configuration) extends FeatureSwitching {
 
+  def loadConfig(key: String): String = servicesConfig.getString(key)
+
   lazy val vatRegistrationUrl: String = servicesConfig.baseUrl("vat-registration")
   lazy val desBaseUrl: String = servicesConfig.getConfString("des.url", "")
   val desEndpoint = "/vat/subscription"

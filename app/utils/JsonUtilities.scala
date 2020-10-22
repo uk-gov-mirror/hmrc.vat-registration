@@ -34,7 +34,7 @@ trait JsonUtilities {
     def filterNullFields: JsValue = json match {
       case JsObject(fieldSet) => JsObject(fieldSet.flatMap {
         case (_, JsNull) => None
-        case _@value => Some(value)
+        case (field, value) => Some((field, value.filterNullFields))
       })
       case obj => obj
     }

@@ -62,10 +62,11 @@ trait IntegrationStubbing extends IntegrationSpecBase with ITFixtures {
       s"""{
          | "internalId": "$testInternalid",
          | "externalId": "Ext-xxx",
-         | "credentials": {
+         | "optionalCredentials": {
          |   "providerId": "xxx2",
          |   "providerType": "some-provider-type"
-         | }
+         | },
+         | "affinityGroup": "Organisation"
          |}""".stripMargin
 
     def isAuthorised: PreconditionBuilder = {

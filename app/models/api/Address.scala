@@ -54,4 +54,17 @@ object Address {
         )
     ) (Address.apply, unlift(Address.unapply))
 
+  val auditFormat: Format[Address] = (
+    (__ \ "line1").format[String] and
+      (__ \ "line2").format[String] and
+      (__ \ "line3").formatNullable[String] and
+      (__ \ "line4").formatNullable[String] and
+      (__ \ "postcode").formatNullable[String] and
+      (__ \ "countryCode").formatNullable[String]
+        .inmap[Option[Country]](
+          optCode => optCode.map(code => Country(Some(code), None)),
+          optCountry => optCountry.flatMap(country => country.code)
+        )
+    ) (Address.apply, unlift(Address.unapply))
+
 }

@@ -17,43 +17,51 @@
 package fixtures
 
 import java.time.LocalDate
+import java.util.UUID
 
 import common.TransactionId
 import enums.VatRegStatus
 import models.api._
 import models.submission.{DateOfBirth, OwnerProprietor, UkCompany}
 import play.api.libs.json.{JsObject, Json}
+import uk.gov.hmrc.auth.core.AffinityGroup
+import uk.gov.hmrc.auth.core.retrieve.Credentials
 
 trait VatRegistrationFixture {
-  val testNino = "AB123456A"
-  val testRole = Some("secretary")
-  val testRegId = "testRegId"
-  val testInternalid = "INT-123-456-789"
-  val testTxId: TransactionId = TransactionId("1")
-  val testAckReference = "BRPY000000000001"
-  val testDate: LocalDate = LocalDate.of(2018, 1, 1)
-  val testDateOfBirth = DateOfBirth(testDate)
-  val testCompanyName = "testCompanyName"
-  val testCrn = "testCrn"
-  val testCtUtr = Some("testCtUtr")
-  val testDateOFIncorp = LocalDate.of(2020, 1, 2)
-  val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some(Country(Some("UK"), None)))
-  val testSicCode = SicCode("88888", "description", "displayDetails")
-  val testName = Name(first = Some("Forename"), middle = None, last = "Surname")
-  val testOldName = Name(first = Some("Bob"), middle = None, last = "Smith")
-  val testPreviousName = FormerName(name = Some(testOldName), change = Some(testDate))
-  val testVatScheme: VatScheme = VatScheme(testRegId, internalId = testInternalid, status = VatRegStatus.draft)
-  val exception = new Exception("Exception")
-  val testVoluntaryThreshold = Threshold(mandatoryRegistration = false, None, None, None)
-  val testMandatoryThreshold = Threshold(mandatoryRegistration = true, Some(LocalDate.of(2020, 10, 7)), Some(LocalDate.of(2020, 10, 7)), Some(LocalDate.of(2020, 10, 7)))
-  val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
-  val testBankDetails = BankAccountDetails("Test Bank Account", "010203", "01023456")
-  val testFormerName = FormerName(Some(testName), Some(testDate))
-  val testReturns = Returns(false, "quarterly", Some("jan"), StartDate(Some(testDate)), Some(12.99))
-  val zeroRatedSupplies: BigDecimal = 12.99
-  val testBpSafeId = "testBpSafeId"
+  lazy val testNino = "AB123456A"
+  lazy val testRole = Some("secretary")
+  lazy val testRegId = "testRegId"
+  lazy val testInternalid = "INT-123-456-789"
+  lazy val testTxId: TransactionId = TransactionId("1")
+  lazy val testAckReference = "BRPY000000000001"
+  lazy val testDate: LocalDate = LocalDate.of(2018, 1, 1)
+  lazy val testDateOfBirth = DateOfBirth(testDate)
+  lazy val testCompanyName = "testCompanyName"
+  lazy val testCrn = "testCrn"
+  lazy val testCtUtr = Some("testCtUtr")
+  lazy val testDateOFIncorp = LocalDate.of(2020, 1, 2)
+  lazy val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some(Country(Some("UK"), None)))
+  lazy val testSicCode = SicCode("88888", "description", "displayDetails")
+  lazy val testName = Name(first = Some("Forename"), middle = None, last = "Surname")
+  lazy val testOldName = Name(first = Some("Bob"), middle = None, last = "Smith")
+  lazy val testPreviousName = FormerName(name = Some(testOldName), change = Some(testDate))
+  lazy val testVatScheme: VatScheme = VatScheme(testRegId, internalId = testInternalid, status = VatRegStatus.draft)
+  lazy val exception = new Exception("Exception")
+  lazy val testVoluntaryThreshold = Threshold(mandatoryRegistration = false, None, None, None)
+  lazy val testMandatoryThreshold = Threshold(mandatoryRegistration = true, Some(LocalDate.of(2020, 10, 7)), Some(LocalDate.of(2020, 10, 7)), Some(LocalDate.of(2020, 10, 7)))
+  lazy val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
+  lazy val testBankDetails = BankAccountDetails("Test Bank Account", "010203", "01023456")
+  lazy val testFormerName = FormerName(Some(testName), Some(testDate))
+  lazy val testReturns = Returns(false, "quarterly", Some("jan"), StartDate(Some(testDate)), Some(12.99))
+  lazy val zeroRatedSupplies: BigDecimal = 12.99
+  lazy val testBpSafeId = "testBpSafeId"
 
-  val testEligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
+  lazy val testProviderId: String = "testProviderID"
+  lazy val testProviderType: String = "GovernmentGateway"
+  lazy val testCredentials: Credentials = Credentials(testProviderId, testProviderType)
+  lazy val testAffinityGroup: AffinityGroup = AffinityGroup.Organisation
+
+  lazy val testEligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
     threshold = testMandatoryThreshold,
     exceptionOrExemption = "0",
     estimates = TurnoverEstimates(123456),
@@ -61,7 +69,7 @@ trait VatRegistrationFixture {
     completionCapacity = OwnerProprietor
   )
 
-  val validApplicantDetails: ApplicantDetails = ApplicantDetails(
+  lazy val validApplicantDetails: ApplicantDetails = ApplicantDetails(
     nino = testNino,
     role = testRole,
     name = testName,
@@ -78,27 +86,27 @@ trait VatRegistrationFixture {
     bpSafeId = Some(testBpSafeId)
   )
 
-  val otherBusinessActivitiesSicAndCompiliance =
+  lazy val otherBusinessActivitiesSicAndCompiliance =
     SicCode("00998", "otherBusiness desc 1", "fooBar 1") :: SicCode("00889", "otherBusiness desc 2", "fooBar 2") :: Nil
 
-  val testSicAndCompliance = Some(SicAndCompliance(
+  lazy val testSicAndCompliance = Some(SicAndCompliance(
     "this is my business description",
     Some(ComplianceLabour(1000, Some(true), Some(true))),
     SicCode("12345", "the flu", "sic details"),
     otherBusinessActivitiesSicAndCompiliance
   ))
 
-  val testBusinessContact = Some(BusinessContact(
+  lazy val testBusinessContact = Some(BusinessContact(
     digitalContact = DigitalContact("email@email.com", Some("12345"), Some("54321")),
     website = Some("www.foo.com"),
     ppob = Address("line1", "line2", None, None, None, Some(Country(Some("UK"), None))),
     commsPreference = Email
   ))
 
-  val testBankAccount = BankAccount(true, Some(testBankDetails))
-  val testBankAccountNotProvided = BankAccount(false, None)
+  lazy val testBankAccount = BankAccount(true, Some(testBankDetails))
+  lazy val testBankAccountNotProvided = BankAccount(false, None)
 
-  val validFullFRSDetails: FRSDetails =
+  lazy val validFullFRSDetails: FRSDetails =
     FRSDetails(
       businessGoods = Some(BusinessGoods(1234567891011L, true)),
       startDate = Some(testDate),
@@ -106,11 +114,11 @@ trait VatRegistrationFixture {
       percent = 15
     )
 
-  val validFullFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = true, Some(validFullFRSDetails))
-  val validEmptyFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = false, None)
-  val invalidEmptyFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = true, None)
+  lazy val validFullFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = true, Some(validFullFRSDetails))
+  lazy val validEmptyFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = false, None)
+  lazy val invalidEmptyFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = true, None)
 
-  val testFullVatScheme: VatScheme = testVatScheme.copy(
+  lazy val testFullVatScheme: VatScheme = testVatScheme.copy(
     tradingDetails = Some(validFullTradingDetails),
     sicAndCompliance = testSicAndCompliance,
     businessContact = testBusinessContact,
@@ -121,7 +129,7 @@ trait VatRegistrationFixture {
     returns = Some(testReturns.copy(zeroRatedSupplies = Some(zeroRatedSupplies)))
   )
 
-  val testFullSubmission: VatSubmission = VatSubmission(
+  lazy val testFullSubmission: VatSubmission = VatSubmission(
     tradersPartyType = Some(UkCompany),
     confirmInformationDeclaration = Some(true),
     companyRegistrationNumber = Some("CRN"),
@@ -135,7 +143,7 @@ trait VatRegistrationFixture {
     returns = testReturns
   )
 
-  val validBusinessContactJson = Json.parse(
+  lazy val validBusinessContactJson = Json.parse(
     s"""{
        |"digitalContact":{
        |"email": "email@email.com",
@@ -156,7 +164,7 @@ trait VatRegistrationFixture {
      """.stripMargin
   ).as[JsObject]
 
-  val validSicAndComplianceJson = Json.parse(
+  lazy val validSicAndComplianceJson = Json.parse(
     s"""
        |{
        | "businessDescription": "this is my business description",
@@ -181,8 +189,8 @@ trait VatRegistrationFixture {
        |}
     """.stripMargin).as[JsObject]
 
-  val validFullTradingDetails: TradingDetails = TradingDetails(Some("trading-name"), true)
-  val validFullTradingDetailsJson: JsObject = Json.parse(
+  lazy val validFullTradingDetails: TradingDetails = TradingDetails(Some("trading-name"), true)
+  lazy val validFullTradingDetailsJson: JsObject = Json.parse(
     s"""
        |{
        | "tradingName":"trading-name",
@@ -190,7 +198,7 @@ trait VatRegistrationFixture {
        |}
      """.stripMargin).as[JsObject]
 
-  val invalidTradingDetailsJson: JsObject = Json.parse(
+  lazy val invalidTradingDetailsJson: JsObject = Json.parse(
     s"""
        |{
        | "tradingName":"trading-name",
@@ -198,7 +206,7 @@ trait VatRegistrationFixture {
        |}
      """.stripMargin).as[JsObject]
 
-  val validFullFRSDetailsJsonWithBusinessGoods: JsObject = Json.parse(
+  lazy val validFullFRSDetailsJsonWithBusinessGoods: JsObject = Json.parse(
     s"""
        |{
        |  "businessGoods" : {
@@ -211,7 +219,7 @@ trait VatRegistrationFixture {
        |}
      """.stripMargin).as[JsObject]
 
-  val validFRSDetailsJsonWithoutBusinessGoods: JsObject = Json.parse(
+  lazy val validFRSDetailsJsonWithoutBusinessGoods: JsObject = Json.parse(
     s"""
        |{
        |  "startDate": "$testDate",
@@ -220,7 +228,7 @@ trait VatRegistrationFixture {
        |}
      """.stripMargin).as[JsObject]
 
-  val validFullFRSDetailsJsonWithOptionals: JsObject = Json.parse(
+  lazy val validFullFRSDetailsJsonWithOptionals: JsObject = Json.parse(
     s"""
        |{
        |  "businessGoods" : {
@@ -233,7 +241,7 @@ trait VatRegistrationFixture {
        |}
      """.stripMargin).as[JsObject]
 
-  val validFRSDetailsJsonWithoutOptionals: JsObject = Json.parse(
+  lazy val validFRSDetailsJsonWithoutOptionals: JsObject = Json.parse(
     s"""
        |{
        |  "categoryOfBusiness":"testCategory",
@@ -242,7 +250,7 @@ trait VatRegistrationFixture {
      """.stripMargin).as[JsObject]
 
 
-  val validFullFlatRateSchemeJson: JsObject = Json.parse(
+  lazy val validFullFlatRateSchemeJson: JsObject = Json.parse(
     s"""
        |{
        |  "joinFrs": true,
@@ -250,7 +258,7 @@ trait VatRegistrationFixture {
        |}
      """.stripMargin).as[JsObject]
 
-  val detailsPresentJoinFrsFalse: JsObject = Json.parse(
+  lazy val detailsPresentJoinFrsFalse: JsObject = Json.parse(
     s"""
        |{
        |  "joinFrs":false,
@@ -258,7 +266,7 @@ trait VatRegistrationFixture {
        |}
      """.stripMargin).as[JsObject]
 
-  val validEmptyFlatRateSchemeJson: JsObject = Json.parse(
+  lazy val validEmptyFlatRateSchemeJson: JsObject = Json.parse(
     s"""
        |{
        |  "joinFrs": false

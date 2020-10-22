@@ -27,11 +27,10 @@ import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito.when
 import play.api.http.Status
 import play.api.libs.json.{JsObject, JsValue, Json}
-import play.api.mvc.Result
+import play.api.mvc.{Request, Result}
 import play.api.test.FakeRequest
 import repositories.RegistrationMongoRepository
-import services.{QuotaReached, RegistrationCreated, SubmissionService, VatRegistrationService}
-import uk.gov.hmrc.auth.core.AuthConnector
+import services.{QuotaReached, RegistrationCreated}
 import uk.gov.hmrc.http.{HeaderCarrier, Upstream5xxResponse}
 
 import scala.concurrent.Future
@@ -312,7 +311,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
 
       val idMatcher = anyString()
 
-      when(mockSubmissionService.submitVatRegistration(idMatcher)(any[HeaderCarrier]()))
+      when(mockSubmissionService.submitVatRegistration(idMatcher)(any[HeaderCarrier], any[Request[_]]))
         .thenReturn(Future.failed(Upstream5xxResponse("message", 501, 1)))
 
       val response: Upstream5xxResponse = intercept[Upstream5xxResponse](await(controller.submitVATRegistration(testRegId)(FakeRequest())))
@@ -325,7 +324,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
       ServiceMocks.mockRetrieveVatScheme(testRegId, testVatScheme)
       val idMatcher = anyString()
 
-      when(mockSubmissionService.submitVatRegistration(idMatcher)(any[HeaderCarrier]()))
+      when(mockSubmissionService.submitVatRegistration(idMatcher)(any[HeaderCarrier], any[Request[_]]))
         .thenReturn(Future.successful("BRVT00000000001"))
 
       val response: Future[Result] = controller.submitVATRegistration(testRegId)(FakeRequest())
