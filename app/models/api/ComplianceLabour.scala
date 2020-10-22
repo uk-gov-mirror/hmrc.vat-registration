@@ -17,17 +17,25 @@
 package models.api
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{OFormat, __}
+import play.api.libs.json.{Format, Json, OFormat, Reads, Writes, __}
+import play.api.libs.functional.syntax._
 
-case class ComplianceLabour(numberOfWorkers:Int,
-                            temporaryContracts:Option[Boolean],
-                            skilledWorkers:Option[Boolean])
+case class ComplianceLabour(numberOfWorkers: Int,
+                            temporaryContracts: Option[Boolean],
+                            skilledWorkers: Option[Boolean])
 
-object ComplianceLabour{
+object ComplianceLabour {
 
   implicit val formats: OFormat[ComplianceLabour] = (
-      (__ \"numberOfWorkers").format[Int] and
-      (__ \"temporaryContracts").formatNullable[Boolean] and
-      (__ \"skilledWorkers").formatNullable[Boolean]
-    )(ComplianceLabour.apply, unlift(ComplianceLabour.unapply))
+    (__ \"numberOfWorkers").format[Int] and
+    (__ \"temporaryContracts").formatNullable[Boolean] and
+    (__ \"skilledWorkers").formatNullable[Boolean]
+  )(apply, unlift(unapply))
+
+  val submissionFormat: Format[ComplianceLabour] = (
+    (__ \ "numOfWorkers").format[Int] and
+    (__ \ "tempWorkers").formatNullable[Boolean] and
+    (__ \ "provisionOfLabour").formatNullable[Boolean]
+  )(apply, unlift(unapply))
+
 }

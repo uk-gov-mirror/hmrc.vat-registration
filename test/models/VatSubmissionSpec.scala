@@ -19,12 +19,12 @@ package models
 import fixtures.{VatRegistrationFixture, VatSubmissionFixture}
 import helpers.BaseSpec
 import models.api.{BankAccount, SicAndCompliance, SicCode, VatSubmission}
-import play.api.libs.json.{JsSuccess, Json}
+import models.submission.UkCompany
+import play.api.libs.json._
 
 class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegistrationFixture with VatSubmissionFixture {
 
   val testMessageType = "SubmissionCreate"
-  val testTradersPartyType = "50"
   val testSafeID = "12345678901234567890"
   val testLine1 = "line1"
   val testLine2 = "line2"
@@ -33,7 +33,7 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
 
   val testVatSubmission: VatSubmission = VatSubmission(
     testMessageType,
-    Some(testTradersPartyType),
+    Some(UkCompany),
     Some(true),
     Some(testCrn),
     validApplicantDetails,
@@ -43,16 +43,38 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
     validFullTradingDetails,
     Some(validFullFRSDetails),
     testEligibilitySubmissionData,
-    zeroRatedSupplies
+    testReturns
   )
 
-  "converting a VatSubmission model into Json" should {
-    "produce a valid Json for a DES submission" in {
-      val json = Json.toJson(testVatSubmission)(VatSubmission.submissionFormat)
+  val testSicResult = SicAndCompliance(
+    businessDescription = "this is my business description",
+    labourCompliance = testSicAndCompliance.flatMap(_.labourCompliance),
+    mainBusinessActivity = SicCode("12345", "", ""),
+    otherBusinessActivities = List(SicCode("00998", "", ""), SicCode("00889", "", ""))
+  )
 
-      json mustBe vatSubmissionJson
+  "converting a VatSubmission model into Json" when {
+    "safe id is not present" should {
+      "produce a valid Json for submission" in {
+        val vatSubmission = testVatSubmission.copy(applicantDetails = validApplicantDetails.copy(bpSafeId = None))
+        val json = Json.toJson(vatSubmission)(VatSubmission.submissionFormat)
+
+        json mustBe vatSubmissionJson
+      }
     }
+    "safe id is present" should {
+      "produce valid json for submission with a list of customer ids" in {
+        val json = Json.toJson(testVatSubmission)(VatSubmission.submissionFormat)
+        val expectedJson = (JsPath \ "customerIdentification" \ "customerID")
+          .prune(vatSubmissionJson.as[JsObject].deepMerge(
+            Json.obj("customerIdentification" -> Json.obj(
+              "primeBPSafeID" -> testBpSafeId
+            ))
+          )).get
 
+        json mustBe expectedJson
+      }
+    }
     "produce a Json to store it in a Mongo DB" in {
       val json = Json.toJson(testVatSubmission)
 
@@ -70,7 +92,7 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
     "write a default reason why the bank account isn't provided" in {
       val vatSubmissionWithoutBank: VatSubmission = VatSubmission(
         testMessageType,
-        Some(testTradersPartyType),
+        Some(UkCompany),
         Some(true),
         Some(testCrn),
         validApplicantDetails,
@@ -80,7 +102,7 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
         validFullTradingDetails,
         Some(validFullFRSDetails),
         testEligibilitySubmissionData,
-        zeroRatedSupplies
+        testReturns
       )
 
       val res = Json.toJson(vatSubmissionWithoutBank)(VatSubmission.submissionFormat)
@@ -90,25 +112,68 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
     }
   }
 
-  "validating Json" should {
-    "successfully validate a valid json submission" in {
-      val expectedSic = SicAndCompliance(
-        businessDescription = "this is my business description",
-        labourCompliance = None,
-        mainBusinessActivity = SicCode("12345", "", ""),
-        otherBusinessActivities = List(SicCode("00998", "", ""), SicCode("00889", "", ""))
-      )
+  "validating Json" when {
+    "all sections are defined" should {
+      "successfully validate a valid json submission" in {
+        val expectedFrs = validFullFRSDetails.copy(businessGoods = None)
 
-      val expectedFrs = validFullFRSDetails.copy(businessGoods = None)
+        val expected = testVatSubmission.copy(
+          applicantDetails = validApplicantDetails.copy(bpSafeId = None),
+          sicAndCompliance = testSicResult,
+          flatRateScheme = Some(expectedFrs)
+        )
 
-      val expected = testVatSubmission.copy(
-        sicAndCompliance = expectedSic,
-        flatRateScheme = Some(expectedFrs)
-      )
+        val result = Json.fromJson[VatSubmission](vatSubmissionJson)(VatSubmission.submissionFormat)
 
-      val result = Json.fromJson[VatSubmission](vatSubmissionJson)(VatSubmission.submissionFormat)
+        result mustBe JsSuccess(expected)
+      }
+    }
+    "without the compliance section" should {
+      "validate successfully" in {
+        val json = vatSubmissionJson.as[JsObject] - "compliance"
+        val expectedFrs = validFullFRSDetails.copy(businessGoods = None)
 
-      result mustBe JsSuccess(expected)
+        val expected = testVatSubmission.copy(
+          applicantDetails = validApplicantDetails.copy(bpSafeId = None),
+          sicAndCompliance = testSicResult.copy(labourCompliance = None),
+          flatRateScheme = Some(expectedFrs)
+        )
+
+        val result = Json.fromJson[VatSubmission](json)(VatSubmission.submissionFormat)
+
+        result mustBe JsSuccess(expected)
+      }
+    }
+    "without the FRS section" should {
+      "validate successfully" in {
+        val json = (__ \ "subscription" \ "schemes").prune(vatSubmissionJson).get
+
+        val expected = testVatSubmission.copy(
+          applicantDetails = validApplicantDetails.copy(bpSafeId = None),
+          sicAndCompliance = testSicResult,
+          flatRateScheme = None
+        )
+
+        val result = Json.fromJson[VatSubmission](json)(VatSubmission.submissionFormat)
+
+        result mustBe JsSuccess(expected)
+      }
+    }
+    "without the Traders Party Type" should {
+      "validate successfully" in {
+        val json = (__ \ "customerIdentification" \ "tradersPartyType").prune(vatSubmissionJson).get
+
+        val expected = testVatSubmission.copy(
+          tradersPartyType = None,
+          applicantDetails = validApplicantDetails.copy(bpSafeId = None),
+          flatRateScheme = Some(validFullFRSDetails.copy(businessGoods = None)),
+          sicAndCompliance = testSicResult
+        )
+
+        val result = Json.fromJson[VatSubmission](json)(VatSubmission.submissionFormat)
+
+        result mustBe JsSuccess(expected)
+      }
     }
   }
 
@@ -128,7 +193,7 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
       val res = VatSubmission.fromVatScheme(scheme)
 
       res mustBe VatSubmission(
-        tradersPartyType = None,
+        tradersPartyType = Some(UkCompany),
         confirmInformationDeclaration = Some(true),
         companyRegistrationNumber = Some("CRN"),
         applicantDetails = validApplicantDetails,
@@ -138,7 +203,7 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
         tradingDetails = validFullTradingDetails,
         flatRateScheme = validFullFlatRateScheme.frsDetails,
         eligibilitySubmissionData = testEligibilitySubmissionData,
-        zeroRatedSupplies = zeroRatedSupplies
+        returns = testReturns
       )
     }
 

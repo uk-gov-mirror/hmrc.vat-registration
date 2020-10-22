@@ -16,11 +16,12 @@
 
 package models.api
 
+import models.submission.{PartyType, UkCompany}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class VatSubmission(messageType: String = "SubscriptionCreate",
-                         tradersPartyType: Option[String],
+                         tradersPartyType: Option[PartyType],
                          confirmInformationDeclaration: Option[Boolean],
                          companyRegistrationNumber: Option[String],
                          applicantDetails: ApplicantDetails,
@@ -30,48 +31,42 @@ case class VatSubmission(messageType: String = "SubscriptionCreate",
                          tradingDetails: TradingDetails,
                          flatRateScheme: Option[FRSDetails],
                          eligibilitySubmissionData: EligibilitySubmissionData,
-                         zeroRatedSupplies: BigDecimal)
+                         returns: Returns)
 
 object VatSubmission {
   val submissionFormat: OFormat[VatSubmission] = (
     (__ \ "messageType").format[String] and
-    (__ \ "customerIdentification" \ "tradersPartyType").formatNullable[String] and
+    (__ \ "customerIdentification" \ "tradersPartyType").formatNullable[PartyType] and
     (__ \ "declaration" \ "declarationSigning" \ "confirmInformationDeclaration").formatNullable[Boolean] and
     (__ \ "subscription" \ "corporateBodyRegistered" \ "companyRegistrationNumber").formatNullable[String] and
     (__).format[ApplicantDetails](ApplicantDetails.submissionFormat) and
-    (__ \ "bankDetails").formatNullable[JsValue].inmap[Option[BankAccount]](
-      a => BankAccount.submissionReads(a),
-      b => BankAccount.submissionWrites(b)
-    ) and
-    (__ \ "businessActivities").format[SicAndCompliance](SicAndCompliance.submissionFormat) and
+    (__ \ "bankDetails").formatNullable[JsValue]
+      .inmap[Option[BankAccount]](BankAccount.submissionReads, BankAccount.submissionWrites) and
+    (__).format[SicAndCompliance](SicAndCompliance.submissionFormat) and
     (__ \ "contact").format[BusinessContact](BusinessContact.submissionFormat) and
     (__).format[TradingDetails](TradingDetails.submissionFormat) and
     (__ \ "subscription" \ "schemes").formatNullable[FRSDetails](FRSDetails.submissionFormat) and
     (__).format[EligibilitySubmissionData](EligibilitySubmissionData.submissionFormat) and
-    (__ \ "subscription" \ "yourTurnover" \ "zeroRatedSupplies").format[BigDecimal]
-    )(VatSubmission.apply, unlift(VatSubmission.unapply))
+    (__).format[Returns](Returns.submissionFormat)
+  )(VatSubmission.apply, unlift(VatSubmission.unapply))
 
   implicit val mongoFormat: OFormat[VatSubmission] = Json.format[VatSubmission]
 
-  def fromVatScheme(scheme: VatScheme): VatSubmission = {
-    (scheme.eligibilitySubmissionData, scheme.applicantDetails, scheme.bankAccount,
-      scheme.sicAndCompliance, scheme.businessContact, scheme.tradingDetails, scheme.flatRateScheme, scheme.returns.flatMap(_.zeroRatedSupplies)) match {
-      case (Some(eligibilityData), Some(applicant), bankAcc, Some(sac), Some(contact), Some(trading), frs, Some(zrs)) =>
-        VatSubmission(
-          tradersPartyType = None,
-          confirmInformationDeclaration = Some(true),
-          companyRegistrationNumber = Some("CRN"),
-          applicantDetails = applicant,
-          bankDetails = bankAcc,
-          sicAndCompliance = sac,
-          businessContact = contact,
-          tradingDetails = trading,
-          flatRateScheme = frs.flatMap(_.frsDetails),
-          eligibilitySubmissionData = eligibilityData,
-          zeroRatedSupplies = zrs
-        )
-      case _ =>
-        throw new IllegalStateException("Vat scheme missing required sections")
-    }
-  }
+  private def missingSection(section: String) = throw new IllegalStateException(s"VAT scheme missing $section section")
+
+  def fromVatScheme(scheme: VatScheme): VatSubmission =
+    VatSubmission(
+      tradersPartyType = Some(UkCompany),
+      confirmInformationDeclaration = Some(true),
+      companyRegistrationNumber = Some("CRN"),
+      applicantDetails = scheme.applicantDetails.getOrElse(missingSection("ApplicantDetails")),
+      bankDetails = scheme.bankAccount,
+      sicAndCompliance = scheme.sicAndCompliance.getOrElse(missingSection("SIC and Compliance")),
+      businessContact = scheme.businessContact.getOrElse(missingSection("Business contact")),
+      tradingDetails = scheme.tradingDetails.getOrElse(missingSection("Trading details")),
+      flatRateScheme = scheme.flatRateScheme.flatMap(_.frsDetails),
+      eligibilitySubmissionData = scheme.eligibilitySubmissionData.getOrElse(missingSection("Eligibility")),
+      returns = scheme.returns.getOrElse(missingSection("Returns"))
+    )
+
 }

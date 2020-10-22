@@ -93,6 +93,21 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
     None
   )
 
+  val fullSubmissionJson = Json.obj(
+    "subscription" -> Json.obj(
+      "reasonForSubscription" -> Json.obj(
+        "voluntaryOrEarlierDate" -> "2017-01-01"
+      ),
+      "yourTurnover" -> Json.obj(
+        "VATRepaymentExpected" -> true,
+        "zeroRatedSupplies" -> 12.99
+      )
+    ),
+    "periods" -> Json.obj(
+      "customerPreferredPeriodicity" -> "MA"
+    )
+  )
+
   "Parsing Returns" should {
     "succeed" when {
       "full json is present" in {
@@ -217,5 +232,89 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
     }
   }
 
+  "readStaggerStart" should {
+    "convert the stagger to the correct values" in {
+      val values = List(
+        Some("MM"),
+        Some("MA"),
+        Some("MB"),
+        Some("MC"),
+        None
+      )
+
+      val result = values.map(Returns.readStaggerStart)
+
+      result mustBe List(
+        None,
+        Some("jan"),
+        Some("feb"),
+        Some("mar"),
+        None
+      )
+    }
+  }
+
+  "readPeriod" should {
+    "convert the periods to the correct values" in {
+      val values = List(
+        "MM",
+        "MA",
+        "MB",
+        "MC"
+      )
+
+      val result = values.map(Returns.readPeriod)
+
+      result mustBe List(
+        "monthly",
+        "quarterly",
+        "quarterly",
+        "quarterly"
+      )
+    }
+  }
+
+  "writePeriod" should {
+    "convert the periods to the correct values" in {
+      val values = List(
+        ("monthly", Some("invalid")),
+        ("monthly", Some("jan")),
+        ("monthly", None),
+        ("quarterly", Some("jan")),
+        ("quarterly", Some("feb")),
+        ("quarterly", Some("mar")),
+        ("quarterly", Some("apr")),
+        ("quarterly", None),
+        ("invalid", Some("invalid"))
+      )
+
+      val result = values.map {
+        case (freq, period) => Returns.writePeriod(freq, period)
+      }
+
+      result mustBe List(
+        Some("MM"),
+        Some("MM"),
+        Some("MM"),
+        Some("MA"),
+        Some("MB"),
+        Some("MC"),
+        None,
+        None,
+        None
+      )
+    }
+  }
+
+  "submissionFormat" should {
+    "parse json" in {
+      val result = Json.fromJson[Returns](fullSubmissionJson)(Returns.submissionFormat)
+      result mustBe JsSuccess(fullReturns)
+    }
+    "write to json" in {
+      val result = Json.toJson(fullReturns)(Returns.submissionFormat)
+      result mustBe fullSubmissionJson
+    }
+  }
 
 }

@@ -20,7 +20,7 @@ import config.BackendConfig
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models.api.{Address, VatSubmission}
-import models.submission.DESSubmission
+import models.submission.{DESSubmission, UkCompany}
 import org.mockito.ArgumentMatchers.{any, anyString, contains}
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
@@ -52,7 +52,7 @@ class DesConnectorSpec extends PlaySpec with VatRegSpec with MockitoSugar with H
 
   val validVatSubmission: VatSubmission = VatSubmission(
     "SubmissionCreate",
-    Some("50"),
+    Some(UkCompany),
     Some(true),
     Some("testCrn"),
     validApplicantDetails,
@@ -62,7 +62,7 @@ class DesConnectorSpec extends PlaySpec with VatRegSpec with MockitoSugar with H
     validFullTradingDetails,
     Some(validFullFRSDetails),
     testEligibilitySubmissionData,
-    19.99
+    testReturns
   )
 
   val upstream4xx: Upstream4xxResponse = Upstream4xxResponse("400", 400, 400)

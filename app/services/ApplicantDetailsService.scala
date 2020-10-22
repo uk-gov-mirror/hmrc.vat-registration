@@ -25,10 +25,6 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ApplicantDetailsService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
-  def updateIVStatus(regId: String, ivStatus: Boolean)(implicit ec: ExecutionContext): Future[Boolean] = {
-    registrationRepository.updateIVStatus(regId, ivStatus)
-  }
-
   def getApplicantDetailsData(regId: String)(implicit ex: ExecutionContext): Future[Option[ApplicantDetails]] = {
     registrationRepository.getApplicantDetails(regId)
   }

@@ -21,7 +21,7 @@ import java.time.LocalDate
 import common.TransactionId
 import enums.VatRegStatus
 import models.api._
-import models.submission.DateOfBirth
+import models.submission.{DateOfBirth, OwnerProprietor, UkCompany}
 import play.api.libs.json.{JsObject, Json}
 
 trait VatRegistrationFixture {
@@ -51,7 +51,7 @@ trait VatRegistrationFixture {
   val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
   val testBankDetails = BankAccountDetails("Test Bank Account", "010203", "01023456")
   val testFormerName = FormerName(Some(testName), Some(testDate))
-  val testReturns = Returns(false, "", None, StartDate(None), None)
+  val testReturns = Returns(false, "quarterly", Some("jan"), StartDate(Some(testDate)), Some(12.99))
   val zeroRatedSupplies: BigDecimal = 12.99
   val testBpSafeId = "testBpSafeId"
 
@@ -59,7 +59,8 @@ trait VatRegistrationFixture {
     threshold = testMandatoryThreshold,
     exceptionOrExemption = "0",
     estimates = TurnoverEstimates(123456),
-    customerStatus = MTDfB
+    customerStatus = MTDfB,
+    completionCapacity = OwnerProprietor
   )
 
   val validApplicantDetails: ApplicantDetails = ApplicantDetails(
@@ -68,7 +69,7 @@ trait VatRegistrationFixture {
     name = testName,
     dateOfBirth = DateOfBirth(testDate),
     companyName = testCompanyName,
-    companyNumber = testCrn,
+    companyNumber = Some(testCrn),
     dateOfIncorporation = testDateOFIncorp,
     ctutr = testCtUtr,
     currentAddress = testAddress,
@@ -123,7 +124,7 @@ trait VatRegistrationFixture {
   )
 
   val testFullSubmission: VatSubmission = VatSubmission(
-    tradersPartyType = None,
+    tradersPartyType = Some(UkCompany),
     confirmInformationDeclaration = Some(true),
     companyRegistrationNumber = Some("CRN"),
     applicantDetails = validApplicantDetails,
@@ -133,7 +134,7 @@ trait VatRegistrationFixture {
     tradingDetails = validFullTradingDetails,
     flatRateScheme = Some(validFullFRSDetails),
     eligibilitySubmissionData = testEligibilitySubmissionData,
-    zeroRatedSupplies = zeroRatedSupplies
+    returns = testReturns
   )
 
   val validBusinessContactJson = Json.parse(

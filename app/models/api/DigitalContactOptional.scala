@@ -19,6 +19,7 @@ package models.api
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.libs.json.Reads._
+import utils.JsonUtilities
 
 case class DigitalContactOptional(email: Option[String] = None,
                                   tel: Option[String] = None,
@@ -49,6 +50,9 @@ object DigitalContactOptional extends VatDigitalContactValidator {
     (__ \ "email").formatNullable[String] and
     (__ \ "telephone").formatNullable[String] and
     (__ \ "mobileNumber").formatNullable[String] and
-    (__ \ "emailVerified").formatNullable[Boolean]
+    OFormat[Option[Boolean]](
+      read =  { _: JsValue => JsSuccess(None) },
+      write = { _: Option[Boolean] => Json.obj() }
+    )
   )(DigitalContactOptional.apply, unlift(DigitalContactOptional.unapply))
 }

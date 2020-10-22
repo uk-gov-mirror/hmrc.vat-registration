@@ -20,7 +20,7 @@ import java.time.LocalDate
 import common.TransactionId
 import enums.VatRegStatus
 import models.api._
-import models.submission.DateOfBirth
+import models.submission.{DateOfBirth, OwnerProprietor}
 import uk.gov.hmrc.http.HeaderCarrier
 
 trait ITFixtures {
@@ -73,7 +73,7 @@ trait ITFixtures {
     name = testName,
     dateOfBirth = DateOfBirth(testDate),
     companyName = testCompanyName,
-    companyNumber = testCrn,
+    companyNumber = Some(testCrn),
     dateOfIncorporation = testDateOFIncorp,
     ctutr = testCtUtr,
     currentAddress = testAddress,
@@ -94,7 +94,8 @@ trait ITFixtures {
     threshold = testThreshold,
     exceptionOrExemption = "0",
     estimates = TurnoverEstimates(123456),
-    customerStatus = MTDfB
+    customerStatus = MTDfB,
+    completionCapacity = OwnerProprietor
   )
 
   val testFullVatScheme: VatScheme =
