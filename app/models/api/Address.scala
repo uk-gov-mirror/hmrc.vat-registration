@@ -19,12 +19,23 @@ package models.api
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
+case class Country(code: Option[String], name: Option[String])
+
+object Country {
+  implicit val format: Format[Country] = Json.format[Country]
+
+  val submissionFormat: Format[Country] = Format[Country](
+    Reads[Country] { json => (json \ "country").validate[Country] },
+    Writes[Country] { country => country.code.map(JsString).getOrElse(JsNull) }
+  )
+}
+
 case class Address(line1: String,
                    line2: String,
                    line3: Option[String] = None,
                    line4: Option[String] = None,
                    postcode: Option[String] = None,
-                   country: Option[String] = None)
+                   country: Option[Country] = None)
 
 object Address {
 
@@ -37,6 +48,10 @@ object Address {
       (__ \ "line4").formatNullable[String] and
       (__ \ "postCode").formatNullable[String] and
       (__ \ "countryCode").formatNullable[String]
+        .inmap[Option[Country]](
+          optCode => optCode.map(code => Country(Some(code), None)),
+          optCountry => optCountry.flatMap(country => country.code)
+        )
     ) (Address.apply, unlift(Address.unapply))
 
 }

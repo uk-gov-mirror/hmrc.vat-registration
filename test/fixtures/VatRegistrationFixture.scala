@@ -37,7 +37,7 @@ trait VatRegistrationFixture {
   val testCrn = "testCrn"
   val testCtUtr = Some("testCtUtr")
   val testDateOFIncorp = LocalDate.of(2020, 1, 2)
-  val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some("UK"))
+  val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some(Country(Some("UK"), None)))
   val testSicCode = SicCode("88888", "description", "displayDetails")
   val testName = Name(first = Some("Forename"), middle = None, last = "Surname")
   val testOldName = Name(first = Some("Bob"), middle = None, last = "Smith")
@@ -46,8 +46,6 @@ trait VatRegistrationFixture {
   val exception = new Exception("Exception")
   val testVoluntaryThreshold = Threshold(mandatoryRegistration = false, None, None, None)
   val testMandatoryThreshold = Threshold(mandatoryRegistration = true, Some(LocalDate.of(2020, 10, 7)), Some(LocalDate.of(2020, 10, 7)), Some(LocalDate.of(2020, 10, 7)))
-  val currentAddress = Address("12 Lukewarm", "Oriental lane")
-  val testDigitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
   val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
   val testBankDetails = BankAccountDetails("Test Bank Account", "010203", "01023456")
   val testFormerName = FormerName(Some(testName), Some(testDate))
@@ -93,7 +91,7 @@ trait VatRegistrationFixture {
   val testBusinessContact = Some(BusinessContact(
     digitalContact = DigitalContact("email@email.com", Some("12345"), Some("54321")),
     website = Some("www.foo.com"),
-    ppob = Address("line1", "line2", None, None, None, Some("foo")),
+    ppob = Address("line1", "line2", None, None, None, Some(Country(Some("UK"), None))),
     commsPreference = Email
   ))
 
@@ -146,9 +144,11 @@ trait VatRegistrationFixture {
        |},
        |"website": "www.foo.com",
        |"ppob": {
-       |"line1": "line1",
-       |"line2": "line2",
-       |"country": "foo"
+       |  "line1": "line1",
+       |  "line2": "line2",
+       |  "country": {
+       |    "code": "UK"
+       |  }
        | },
        | "contactPreference": "Email"
        |}
