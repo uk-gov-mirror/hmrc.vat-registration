@@ -28,7 +28,6 @@ import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.http.HeaderCarrier
 import play.api.test.Helpers._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class NewRegistrationServiceSpec extends VatRegSpec

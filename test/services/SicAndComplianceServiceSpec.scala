@@ -25,7 +25,6 @@ import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
 import play.api.test.Helpers._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SicAndComplianceServiceSpec extends VatRegSpec with VatRegistrationFixture  {
@@ -36,11 +35,11 @@ class SicAndComplianceServiceSpec extends VatRegSpec with VatRegistrationFixture
     )
   }
   def getFromMongo(res:Future[Option[SicAndCompliance]]): OngoingStubbing[Future[Option[SicAndCompliance]]] =
-    when(mockRegistrationMongoRepository.fetchSicAndCompliance(any())(any()))
+    when(mockRegistrationMongoRepository.fetchSicAndCompliance(any()))
     .thenReturn(res)
 
   def updateMongo(res:Future[SicAndCompliance]): OngoingStubbing[Future[SicAndCompliance]] =
-    when(mockRegistrationMongoRepository.updateSicAndCompliance(any(),any())(any()))
+    when(mockRegistrationMongoRepository.updateSicAndCompliance(any(),any()))
     .thenReturn(res)
 
   "getSicAndCompliance" should {

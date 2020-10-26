@@ -33,10 +33,10 @@ import uk.gov.hmrc.mongo.MongoSpecSupport
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class RegistrationMongoRepositoryISpec extends MongoBaseSpec with MongoSpecSupport with FutureAssertions with ITFixtures {
+class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertions with ITFixtures {
 
   class Setup {
-    val repository: RegistrationMongoRepository = fakeApplication.injector.instanceOf[RegistrationMongoRepository]
+    val repository: RegistrationMongoRepository = app.injector.instanceOf[RegistrationMongoRepository]
 
     def insert(json: JsObject): WriteResult = await(repository.collection.insert(json))
 

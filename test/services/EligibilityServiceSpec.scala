@@ -23,7 +23,6 @@ import org.mockito.Mockito._
 import play.api.libs.json.{JsArray, JsObject, JsResultException, Json}
 import play.api.test.Helpers._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
@@ -38,7 +37,7 @@ class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   "getEligibilityData" should {
     "return an eligibility data json if found" in new Setup {
-      when(mockRegistrationMongoRepository.fetchEligibilityData(any())(any()))
+      when(mockRegistrationMongoRepository.fetchEligibilityData(any()))
         .thenReturn(Future.successful(Some(json)))
 
       val result: Option[JsObject] = await(service.getEligibilityData("regId"))
@@ -46,7 +45,7 @@ class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
     }
 
     "return None if none found matching regId" in new Setup {
-      when(mockRegistrationMongoRepository.fetchEligibilityData(any())(any()))
+      when(mockRegistrationMongoRepository.fetchEligibilityData(any()))
         .thenReturn(Future.successful(None))
 
       val result: Option[JsObject] = await(service.getEligibilityData("regId"))
@@ -78,9 +77,9 @@ class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
     val eligibilityData = Json.obj("sections" -> sections)
 
     "return the data that is being provided" in new Setup {
-      when(mockRegistrationMongoRepository.updateEligibilitySubmissionData(any(), any())(any()))
+      when(mockRegistrationMongoRepository.updateEligibilitySubmissionData(any(), any()))
         .thenReturn(Future.successful(testEligibilitySubmissionData))
-      when(mockRegistrationMongoRepository.updateEligibilityData(any(), any())(any()))
+      when(mockRegistrationMongoRepository.updateEligibilityData(any(), any()))
         .thenReturn(Future.successful(eligibilityData))
 
       val result: JsObject = await(service.updateEligibilityData("regId", eligibilityData))
@@ -96,16 +95,16 @@ class EligibilityServiceSpec extends VatRegSpec with VatRegistrationFixture {
     }
 
     "encounter an exception if an error occurs during eligibility submission data update" in new Setup {
-      when(mockRegistrationMongoRepository.updateEligibilitySubmissionData(any(), any())(any()))
+      when(mockRegistrationMongoRepository.updateEligibilitySubmissionData(any(), any()))
         .thenReturn(Future.failed(new Exception("")))
 
       intercept[Exception](await(service.updateEligibilityData("regId", eligibilityData)))
     }
 
     "encounter an exception if an error occurs" in new Setup {
-      when(mockRegistrationMongoRepository.updateEligibilitySubmissionData(any(), any())(any()))
+      when(mockRegistrationMongoRepository.updateEligibilitySubmissionData(any(), any()))
         .thenReturn(Future.successful(testEligibilitySubmissionData))
-      when(mockRegistrationMongoRepository.updateEligibilityData(any(), any())(any()))
+      when(mockRegistrationMongoRepository.updateEligibilityData(any(), any()))
         .thenReturn(Future.failed(new Exception("")))
 
       intercept[Exception](await(service.updateEligibilityData("regId", eligibilityData)))

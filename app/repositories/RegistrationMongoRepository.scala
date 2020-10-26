@@ -151,7 +151,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
 
   private[repositories] def tidSelector(id: String) = BSONDocument("transactionId" -> id)
 
-  def updateIVStatus(regId: String, ivStatus: Boolean)(implicit ex: ExecutionContext): Future[Boolean] = {
+  def updateIVStatus(regId: String, ivStatus: Boolean): Future[Boolean] = {
     val querySelect = Json.obj("registrationId" -> regId, "applicantDetails" -> Json.obj("$exists" -> true))
     val setDoc = Json.obj("$set" -> Json.obj("applicantDetails.ivPassed" -> ivStatus))
 
@@ -180,15 +180,15 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     }
   }
 
-  def retrieveTradingDetails(regId: String)(implicit ex: ExecutionContext): Future[Option[TradingDetails]] = {
+  def retrieveTradingDetails(regId: String): Future[Option[TradingDetails]] = {
     fetchBlock[TradingDetails](regId, "tradingDetails")
   }
 
-  def updateTradingDetails(regId: String, tradingDetails: TradingDetails)(implicit ex: ExecutionContext): Future[TradingDetails] = {
+  def updateTradingDetails(regId: String, tradingDetails: TradingDetails): Future[TradingDetails] = {
     updateBlock(regId, tradingDetails, "tradingDetails")
   }
 
-  def updateReturns(regId: String, returns: Returns)(implicit ex: ExecutionContext): Future[Returns] = {
+  def updateReturns(regId: String, returns: Returns): Future[Returns] = {
     val selector = regIdSelector(regId)
     val update = BSONDocument("$set" -> BSONDocument("returns" -> Json.toJson(returns)))
     collection.update(selector, update) map { updateResult =>
@@ -197,7 +197,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     }
   }
 
-  def fetchBankAccount(regId: String)(implicit ex: ExecutionContext): Future[Option[BankAccount]] = {
+  def fetchBankAccount(regId: String): Future[Option[BankAccount]] = {
     val selector = regIdSelector(regId)
     val projection = Json.obj("bankAccount" -> 1)
     collection.find(selector, projection).one[JsObject].map(
@@ -205,7 +205,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     )
   }
 
-  def updateBankAccount(regId: String, bankAccount: BankAccount)(implicit ex: ExecutionContext): Future[BankAccount] = {
+  def updateBankAccount(regId: String, bankAccount: BankAccount): Future[BankAccount] = {
     val selector = regIdSelector(regId)
     val update = BSONDocument("$set" -> Json.obj("bankAccount" -> Json.toJson(bankAccount)(bankAccountCryptoFormatter)))
     collection.update(selector, update) map { updateResult =>
@@ -221,7 +221,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     }
   }
 
-  def getApplicantDetails(regId: String)(implicit ec: ExecutionContext): Future[Option[ApplicantDetails]] = {
+  def getApplicantDetails(regId: String): Future[Option[ApplicantDetails]] = {
     val projection = Json.obj("applicantDetails" -> 1, "_id" -> 0)
 
     collection.find(regIdSelector(regId), Some(projection)).one[JsObject].map { doc =>
@@ -237,7 +237,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     }
   }
 
-  def patchApplicantDetails(regId: String, applicantDetails: ApplicantDetails)(implicit ec: ExecutionContext): Future[ApplicantDetails] = {
+  def patchApplicantDetails(regId: String, applicantDetails: ApplicantDetails): Future[ApplicantDetails] = {
     val query = Json.obj("registrationId" -> regId)
     val updateData = Json.obj("$set" -> Json.obj("applicantDetails" -> applicantDetails))
 
@@ -258,7 +258,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
 
   private[repositories] def regIdSelector(regId: String) = BSONDocument("registrationId" -> regId)
 
-  def removeFlatRateScheme(regId: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+  def removeFlatRateScheme(regId: String): Future[Boolean] = {
     val selector = regIdSelector(regId)
     val update = BSONDocument("$unset" -> BSONDocument("flatRateScheme" -> ""))
     collection.update(selector, update) map { updateResult =>
@@ -276,14 +276,14 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     }
   }
 
-  def clearDownDocument(transId: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+  def clearDownDocument(transId: String): Future[Boolean] = {
     collection.remove(tidSelector(transId)) map { wr =>
       if (!wr.ok) logger.error(s"[clearDownDocument] - Error deleting vat reg doc for txId $transId - Error: ${Message.unapply(wr)}")
       wr.ok
     }
   }
 
-  def fetchBlock[T](regId: String, key: String)(implicit ec: ExecutionContext, rds: Reads[T]): Future[Option[T]] = {
+  def fetchBlock[T](regId: String, key: String)(implicit rds: Reads[T]): Future[Option[T]] = {
     val projection = Some(Json.obj(key -> 1))
     collection.find(regIdSelector(regId), projection).one[JsObject].map { doc =>
       doc.fold(throw MissingRegDocument(regId)) { js =>
@@ -292,7 +292,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     }
   }
 
-  def updateBlock[T](regId: String, data: T, key: String = "")(implicit ec: ExecutionContext, writes: Writes[T]): Future[T] = {
+  def updateBlock[T](regId: String, data: T, key: String = "")(implicit writes: Writes[T]): Future[T] = {
     def toCamelCase(str: String): String = str.head.toLower + str.tail
 
     val selectorKey = if (key == "") toCamelCase(data.getClass.getSimpleName) else key
@@ -313,34 +313,34 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     }
   }
 
-  def fetchSicAndCompliance(regId: String)(implicit ec: ExecutionContext): Future[Option[SicAndCompliance]] =
-    fetchBlock[SicAndCompliance](regId, "sicAndCompliance")(ec, SicAndCompliance.mongoFormats)
+  def fetchSicAndCompliance(regId: String): Future[Option[SicAndCompliance]] =
+    fetchBlock[SicAndCompliance](regId, "sicAndCompliance")(SicAndCompliance.mongoFormats)
 
-  def updateSicAndCompliance(regId: String, sicAndCompliance: SicAndCompliance)(implicit ec: ExecutionContext): Future[SicAndCompliance] =
-    updateBlock(regId, sicAndCompliance, "sicAndCompliance")(ec, SicAndCompliance.mongoFormats)
+  def updateSicAndCompliance(regId: String, sicAndCompliance: SicAndCompliance): Future[SicAndCompliance] =
+    updateBlock(regId, sicAndCompliance, "sicAndCompliance")(SicAndCompliance.mongoFormats)
 
-  def fetchBusinessContact(regId: String)(implicit ec: ExecutionContext): Future[Option[BusinessContact]] =
+  def fetchBusinessContact(regId: String): Future[Option[BusinessContact]] =
     fetchBlock[BusinessContact](regId, "businessContact")
 
-  def updateBusinessContact(regId: String, businessCont: BusinessContact)(implicit ec: ExecutionContext): Future[BusinessContact] =
+  def updateBusinessContact(regId: String, businessCont: BusinessContact): Future[BusinessContact] =
     updateBlock(regId, businessCont, "businessContact")
 
-  def fetchFlatRateScheme(regId: String)(implicit ec: ExecutionContext): Future[Option[FlatRateScheme]] =
+  def fetchFlatRateScheme(regId: String): Future[Option[FlatRateScheme]] =
     fetchBlock[FlatRateScheme](regId, "flatRateScheme")
 
-  def updateFlatRateScheme(regId: String, flatRateScheme: FlatRateScheme)(implicit ec: ExecutionContext): Future[FlatRateScheme] =
+  def updateFlatRateScheme(regId: String, flatRateScheme: FlatRateScheme): Future[FlatRateScheme] =
     updateBlock(regId, flatRateScheme, "flatRateScheme")
 
-  def fetchEligibilityData(regId: String)(implicit ec: ExecutionContext): Future[Option[JsObject]] =
+  def fetchEligibilityData(regId: String): Future[Option[JsObject]] =
     fetchBlock[JsObject](regId, "eligibilityData")
 
-  def updateEligibilityData(regId: String, eligibilityData: JsObject)(implicit ec: ExecutionContext): Future[JsObject] =
+  def updateEligibilityData(regId: String, eligibilityData: JsObject): Future[JsObject] =
     updateBlock(regId, eligibilityData, "eligibilityData")
 
-  def fetchEligibilitySubmissionData(regId: String)(implicit ec: ExecutionContext): Future[Option[EligibilitySubmissionData]] =
+  def fetchEligibilitySubmissionData(regId: String): Future[Option[EligibilitySubmissionData]] =
     fetchBlock[EligibilitySubmissionData](regId, "eligibilitySubmissionData")
 
-  def updateEligibilitySubmissionData(regId: String, eligibilitySubmissionData: EligibilitySubmissionData)(implicit ec: ExecutionContext): Future[EligibilitySubmissionData] =
+  def updateEligibilitySubmissionData(regId: String, eligibilitySubmissionData: EligibilitySubmissionData): Future[EligibilitySubmissionData] =
     updateBlock(regId, eligibilitySubmissionData, "eligibilitySubmissionData")
 
 }

@@ -24,7 +24,6 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import play.api.test.Helpers._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
@@ -37,7 +36,7 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   "retrieveFlatRateScheme" should {
     "return a Flat Rate Scheme if found" in new Setup {
-      when(mockRegistrationMongoRepository.fetchFlatRateScheme(any())(any()))
+      when(mockRegistrationMongoRepository.fetchFlatRateScheme(any()))
         .thenReturn(Future.successful(Some(validFullFlatRateScheme)))
 
       val result: Option[FlatRateScheme] = await(service.retrieveFlatRateScheme(testRegId))
@@ -46,7 +45,7 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
     }
 
     "return None if none found matching regId" in new Setup {
-      when(mockRegistrationMongoRepository.fetchFlatRateScheme(any())(any()))
+      when(mockRegistrationMongoRepository.fetchFlatRateScheme(any()))
         .thenReturn(Future.successful(None))
 
       val result: Option[FlatRateScheme] = await(service.retrieveFlatRateScheme(testRegId))
@@ -57,7 +56,7 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   "updateFlatRateScheme" should {
     "return the data that is being input" in new Setup {
-      when(mockRegistrationMongoRepository.updateFlatRateScheme(any(),any())(any()))
+      when(mockRegistrationMongoRepository.updateFlatRateScheme(any(),any()))
         .thenReturn(Future.successful(validFullFlatRateScheme))
 
       val result: FlatRateScheme = await(service.updateFlatRateScheme(testRegId, validFullFlatRateScheme))
@@ -66,14 +65,14 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
     }
 
     "encounter an exception if an error occurs" in new Setup {
-      when(mockRegistrationMongoRepository.updateFlatRateScheme(any(),any())(any()))
+      when(mockRegistrationMongoRepository.updateFlatRateScheme(any(),any()))
         .thenReturn(Future.failed(new Exception))
 
       intercept[Exception](await(service.updateFlatRateScheme(testRegId, validFullFlatRateScheme)))
     }
 
     "encounter a MissingRegDocument if no document is found" in new Setup {
-      when(mockRegistrationMongoRepository.updateFlatRateScheme(any(), any())(any()))
+      when(mockRegistrationMongoRepository.updateFlatRateScheme(any(), any()))
         .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
       intercept[MissingRegDocument](await(service.updateFlatRateScheme(testRegId, validFullFlatRateScheme)))
@@ -82,7 +81,7 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   "removeFlatRateScheme" should {
     "return true when the block has been removed" in new Setup {
-      when(mockRegistrationMongoRepository.removeFlatRateScheme(any())(any()))
+      when(mockRegistrationMongoRepository.removeFlatRateScheme(any()))
         .thenReturn(Future.successful(true))
 
       val result: Boolean = await(service.removeFlatRateScheme(testRegId))
@@ -91,14 +90,14 @@ class FlatRateSchemeServiceSpec extends VatRegSpec with VatRegistrationFixture {
     }
 
     "encounter an exception if an error occurs" in new Setup {
-      when(mockRegistrationMongoRepository.removeFlatRateScheme(any())(any()))
+      when(mockRegistrationMongoRepository.removeFlatRateScheme(any()))
         .thenReturn(Future.failed(new Exception))
 
       intercept[Exception](await(service.removeFlatRateScheme(testRegId)))
     }
 
     "encounter a MissingRegDocument if no document is found" in new Setup {
-      when(mockRegistrationMongoRepository.removeFlatRateScheme(any())(any()))
+      when(mockRegistrationMongoRepository.removeFlatRateScheme(any()))
         .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
       intercept[MissingRegDocument](await(service.removeFlatRateScheme(testRegId)))

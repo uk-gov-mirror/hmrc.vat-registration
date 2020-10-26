@@ -24,7 +24,6 @@ import mocks.{MockDailyQuotaRepository, MockTrafficManagementRepository}
 import models.api.{Draft, OTRS, RegistrationInformation, Submitted, VatReg}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.test.Helpers._
 
 import scala.concurrent.Future

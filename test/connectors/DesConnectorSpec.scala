@@ -19,7 +19,7 @@ package connectors
 import config.BackendConfig
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import models.api.{Address, VatSubmission}
+import models.api.VatSubmission
 import models.submission.{DESSubmission, UkCompany}
 import org.mockito.ArgumentMatchers.{any, anyString, contains}
 import org.mockito.Mockito.when
@@ -27,7 +27,7 @@ import org.mockito.stubbing.OngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.Configuration
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.Writes
 import play.api.test.Helpers._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig

@@ -29,11 +29,10 @@ import models.submission.OwnerProprietor
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
-import play.api.libs.json.{JsArray, JsObject, JsValue, Json, Reads}
+import play.api.libs.json.{JsValue, Json, Reads}
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationFixture {
@@ -224,7 +223,7 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
   "call to clearDownDocument" should {
     "pass" when {
       "given a transactionid" in new Setup {
-        when(mockRegistrationMongoRepository.clearDownDocument(ArgumentMatchers.eq("testTransID"))(any())).thenReturn(Future.successful(true))
+        when(mockRegistrationMongoRepository.clearDownDocument(ArgumentMatchers.eq("testTransID"))).thenReturn(Future.successful(true))
         await(service.clearDownDocument("testTransID")) mustBe true
       }
     }
@@ -235,7 +234,7 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
     val thresholdInTwelveMonths = LocalDate.of(2017, 7, 16)
 
     "return nothing if nothing in EligibilityData" in new Setup {
-      when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any())(any())).thenReturn(Future.successful(None))
+      when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any())).thenReturn(Future.successful(None))
 
       await(service.getThreshold("regId")) mustBe None
     }
@@ -261,7 +260,7 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
         thresholdNextThirtyDays = None
       )
 
-      when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any())(any())).thenReturn(Future.successful(Some(eligibilitySubmissionData)))
+      when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any())).thenReturn(Future.successful(Some(eligibilitySubmissionData)))
 
       implicit val read: Reads[Threshold] = Threshold.eligibilityDataJsonReads
 
@@ -271,7 +270,7 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
 
   "call to getTurnoverEstimates" should {
     "return nothing if nothing in EligibilityData" in new Setup {
-      when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any())(any())).thenReturn(Future.successful(None))
+      when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any())).thenReturn(Future.successful(None))
 
       await(service.getTurnoverEstimates("regId")) mustBe None
     }
@@ -289,7 +288,7 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
 
       val expected: TurnoverEstimates = TurnoverEstimates(turnoverEstimate = 10001)
 
-      when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any())(any())).thenReturn(Future.successful(Some(eligibilitySubmissionData)))
+      when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any())).thenReturn(Future.successful(Some(eligibilitySubmissionData)))
 
       implicit val read: Reads[TurnoverEstimates] = TurnoverEstimates.eligibilityDataJsonReads
 

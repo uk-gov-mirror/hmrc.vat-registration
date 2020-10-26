@@ -53,7 +53,7 @@ class SubmissionService @Inject()(val sequenceMongoRepository: SequenceMongoRepo
     sequenceMongoRepository.getNext("AcknowledgementID").map(ref => f"BRVT$ref%011d")
 
   private[services] def ensureAcknowledgementReference(regId: String, status: VatRegStatus.Value)
-                                                      (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[String] = {
+                                                      (implicit hc: HeaderCarrier): Future[String] = {
     registrationRepository.retrieveVatScheme(regId) flatMap {
       case Some(vs) => vs.acknowledgementReference.fold(
         for {

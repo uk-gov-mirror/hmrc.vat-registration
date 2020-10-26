@@ -17,16 +17,16 @@
 import sbt._
 
 object AppDependencies {
-  def apply(): Seq[ModuleID] = CompileDependencies() ++ UnitTestDependencies() ++ IntegrationTestDependencies() ++ TempMacWorkaround()
+  def apply(): Seq[ModuleID] = CompileDependencies() ++ UnitTestDependencies() ++ IntegrationTestDependencies()
 }
 
 object CompileDependencies {
-  val domainVersion = "5.6.0-play-26"
-  val bootstrapVersion = "1.8.0"
-  val simpleReactiveMongoVersion = "7.27.0-play-26"
+  val domainVersion = "5.10.0-play-26"
+  val bootstrapVersion = "1.16.0"
+  val simpleReactiveMongoVersion = "7.30.0-play-26"
   val catsVersion = "0.9.0"
-  private val authClientVersion = "3.0.0-play-26"
-  private val playJsonVersion = "2.6.14"
+  private val authClientVersion = "3.2.0-play-26"
+  private val playJsonVersion = "2.9.1"
 
   val compile = Seq(
     "uk.gov.hmrc" %% "simple-reactivemongo" % simpleReactiveMongoVersion,
@@ -47,7 +47,7 @@ object UnitTestDependencies extends CommonTestDependencies {
 
   override val testDependencies: Seq[ModuleID] = Seq(
     "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
-    "org.scoverage" % "scalac-scoverage-runtime_2.11" % scoverageVersion % scope,
+    "org.scoverage" %% "scalac-scoverage-runtime" % scoverageVersion % scope,
     "uk.gov.hmrc" %% "reactivemongo-test" % reactiveMongoTestVersion % scope,
     "org.mockito" % "mockito-core" % mockitoVersion % scope
   )
@@ -62,7 +62,7 @@ object IntegrationTestDependencies extends CommonTestDependencies {
 
   override val testDependencies: Seq[ModuleID] = Seq(
     "org.scalatestplus.play" %% "scalatestplus-play" % scalaTestPlusVersion % scope,
-    "org.scoverage" % "scalac-scoverage-runtime_2.11" % scoverageVersion % scope,
+    "org.scoverage" %% "scalac-scoverage-runtime" % scoverageVersion % scope,
     "uk.gov.hmrc" %% "reactivemongo-test" % reactiveMongoTestVersion % scope,
     "com.github.tomakehurst" % "wiremock-jre8" % wireMockVersion % scope
   )
@@ -70,17 +70,10 @@ object IntegrationTestDependencies extends CommonTestDependencies {
   def apply(): Seq[ModuleID] = testDependencies
 }
 
-object TempMacWorkaround {
-  def apply(): Seq[ModuleID] =
-    if (sys.props.get("os.name").exists(_.toLowerCase.contains("mac")))
-      Seq("org.reactivemongo" % "reactivemongo-shaded-native" % "0.17.1-osx-x86-64" % "runtime,test,it")
-    else Seq()
-}
-
 trait CommonTestDependencies {
   val scalaTestPlusVersion = "3.1.3"
-  val scoverageVersion = "1.3.1"
-  val reactiveMongoTestVersion = "4.16.0-play-26"
+  val scoverageVersion = "1.4.1"
+  val reactiveMongoTestVersion = "4.21.0-play-26"
   val scope: Configuration
   val testDependencies: Seq[ModuleID]
 }
