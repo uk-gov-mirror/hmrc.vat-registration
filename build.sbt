@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import TestPhases.oneForkedJvmPerSuite
 import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
@@ -30,13 +29,6 @@ lazy val scoverageSettings = Seq(
   ScoverageKeys.coverageHighlighting      := true
 )
 
-dependencyOverrides ++= Set(
-  "com.typesafe.akka" %% "akka-actor" % "2.5.23",
-  "com.typesafe.akka" %% "akka-protobuf" % "2.5.23",
-  "com.typesafe.akka" %% "akka-slf4j" % "2.5.23",
-  "com.typesafe.akka" %% "akka-stream" % "2.5.23"
-)
-
 lazy val aliases: Seq[Def.Setting[_]] = Seq(
   addCommandAlias("testTime", "testOnly * -- -oD")
 ).flatten
@@ -46,7 +38,6 @@ lazy val testSettings = Seq(
   testForkedParallel         in IntegrationTest := false,
   parallelExecution          in IntegrationTest := false,
   logBuffered                in IntegrationTest := false,
-  testGrouping               in IntegrationTest := oneForkedJvmPerSuite((definedTests in IntegrationTest).value),
   unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest) (base => Seq(base / "it")).value,
   fork                       in Test            := true,
   testForkedParallel         in Test            := true,
@@ -68,7 +59,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(aliases: _*)
   .settings(majorVersion := 0)
   .settings(
-    scalaVersion                     := "2.11.11",
+    scalaVersion                     := "2.12.12",
     libraryDependencies              ++= AppDependencies(),
     retrieveManaged                  := true,
     cancelable             in Global := true,

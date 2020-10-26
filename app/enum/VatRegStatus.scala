@@ -28,5 +28,9 @@ object VatRegStatus extends Enumeration {
   val rejected     = Value
   val cancelled    = Value
 
-  implicit val format = Format(Reads.enumNameReads(VatRegStatus), Writes.enumNameWrites)
+  implicit val format = Format(
+    Reads[VatRegStatus.Value] { json => json.validate[String].map(VatRegStatus.withName) },
+    Writes[VatRegStatus.Value] { value => JsString(value.toString) }
+  )
+
 }

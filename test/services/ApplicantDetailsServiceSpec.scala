@@ -25,7 +25,6 @@ import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import play.api.test.Helpers._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ApplicantDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {
@@ -35,19 +34,19 @@ class ApplicantDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture
       registrationRepository = mockRegistrationMongoRepository
     )
 
-    def updateIVPassedToMongo(): OngoingStubbing[Future[Boolean]] = when(mockRegistrationMongoRepository.updateIVStatus(any(),any())(any()))
+    def updateIVPassedToMongo(): OngoingStubbing[Future[Boolean]] = when(mockRegistrationMongoRepository.updateIVStatus(any(),any()))
       .thenReturn(Future.successful(true))
 
-    def updateIVPassedToMongoFail(): OngoingStubbing[Future[Boolean]] = when(mockRegistrationMongoRepository.updateIVStatus(any(),any())(any()))
+    def updateIVPassedToMongoFail(): OngoingStubbing[Future[Boolean]] = when(mockRegistrationMongoRepository.updateIVStatus(any(),any()))
       .thenReturn(Future.failed(new Exception("")))
 
-    def updateIVPassedToMongoNoRegDoc(): OngoingStubbing[Future[Boolean]] = when(mockRegistrationMongoRepository.updateIVStatus(any(),any())(any()))
+    def updateIVPassedToMongoNoRegDoc(): OngoingStubbing[Future[Boolean]] = when(mockRegistrationMongoRepository.updateIVStatus(any(),any()))
       .thenReturn(Future.failed(MissingRegDocument(testRegId)))
   }
 
   "getApplicantDetailsData" should {
     "return an applicant if found" in new Setup {
-      when(mockRegistrationMongoRepository.getApplicantDetails(any())(any()))
+      when(mockRegistrationMongoRepository.getApplicantDetails(any()))
         .thenReturn(Future.successful(Some(validApplicantDetails)))
 
       val result: Option[ApplicantDetails] = await(service.getApplicantDetailsData("regId"))
@@ -55,7 +54,7 @@ class ApplicantDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture
     }
 
     "return None if none found matching regId" in new Setup {
-      when(mockRegistrationMongoRepository.getApplicantDetails(any())(any()))
+      when(mockRegistrationMongoRepository.getApplicantDetails(any()))
         .thenReturn(Future.successful(None))
 
       val result: Option[ApplicantDetails] = await(service.getApplicantDetailsData("regId"))
@@ -65,7 +64,7 @@ class ApplicantDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture
 
   "updateApplicantDetailsData" should {
     "return the data that is being inputted" in new Setup {
-      when(mockRegistrationMongoRepository.patchApplicantDetails(any(),any())(any()))
+      when(mockRegistrationMongoRepository.patchApplicantDetails(any(),any()))
         .thenReturn(Future.successful(validApplicantDetails))
 
       val result = await(service.updateApplicantDetailsData("regId", validApplicantDetails))
@@ -73,14 +72,14 @@ class ApplicantDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture
     }
 
     "encounter an exception if an error occurs" in new Setup {
-      when(mockRegistrationMongoRepository.patchApplicantDetails(any(),any())(any()))
+      when(mockRegistrationMongoRepository.patchApplicantDetails(any(),any()))
         .thenReturn(Future.failed(new Exception("")))
 
       intercept[Exception](await(service.updateApplicantDetailsData("regId", validApplicantDetails)))
     }
 
     "encounter an MissingRegDocument Exception if no document is found" in new Setup {
-      when(mockRegistrationMongoRepository.patchApplicantDetails(any(),any())(any()))
+      when(mockRegistrationMongoRepository.patchApplicantDetails(any(),any()))
         .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
       intercept[MissingRegDocument](await(service.updateApplicantDetailsData("regId", validApplicantDetails)))

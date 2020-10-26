@@ -121,11 +121,11 @@ class VatRegistrationService @Inject()(registrationRepository: RegistrationMongo
     retrieveVatScheme(regId).subflatMap(_.acknowledgementReference.toRight(ResourceNotFound("AcknowledgementId")))
   }
 
-  def getThreshold(regId: String)(implicit ex: ExecutionContext): Future[Option[Threshold]] = {
+  def getThreshold(regId: String): Future[Option[Threshold]] = {
     registrationRepository.fetchEligibilitySubmissionData(regId).map(_.map(_.threshold))
   }
 
-  def getTurnoverEstimates(regId: String)(implicit ex: ExecutionContext): Future[Option[TurnoverEstimates]] = {
+  def getTurnoverEstimates(regId: String): Future[Option[TurnoverEstimates]] = {
     registrationRepository.fetchEligibilitySubmissionData(regId).map(_.map(_.estimates))
   }
 }

@@ -26,7 +26,6 @@ import org.mockito.Mockito._
 import play.api.test.Helpers._
 import repositories.RegistrationMongoRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class TradingDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {
@@ -41,7 +40,7 @@ class TradingDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   "fetchTradingDetails" should {
     "return an Trading Details if found" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveTradingDetails(any())(any()))
+      when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
         .thenReturn(Future.successful(Some(validFullTradingDetails)))
 
       val result: Option[TradingDetails] = await(service.retrieveTradingDetails(testRegId))
@@ -50,7 +49,7 @@ class TradingDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {
     }
 
     "return None if none found matching regId" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveTradingDetails(any())(any()))
+      when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
         .thenReturn(Future.successful(None))
 
       val result: Option[TradingDetails] = await(service.retrieveTradingDetails(testRegId))
@@ -61,7 +60,7 @@ class TradingDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   "updateTradingDetails" should {
     "return the data that is being input" in new Setup {
-      when(mockRegistrationMongoRepository.updateTradingDetails(any(),any())(any()))
+      when(mockRegistrationMongoRepository.updateTradingDetails(any(),any()))
         .thenReturn(Future.successful(validFullTradingDetails))
 
       val result: TradingDetails = await(service.updateTradingDetails(testRegId, validFullTradingDetails))
@@ -70,14 +69,14 @@ class TradingDetailsServiceSpec extends VatRegSpec with VatRegistrationFixture {
     }
 
     "encounter an exception if an error occurs" in new Setup {
-      when(mockRegistrationMongoRepository.updateTradingDetails(any(),any())(any()))
+      when(mockRegistrationMongoRepository.updateTradingDetails(any(),any()))
         .thenReturn(Future.failed(new Exception))
 
       intercept[Exception](await(service.updateTradingDetails(testRegId, validFullTradingDetails)))
     }
 
     "encounter a MissingRegDocument if no document is found" in new Setup {
-      when(mockRegistrationMongoRepository.updateTradingDetails(any(), any())(any()))
+      when(mockRegistrationMongoRepository.updateTradingDetails(any(), any()))
         .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
       intercept[MissingRegDocument](await(service.updateTradingDetails(testRegId, validFullTradingDetails)))

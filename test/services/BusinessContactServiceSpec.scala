@@ -25,7 +25,6 @@ import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import play.api.test.Helpers._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class BusinessContactServiceSpec extends VatRegSpec with VatRegistrationFixture {
@@ -37,10 +36,10 @@ class BusinessContactServiceSpec extends VatRegSpec with VatRegistrationFixture 
   }
 
   def getFromMongo(res: Future[Option[BusinessContact]]): OngoingStubbing[Future[Option[BusinessContact]]] =
-    when(mockRegistrationMongoRepository.fetchBusinessContact(any())(any())).thenReturn(res)
+    when(mockRegistrationMongoRepository.fetchBusinessContact(any())).thenReturn(res)
 
   def updateMongo(res: Future[BusinessContact]): OngoingStubbing[Future[BusinessContact]] =
-    when(mockRegistrationMongoRepository.updateBusinessContact(any(), any())(any())).thenReturn(res)
+    when(mockRegistrationMongoRepository.updateBusinessContact(any(), any())).thenReturn(res)
 
   "getBusinessContact" should {
     "return a BusinessContact Model when an entry exists in mongo for the specified regId" in new Setup {
