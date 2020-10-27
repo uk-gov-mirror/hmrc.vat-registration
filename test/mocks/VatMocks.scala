@@ -30,10 +30,11 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import repositories._
 import services._
+import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.auth.core.{AuthConnector, InvalidBearerToken}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait VatMocks extends HttpClientMock {
 
@@ -183,6 +184,21 @@ trait VatMocks extends HttpClientMock {
       when(mockSubmissionService.getAcknowledgementReference(idMatcher)(any()))
         .thenReturn(serviceError[String](AcknowledgementReferenceExists("regId")))
     }
+  }
+
+  implicit class RetrievalCombiner[A](a: A) {
+    def ~[B](b: B): A ~ B = new ~(a, b)
+  }
+
+  def mockAuthorise[T](retrievals: Retrieval[T])(response: Future[T]): Unit = {
+    when(
+      mockAuthConnector.authorise(
+        Matchers.any,
+        Matchers.eq(retrievals)
+      )(
+        Matchers.any[HeaderCarrier],
+        Matchers.any[ExecutionContext])
+    ) thenReturn response
   }
 
 }

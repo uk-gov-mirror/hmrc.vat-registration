@@ -42,7 +42,6 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
     "the user is authorised" should {
       "Return CREATED" in new Setup {
         given.user.isAuthorised
-        stubBusinessReg(OK)(Some(validBusinessRegistrationResponse))
 
         val res: WSResponse = await(client(controllers.routes.VatRegistrationController.newVatRegistration().url).post("test"))
 
@@ -50,7 +49,6 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
       }
       "Return NOT FOUND if the registration is missing" in new Setup {
         given.user.isAuthorised
-        stubBusinessReg(NOT_FOUND)()
 
         val res: WSResponse = await(client(s"/12345").post("test"))
 
@@ -73,6 +71,7 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
     "return an Ok if the submission is successful for the regID" in new Setup() {
       disable(StubSubmission)
       given.user.isAuthorised
+
       stubVatSubmission(ACCEPTED)()
 
       await(repo.insert(testFullVatScheme))

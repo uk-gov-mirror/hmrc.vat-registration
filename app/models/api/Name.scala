@@ -30,12 +30,6 @@ object Name extends VatApplicantDetailsValidator {
     (__ \ "last").format[String](nameValidator)
   )(Name.apply, unlift(Name.unapply))
 
-  val nameReadsFromElData: Reads[Name] = (
-    (__ \ "forename").readNullable[String](nameValidator) and
-    (__ \ "other_forenames").readNullable[String](nameValidator) and
-    (__ \ "surname").read[String](nameValidator)
-  )(Name.apply _)
-
   val submissionFormat: Format[Name] = (
     (__ \ "firstName").formatNullable[String](nameValidator) and
     (__ \ "middleName").formatNullable[String](nameValidator) and

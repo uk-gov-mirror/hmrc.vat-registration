@@ -88,7 +88,7 @@ trait ITFixtures {
   val testBusinessContactDetails = BusinessContact(digitalContact = testContactDetails, website = None, ppob = testAddress, commsPreference = Email)
   val testSicAndCompliance = SicAndCompliance("businessDesc", Some(ComplianceLabour(1, Some(true), Some(true))), SicCode("12345", "sicDesc", "sicDetail"), List(SicCode("12345", "sicDesc", "sicDetail")))
   val testTurnoverEstimates = TurnoverEstimates(12345678L)
-  val testBankDetails = BankAccount(true, None)
+  val testBankDetails = BankAccount(false, None)
   val testThreshold = Threshold(mandatoryRegistration = true, Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
 
   val testEligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
