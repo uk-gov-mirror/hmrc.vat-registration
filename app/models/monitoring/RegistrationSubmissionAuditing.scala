@@ -41,7 +41,7 @@ object RegistrationSubmissionAuditing {
       "authProviderId" -> authProviderId,
       "journeyId" -> regId,
       "userType" -> affinityGroup.toString,
-      "agentReferenceNumber" -> optAgentReferenceNumber,
+      "agentReferenceNumber" -> optAgentReferenceNumber.filterNot(_ == ""),
       "messageType" -> vatSubmission.messageType,
       "customerStatus" -> vatSubmission.eligibilitySubmissionData.customerStatus.toString,
       "eoriRequested" -> vatSubmission.tradingDetails.eoriRequested,
@@ -55,14 +55,14 @@ object RegistrationSubmissionAuditing {
       "userEnteredDetails" -> Json.obj(
         "outsideEUSales" -> vatSubmission.tradingDetails.eoriRequested,
         "customerIdentification" -> Json.obj(
-          "tradersPartyType" -> "UK company",
+          "tradersPartyType" -> vatSubmission.tradersPartyType.map(_.toString),
           "identifiers" -> Json.obj(
             "companyRegistrationNumber" -> vatSubmission.applicantDetails.companyNumber,
             "ctUTR" -> vatSubmission.applicantDetails.ctutr
           ),
           "shortOrgName" -> vatSubmission.applicantDetails.companyName,
           "dateOfBirth" -> vatSubmission.applicantDetails.dateOfBirth,
-          "tradingName" -> vatSubmission.applicantDetails.companyName
+          "tradingName" -> vatSubmission.tradingDetails.tradingName
         ),
         "businessContact" -> Json.obj(
           "address" -> Json.toJson(vatSubmission.businessContact.ppob)(Address.auditFormat),
@@ -93,7 +93,7 @@ object RegistrationSubmissionAuditing {
             "zeroRatedSupplies" -> vatSubmission.returns.zeroRatedSupplies,
             "vatRepaymentExpected" -> vatSubmission.returns.reclaimVatOnMostReturns
           ),
-          "frsScheme" -> vatSubmission.flatRateScheme.map(Json.toJson(_)(FRSDetails.submissionWrites))
+          "frsScheme" -> vatSubmission.flatRateScheme.map(Json.toJson(_)(FRSDetails.auditWrites))
         ),
         "periods" -> Json.obj(
           "customerPreferredPeriodicity" -> vatSubmission.returns.frequency
