@@ -28,7 +28,7 @@ class BackendConfig @Inject()(val servicesConfig: ServicesConfig,
   def loadConfig(key: String): String = servicesConfig.getString(key)
 
   lazy val vatRegistrationUrl: String = servicesConfig.baseUrl("vat-registration")
-  lazy val desBaseUrl: String = servicesConfig.getConfString("des.url", "")
+  lazy val desBaseUrl: String = servicesConfig.getConfString("des-service.url", "")
   val desEndpoint = "/vat/subscription"
 
   def desUrl: String = if (isEnabled(StubSubmission)) {
@@ -37,9 +37,6 @@ class BackendConfig @Inject()(val servicesConfig: ServicesConfig,
   else {
     desBaseUrl + desEndpoint
   }
-
-  lazy val desStubTopUpUrl: String = servicesConfig.baseUrl("des-stub")
-  lazy val desStubTopUpURI: String = servicesConfig.getConfString("des-stub.uri", "")
 
   lazy val urlHeaderEnvironment: String = servicesConfig.getConfString("des-service.environment", throw new Exception("could not find config value for des-service.environment"))
   lazy val urlHeaderAuthorization: String = s"Bearer ${
