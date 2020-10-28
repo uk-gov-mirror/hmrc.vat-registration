@@ -101,7 +101,8 @@ object RegistrationSubmissionAuditing {
         "bankDetails" -> vatSubmission.bankDetails.map {
           case BankAccount(true, Some(details)) => Json.obj(
             "accountName" -> details.name,
-            "sortCode" -> details.sortCode
+            "sortCode" -> details.sortCode,
+            "accountNumber" -> details.number
           )
           case BankAccount(false, _) => Json.obj(
             "reasonBankAccNotProvided" -> "1"
