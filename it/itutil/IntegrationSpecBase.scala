@@ -70,7 +70,7 @@ trait IntegrationSpecBase extends PlaySpec
     "microservice.services.vat-registration.host" -> mockHost,
     "microservice.services.vat-registration.port" -> mockPort,
     "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV==",
-    "constants.daily-quota" -> "10"
+    "constants.daily-quota" -> "1"
   )
 
   override implicit lazy val app: Application = new GuiceApplicationBuilder()

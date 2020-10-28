@@ -16,12 +16,13 @@
 
 package mocks
 
+import models.api.VatScheme
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.Suite
 import org.scalatestplus.mockito.MockitoSugar
-import services.{NewRegistrationService, RegistrationResponse}
+import services.NewRegistrationService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -32,7 +33,7 @@ trait MockNewRegistrationService extends MockitoSugar {
   val mockNewRegistrationService = mock[NewRegistrationService]
 
   def mockNewRegistration(internalId: String)
-                         (response: Future[RegistrationResponse]): OngoingStubbing[Future[RegistrationResponse]] =
+                         (response: Future[VatScheme]): OngoingStubbing[Future[VatScheme]] =
     when(mockNewRegistrationService.newRegistration(ArgumentMatchers.eq(internalId))(ArgumentMatchers.any[HeaderCarrier]))
     .thenReturn(response)
 

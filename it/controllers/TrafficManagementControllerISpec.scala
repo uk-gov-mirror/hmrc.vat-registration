@@ -1,6 +1,8 @@
 
 package controllers
 
+import java.time.LocalDate
+
 import itutil.IntegrationStubbing
 import models.api._
 import play.api.libs.json.Json
@@ -19,6 +21,37 @@ class TrafficManagementControllerISpec extends IntegrationStubbing {
     regStartDate = Some(testDate),
     channel = VatReg
   )
+
+  "POST /traffic-management/:regId/allocate" must {
+    "return CREATED if the user can be allocated" in new Setup {
+      given
+        .user.isAuthorised
+        .dailyQuotaRepo.insertIntoDb(DailyQuota(testDate), dailyQuotaRepo.insert)
+
+      val res = await(client(controllers.routes.TrafficManagementController.allocate(testRegId).url).post(Json.obj()))
+
+      res.status mustBe CREATED
+    }
+    "return CREATED if there is no quota for the current day" in new Setup {
+      given
+        .user.isAuthorised
+
+      dailyQuotaRepo.drop
+
+      val res = await(client(controllers.routes.TrafficManagementController.allocate(testRegId).url).post(Json.obj()))
+
+      res.status mustBe CREATED
+    }
+    "return TOO_MANY_REQUESTS if the user cannot be allocated" in new Setup {
+      given
+        .user.isAuthorised
+        .dailyQuotaRepo.insertIntoDb(DailyQuota(testDate, 1), dailyQuotaRepo.insert)
+
+      val res = await(client(controllers.routes.TrafficManagementController.allocate(testRegId).url).post(Json.obj()))
+
+      res.status mustBe TOO_MANY_REQUESTS
+    }
+  }
 
   "GET /traffic-management/reg-info" must {
     "return OK with reg info when a record exists for the internal ID" in new Setup {
@@ -44,76 +77,6 @@ class TrafficManagementControllerISpec extends IntegrationStubbing {
       given.user.isNotAuthorised
 
       val res = await(client(controllers.routes.TrafficManagementController.getRegistrationInformation.url).get)
-
-      res.status mustBe FORBIDDEN
-    }
-  }
-
-  "PATCH /traffic-management/reg-info" must {
-    "return OK with reg info when provided with valid JSON" in new Setup {
-      given
-        .user.isAuthorised
-        .regInfoRepo.insertIntoDb(testRegInfo, trafficManagementRepo.insert)
-
-      val updateData = RegistrationInformation(
-        internalId = testInternalid,
-        registrationId = testRegId,
-        status = Submitted,
-        channel = OTRS
-      )
-
-      val res = await(
-        client(controllers.routes.TrafficManagementController.upsertRegistrationInformation().url)
-          .patch(Json.toJson(updateData))
-      )
-
-      res.status mustBe OK
-      res.body mustBe Json.toJson(testRegInfo.copy(status = Submitted, channel = OTRS)).toString()
-    }
-
-    "return BAD_REQUEST when provided with invalid JSON" in new Setup {
-      given
-        .user.isAuthorised
-        .regInfoRepo.insertIntoDb(testRegInfo, trafficManagementRepo.insert)
-
-      val updateData = Json.obj()
-
-      val res = await(
-        client(controllers.routes.TrafficManagementController.upsertRegistrationInformation().url)
-          .patch(updateData)
-      )
-
-      res.status mustBe BAD_REQUEST
-    }
-
-    "return UNPROCESSABLE_ENTITY if the json contains a regStartDate" in new Setup {
-      given
-        .user.isAuthorised
-
-      val res = await(
-        client(controllers.routes.TrafficManagementController.upsertRegistrationInformation().url)
-          .patch(Json.toJson(testRegInfo))
-      )
-
-      res.status mustBe UNPROCESSABLE_ENTITY
-    }
-
-    "return FORBIDDEN when the user is not authenticated" in new Setup {
-      given
-        .user.isNotAuthorised
-        .regInfoRepo.insertIntoDb(testRegInfo, trafficManagementRepo.insert)
-
-      val updateData = RegistrationInformation(
-        internalId = testInternalid,
-        registrationId = testRegId,
-        status = Submitted,
-        channel = OTRS
-      )
-
-      val res = await(
-        client(controllers.routes.TrafficManagementController.upsertRegistrationInformation().url)
-          .patch(Json.toJson(updateData))
-      )
 
       res.status mustBe FORBIDDEN
     }

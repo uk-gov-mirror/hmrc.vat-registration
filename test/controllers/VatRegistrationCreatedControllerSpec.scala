@@ -30,7 +30,6 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.{Request, Result}
 import play.api.test.FakeRequest
 import repositories.RegistrationMongoRepository
-import services.{QuotaReached, RegistrationCreated}
 import uk.gov.hmrc.http.{HeaderCarrier, Upstream5xxResponse}
 
 import scala.concurrent.Future
@@ -74,7 +73,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
       "return CREATED if a new VAT scheme is successfully created" in new Setup {
         AuthorisationMocks.mockAuthenticated(testInternalid)
 
-        mockNewRegistration(testInternalid)(Future.successful(RegistrationCreated(testVatScheme)))
+        mockNewRegistration(testInternalid)(Future.successful(testVatScheme))
 
         controller.newVatRegistration()(FakeRequest()) returnsStatus CREATED
       }
@@ -83,13 +82,6 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
         AuthorisationMocks.mockAuthenticatedLoggedInNoCorrespondingData()
 
         controller.newVatRegistration(FakeRequest()) returnsStatus FORBIDDEN
-      }
-
-      "return TOO_MANY_REQUESTS if the daily quota has been reached" in new Setup {
-        AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-        mockNewRegistration(testInternalid)(Future.successful(QuotaReached))
-
-        controller.newVatRegistration()(FakeRequest()) returnsStatus TOO_MANY_REQUESTS
       }
 
       "return INTERNAL_SERVER_ERROR if RegistrationService encounters any problems" in new Setup {

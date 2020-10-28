@@ -22,7 +22,7 @@ import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.Suite
 import org.scalatestplus.mockito.MockitoSugar
-import services.TrafficManagementService
+import services.{AllocationResponse, TrafficManagementService}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -32,21 +32,19 @@ trait MockTrafficManagementService extends MockitoSugar {
 
   val mockTrafficManagementService = mock[TrafficManagementService]
 
-  def mockGetRegInfo(internalId: String)
-                    (response: Future[Option[RegistrationInformation]]): OngoingStubbing[Future[Option[RegistrationInformation]]] =
-    when(mockTrafficManagementService.getRegistrationInformation(
-      ArgumentMatchers.eq(internalId)
+  def mockAllocate(internalId: String, regId: String)
+                  (response: Future[AllocationResponse]): OngoingStubbing[Future[AllocationResponse]] =
+    when(mockTrafficManagementService.allocate(
+      ArgumentMatchers.eq(internalId),
+      ArgumentMatchers.eq(regId)
     )(
       ArgumentMatchers.any[HeaderCarrier]
     )).thenReturn(response)
 
-  def mockUpsertRegInfo(internalId: String, regId: String, status: RegistrationStatus, channel: RegistrationChannel)
-                                (response: Future[RegistrationInformation]): OngoingStubbing[Future[RegistrationInformation]] =
-    when(mockTrafficManagementService.upsertRegistrationInformation(
-      ArgumentMatchers.eq(internalId),
-      ArgumentMatchers.eq(regId),
-      ArgumentMatchers.eq(status),
-      ArgumentMatchers.eq(channel)
+  def mockGetRegInfo(internalId: String)
+                    (response: Future[Option[RegistrationInformation]]): OngoingStubbing[Future[Option[RegistrationInformation]]] =
+    when(mockTrafficManagementService.getRegistrationInformation(
+      ArgumentMatchers.eq(internalId)
     )(
       ArgumentMatchers.any[HeaderCarrier]
     )).thenReturn(response)

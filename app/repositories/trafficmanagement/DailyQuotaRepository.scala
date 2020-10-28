@@ -55,13 +55,15 @@ class DailyQuotaRepository @Inject()(mongo: ReactiveMongoComponent,
 
   private def today: LocalDate = timeMachine.today
 
-  def quotaReached(implicit hc: HeaderCarrier): Future[Boolean] =
+  def checkQuota(implicit hc: HeaderCarrier): Future[Boolean] =
     find("date" -> JsString(today.toString))
-      .map(_.headOption.getOrElse {
-        incrementTotal
-        DailyQuota(today)
-      })
-      .map(_.currentTotal >= config.dailyQuota)
+      .map(_.headOption.getOrElse(DailyQuota(today)))
+      .flatMap {
+        case quota if quota.currentTotal >= config.dailyQuota =>
+          Future.successful(true)
+        case _ =>
+          incrementTotal.map(_ => false)
+      }
 
   def incrementTotal(implicit hc: HeaderCarrier): Future[Int] = {
     val selector = Json.obj("date" -> today.toString)

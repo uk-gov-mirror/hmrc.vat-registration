@@ -19,49 +19,24 @@ package services
 import java.util.UUID
 
 import config.BackendConfig
-import featureswitch.core.config.{FeatureSwitching, TrafficManagement}
+import featureswitch.core.config.FeatureSwitching
 import javax.inject.{Inject, Singleton}
-import models.api.{Draft, OTRS, VatScheme}
+import models.api.VatScheme
 import repositories.RegistrationMongoRepository
-import repositories.trafficmanagement.DailyQuotaRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class NewRegistrationService @Inject()(dailyQuotaRepository: DailyQuotaRepository,
-                                       registrationRepository: RegistrationMongoRepository,
-                                       trafficManagementService: TrafficManagementService)
+class NewRegistrationService @Inject()(registrationRepository: RegistrationMongoRepository)
                                       (implicit ec: ExecutionContext, config: BackendConfig) extends FeatureSwitching {
 
-  def newRegistration(internalId: String)(implicit hc: HeaderCarrier): Future[RegistrationResponse] = {
+  def newRegistration(internalId: String)(implicit hc: HeaderCarrier): Future[VatScheme] = {
     val regId = generateRegistrationId()
 
-    if (isEnabled(TrafficManagement)) {
-      dailyQuotaRepository.quotaReached flatMap { quotaReached =>
-        if (quotaReached) {
-          trafficManagementService.upsertRegistrationInformation(internalId, regId, Draft, OTRS) map (_ => QuotaReached)
-        }
-        else {
-          registrationRepository.createNewVatScheme(regId, internalId) map { vatScheme =>
-            RegistrationCreated(vatScheme)
-          }
-        }
-      }
-    }
-    else {
-      registrationRepository.createNewVatScheme(regId, internalId) map { vatScheme =>
-        RegistrationCreated(vatScheme)
-      }
-    }
+    registrationRepository.createNewVatScheme(regId, internalId)
   }
 
   private[services] def generateRegistrationId(): String = UUID.randomUUID().toString
 
 }
-
-sealed trait RegistrationResponse
-
-case object QuotaReached extends RegistrationResponse
-
-case class RegistrationCreated(vatScheme: VatScheme) extends RegistrationResponse

@@ -31,12 +31,8 @@ trait MockDailyQuotaRepository extends MockitoSugar {
 
   val mockDailyQuotaRepository = mock[DailyQuotaRepository]
 
-  def mockQuotaReached(response: Boolean): OngoingStubbing[Future[Boolean]] =
-    when(mockDailyQuotaRepository.quotaReached(ArgumentMatchers.any[HeaderCarrier]))
-      .thenReturn(Future.successful(response))
-
-  def mockIncrementTotal(response: Int): OngoingStubbing[Future[Int]] =
-    when(mockDailyQuotaRepository.incrementTotal(ArgumentMatchers.any[HeaderCarrier]))
+  def mockCheckQuota(response: Boolean): OngoingStubbing[Future[Boolean]] =
+    when(mockDailyQuotaRepository.checkQuota(ArgumentMatchers.any[HeaderCarrier]))
       .thenReturn(Future.successful(response))
 
 }

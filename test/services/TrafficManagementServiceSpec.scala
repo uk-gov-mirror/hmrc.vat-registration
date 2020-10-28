@@ -19,12 +19,11 @@ package services
 import java.time.LocalDate
 
 import helpers.VatRegSpec
-import utils.FakeTimeMachine
 import mocks.{MockDailyQuotaRepository, MockTrafficManagementRepository}
-import models.api.{Draft, OTRS, RegistrationInformation, Submitted, VatReg}
-import uk.gov.hmrc.http.HeaderCarrier
-
+import models.api.{Draft, OTRS, RegistrationInformation, VatReg}
 import play.api.test.Helpers._
+import uk.gov.hmrc.http.HeaderCarrier
+import utils.FakeTimeMachine
 
 import scala.concurrent.Future
 
@@ -42,6 +41,7 @@ class TrafficManagementServiceSpec extends VatRegSpec
 
   val testInternalId = "testInternalId"
   val testRegId = "testRegID"
+  val testDate = LocalDate.of(2020,1,1)
   implicit val hc = HeaderCarrier()
 
   val testRegInfo = RegistrationInformation(
@@ -51,6 +51,29 @@ class TrafficManagementServiceSpec extends VatRegSpec
     regStartDate = Some(timeMachine.today),
     channel = VatReg
   )
+
+  "allocate" must {
+    "return QuotaReached when the quota is exceeded" in {
+      mockCheckQuota(response = true)
+      mockUpsertRegInfo(testInternalId, testRegId, Draft, Some(testDate), OTRS)(
+        Future.successful(RegistrationInformation(testInternalId, testRegId, Draft, Some(testDate), OTRS))
+      )
+
+      val res = await(Service.allocate(testInternalId, testRegId))
+
+      res mustBe QuotaReached
+    }
+    "return Allocated when the quota has not been exceeded" in {
+      mockCheckQuota(response = false)
+      mockUpsertRegInfo(testInternalId, testRegId, Draft, Some(testDate), VatReg)(
+        Future.successful(RegistrationInformation(testInternalId, testRegId, Draft, Some(testDate), VatReg))
+      )
+
+      val res = await(Service.allocate(testInternalId, testRegId))
+
+      res mustBe Allocated
+    }
+  }
 
   "getRegistrationInformation" must {
     "return the registration information where it exists" in {
@@ -66,28 +89,6 @@ class TrafficManagementServiceSpec extends VatRegSpec
       val res = await(Service.getRegistrationInformation(testInternalId))
 
       res mustBe None
-    }
-  }
-  "upsertRegistrationInformation" must {
-    "Insert a new record with today's date when one doesn't exist for the internal id" in {
-      mockGetRegInfo(testInternalId)(Future.successful(None))
-      mockUpsertRegInfo(testInternalId, testRegId, Draft, Some(timeMachine.today), VatReg)(Future.successful(testRegInfo))
-      mockIncrementTotal(1)
-
-      val res = await(Service.upsertRegistrationInformation(testInternalId, testRegId, Draft, VatReg))
-
-      res mustBe testRegInfo
-    }
-    "Update an existing record, without altering the date" in {
-      val oldDate = LocalDate.parse("2019-12-12")
-      val existingRecord = testRegInfo.copy(regStartDate = Some(oldDate))
-      val newRecord = existingRecord.copy(status = Submitted, channel = OTRS)
-      mockGetRegInfo(testInternalId)(Future.successful(Some(existingRecord)))
-      mockUpsertRegInfo(testInternalId, testRegId, Submitted, Some(oldDate), OTRS)(Future.successful(newRecord))
-
-      val res = await(Service.upsertRegistrationInformation(testInternalId, testRegId, Submitted, OTRS))
-
-      res mustBe newRecord
     }
   }
 
