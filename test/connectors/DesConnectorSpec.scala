@@ -40,8 +40,6 @@ class DesConnectorSpec extends PlaySpec with VatRegSpec with MockitoSugar with H
 
   override val backendConfig: BackendConfig = new BackendConfig(mock[ServicesConfig], mock[Configuration]) {
     override lazy val desBaseUrl = "testDesUrl"
-    override lazy val desStubTopUpUrl = "desStubTopUpURL"
-    override lazy val desStubTopUpURI = "testStubTopUpURI"
     override lazy val urlHeaderEnvironment = "env"
     override lazy val urlHeaderAuthorization = "auth"
   }
