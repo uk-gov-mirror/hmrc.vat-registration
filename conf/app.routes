@@ -2,8 +2,8 @@
 
 POST         /new                                   controllers.VatRegistrationController.newVatRegistration
 
+POST         /traffic-management/:regId/allocate    controllers.TrafficManagementController.allocate(regId)
 GET          /traffic-management/reg-info           controllers.TrafficManagementController.getRegistrationInformation
-PATCH        /traffic-management/reg-info           controllers.TrafficManagementController.upsertRegistrationInformation
 
 GET          /scheme                                controllers.VatRegistrationController.retrieveVatSchemeByInternalId()
 GET          /:regId/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regId: String)

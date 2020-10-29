@@ -20,15 +20,13 @@ import java.time.LocalDate
 
 import config.BackendConfig
 import enums.VatRegStatus
-import featureswitch.core.config.{FeatureSwitching, TrafficManagement}
+import featureswitch.core.config.FeatureSwitching
 import helpers.VatRegSpec
 import mocks.{MockDailyQuotaRepository, MockRegistrationRepository, MockTrafficManagementService}
-import models.api.{Draft, OTRS, RegistrationInformation, VatReg, VatScheme}
+import models.api.{Draft, RegistrationInformation, VatReg, VatScheme}
 import org.scalatest.BeforeAndAfterEach
-import uk.gov.hmrc.http.HeaderCarrier
 import play.api.test.Helpers._
-
-import scala.concurrent.Future
+import uk.gov.hmrc.http.HeaderCarrier
 
 class NewRegistrationServiceSpec extends VatRegSpec
   with MockDailyQuotaRepository
@@ -49,10 +47,6 @@ class NewRegistrationServiceSpec extends VatRegSpec
     status = VatRegStatus.draft
   )
 
-  override def beforeEach(): Unit = {
-    disable(TrafficManagement)
-  }
-
   val testRegInfo = RegistrationInformation(
     internalId = testInternalId,
     registrationId = testRegId,
@@ -62,44 +56,18 @@ class NewRegistrationServiceSpec extends VatRegSpec
   )
 
   object Service extends NewRegistrationService(
-    dailyQuotaRepository = mockDailyQuotaRepository,
-    registrationRepository = mockRegistrationRepository,
-    trafficManagementService = mockTrafficManagementService
+    registrationRepository = mockRegistrationRepository
   ) {
     override private[services] def generateRegistrationId(): String = testRegId
   }
 
-  "newRegistration" when {
-    "the TrafficManagement feature switch is disabled" should {
-      "return a vat scheme" in {
-        disable(TrafficManagement)
-        mockCreateRegistration(testRegId, testInternalId)(testVatScheme)
+  "newRegistration" should {
+    "return a vat scheme" in {
+      mockCreateRegistration(testRegId, testInternalId)(testVatScheme)
 
-        val res = await(Service.newRegistration(testInternalId))
+      val res = await(Service.newRegistration(testInternalId))
 
-        res mustBe RegistrationCreated(testVatScheme)
-      }
-    }
-    "the TrafficManagement feature switch is enabled" should {
-      "return QuotaReached if the daily quota has been exceeded" in {
-        enable(TrafficManagement)
-        mockQuotaReached(true)
-        mockUpsertRegInfo(testInternalId, testRegId, Draft, OTRS)(Future.successful(testRegInfo))
-
-        val res = await(Service.newRegistration(testInternalId))
-
-        res mustBe QuotaReached
-      }
-      "return a vat scheme if the daily quota has not been met" in {
-        enable(TrafficManagement)
-        mockQuotaReached(false)
-        val e = testRegId
-        mockCreateRegistration(e, testInternalId)(testVatScheme)
-
-        val res = await(Service.newRegistration(testInternalId))
-
-        res mustBe RegistrationCreated(testVatScheme)
-      }
+      res mustBe testVatScheme
     }
   }
 

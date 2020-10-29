@@ -14,20 +14,20 @@ class DailyQuotaRepositoryISpec extends IntegrationStubbing {
 
   val testQuota = DailyQuota(testDate, 10)
 
-  "quotaReached" must {
+  "checkQuota" must {
     "return true if the quota has been reached" in new Setup {
       given.user.isAuthorised
-      await(dailyQuotaRepo.insert(DailyQuota(testDate, 10)))
+      await(dailyQuotaRepo.insert(DailyQuota(testDate, 1)))
 
-      val res = await(dailyQuotaRepo.quotaReached)
+      val res = await(dailyQuotaRepo.checkQuota)
 
       res mustBe true
     }
     "return false if the quota has not been reached" in new Setup {
       given.user.isAuthorised
-      await(dailyQuotaRepo.insert(DailyQuota(testDate, 9)))
+      await(dailyQuotaRepo.insert(DailyQuota(testDate)))
 
-      val res = await(dailyQuotaRepo.quotaReached)
+      val res = await(dailyQuotaRepo.checkQuota)
 
       res mustBe false
     }

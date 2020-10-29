@@ -24,7 +24,7 @@ import featureswitch.core.models.FeatureSwitch
 @Singleton
 class FeatureSwitchingModule extends Module with FeatureSwitchRegistry {
 
-  val switches = Seq(StubSubmission, TrafficManagement)
+  val switches = Seq(StubSubmission)
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     Seq(
@@ -36,9 +36,4 @@ class FeatureSwitchingModule extends Module with FeatureSwitchRegistry {
 case object StubSubmission extends FeatureSwitch {
   override val configName: String = "feature-switch.submission-stub"
   override val displayName: String = "Use stub for Submission to DES"
-}
-
-case object TrafficManagement extends FeatureSwitch {
-  override val configName: String = "feature-switch.traffic-management"
-  override val displayName: String = "Use traffic management (limit number of service users)"
 }

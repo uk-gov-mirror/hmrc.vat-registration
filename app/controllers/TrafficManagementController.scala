@@ -21,7 +21,7 @@ import javax.inject.{Inject, Singleton}
 import models.api.RegistrationInformation
 import play.api.libs.json.{JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import services.TrafficManagementService
+import services.{Allocated, QuotaReached, TrafficManagementService}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
@@ -36,6 +36,15 @@ class TrafficManagementController @Inject()(controllerComponents: ControllerComp
 
   override val resourceConn: AuthorisationResource = trafficManagementService.trafficManagementRepository
 
+  def allocate(regId: String): Action[AnyContent] = Action.async { implicit request =>
+    isAuthenticated { internalId =>
+      trafficManagementService.allocate(internalId, regId) map {
+        case Allocated => Created
+        case QuotaReached => TooManyRequests
+      }
+    }
+  }
+
   def getRegistrationInformation: Action[AnyContent] = Action.async { implicit request =>
     isAuthenticated { internalId =>
       trafficManagementService.getRegistrationInformation(internalId) map {
@@ -43,23 +52,6 @@ class TrafficManagementController @Inject()(controllerComponents: ControllerComp
           Ok(Json.toJson(regInfo))
         case _ =>
           NotFound
-      }
-    }
-  }
-
-  def upsertRegistrationInformation: Action[JsValue] = Action.async(parse.json) { implicit request =>
-    isAuthenticated { _ =>
-      request.body.validate[RegistrationInformation] match {
-        case JsSuccess(RegistrationInformation(internalId, registrationId, status, regStartDate, channel), _) =>
-          if (regStartDate.isDefined) {
-            Future.successful(UnprocessableEntity("Registration start date is not supported by this API"))
-          }
-          else {
-            trafficManagementService.upsertRegistrationInformation(internalId, registrationId, status, channel)
-              .map (regInfo => Ok(Json.toJson(regInfo)))
-          }
-        case _ =>
-          Future.successful(BadRequest)
       }
     }
   }

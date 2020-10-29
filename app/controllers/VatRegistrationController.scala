@@ -51,11 +51,8 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
       isAuthenticated { internalId =>
         implicit val writes: OWrites[VatScheme] = VatScheme.apiWrites
 
-        newRegistrationService.newRegistration(internalId) map {
-          case RegistrationCreated(vatScheme) =>
-            Created(Json.toJson(vatScheme))
-          case QuotaReached =>
-            TooManyRequests
+        newRegistrationService.newRegistration(internalId) map { scheme =>
+          Created(Json.toJson(scheme))
         } recover {
           case _ => InternalServerError(
             "[VatRegistrationController][newVatRegistration] Unexpected error when creating new registration"

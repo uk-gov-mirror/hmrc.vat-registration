@@ -38,14 +38,18 @@ trait MockTrafficManagementRepository extends MockitoSugar {
       ArgumentMatchers.eq(internalId)
     )(ArgumentMatchers.any[HeaderCarrier])).thenReturn(response)
 
-  def mockUpsertRegInfo(internalId: String, regId: String, status: RegistrationStatus, regStartDate: Option[LocalDate], channel: RegistrationChannel)
+  def mockUpsertRegInfo(internalId: String,
+                        regId: String,
+                        status: RegistrationStatus,
+                        regStartDate: Option[LocalDate],
+                        channel: RegistrationChannel)
                        (response: Future[RegistrationInformation]): OngoingStubbing[Future[RegistrationInformation]] =
     when(mockTrafficManagementRepository.upsertRegistrationInformation(
       ArgumentMatchers.eq(internalId),
       ArgumentMatchers.eq(regId),
       ArgumentMatchers.eq(status),
       ArgumentMatchers.eq(regStartDate),
-      ArgumentMatchers.eq(channel)
-    )(ArgumentMatchers.any[HeaderCarrier])).thenReturn(response)
+      ArgumentMatchers.eq(channel),
+    )(ArgumentMatchers.any[HeaderCarrier])) thenReturn response
 
 }
