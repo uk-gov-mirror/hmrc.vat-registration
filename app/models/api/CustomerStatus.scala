@@ -44,9 +44,9 @@ object CustomerStatus {
   def unapply(arg: CustomerStatus): Option[String] = Some(arg.value)
 
   val eligibilityDataJsonReads: Reads[CustomerStatus] = Reads { json =>
-    (json \ "voluntaryInformation").validate[Boolean].map {
-      case true => MTDfB
-      case false => NonMTDfB
+    (json \ "voluntaryInformation").validateOpt[Boolean].map {
+      case Some(true) | None => MTDfB
+      case Some(false) => NonMTDfB
     }
   }
 
