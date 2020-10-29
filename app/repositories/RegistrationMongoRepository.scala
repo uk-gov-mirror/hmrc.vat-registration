@@ -99,7 +99,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
   }
 
   def retrieveVatSchemeByInternalId(id: String)(implicit hc: HeaderCarrier): Future[Option[VatScheme]] = {
-    collection.find(Json.obj("internalId" -> id)).one[VatScheme]
+    collection.find(Json.obj("internalId" -> id)).sort(Json.obj("_id" -> -1)).one[VatScheme]
   }
 
   def deleteVatScheme(regId: String)(implicit hc: HeaderCarrier): Future[Boolean] = {
