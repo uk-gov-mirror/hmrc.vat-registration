@@ -26,6 +26,7 @@ class CustomerStatusSpec extends JsonFormatValidation {
     def parser(json: JsValue): JsResult[CustomerStatus] =
       Json.fromJson[CustomerStatus](EligibilityDataJsonUtils.toJsObject(json))(CustomerStatus.eligibilityDataJsonReads)
 
+
     "successfully parse valid json into the right type for MTDfB" in {
       val json: JsValue = Json.parse(
         s"""{
@@ -34,6 +35,22 @@ class CustomerStatusSpec extends JsonFormatValidation {
            |     "title": "testTitle",
            |     "data": [
            |       {"questionId": "voluntaryInformation","question": "testQuestion", "answer": "testAnswer", "answerValue": true}
+           |     ]
+           |   }
+           | ]
+           | }""".stripMargin
+      )
+
+      parser(json) mustBe JsSuccess(MTDfB)
+    }
+
+    "successfully parse valid json into the right type for MTDfB with no data" in {
+      val json: JsValue = Json.parse(
+        s"""{
+           |  "sections": [
+           |   {
+           |     "title": "testTitle",
+           |     "data": [
            |     ]
            |   }
            | ]
