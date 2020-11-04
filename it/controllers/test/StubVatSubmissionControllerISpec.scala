@@ -6,7 +6,7 @@ import itutil.{ITVatSubmissionFixture, IntegrationStubbing}
 import play.api.libs.ws.WSResponse
 import play.api.test.Helpers._
 
-class StubDesSubmissionControllerISpec extends IntegrationStubbing with ITVatSubmissionFixture {
+class StubVatSubmissionControllerISpec extends IntegrationStubbing with ITVatSubmissionFixture {
 
   val testMessageType = "SubmissionCreate"
   val testCustomerStatus = "3"
@@ -22,7 +22,7 @@ class StubDesSubmissionControllerISpec extends IntegrationStubbing with ITVatSub
     "return OK if the json is a valid VatSubmission" in new Setup() {
       stubAudit(OK)
 
-      val response: WSResponse = await(client(routes.StubDesSubmissionController.processSubmission().url).post(vatSubmissionJson))
+      val response: WSResponse = await(client(routes.StubVatSubmissionController.processSubmission().url).post(vatSubmissionJson))
 
       response.status mustBe OK
     }
@@ -30,7 +30,7 @@ class StubDesSubmissionControllerISpec extends IntegrationStubbing with ITVatSub
     "fail if the json is not a valid VatSubmission" in new Setup() {
       stubAudit(OK)
 
-      val response: WSResponse = await(client(routes.StubDesSubmissionController.processSubmission().url).post(""))
+      val response: WSResponse = await(client(routes.StubVatSubmissionController.processSubmission().url).post(""))
 
       response.status mustBe UNSUPPORTED_MEDIA_TYPE
     }

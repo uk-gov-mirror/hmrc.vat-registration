@@ -46,7 +46,7 @@ trait VatMocks extends HttpClientMock {
   lazy val mockSubmissionService: SubmissionService = mock[SubmissionService]
   lazy val mockVatRegistrationService: VatRegistrationService = mock[VatRegistrationService]
   lazy val mockSequenceRepository: SequenceMongoRepository = mock[SequenceMongoRepository]
-  lazy val mockDesConnector: DESConnector = mock[DESConnector]
+  lazy val mockVatSubmissionConnector: VatSubmissionConnector = mock[VatSubmissionConnector]
   lazy val mockEligibilityService: EligibilityService = mock[EligibilityService]
   lazy val mockApplicantDetailsService: ApplicantDetailsService = mock[ApplicantDetailsService]
   lazy val mockSicAndComplianceService: SicAndComplianceService = mock[SicAndComplianceService]
@@ -163,13 +163,13 @@ trait VatMocks extends HttpClientMock {
 
     def mockGetAcknowledgementReference(ackRef: String): Unit = {
       val idMatcher: String = anyString()
-      when(mockSubmissionService.getAcknowledgementReference(idMatcher)(any()))
+      when(mockVatRegistrationService.retrieveAcknowledgementReference(idMatcher)(any()))
         .thenReturn(serviceResult(ackRef))
     }
 
     def mockGetAcknowledgementReferenceServiceUnavailable(exception: Exception): Unit = {
       val idMatcher: String = anyString()
-      when(mockSubmissionService.getAcknowledgementReference(idMatcher)(any()))
+      when(mockVatRegistrationService.retrieveAcknowledgementReference(idMatcher)(any()))
         .thenReturn(serviceError[String](GenericDatabaseError(exception, Some("regId"))))
     }
 
@@ -181,7 +181,7 @@ trait VatMocks extends HttpClientMock {
 
     def mockGetAcknowledgementReferenceExistsError(): Unit = {
       val idMatcher: String = anyString()
-      when(mockSubmissionService.getAcknowledgementReference(idMatcher)(any()))
+      when(mockVatRegistrationService.retrieveAcknowledgementReference(idMatcher)(any()))
         .thenReturn(serviceError[String](AcknowledgementReferenceExists("regId")))
     }
   }

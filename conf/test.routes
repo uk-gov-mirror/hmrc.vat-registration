@@ -1,4 +1,4 @@
 GET         /api/feature-switches                                  featureswitch.api.controllers.FeatureSwitchApiController.getFeatureSwitches()
 POST        /api/feature-switches                                  featureswitch.api.controllers.FeatureSwitchApiController.updateFeatureSwitches()
 
-POST        /vat/subscription                                      controllers.test.StubDesSubmissionController.processSubmission
+POST        /vat/subscription                                      controllers.test.StubVatSubmissionController.processSubmission

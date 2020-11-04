@@ -28,21 +28,22 @@ class BackendConfig @Inject()(val servicesConfig: ServicesConfig,
   def loadConfig(key: String): String = servicesConfig.getString(key)
 
   lazy val vatRegistrationUrl: String = servicesConfig.baseUrl("vat-registration")
-  lazy val desBaseUrl: String = servicesConfig.getConfString("des-service.url", "")
-  val desEndpoint = "/vat/subscription"
+  lazy val integrationFrameworkBaseUrl: String = servicesConfig.getString("microservice.services.integration-framework.url")
 
-  def desUrl: String = if (isEnabled(StubSubmission)) {
-    vatRegistrationUrl + "/vatreg/test-only" + desEndpoint
-  }
-  else {
-    desBaseUrl + desEndpoint
+  lazy val vatSubmissionUrl: String = {
+    val submissionEndpointUri = "/vat/subscription"
+
+    if (isEnabled(StubSubmission)) {
+      s"$vatRegistrationUrl/vatreg/test-only$submissionEndpointUri"
+    }
+    else {
+      integrationFrameworkBaseUrl + submissionEndpointUri
+    }
   }
 
-  lazy val urlHeaderEnvironment: String = servicesConfig.getConfString("des-service.environment", throw new Exception("could not find config value for des-service.environment"))
-  lazy val urlHeaderAuthorization: String = s"Bearer ${
-    servicesConfig.getConfString("des-service.authorization-token",
-      throw new Exception("could not find config value for des-service.authorization-token"))
-  }"
+  lazy val urlHeaderEnvironment: String = servicesConfig.getString("microservice.services.integration-framework.environment")
+
+  lazy val urlHeaderAuthorization: String = s"Bearer ${servicesConfig.getString("microservice.services.integration-framework.authorization-token")}"
 
   lazy val dailyQuota: Int = servicesConfig.getConfInt("constants.daily-quota", 1)
 

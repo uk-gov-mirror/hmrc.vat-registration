@@ -43,7 +43,7 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
   extends BackendController(controllerComponents) with Authorisation with FutureInstances {
 
 
-  override val resourceConn: AuthorisationResource = submissionService.registrationRepository
+  override val resourceConn: AuthorisationResource = registrationRepository
   val errorHandler: LeftState => Result = err => err.toResult
 
   def newVatRegistration: Action[AnyContent] = Action.async {
@@ -124,7 +124,7 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
     implicit request =>
       isAuthorised(regId) { authResult =>
         authResult.ifAuthorised(regId, "VatRegistrationController", "getAcknowledgementReference") {
-          submissionService.getAcknowledgementReference(regId).fold(errorHandler, ackRefNumber => Ok(Json.toJson(ackRefNumber)))
+          registrationService.retrieveAcknowledgementReference(regId).fold(errorHandler, ackRefNumber => Ok(Json.toJson(ackRefNumber)))
         }
       }
   }

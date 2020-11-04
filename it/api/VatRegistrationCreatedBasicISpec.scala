@@ -72,7 +72,7 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
       disable(StubSubmission)
       given.user.isAuthorised
 
-      stubVatSubmission(ACCEPTED)()
+      stubVatSubmission(OK)()
 
       await(repo.insert(testFullVatScheme))
 
@@ -91,7 +91,7 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
     "mock the return if the stub submission flag is on" in new Setup {
       enable(StubSubmission)
       given.user.isAuthorised
-      stubVatSubmission(ACCEPTED)()
+      stubVatSubmission(OK)()
 
       await(repo.insert(testFullVatScheme))
 

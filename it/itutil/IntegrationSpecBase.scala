@@ -15,22 +15,20 @@
  */
 package itutil
 
-import java.time.LocalDate
-
 import auth.CryptoSCRS
 import config.BackendConfig
 import models.api.VatScheme
 import org.scalatest._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.bind
-import play.api.{Application, Configuration}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsString, Reads, Writes}
 import play.api.libs.ws.{WSClient, WSRequest}
 import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers._
+import play.api.{Application, Configuration}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.WriteResult
 import repositories.trafficmanagement.{DailyQuotaRepository, TrafficManagementRepository}
@@ -60,7 +58,9 @@ trait IntegrationSpecBase extends PlaySpec
     "microservice.services.auth.port" -> mockPort,
     "microservice.services.business-registration.host" -> mockHost,
     "microservice.services.business-registration.port" -> mockPort,
-    "microservice.services.des-service.url" -> mockUrl,
+    "microservice.services.integration-framework.url" -> mockUrl,
+    "microservice.services.integration-framework.environment" -> "local",
+    "microservice.services.integration-framework.authorization-token" -> "Bearer FakeToken",
     "microservice.services.company-registration.host" -> mockHost,
     "microservice.services.company-registration.port" -> mockPort,
     "microservice.services.incorporation-information.host" -> mockHost,

@@ -34,17 +34,22 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import utils.IdGenerator
 
 import scala.concurrent.Future
 
 class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with ApplicativeSyntax with FutureInstances with MockAuditService {
 
   class Setup {
+    object TestIdGenerator extends IdGenerator {
+      override def createId: String = "TestCorrelationId"
+    }
+
     val service: SubmissionService = new SubmissionService(
       sequenceMongoRepository = mockSequenceRepository,
-      vatRegistrationService = mockVatRegistrationService,
       registrationRepository = mockRegistrationMongoRepository,
-      desConnector = mockDesConnector,
+      vatSubmissionConnector = mockVatSubmissionConnector,
+      idGenerator = TestIdGenerator,
       auditService = mockAuditService,
       authConnector = mockAuthConnector
     )
@@ -60,7 +65,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
       when(mockSequenceRepository.getNext(any())(any())).thenReturn(Future.successful(100))
       when(mockRegistrationMongoRepository.prepareRegistrationSubmission(anyString(), any(), any())(any())).thenReturn(Future.successful(true))
       when(mockRegistrationMongoRepository.saveTransId(any(), anyString())(any())).thenReturn(Future.successful("transID"))
-      when(mockDesConnector.submitToDES(any[VatSubmission], any())(any())).thenReturn(Future.successful(HttpResponse(200)))
+      when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString())(any())).thenReturn(Future.successful(HttpResponse(200)))
       when(mockRegistrationMongoRepository.finishRegistrationSubmission(anyString(), any())(any())).thenReturn(Future.successful(VatRegStatus.submitted))
       mockAuthorise(Retrievals.credentials and Retrievals.affinityGroup and Retrievals.agentCode)(
         Future.successful(
@@ -81,7 +86,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
 
   "submit" should {
     "return a 200 response and successfully audit when all calls succeed" in new Setup {
-      when(mockDesConnector.submitToDES(any[VatSubmission], any())(any())).thenReturn(Future.successful(HttpResponse(200)))
+      when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString())(any())).thenReturn(Future.successful(HttpResponse(200)))
       mockAuthorise(Retrievals.credentials and Retrievals.affinityGroup and Retrievals.agentCode)(
         Future.successful(
           Some(testCredentials) ~ Some(testAffinityGroup) ~ None
@@ -99,7 +104,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
     }
 
     "return a 502 response and successfully audit when submission fails with a 502" in new Setup {
-      when(mockDesConnector.submitToDES(any[VatSubmission], any())(any())).thenReturn(Future.successful(HttpResponse(502)))
+      when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString())(any())).thenReturn(Future.successful(HttpResponse(502)))
       mockAuthorise(Retrievals.credentials and Retrievals.affinityGroup and Retrievals.agentCode)(
         Future.successful(
           Some(testCredentials) ~ Some(testAffinityGroup) ~ None
@@ -114,25 +119,6 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
         AffinityGroup.Organisation,
         None
       ))
-    }
-  }
-
-  "call to getAcknowledgementReference" should {
-    val vatScheme = VatScheme(testRegId, internalId = testInternalid, None, None, None, status = VatRegStatus.draft)
-
-    "return Success response " in new Setup {
-      when(mockVatRegistrationService.retrieveAcknowledgementReference(testRegId)).
-        thenReturn(ServiceMocks.serviceResult(testAckReference))
-
-      service.getAcknowledgementReference(testRegId) returnsRight testAckReference
-    }
-
-    "return ResourceNotFound response " in new Setup {
-      val resourceNotFound: ResourceNotFound = ResourceNotFound("Resource Not Found for regId 1")
-      when(mockVatRegistrationService.retrieveAcknowledgementReference(anyString())(ArgumentMatchers.any()))
-        .thenReturn(ServiceMocks.serviceError[String](resourceNotFound))
-
-      service.getAcknowledgementReference(testRegId) returnsLeft resourceNotFound
     }
   }
 
@@ -196,22 +182,6 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
         .thenReturn(Future.successful(Some(vatScheme)))
 
       await(service.getValidDocumentStatus(testRegId)) mustBe VatRegStatus.draft
-    }
-  }
-
-  "updateSubmissionStatus" should {
-    "update the submission to submitted if there is an incorp date" in new Setup {
-      when(mockRegistrationMongoRepository.finishRegistrationSubmission(ArgumentMatchers.eq(testRegId), ArgumentMatchers.any())
-      (ArgumentMatchers.any())).thenReturn(Future.successful(VatRegStatus.submitted))
-
-      await(service.updateSubmissionStatus(testRegId)) mustBe VatRegStatus.submitted
-    }
-
-    "update the submission to held if there is no incorp date" in new Setup {
-      when(mockRegistrationMongoRepository.finishRegistrationSubmission(ArgumentMatchers.eq(testRegId), ArgumentMatchers.any())
-      (ArgumentMatchers.any())).thenReturn(Future.successful(VatRegStatus.held))
-
-      await(service.updateSubmissionStatus(testRegId)) mustBe VatRegStatus.held
     }
   }
 
