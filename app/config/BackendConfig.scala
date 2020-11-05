@@ -30,7 +30,7 @@ class BackendConfig @Inject()(val servicesConfig: ServicesConfig,
   lazy val vatRegistrationUrl: String = servicesConfig.baseUrl("vat-registration")
   lazy val integrationFrameworkBaseUrl: String = servicesConfig.getString("microservice.services.integration-framework.url")
 
-  lazy val vatSubmissionUrl: String = {
+  def vatSubmissionUrl: String = {
     val submissionEndpointUri = "/vat/subscription"
 
     if (isEnabled(StubSubmission)) {
