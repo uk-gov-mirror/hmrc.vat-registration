@@ -67,3 +67,5 @@ lazy val microservice = Project(appName, file("."))
     routesImport                     ++= Seq("config.CustomPathBinder._", "common.TransactionId", "models.ElementPath"),
     resolvers                        ++= Seq(Resolver.bintrayRepo("hmrc", "releases"), Resolver.jcenterRepo)
   )
+  .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
+
