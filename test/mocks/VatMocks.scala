@@ -54,6 +54,7 @@ trait VatMocks extends HttpClientMock {
   lazy val mockTradingDetailsService: TradingDetailsService = mock[TradingDetailsService]
   lazy val mockFlatRateSchemeService: FlatRateSchemeService = mock[FlatRateSchemeService]
   lazy val mockVatThresholdService: VatThresholdService = mock[VatThresholdService]
+  lazy val mockNonRepudiationConnector: NonRepudiationConnector = mock[NonRepudiationConnector]
 
   object AuthorisationMocks {
 

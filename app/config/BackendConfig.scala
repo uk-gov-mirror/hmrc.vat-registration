@@ -47,4 +47,7 @@ class BackendConfig @Inject()(val servicesConfig: ServicesConfig,
 
   lazy val dailyQuota: Int = servicesConfig.getConfInt("constants.daily-quota", 1)
 
+  lazy val nonRepudiationSubmissionUrl: String = servicesConfig.baseUrl("non-repudiation") + "/submission"
+  lazy val nonRepudiationApiKey: String = servicesConfig.getString("microservice.services.non-repudiation.api-key")
+
 }
