@@ -14,23 +14,15 @@
  * limitations under the License.
  */
 
-package models.submission
+package utils
 
-import java.time.LocalDate
+import java.util.UUID
 
-import org.joda.time.DateTime
-import play.api.libs.functional.syntax._
-import play.api.libs.functional.syntax.unlift
-import play.api.libs.json.{Writes, __}
-import play.api.libs.json.JodaWrites._
+import javax.inject.{Inject, Singleton}
 
-case class DESSubmission(acknowledgementReference: String,
-                         vatStartDate: Option[LocalDate] = None)
+@Singleton
+class IdGenerator @Inject()() {
 
-object DESSubmission {
-  implicit val writes: Writes[DESSubmission] =
-    (
-      (__ \ "acknowledgementReference").write[String] and
-        (__ \ "vatStartDate").writeNullable[LocalDate]
-      )(unlift(DESSubmission.unapply))
+  def createId: String = UUID.randomUUID().toString
+
 }

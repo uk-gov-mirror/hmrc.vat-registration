@@ -18,11 +18,12 @@ package services
 
 import cats.instances.FutureInstances
 import common.exceptions._
-import connectors.DESConnector
+import connectors.VatSubmissionConnector
 import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
 import models.api.VatSubmission
 import models.monitoring.RegistrationSubmissionAuditing.RegistrationSubmissionAuditModel
+import play.api.Logger
 import play.api.mvc.Request
 import repositories._
 import services.monitoring.AuditService
@@ -30,59 +31,66 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import utils.IdGenerator
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoRepository,
-                                  vatRegistrationService: VatRegistrationService,
-                                  val registrationRepository: RegistrationMongoRepository,
-                                  desConnector: DESConnector,
+                                  registrationRepository: RegistrationMongoRepository,
+                                  vatSubmissionConnector: VatSubmissionConnector,
                                   auditService: AuditService,
+                                  idGenerator: IdGenerator,
                                   val authConnector: AuthConnector
                                  )(implicit executionContext: ExecutionContext) extends FutureInstances with AuthorisedFunctions {
 
-  def submitVatRegistration(regId: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[String] = {
+  def submitVatRegistration(regId: String)
+                           (implicit hc: HeaderCarrier,
+                            request: Request[_]): Future[String] = {
     for {
       status <- getValidDocumentStatus(regId)
       ackRefs <- ensureAcknowledgementReference(regId, status)
       submission <- buildSubmission(regId)
-      _ <- submit(submission, regId)
-      _ <- updateSubmissionStatus(regId)
+      _ <- submit(submission, regId) // TODO refactor so this returns a value from the VatRegStatus enum or maybe an ADT
+      _ <- registrationRepository.finishRegistrationSubmission(regId, VatRegStatus.submitted)
     } yield {
       ackRefs
     }
   }
 
-  private[services] def submit(submission: VatSubmission, regId: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[HttpResponse] = {
-    desConnector.submitToDES(submission, regId).flatMap { response =>
-      authorised().retrieve(credentials and affinityGroup and agentCode) {
-        case Some(credentials) ~ Some(affinity) ~ optAgentCode =>
-          auditService.audit(RegistrationSubmissionAuditModel(
-            vatSubmission = submission,
-            regId = regId,
-            authProviderId = credentials.providerId,
-            affinityGroup = affinity,
-            optAgentReferenceNumber = optAgentCode
-          ))
+  private[services] def submit(submission: VatSubmission,
+                               regId: String
+                              )(implicit hc: HeaderCarrier,
+                                request: Request[_]): Future[HttpResponse] = {
 
-          Future.successful(response)
-      }
+    val correlationId = idGenerator.createId
+
+    vatSubmissionConnector.submit(submission, correlationId).flatMap {
+      response =>
+        authorised().retrieve(credentials and affinityGroup and agentCode) {
+          case Some(credentials) ~ Some(affinity) ~ optAgentCode =>
+            auditService.audit(RegistrationSubmissionAuditModel(
+              vatSubmission = submission,
+              regId = regId,
+              authProviderId = credentials.providerId,
+              affinityGroup = affinity,
+              optAgentReferenceNumber = optAgentCode
+            ))
+
+            Logger.info(s"VAT Submission API Correlation Id: $correlationId for the following regId: $regId")
+
+            Future.successful(response)
+        }
     }
   }
 
-  def getAcknowledgementReference(id: String)(implicit hc: HeaderCarrier): ServiceResult[String] =
-    vatRegistrationService.retrieveAcknowledgementReference(id)
-
-  private[services] def generateAcknowledgementReference(implicit hc: HeaderCarrier): Future[String] =
-    sequenceMongoRepository.getNext("AcknowledgementID").map(ref => f"BRVT$ref%011d")
-
-  private[services] def ensureAcknowledgementReference(regId: String, status: VatRegStatus.Value)
-                                                      (implicit hc: HeaderCarrier): Future[String] = {
+  private[services] def ensureAcknowledgementReference(regId: String,
+                                                       status: VatRegStatus.Value
+                                                      )(implicit hc: HeaderCarrier): Future[String] = {
     registrationRepository.retrieveVatScheme(regId) flatMap {
       case Some(vs) => vs.acknowledgementReference.fold(
         for {
-          newAckref <- generateAcknowledgementReference
+          newAckref <- sequenceMongoRepository.getNext("AcknowledgementID").map(ref => f"BRVT$ref%011d")
           _ <- registrationRepository.prepareRegistrationSubmission(regId, newAckref, status)
         } yield newAckref
       )(ar => Future.successful(ar))
@@ -98,7 +106,8 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
     }
   }
 
-  private[services] def getValidDocumentStatus(regID: String)(implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
+  private[services] def getValidDocumentStatus(regID: String)
+                                              (implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
     registrationRepository.retrieveVatScheme(regID) map {
       case Some(registration) => registration.status match {
         case VatRegStatus.draft | VatRegStatus.locked => registration.status
@@ -106,14 +115,6 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
       }
       case _ => throw MissingRegDocument(regID)
     }
-  }
-
-  private[services] def updateSubmissionStatus(regId: String)
-                                              (implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
-    registrationRepository.finishRegistrationSubmission(
-      regId,
-      VatRegStatus.submitted
-    )
   }
 
 }
