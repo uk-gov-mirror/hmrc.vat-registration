@@ -51,7 +51,9 @@ trait IntegrationSpecBase extends PlaySpec
   val mockHost: String = WiremockHelper.wiremockHost
   val mockPort: String = WiremockHelper.wiremockPort.toString
 
-  val config: Map[String, String] = Map(
+  lazy val additionalConfig: Map[String, String] = Map.empty
+
+  lazy val config: Map[String, String] = Map(
     "auditing.consumer.baseUri.host" -> mockHost,
     "auditing.consumer.baseUri.port" -> mockPort,
     "microservice.services.auth.host" -> mockHost,
@@ -69,9 +71,12 @@ trait IntegrationSpecBase extends PlaySpec
     "microservice.services.ThresholdsJsonLocation" -> "conf/thresholds.json",
     "microservice.services.vat-registration.host" -> mockHost,
     "microservice.services.vat-registration.port" -> mockPort,
+    "microservice.services.non-repudiation.host" -> mockHost,
+    "microservice.services.non-repudiation.port" -> mockPort,
     "mongo-encryption.key" -> "ABCDEFGHIJKLMNOPQRSTUV==",
     "constants.daily-quota" -> "1"
-  )
+  ) ++ additionalConfig
+
 
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
     .configure(config)

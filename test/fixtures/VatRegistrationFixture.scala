@@ -16,8 +16,7 @@
 
 package fixtures
 
-import java.time.LocalDate
-import java.util.UUID
+import java.time.{LocalDate, LocalDateTime, LocalTime}
 
 import common.TransactionId
 import enums.VatRegStatus
@@ -35,12 +34,14 @@ trait VatRegistrationFixture {
   lazy val testTxId: TransactionId = TransactionId("1")
   lazy val testAckReference = "BRPY000000000001"
   lazy val testDate: LocalDate = LocalDate.of(2018, 1, 1)
+  lazy val testDateTime: LocalDateTime = LocalDateTime.of(testDate, LocalTime.MIDNIGHT)
   lazy val testDateOfBirth = DateOfBirth(testDate)
   lazy val testCompanyName = "testCompanyName"
   lazy val testCrn = "testCrn"
   lazy val testCtUtr = Some("testCtUtr")
   lazy val testDateOFIncorp = LocalDate.of(2020, 1, 2)
   lazy val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some(Country(Some("UK"), None)))
+  lazy val testPostcode = "ZZ1 1ZZ"
   lazy val testSicCode = SicCode("88888", "description", "displayDetails")
   lazy val testName = Name(first = Some("Forename"), middle = None, last = "Surname")
   lazy val testOldName = Name(first = Some("Bob"), middle = None, last = "Smith")
@@ -60,6 +61,7 @@ trait VatRegistrationFixture {
   lazy val testProviderType: String = "GovernmentGateway"
   lazy val testCredentials: Credentials = Credentials(testProviderId, testProviderType)
   lazy val testAffinityGroup: AffinityGroup = AffinityGroup.Organisation
+  lazy val testAuthToken = "testAuthToken"
 
   lazy val testEligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
     threshold = testMandatoryThreshold,
@@ -272,4 +274,91 @@ trait VatRegistrationFixture {
        |  "joinFrs": false
        |}
      """.stripMargin).as[JsObject]
+
+  object AuthTestData {
+
+    import models.nonrepudiation.IdentityData
+    import services.NonRepudiationService.NonRepudiationIdentityRetrievals
+    import uk.gov.hmrc.auth.core.retrieve._
+    import uk.gov.hmrc.auth.core.{ConfidenceLevel, CredentialStrength, User}
+
+
+    val testInternalId = "testInternalId"
+    val testExternalId = "testExternalId"
+    val testAgentCode = "testAgentCode"
+    val testConfidenceLevel = ConfidenceLevel.L200
+    val testSautr = "testSautr"
+    val testAuthName = uk.gov.hmrc.auth.core.retrieve.Name(Some("testFirstName"), Some("testLastName"))
+    val testAuthDateOfBirth = org.joda.time.LocalDate.now()
+    val testEmail = "testEmail"
+    val testAgentInformation = AgentInformation(Some("testAgentId"), Some("testAgentCode"), Some("testAgentFriendlyName"))
+    val testGroupIdentifier = "testGroupIdentifier"
+    val testCredentialRole = User
+    val testMdtpInformation = MdtpInformation("testDeviceId", "testSessionId")
+    val testItmpName = ItmpName(Some("testGivenName"), Some("testMiddleName"), Some("testFamilyName"))
+    val testItmpDateOfBirth = org.joda.time.LocalDate.now()
+    val testItmpAddress = ItmpAddress(
+      Some("testLine1"),
+      None,
+      None,
+      None,
+      None,
+      Some("testPostcode"),
+      None,
+      None
+    )
+    val testCredentialStrength = CredentialStrength.strong
+    val testLoginTimes = LoginTimes(org.joda.time.DateTime.now(), Some(org.joda.time.DateTime.now()))
+
+    val testNonRepudiationIdentityData: IdentityData = IdentityData(
+      Some(testInternalId),
+      Some(testExternalId),
+      Some(testAgentCode),
+      Some(testCredentials),
+      testConfidenceLevel,
+      Some(testNino),
+      Some(testSautr),
+      Some(testAuthName),
+      Some(testAuthDateOfBirth),
+      Some(testEmail),
+      testAgentInformation,
+      Some(testGroupIdentifier),
+      Some(testCredentialRole),
+      Some(testMdtpInformation),
+      Some(testItmpName),
+      Some(testItmpDateOfBirth),
+      Some(testItmpAddress),
+      Some(testAffinityGroup),
+      Some(testCredentialStrength),
+      testLoginTimes
+    )
+
+    implicit class RetrievalCombiner[A](a: A) {
+      def ~[B](b: B): A ~ B = new ~(a, b)
+    }
+
+    val testAuthRetrievals: NonRepudiationIdentityRetrievals =
+      Some(testAffinityGroup) ~
+        Some(testInternalId) ~
+        Some(testExternalId) ~
+        Some(testAgentCode) ~
+        Some(testCredentials) ~
+        testConfidenceLevel ~
+        Some(testNino) ~
+        Some(testSautr) ~
+        Some(testAuthName) ~
+        Some(testAuthDateOfBirth) ~
+        Some(testEmail) ~
+        testAgentInformation ~
+        Some(testGroupIdentifier) ~
+        Some(testCredentialRole) ~
+        Some(testMdtpInformation) ~
+        Some(testItmpName) ~
+        Some(testItmpDateOfBirth) ~
+        Some(testItmpAddress) ~
+        Some(testCredentialStrength) ~
+        testLoginTimes
+
+  }
+
 }

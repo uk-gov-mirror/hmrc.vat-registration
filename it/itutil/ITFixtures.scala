@@ -15,12 +15,13 @@
  */
 package itutil
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime, LocalTime}
 
 import common.TransactionId
 import enums.VatRegStatus
 import models.api._
 import models.submission.{DateOfBirth, OwnerProprietor}
+import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.http.HeaderCarrier
 
 trait ITFixtures {
@@ -28,6 +29,7 @@ trait ITFixtures {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val testDate: LocalDate = LocalDate.of(2017, 1, 1)
+  val testDateTime: LocalDateTime = LocalDateTime.of(testDate, LocalTime.of(0, 0))
   val startDate = StartDate(Some(testDate))
   val testRegId = "regId"
   val testInternalid = "INT-123-456-789"
@@ -121,4 +123,95 @@ trait ITFixtures {
     internalId = testInternalid,
     status = VatRegStatus.draft
   )
+
+  object AuthTestData {
+
+    import models.nonrepudiation.IdentityData
+    import services.NonRepudiationService.NonRepudiationIdentityRetrievals
+    import uk.gov.hmrc.auth.core.retrieve._
+    import uk.gov.hmrc.auth.core.{ConfidenceLevel, CredentialStrength, User}
+
+
+    val testInternalId = "testInternalId"
+    val testExternalId = "testExternalId"
+    val testAgentCode = "testAgentCode"
+    val testConfidenceLevel = ConfidenceLevel.L200
+    val testSautr = "testSautr"
+    val testAuthName = uk.gov.hmrc.auth.core.retrieve.Name(Some("testFirstName"), Some("testLastName"))
+    val testAuthDateOfBirth = org.joda.time.LocalDate.now()
+    val testEmail = "testEmail"
+    val testAgentInformation = AgentInformation(Some("testAgentId"), Some("testAgentCode"), Some("testAgentFriendlyName"))
+    val testGroupIdentifier = "testGroupIdentifier"
+    val testCredentialRole = User
+    val testMdtpInformation = MdtpInformation("testDeviceId", "testSessionId")
+    val testItmpName = ItmpName(Some("testGivenName"), Some("testMiddleName"), Some("testFamilyName"))
+    val testItmpDateOfBirth = org.joda.time.LocalDate.now()
+    val testItmpAddress = ItmpAddress(
+      Some("testLine1"),
+      None,
+      None,
+      None,
+      None,
+      Some("testPostcode"),
+      None,
+      None
+    )
+    val testCredentialStrength = CredentialStrength.strong
+    val testLoginTimes = LoginTimes(org.joda.time.DateTime.now(), Some(org.joda.time.DateTime.now()))
+    lazy val testAffinityGroup: AffinityGroup = AffinityGroup.Organisation
+    lazy val testProviderId: String = "testProviderID"
+    lazy val testProviderType: String = "GovernmentGateway"
+    lazy val testCredentials: Credentials = Credentials(testProviderId, testProviderType)
+
+    val testNonRepudiationIdentityData: IdentityData = IdentityData(
+      Some(testInternalId),
+      Some(testExternalId),
+      Some(testAgentCode),
+      Some(testCredentials),
+      testConfidenceLevel,
+      Some(testNino),
+      Some(testSautr),
+      Some(testAuthName),
+      Some(testAuthDateOfBirth),
+      Some(testEmail),
+      testAgentInformation,
+      Some(testGroupIdentifier),
+      Some(testCredentialRole),
+      Some(testMdtpInformation),
+      Some(testItmpName),
+      Some(testItmpDateOfBirth),
+      Some(testItmpAddress),
+      Some(testAffinityGroup),
+      Some(testCredentialStrength),
+      testLoginTimes
+    )
+
+    implicit class RetrievalCombiner[A](a: A) {
+      def ~[B](b: B): A ~ B = new ~(a, b)
+    }
+
+    val testAuthRetrievals: NonRepudiationIdentityRetrievals =
+      Some(testAffinityGroup) ~
+        Some(testInternalId) ~
+        Some(testExternalId) ~
+        Some(testAgentCode) ~
+        Some(testCredentials) ~
+        testConfidenceLevel ~
+        Some(testNino) ~
+        Some(testSautr) ~
+        Some(testAuthName) ~
+        Some(testAuthDateOfBirth) ~
+        Some(testEmail) ~
+        testAgentInformation ~
+        Some(testGroupIdentifier) ~
+        Some(testCredentialRole) ~
+        Some(testMdtpInformation) ~
+        Some(testItmpName) ~
+        Some(testItmpDateOfBirth) ~
+        Some(testItmpAddress) ~
+        Some(testCredentialStrength) ~
+        testLoginTimes
+
+  }
+
 }
