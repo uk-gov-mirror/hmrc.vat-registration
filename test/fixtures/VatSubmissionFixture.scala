@@ -31,7 +31,7 @@ trait VatSubmissionFixture {
       |    "customerID": [
       |      {
       |        "idValue": "testCtUtr",
-      |        "idType": " UTR",
+      |        "idType": "UTR",
       |        "IDsVerificationStatus": "1"
       |      },
       |      {
@@ -145,7 +145,7 @@ trait VatSubmissionFixture {
       |      "customerStatus": "2"
       |    },
       |    "attachments": {
-      |      "EORIRequested": true
+      |      "EORIrequested": true
       |    }
       |  },
       |  "periods": {
