@@ -57,17 +57,17 @@ object SicAndCompliance {
   val mongoFormats: Format[SicAndCompliance] = Format(mongoReads,writes)
 
   val submissionReads: Reads[SicAndCompliance] = (
-    (__ \ "businessActivities" \ "description").read[String] and
+    (__ \ "subscription" \ "businessActivities" \ "description").read[String] and
     (__ \ "compliance").readNullable[ComplianceLabour](ComplianceLabour.submissionFormat) and
-    (__ \ "businessActivities" \ "SICCodes" \ "primaryMainCode").read[String].fmap(code => SicCode(code, "", "")) and
-    (__ \ "businessActivities" \ "SICCodes").read[List[SicCode]](SicCode.sicCodeListReads).orElse(Reads.pure(List()))
+    (__ \ "subscription" \ "businessActivities" \ "SICCodes" \ "primaryMainCode").read[String].fmap(code => SicCode(code, "", "")) and
+    (__ \ "subscription" \ "businessActivities" \ "SICCodes").read[List[SicCode]](SicCode.sicCodeListReads).orElse(Reads.pure(List()))
   )(apply(_, _, _, _))
 
   val submissionWrites: Writes[SicAndCompliance] = (
-    (__ \ "businessActivities" \ "description").write[String] and
+    (__ \ "subscription" \ "businessActivities" \ "description").write[String] and
     (__ \ "compliance").writeNullable[ComplianceLabour](ComplianceLabour.submissionFormat) and
-    (__ \ "businessActivities" \ "SICCodes" \ "primaryMainCode").write[String].contramap[SicCode](code => code.id) and
-    (__ \ "businessActivities" \ "SICCodes").write[List[SicCode]](SicCode.sicCodeListWrites)
+    (__ \ "subscription" \ "businessActivities" \ "SICCodes" \ "primaryMainCode").write[String].contramap[SicCode](code => code.id) and
+    (__ \ "subscription" \ "businessActivities" \ "SICCodes").write[List[SicCode]](SicCode.sicCodeListWrites)
   )(unlift(unapply))
 
   val submissionFormat: Format[SicAndCompliance] = Format[SicAndCompliance](submissionReads, submissionWrites)

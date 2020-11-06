@@ -89,6 +89,14 @@ trait ITVatSubmissionFixture {
       |      "startDate": "2018-01-01",
       |      "FRSCategory": "testCategory",
       |      "FRSPercentage": 15
+      |    },
+      |    "businessActivities": {
+      |     "SICCodes": {
+      |        "mainCode2": "00998",
+      |        "primaryMainCode": "12345",
+      |        "mainCode3": "00889"
+      |     },
+      |     "description": "this is my business description"
       |    }
       |  },
       |  "bankDetails": {
@@ -102,14 +110,6 @@ trait ITVatSubmissionFixture {
       |    "numOfWorkers": 1000,
       |    "tempWorkers": true,
       |    "provisionOfLabour": true
-      |  },
-      |  "businessActivities": {
-      |    "SICCodes": {
-      |      "mainCode2": "00998",
-      |      "primaryMainCode": "12345",
-      |      "mainCode3": "00889"
-      |    },
-      |    "description": "this is my business description"
       |  },
       |  "contact": {
       |    "commDetails": {

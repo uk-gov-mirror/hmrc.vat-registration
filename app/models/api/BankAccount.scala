@@ -57,7 +57,7 @@ object BankAccount {
       case Some(BankAccount(true, Some(details))) =>
         Some(Json.obj("UK" -> Json.obj(
           "accountName" -> details.name,
-          "sortCode" -> details.sortCode,
+          "sortCode" -> details.sortCode.replaceAll("-", ""),
           "accountNumber" -> details.number
         )))
       case _ =>
