@@ -31,13 +31,14 @@ class VatSubmissionConnector @Inject()(config: BackendConfig,
                                        http: HttpClient
                                       )(implicit executionContext: ExecutionContext) {
 
-  def submit(submissionData: VatSubmission, correlationId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+  def submit(submissionData: VatSubmission, correlationId: String, credentialId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
 
     val updatedHeaderCarrier =
       hc.copy(authorization = Some(Authorization(config.urlHeaderAuthorization)))
         .withExtraHeaders(
           "Environment" -> config.urlHeaderEnvironment,
-          "CorrelationId" -> correlationId
+          "CorrelationId" -> correlationId,
+          "Credential-Id" -> credentialId
         )
 
     http.POST[VatSubmission, HttpResponse](config.vatSubmissionUrl, submissionData)(

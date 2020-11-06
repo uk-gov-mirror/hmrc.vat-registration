@@ -65,10 +65,10 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
 
     val correlationId = idGenerator.createId
 
-    vatSubmissionConnector.submit(submission, correlationId).flatMap {
-      response =>
-        authorised().retrieve(credentials and affinityGroup and agentCode) {
-          case Some(credentials) ~ Some(affinity) ~ optAgentCode =>
+    authorised().retrieve(credentials and affinityGroup and agentCode) {
+      case Some(credentials) ~ Some(affinity) ~ optAgentCode =>
+        vatSubmissionConnector.submit(submission, correlationId, credentials.providerId).map {
+          response =>
             auditService.audit(RegistrationSubmissionAuditModel(
               vatSubmission = submission,
               regId = regId,
@@ -79,7 +79,7 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
 
             Logger.info(s"VAT Submission API Correlation Id: $correlationId for the following regId: $regId")
 
-            Future.successful(response)
+            response
         }
     }
   }
