@@ -65,7 +65,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
       when(mockSequenceRepository.getNext(any())(any())).thenReturn(Future.successful(100))
       when(mockRegistrationMongoRepository.prepareRegistrationSubmission(anyString(), any(), any())(any())).thenReturn(Future.successful(true))
       when(mockRegistrationMongoRepository.saveTransId(any(), anyString())(any())).thenReturn(Future.successful("transID"))
-      when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString())(any())).thenReturn(Future.successful(HttpResponse(200)))
+      when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString(), anyString())(any())).thenReturn(Future.successful(HttpResponse(200)))
       when(mockRegistrationMongoRepository.finishRegistrationSubmission(anyString(), any())(any())).thenReturn(Future.successful(VatRegStatus.submitted))
       mockAuthorise(Retrievals.credentials and Retrievals.affinityGroup and Retrievals.agentCode)(
         Future.successful(
@@ -86,7 +86,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
 
   "submit" should {
     "return a 200 response and successfully audit when all calls succeed" in new Setup {
-      when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString())(any())).thenReturn(Future.successful(HttpResponse(200)))
+      when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString(), anyString())(any())).thenReturn(Future.successful(HttpResponse(200)))
       mockAuthorise(Retrievals.credentials and Retrievals.affinityGroup and Retrievals.agentCode)(
         Future.successful(
           Some(testCredentials) ~ Some(testAffinityGroup) ~ None
@@ -104,7 +104,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
     }
 
     "return a 502 response and successfully audit when submission fails with a 502" in new Setup {
-      when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString())(any())).thenReturn(Future.successful(HttpResponse(502)))
+      when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString(), anyString())(any())).thenReturn(Future.successful(HttpResponse(502)))
       mockAuthorise(Retrievals.credentials and Retrievals.affinityGroup and Retrievals.agentCode)(
         Future.successful(
           Some(testCredentials) ~ Some(testAffinityGroup) ~ None
