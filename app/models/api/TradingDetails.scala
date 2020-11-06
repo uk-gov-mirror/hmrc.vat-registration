@@ -29,7 +29,7 @@ object TradingDetails {
 
   val submissionFormat: Format[TradingDetails] = (
     (__ \ "customerIdentification" \ "tradingName").formatNullable[String] and
-    (__ \ "admin" \ "attachments" \ "EORIRequested").format[Boolean]
+    (__ \ "admin" \ "attachments" \ "EORIrequested").format[Boolean]
   )(TradingDetails.apply, unlift(TradingDetails.unapply))
 
 }

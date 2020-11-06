@@ -16,7 +16,7 @@ trait ITVatSubmissionFixture {
       |    "customerID": [
       |      {
       |        "idValue": "testCtUtr",
-      |        "idType": " UTR",
+      |        "idType": "UTR",
       |        "IDsVerificationStatus": "1"
       |      },
       |      {
@@ -130,7 +130,7 @@ trait ITVatSubmissionFixture {
       |      "customerStatus": "2"
       |    },
       |    "attachments": {
-      |      "EORIRequested": true
+      |      "EORIrequested": true
       |    }
       |  },
       |  "periods": {

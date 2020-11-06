@@ -43,7 +43,7 @@ object IdType {
 
   val stati: Map[IdType, String] = Map(
     NinoIdType -> "NINO",
-    UtrIdType -> " UTR",
+    UtrIdType -> "UTR",
     CrnIdType -> "CRN",
     TempNinoIDType -> "TEMPNI",
     CharityRefIdType -> "CHRN",
