@@ -23,26 +23,30 @@ import java.util.Base64
 
 import connectors.NonRepudiationConnector
 import javax.inject.{Inject, Singleton}
+import models.nonrepudiation.NonRepudiationAuditing.{NonRepudiationSubmissionFailureAudit, NonRepudiationSubmissionSuccessAudit}
 import models.nonrepudiation.{IdentityData, NonRepudiationMetadata, NonRepudiationSubmissionAccepted}
 import org.joda.time.LocalDate
-import play.api.mvc.{AnyContent, Request}
+import play.api.mvc.Request
 import services.NonRepudiationService._
-import uk.gov.hmrc.auth.core.authorise.EmptyPredicate
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.auth.core.retrieve._
+import services.monitoring.AuditService
 import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.authorise.EmptyPredicate
+import uk.gov.hmrc.auth.core.retrieve._
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpException, InternalServerException}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class NonRepudiationService @Inject()(nonRepudiationConnector: NonRepudiationConnector,
+                                      auditService: AuditService,
                                       val authConnector: AuthConnector)(implicit ec: ExecutionContext) extends AuthorisedFunctions {
-  def submitNonRepudiation(payloadString: String,
+  def submitNonRepudiation(registrationId: String,
+                           payloadString: String,
                            submissionTimestamp: LocalDateTime,
                            postCode: String
-                          )(implicit hc: HeaderCarrier, request: Request[AnyContent]): Future[NonRepudiationSubmissionAccepted] = for {
+                          )(implicit hc: HeaderCarrier, request: Request[_]): Future[NonRepudiationSubmissionAccepted] = for {
     identityData <- retrieveIdentityData()
     payloadChecksum = MessageDigest.getInstance("SHA-256")
       .digest(payloadString.getBytes(StandardCharsets.UTF_8))
@@ -64,7 +68,15 @@ class NonRepudiationService @Inject()(nonRepudiationConnector: NonRepudiationCon
       Map("postCode" -> postCode)
     )
     encodedPayloadString = Base64.getEncoder.encodeToString(payloadString.getBytes(StandardCharsets.UTF_8))
-    nonRepudiationSubmissionResponse <- nonRepudiationConnector.submitNonRepudiation(encodedPayloadString, nonRepudiationMetadata)
+    nonRepudiationSubmissionResponse <- nonRepudiationConnector.submitNonRepudiation(encodedPayloadString, nonRepudiationMetadata).map {
+      case response@NonRepudiationSubmissionAccepted(submissionId) =>
+        auditService.audit(NonRepudiationSubmissionSuccessAudit(registrationId, submissionId))
+        response
+    }.recoverWith {
+      case exception: HttpException =>
+        auditService.audit(NonRepudiationSubmissionFailureAudit(registrationId, exception.responseCode, exception.message))
+        Future.failed(exception)
+    }
   } yield nonRepudiationSubmissionResponse
 
   private def retrieveIdentityData()(implicit headerCarrier: HeaderCarrier): Future[IdentityData] = {

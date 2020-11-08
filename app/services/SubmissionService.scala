@@ -24,6 +24,7 @@ import javax.inject.{Inject, Singleton}
 import models.api.VatSubmission
 import models.monitoring.RegistrationSubmissionAuditing.RegistrationSubmissionAuditModel
 import play.api.Logger
+import play.api.libs.json.Json
 import play.api.mvc.Request
 import repositories._
 import services.monitoring.AuditService
@@ -31,7 +32,7 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import utils.IdGenerator
+import utils.{IdGenerator, TimeMachine}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,6 +40,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoRepository,
                                   registrationRepository: RegistrationMongoRepository,
                                   vatSubmissionConnector: VatSubmissionConnector,
+                                  nonRepudiationService: NonRepudiationService,
+                                  timeMachine: TimeMachine,
                                   auditService: AuditService,
                                   idGenerator: IdGenerator,
                                   val authConnector: AuthConnector
@@ -76,6 +79,13 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
               affinityGroup = affinity,
               optAgentReferenceNumber = optAgentCode
             ))
+
+            val nonRepudiationPayload = Json.toJson(submission).toString
+
+            //TODO - Confirm what to send when postcode is not available
+            val nonRepudiationPostcode = submission.businessContact.ppob.postcode.getOrElse("NoPostcodeSupplied")
+
+            nonRepudiationService.submitNonRepudiation(regId, nonRepudiationPayload, timeMachine.timestamp, nonRepudiationPostcode)
 
             Logger.info(s"VAT Submission API Correlation Id: $correlationId for the following regId: $regId")
 

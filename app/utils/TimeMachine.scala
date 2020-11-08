@@ -16,10 +16,12 @@
 
 package utils
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 
 class TimeMachine {
 
   def today: LocalDate = LocalDate.now
+
+  def timestamp: LocalDateTime = LocalDateTime.now
 
 }

@@ -101,7 +101,7 @@ trait VatRegistrationFixture {
   lazy val testBusinessContact = Some(BusinessContact(
     digitalContact = DigitalContact("email@email.com", Some("12345"), Some("54321")),
     website = Some("www.foo.com"),
-    ppob = Address("line1", "line2", None, None, None, Some(Country(Some("UK"), None))),
+    ppob = Address("line1", "line2", None, None, Some(testPostcode), Some(Country(Some("UK"), None))),
     commsPreference = Email
   ))
 
@@ -156,6 +156,7 @@ trait VatRegistrationFixture {
        |"ppob": {
        |  "line1": "line1",
        |  "line2": "line2",
+       |  "postcode": "ZZ1 1ZZ",
        |  "country": {
        |    "code": "UK"
        |  }
