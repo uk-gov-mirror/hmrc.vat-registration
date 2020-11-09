@@ -67,6 +67,7 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
                                 request: Request[_]): Future[HttpResponse] = {
 
     val correlationId = idGenerator.createId
+    Logger.info(s"VAT Submission API Correlation Id: $correlationId for the following regId: $regId")
 
     authorised().retrieve(credentials and affinityGroup and agentCode) {
       case Some(credentials) ~ Some(affinity) ~ optAgentCode =>
@@ -84,11 +85,7 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
 
             //TODO - Confirm what to send when postcode is not available
             val nonRepudiationPostcode = submission.businessContact.ppob.postcode.getOrElse("NoPostcodeSupplied")
-
             nonRepudiationService.submitNonRepudiation(regId, nonRepudiationPayload, timeMachine.timestamp, nonRepudiationPostcode)
-
-            Logger.info(s"VAT Submission API Correlation Id: $correlationId for the following regId: $regId")
-
             response
         }
     }

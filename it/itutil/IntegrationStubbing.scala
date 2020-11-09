@@ -32,6 +32,7 @@ trait IntegrationStubbing extends IntegrationSpecBase with ITFixtures {
     def regRepo: RegRepo = RegRepo()
     def dailyQuotaRepo: DailyQuotaRepo = DailyQuotaRepo()
     def regInfoRepo: RegInfoRepo = RegInfoRepo()
+    def subscriptionApi: SubscriptionApi = SubscriptionApi()
   }
 
   def given: PreconditionBuilder = new PreconditionBuilder
@@ -84,4 +85,12 @@ trait IntegrationStubbing extends IntegrationSpecBase with ITFixtures {
       builder
     }
   }
+
+  case class SubscriptionApi()(implicit builder: PreconditionBuilder) {
+    def respondsWith(status: Int): PreconditionBuilder = {
+      stubPost("/vatreg/test-only/vat/subscription", status, "")
+      builder
+    }
+  }
+
 }
