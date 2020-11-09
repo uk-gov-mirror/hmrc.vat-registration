@@ -137,6 +137,7 @@ trait VatSubmissionFixture {
       |    "address": {
       |      "line1": "line1",
       |      "line2": "line2",
+      |      "postCode": "ZZ1 1ZZ",
       |      "countryCode": "UK"
       |    }
       |  },
@@ -237,6 +238,7 @@ trait VatSubmissionFixture {
       |    "ppob": {
       |      "line1": "line1",
       |      "line2": "line2",
+      |      "postcode": "ZZ1 1ZZ",
       |      "country": {
       |         "code": "UK"
       |      }

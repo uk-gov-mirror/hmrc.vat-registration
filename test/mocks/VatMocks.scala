@@ -33,6 +33,7 @@ import services._
 import uk.gov.hmrc.auth.core.retrieve.{Retrieval, ~}
 import uk.gov.hmrc.auth.core.{AuthConnector, InvalidBearerToken}
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.TimeMachine
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -54,7 +55,9 @@ trait VatMocks extends HttpClientMock {
   lazy val mockTradingDetailsService: TradingDetailsService = mock[TradingDetailsService]
   lazy val mockFlatRateSchemeService: FlatRateSchemeService = mock[FlatRateSchemeService]
   lazy val mockVatThresholdService: VatThresholdService = mock[VatThresholdService]
+  lazy val mockNonRepudiationService: NonRepudiationService = mock[NonRepudiationService]
   lazy val mockNonRepudiationConnector: NonRepudiationConnector = mock[NonRepudiationConnector]
+  lazy val mockTimeMachine: TimeMachine = mock[TimeMachine]
 
   object AuthorisationMocks {
 

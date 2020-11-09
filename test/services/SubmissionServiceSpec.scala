@@ -25,9 +25,12 @@ import helpers.VatRegSpec
 import mocks.monitoring.MockAuditService
 import models.api._
 import models.monitoring.RegistrationSubmissionAuditing.RegistrationSubmissionAuditModel
+import models.nonrepudiation.NonRepudiationSubmissionAccepted
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
+import org.scalatest.concurrent.Eventually
+import play.api.libs.json.Json
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -38,9 +41,10 @@ import utils.IdGenerator
 
 import scala.concurrent.Future
 
-class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with ApplicativeSyntax with FutureInstances with MockAuditService {
+class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with ApplicativeSyntax with FutureInstances with MockAuditService with Eventually {
 
   class Setup {
+
     object TestIdGenerator extends IdGenerator {
       override def createId: String = "TestCorrelationId"
     }
@@ -49,8 +53,10 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
       sequenceMongoRepository = mockSequenceRepository,
       registrationRepository = mockRegistrationMongoRepository,
       vatSubmissionConnector = mockVatSubmissionConnector,
+      nonRepudiationService = mockNonRepudiationService,
       idGenerator = TestIdGenerator,
       auditService = mockAuditService,
+      timeMachine = mockTimeMachine,
       authConnector = mockAuthConnector
     )
   }
@@ -67,6 +73,17 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
       when(mockRegistrationMongoRepository.saveTransId(any(), anyString())(any())).thenReturn(Future.successful("transID"))
       when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString(), anyString())(any())).thenReturn(Future.successful(HttpResponse(200)))
       when(mockRegistrationMongoRepository.finishRegistrationSubmission(anyString(), any())(any())).thenReturn(Future.successful(VatRegStatus.submitted))
+
+      when(mockTimeMachine.timestamp).thenReturn(testDateTime)
+      val nonRepudiationPayloadString: String = Json.toJson(VatSubmission.fromVatScheme(testFullVatScheme)).toString()
+      val testNonRepudiationSubmissionId = "testNonRepudiationSubmissionId"
+      when(mockNonRepudiationService.submitNonRepudiation(
+        ArgumentMatchers.eq(testRegId),
+        ArgumentMatchers.eq(nonRepudiationPayloadString),
+        ArgumentMatchers.eq(testDateTime),
+        ArgumentMatchers.eq(testPostcode)
+      )(ArgumentMatchers.eq(hc), ArgumentMatchers.eq(request))).thenReturn(Future.successful(NonRepudiationSubmissionAccepted(testNonRepudiationSubmissionId)))
+
       mockAuthorise(Retrievals.credentials and Retrievals.affinityGroup and Retrievals.agentCode)(
         Future.successful(
           Some(testCredentials) ~ Some(testAffinityGroup) ~ None
@@ -74,13 +91,21 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
       )
 
       await(service.submitVatRegistration(testRegId)) mustBe "BRVT00000000100"
-      verifyAudit(RegistrationSubmissionAuditModel(
-        testFullSubmission,
-        testRegId,
-        testProviderId,
-        testAffinityGroup,
-        None
-      ))
+      eventually {
+        verifyAudit(RegistrationSubmissionAuditModel(
+          testFullSubmission,
+          testRegId,
+          testProviderId,
+          testAffinityGroup,
+          None
+        ))
+        verify(mockNonRepudiationService).submitNonRepudiation(
+          ArgumentMatchers.eq(testRegId),
+          ArgumentMatchers.eq(nonRepudiationPayloadString),
+          ArgumentMatchers.eq(testDateTime),
+          ArgumentMatchers.eq(testPostcode)
+        )(ArgumentMatchers.eq(hc), ArgumentMatchers.eq(request))
+      }
     }
   }
 

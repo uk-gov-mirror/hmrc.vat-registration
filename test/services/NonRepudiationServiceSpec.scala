@@ -22,23 +22,28 @@ import java.util.Base64
 
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
+import mocks.monitoring.MockAuditService
+import models.nonrepudiation.NonRepudiationAuditing.{NonRepudiationSubmissionFailureAudit, NonRepudiationSubmissionSuccessAudit}
 import models.nonrepudiation.{NonRepudiationMetadata, NonRepudiationSubmissionAccepted}
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
+import org.scalatest.concurrent.Eventually
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.EmptyPredicate
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.http.logging.Authorization
 
 import scala.concurrent.Future
 
-class NonRepudiationServiceSpec extends VatRegSpec with VatRegistrationFixture {
+class NonRepudiationServiceSpec extends VatRegSpec with MockAuditService with VatRegistrationFixture with Eventually {
+
   import AuthTestData._
 
   object TestService extends NonRepudiationService(
     mockNonRepudiationConnector,
+    mockAuditService,
     mockAuthConnector
   )
 
@@ -49,6 +54,7 @@ class NonRepudiationServiceSpec extends VatRegSpec with VatRegistrationFixture {
     "call the nonRepudiationConnector with the correctly formatted metadata" in {
       val testSubmissionId = "testSubmissionId"
       val testPayloadString = "testPayloadString"
+      val testRegistrationId = "testRegistrationId"
 
       val testPayloadChecksum = MessageDigest.getInstance("SHA-256")
         .digest(testPayloadString.getBytes(StandardCharsets.UTF_8))
@@ -73,7 +79,7 @@ class NonRepudiationServiceSpec extends VatRegSpec with VatRegistrationFixture {
         ArgumentMatchers.eq(testEncodedPayload),
         ArgumentMatchers.eq(expectedMetadata)
       )(ArgumentMatchers.eq(hc)))
-          .thenReturn(Future.successful(NonRepudiationSubmissionAccepted(testSubmissionId)))
+        .thenReturn(Future.successful(NonRepudiationSubmissionAccepted(testSubmissionId)))
 
       when(mockAuthConnector.authorise(
         ArgumentMatchers.eq(EmptyPredicate),
@@ -81,9 +87,59 @@ class NonRepudiationServiceSpec extends VatRegSpec with VatRegistrationFixture {
         ))(ArgumentMatchers.eq(hc), ArgumentMatchers.eq(executionContext))
       ).thenReturn(Future.successful(testAuthRetrievals))
 
-      val res = TestService.submitNonRepudiation(testPayloadString, testDateTime, testPostcode)
+      val res = TestService.submitNonRepudiation(testRegistrationId, testPayloadString, testDateTime, testPostcode)
 
       await(res) mustBe NonRepudiationSubmissionAccepted(testSubmissionId)
+
+      eventually {
+        verifyAudit(NonRepudiationSubmissionSuccessAudit(testRegistrationId, testSubmissionId))
+      }
+    }
+    "audit when the non repudiation call fails" in {
+      val testSubmissionId = "testSubmissionId"
+      val testPayloadString = "testPayloadString"
+      val testRegistrationId = "testRegistrationId"
+
+      val testPayloadChecksum = MessageDigest.getInstance("SHA-256")
+        .digest(testPayloadString.getBytes(StandardCharsets.UTF_8))
+        .map("%02x".format(_)).mkString
+
+      val testEncodedPayload = Base64.getEncoder.encodeToString(testPayloadString.getBytes(StandardCharsets.UTF_8))
+
+
+      val expectedMetadata = NonRepudiationMetadata(
+        businessId = "vrs",
+        notableEvent = "vat-registration",
+        payloadContentType = "application/json",
+        payloadSha256Checksum = testPayloadChecksum,
+        userSubmissionTimestamp = testDateTime,
+        identityData = testNonRepudiationIdentityData,
+        userAuthToken = testAuthToken,
+        headerData = request.headers.toSimpleMap,
+        searchKeys = Map("postCode" -> testPostcode)
+      )
+
+      val testExceptionMessage = "testExceptionMessage"
+
+      when(mockAuthConnector.authorise(
+        ArgumentMatchers.eq(EmptyPredicate),
+        ArgumentMatchers.eq(NonRepudiationService.nonRepudiationIdentityRetrievals
+        ))(ArgumentMatchers.eq(hc), ArgumentMatchers.eq(executionContext))
+      ).thenReturn(Future.successful(testAuthRetrievals))
+
+      when(mockNonRepudiationConnector.submitNonRepudiation(
+          ArgumentMatchers.eq(testEncodedPayload),
+          ArgumentMatchers.eq(expectedMetadata)
+      )(ArgumentMatchers.eq(hc)))
+        .thenReturn(Future.failed(new NotFoundException(testExceptionMessage)))
+
+      val res = TestService.submitNonRepudiation(testRegistrationId, testPayloadString, testDateTime, testPostcode)
+
+      intercept[NotFoundException](await(res))
+
+      eventually {
+        verifyAudit(NonRepudiationSubmissionFailureAudit(testRegistrationId, NOT_FOUND , testExceptionMessage))
+      }
     }
   }
 }
