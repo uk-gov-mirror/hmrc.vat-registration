@@ -20,14 +20,14 @@ import config.BackendConfig
 import javax.inject.{Inject, Singleton}
 import models.nonrepudiation.{NonRepudiationMetadata, NonRepudiationSubmissionAccepted}
 import play.api.http.Status.ACCEPTED
-import play.api.libs.json.Json
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
+import play.api.libs.json.{JsObject, Json}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpReadsHttpResponse, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class NonRepudiationConnector @Inject()(httpClient: HttpClient, config: BackendConfig)(implicit ec: ExecutionContext) {
+class NonRepudiationConnector @Inject()(httpClient: HttpClient, config: BackendConfig)(implicit ec: ExecutionContext) extends HttpReadsHttpResponse {
   def submitNonRepudiation(encodedPayloadString: String,
                            nonRepudiationMetadata: NonRepudiationMetadata
                           )(implicit hc: HeaderCarrier): Future[NonRepudiationSubmissionAccepted] = {
@@ -36,7 +36,7 @@ class NonRepudiationConnector @Inject()(httpClient: HttpClient, config: BackendC
       "metadata" -> nonRepudiationMetadata
     )
 
-    httpClient.POST(
+    httpClient.POST[JsObject, HttpResponse](
       url = config.nonRepudiationSubmissionUrl,
       body = jsonBody,
       headers = Seq("X-API-Key" -> config.nonRepudiationApiKey)
@@ -47,7 +47,7 @@ class NonRepudiationConnector @Inject()(httpClient: HttpClient, config: BackendC
             val submissionId = (response.json \ "nrSubmissionId").as[String]
             NonRepudiationSubmissionAccepted(submissionId)
           case _ =>
-            throw new InternalServerException("invalid response from NRS") //TODO - handle different errors elegantly
+            throw new HttpException(response.body, response.status)
         }
     }
   }
