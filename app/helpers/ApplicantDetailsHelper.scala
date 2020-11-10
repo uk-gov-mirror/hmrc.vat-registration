@@ -26,7 +26,7 @@ trait ApplicantDetailsHelper {
     val businessVerificationStatus = applicantDetails.businessVerification collect {
       case BvPass => IdVerified
       case BvFail => IdVerificationFailed
-      case BvUnchallenged => IdUnverifiable
+      case BvUnchallenged => IdVerificationFailed
     }
 
     def personalIdentifiers: List[CustomerId] = List(
