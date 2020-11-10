@@ -31,7 +31,7 @@ object IdVerificationStatus {
 
   val stati: Map[IdVerificationStatus, String] = Map(
     IdVerified -> "1",
-    IdUnverifiable -> " 2",
+    IdUnverifiable -> "2",
     IdVerificationFailed -> "3"
   )
 
