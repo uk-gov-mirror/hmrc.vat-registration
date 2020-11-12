@@ -36,6 +36,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import utils.TimeMachine
 
 import scala.concurrent.{ExecutionContext, Future}
+import repositories.trafficmanagement.TrafficManagementRepository
 
 trait VatMocks extends HttpClientMock {
 

@@ -21,7 +21,7 @@ import common.exceptions._
 import connectors.VatSubmissionConnector
 import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
-import models.api.VatSubmission
+import models.api.{Submitted, VatSubmission}
 import models.monitoring.RegistrationSubmissionAuditing.RegistrationSubmissionAuditModel
 import play.api.Logger
 import play.api.libs.json.Json
@@ -41,6 +41,7 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
                                   registrationRepository: RegistrationMongoRepository,
                                   vatSubmissionConnector: VatSubmissionConnector,
                                   nonRepudiationService: NonRepudiationService,
+                                  trafficManagementService: TrafficManagementService,
                                   timeMachine: TimeMachine,
                                   auditService: AuditService,
                                   idGenerator: IdGenerator,
@@ -56,6 +57,7 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
       submission <- buildSubmission(regId)
       _ <- submit(submission, regId) // TODO refactor so this returns a value from the VatRegStatus enum or maybe an ADT
       _ <- registrationRepository.finishRegistrationSubmission(regId, VatRegStatus.submitted)
+      _ <- trafficManagementService.updateStatus(regId, Submitted)
     } yield {
       ackRefs
     }

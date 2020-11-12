@@ -44,6 +44,11 @@ class TrafficManagementRepository @Inject()(mongo: ReactiveMongoComponent)(impli
       name = Some("internalId"),
       key = Seq("internalId" -> IndexType.Ascending),
       unique = true
+    ),
+    Index(
+      name = Some("registrationId"),
+      key = Seq("registrationId" -> IndexType.Ascending),
+      unique = true
     )
   )
 
