@@ -41,7 +41,7 @@ class TrafficManagementServiceSpec extends VatRegSpec
 
   val testInternalId = "testInternalId"
   val testRegId = "testRegID"
-  val testDate = LocalDate.of(2020,1,1)
+  val testDate = LocalDate.of(2020, 1, 1)
   implicit val hc = HeaderCarrier()
 
   val testRegInfo = RegistrationInformation(
@@ -89,6 +89,17 @@ class TrafficManagementServiceSpec extends VatRegSpec
       val res = await(Service.getRegistrationInformation(testInternalId))
 
       res mustBe None
+    }
+  }
+
+  "upsertRegistrationInformation" must {
+    "return registration information" in {
+      val regInfo = RegistrationInformation(testInternalId, testRegId, Draft, Some(testDate), OTRS)
+      mockUpsertRegInfo(testInternalId, testRegId, Draft, Some(testDate), OTRS)(Future.successful(regInfo))
+
+      val res = await(Service.upsertRegistrationInformation(testInternalId, testRegId, Draft, Some(testDate), OTRS))
+
+      res mustBe regInfo
     }
   }
 

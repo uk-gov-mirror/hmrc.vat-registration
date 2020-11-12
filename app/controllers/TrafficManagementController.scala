@@ -16,16 +16,18 @@
 
 package controllers
 
+import java.time.LocalDate
+
 import auth.{Authorisation, AuthorisationResource}
 import javax.inject.{Inject, Singleton}
-import models.api.RegistrationInformation
-import play.api.libs.json.{JsSuccess, JsValue, Json}
+import models.api.{RegistrationChannel, RegistrationStatus}
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{Allocated, QuotaReached, TrafficManagementService}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class TrafficManagementController @Inject()(controllerComponents: ControllerComponents,
@@ -52,6 +54,19 @@ class TrafficManagementController @Inject()(controllerComponents: ControllerComp
           Ok(Json.toJson(regInfo))
         case _ =>
           NotFound
+      }
+    }
+  }
+
+  def upsertRegistrationInformation(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    isAuthenticated { internalId =>
+      val regId = (request.body \ "registrationId").as[String]
+      val status = (request.body \ "status").as[RegistrationStatus]
+      val regStartDate = (request.body \ "regStartDate").asOpt[LocalDate]
+      val channel = (request.body \ "channel").as[RegistrationChannel]
+      trafficManagementService.upsertRegistrationInformation(internalId, regId, status, regStartDate, channel) map {
+        regInfo =>
+          Ok(Json.toJson(regInfo))
       }
     }
   }

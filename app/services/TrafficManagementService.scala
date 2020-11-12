@@ -16,8 +16,10 @@
 
 package services
 
+import java.time.LocalDate
+
 import javax.inject.{Inject, Singleton}
-import models.api.{Draft, OTRS, RegistrationChannel, RegistrationInformation, RegistrationStatus, VatReg}
+import models.api._
 import repositories.trafficmanagement.{DailyQuotaRepository, TrafficManagementRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TimeMachine
@@ -40,6 +42,18 @@ class TrafficManagementService @Inject()(dailyQuotaRepository: DailyQuotaReposit
 
   def getRegistrationInformation(internalId: String)(implicit hc: HeaderCarrier): Future[Option[RegistrationInformation]] =
     trafficManagementRepository.getRegistrationInformation(internalId)
+
+  def upsertRegistrationInformation(internalId: String,
+                                    registrationId: String,
+                                    status: RegistrationStatus,
+                                    regStartDate: Option[LocalDate],
+                                    channel: RegistrationChannel)(implicit hc: HeaderCarrier): Future[RegistrationInformation] =
+    trafficManagementRepository.upsertRegistrationInformation(
+      internalId = internalId,
+      regId = registrationId,
+      status = status,
+      regStartDate = regStartDate,
+      channel = channel)
 
 }
 
