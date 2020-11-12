@@ -1,8 +1,6 @@
 
 package controllers
 
-import java.time.LocalDate
-
 import itutil.IntegrationStubbing
 import models.api._
 import play.api.libs.json.Json
@@ -80,6 +78,22 @@ class TrafficManagementControllerISpec extends IntegrationStubbing {
 
       res.status mustBe FORBIDDEN
     }
+  }
+
+  "PUT /traffic-management/reg-info" must {
+    "return OK with reg info" in new Setup {
+      given
+        .user.isAuthorised
+        .regInfoRepo.insertIntoDb(testRegInfo, trafficManagementRepo.insert)
+
+      val json = Json.toJson(testRegInfo)
+
+      val res = await(client(controllers.routes.TrafficManagementController.upsertRegistrationInformation().url).put(json))
+
+      res.status mustBe OK
+      res.json mustBe Json.toJson(testRegInfo)
+    }
+
   }
 
 }

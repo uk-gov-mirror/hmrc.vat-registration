@@ -4,6 +4,7 @@ POST         /new                                   controllers.VatRegistrationC
 
 POST         /traffic-management/:regId/allocate    controllers.TrafficManagementController.allocate(regId)
 GET          /traffic-management/reg-info           controllers.TrafficManagementController.getRegistrationInformation
+PUT          /traffic-management/reg-info           controllers.TrafficManagementController.upsertRegistrationInformation()
 
 GET          /scheme                                controllers.VatRegistrationController.retrieveVatSchemeByInternalId()
 GET          /:regId/get-scheme                     controllers.VatRegistrationController.retrieveVatScheme(regId: String)
@@ -46,5 +47,5 @@ PATCH       /:regId/eligibility-data                controllers.EligibilityContr
 GET         /:regId/threshold-data                  controllers.VatRegistrationController.getThreshold(regId: String)
 GET         /:regId/turnover-estimates-data         controllers.VatRegistrationController.getTurnoverEstimates(regId: String)
 
-GET         /:regId/applicant-details                    controllers.ApplicantDetailsController.getApplicantDetailsData(regId: String)
-PATCH       /:regId/applicant-details                    controllers.ApplicantDetailsController.updateApplicantDetailsData(regId: String)
+GET         /:regId/applicant-details               controllers.ApplicantDetailsController.getApplicantDetailsData(regId: String)
+PATCH       /:regId/applicant-details               controllers.ApplicantDetailsController.updateApplicantDetailsData(regId: String)
