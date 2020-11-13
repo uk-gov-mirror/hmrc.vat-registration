@@ -97,7 +97,7 @@ object ApplicantDetails extends VatApplicantDetailsValidator
     appDetails =>
       Json.obj(
         "customerIdentification" -> Json.obj(
-          "shortOrgName" -> appDetails.companyName,
+          "shortOrgName" -> appDetails.companyName
         ).++(
           optionalIds(appDetails)
         ),
