@@ -20,6 +20,7 @@ import java.time.LocalDate
 
 import javax.inject.{Inject, Singleton}
 import models.api._
+import play.api.libs.json.Json
 import repositories.trafficmanagement.{DailyQuotaRepository, TrafficManagementRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TimeMachine
@@ -54,6 +55,15 @@ class TrafficManagementService @Inject()(dailyQuotaRepository: DailyQuotaReposit
       status = status,
       regStartDate = regStartDate,
       channel = channel)
+
+  def updateStatus(regId: String, status: RegistrationStatus) (implicit hc: HeaderCarrier): Future[Option[RegistrationInformation]] =
+    trafficManagementRepository.findAndUpdate(
+      query = Json.obj("registrationId"-> regId),
+      update = Json.obj("$set" -> Json.obj(
+        "status" -> RegistrationStatus.toJsString(status))
+      ),
+      upsert = true
+    ) map (_.result[RegistrationInformation])
 
 }
 

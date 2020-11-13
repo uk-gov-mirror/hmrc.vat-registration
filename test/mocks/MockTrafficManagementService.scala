@@ -49,4 +49,13 @@ trait MockTrafficManagementService extends MockitoSugar {
       ArgumentMatchers.any[HeaderCarrier]
     )).thenReturn(response)
 
+  def mockUpdateStatus(regId: String, channel: RegistrationStatus)
+                      (response: Future[Option[RegistrationInformation]]): OngoingStubbing[Future[Option[RegistrationInformation]]] =
+    when(mockTrafficManagementService.updateStatus(
+      ArgumentMatchers.eq(regId),
+      ArgumentMatchers.eq(channel)
+    )(
+      ArgumentMatchers.any[HeaderCarrier]
+    )) thenReturn response
+
 }

@@ -22,6 +22,7 @@ import common.exceptions._
 import enums.VatRegStatus
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
+import mocks.{MockTrafficManagementRepository, MockTrafficManagementService}
 import mocks.monitoring.MockAuditService
 import models.api._
 import models.monitoring.RegistrationSubmissionAuditing.RegistrationSubmissionAuditModel
@@ -34,6 +35,7 @@ import play.api.libs.json.Json
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import reactivemongo.api.commands.FindAndModifyCommand._
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -41,7 +43,14 @@ import utils.IdGenerator
 
 import scala.concurrent.Future
 
-class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with ApplicativeSyntax with FutureInstances with MockAuditService with Eventually {
+
+class SubmissionServiceSpec extends VatRegSpec
+  with VatRegistrationFixture
+  with ApplicativeSyntax
+  with FutureInstances
+  with MockAuditService
+  with Eventually
+  with MockTrafficManagementService {
 
   class Setup {
 
@@ -54,12 +63,21 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
       registrationRepository = mockRegistrationMongoRepository,
       vatSubmissionConnector = mockVatSubmissionConnector,
       nonRepudiationService = mockNonRepudiationService,
+      trafficManagementService = mockTrafficManagementService,
       idGenerator = TestIdGenerator,
       auditService = mockAuditService,
       timeMachine = mockTimeMachine,
       authConnector = mockAuthConnector
     )
   }
+
+  val testRegInfo = RegistrationInformation(
+    internalId = testInternalid,
+    registrationId = testRegId,
+    status = Submitted,
+    regStartDate = Some(testDate),
+    channel = VatReg
+  )
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   implicit val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("POST", "testUrl")
@@ -73,7 +91,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
       when(mockRegistrationMongoRepository.saveTransId(any(), anyString())(any())).thenReturn(Future.successful("transID"))
       when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString(), anyString())(any())).thenReturn(Future.successful(HttpResponse(200)))
       when(mockRegistrationMongoRepository.finishRegistrationSubmission(anyString(), any())(any())).thenReturn(Future.successful(VatRegStatus.submitted))
-
+      mockUpdateStatus(testRegId, Submitted)(Future.successful(Some(testRegInfo)))
       when(mockTimeMachine.timestamp).thenReturn(testDateTime)
       val nonRepudiationPayloadString: String = Json.toJson(VatSubmission.fromVatScheme(testFullVatScheme)).toString()
       val testNonRepudiationSubmissionId = "testNonRepudiationSubmissionId"
