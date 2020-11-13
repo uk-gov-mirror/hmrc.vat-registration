@@ -40,7 +40,7 @@ case class ApplicantDetails(nino: String,
                             currentAddress: Address,
                             contact: DigitalContactOptional,
                             changeOfName: Option[FormerName] = None,
-                            previousAddress : Option[Address] = None,
+                            previousAddress: Option[Address] = None,
                             countryOfIncorporation: String = "GB")
 
 object ApplicantDetails extends VatApplicantDetailsValidator
@@ -53,21 +53,21 @@ object ApplicantDetails extends VatApplicantDetailsValidator
 
   implicit val format: Format[ApplicantDetails] = (
     (__ \ "nino").format[String] and
-    (__ \ "role").formatNullable[String] and
-    (__ \ "name").format[Name] and
-    (__ \ "dateOfBirth").format[DateOfBirth] and
-    (__ \ "companyName").format[String] and
-    (__ \ "companyNumber").formatNullable[String] and
-    (__ \ "dateOfIncorporation").format[LocalDate] and
-    (__ \ "ctutr").formatNullable[String] and
-    (__ \ "businessVerification").formatNullable[BusinessVerificationStatus] and
-    (__ \ "bpSafeId").formatNullable[String] and
-    (__ \ "currentAddress").format[Address] and
-    (__ \ "contact").format[DigitalContactOptional] and
-    (__ \ "changeOfName").formatNullable[FormerName] and
-    (__ \ "previousAddress").formatNullable[Address] and
-    (__ \ "countryOfIncorporation").format[String]
-  )(ApplicantDetails.apply, unlift(ApplicantDetails.unapply))
+      (__ \ "role").formatNullable[String] and
+      (__ \ "name").format[Name] and
+      (__ \ "dateOfBirth").format[DateOfBirth] and
+      (__ \ "companyName").format[String] and
+      (__ \ "companyNumber").formatNullable[String] and
+      (__ \ "dateOfIncorporation").format[LocalDate] and
+      (__ \ "ctutr").formatNullable[String] and
+      (__ \ "businessVerification").formatNullable[BusinessVerificationStatus] and
+      (__ \ "bpSafeId").formatNullable[String] and
+      (__ \ "currentAddress").format[Address] and
+      (__ \ "contact").format[DigitalContactOptional] and
+      (__ \ "changeOfName").formatNullable[FormerName] and
+      (__ \ "previousAddress").formatNullable[Address] and
+      (__ \ "countryOfIncorporation").format[String]
+    ) (ApplicantDetails.apply, unlift(ApplicantDetails.unapply))
 
   val submissionReads: Reads[ApplicantDetails] = Reads[ApplicantDetails] { json =>
     Try {
@@ -93,44 +93,48 @@ object ApplicantDetails extends VatApplicantDetailsValidator
     }
   }
 
-  val submissionWrites: Writes[ApplicantDetails] = Writes[ApplicantDetails] { appDetails =>
-    Json.obj(
-      "customerIdentification" -> Json.obj(
-        "name" -> Json.toJson(appDetails.name)(Name.submissionFormat),
-        "dateOfBirth" -> Json.toJson(appDetails.dateOfBirth),
-        "shortOrgName" -> appDetails.companyName,
-        optionalIds(appDetails)
-      ),
-      "subscription" -> Json.obj(
-        "corporateBodyRegistered" -> Json.obj(
-          "companyRegistrationNumber" -> appDetails.companyNumber,
-          "dateOfIncorporation" -> appDetails.dateOfIncorporation,
-          "countryOfIncorporation" -> "GB"
+  val submissionWrites: Writes[ApplicantDetails] = Writes[ApplicantDetails] {
+    appDetails =>
+      Json.obj(
+        "customerIdentification" -> Json.obj(
+          "shortOrgName" -> appDetails.companyName,
+        ).++(
+          optionalIds(appDetails)
+        ),
+        "subscription" -> Json.obj(
+          "corporateBodyRegistered" -> Json.obj(
+            "companyRegistrationNumber" -> appDetails.companyNumber,
+            "dateOfIncorporation" -> appDetails.dateOfIncorporation,
+            "countryOfIncorporation" -> "GB"
+          )
+        ),
+        "declaration" -> Json.obj(
+          "applicantDetails" -> Json.obj(
+            "roleInBusiness" -> appDetails.role,
+            "name" -> Json.toJson(appDetails.name)(Name.submissionFormat),
+            "prevName" -> Json.toJson(appDetails.changeOfName.map(FormerName.submissionFormat.writes)),
+            "dateOfBirth" -> Json.toJson(appDetails.dateOfBirth),
+            "currAddress" -> Json.toJson(appDetails.currentAddress)(Address.submissionFormat),
+            "prevAddress" -> Json.toJson(appDetails.previousAddress.map(Address.submissionFormat.writes)),
+            "commDetails" -> Json.toJson(appDetails.contact)(DigitalContactOptional.submissionFormat),
+            "identifiers" -> Json.toJson(appDetails.personalIdentifiers)
+          ).filterNullFields
         )
-      ),
-      "declaration" -> Json.obj(
-        "applicantDetails" -> Json.obj(
-          "roleInBusiness" -> appDetails.role,
-          "name" -> Json.toJson(appDetails.name)(Name.submissionFormat),
-          "prevName" -> Json.toJson(appDetails.changeOfName.map(FormerName.submissionFormat.writes)),
-          "dateOfBirth" -> Json.toJson(appDetails.dateOfBirth),
-          "currAddress" -> Json.toJson(appDetails.currentAddress)(Address.submissionFormat),
-          "prevAddress" -> Json.toJson(appDetails.previousAddress.map(Address.submissionFormat.writes)),
-          "commDetails" -> Json.toJson(appDetails.contact)(DigitalContactOptional.submissionFormat),
-          "identifiers" -> Json.toJson(appDetails.personalIdentifiers)
-        ).filterNullFields
       )
-    )
   }
 
   val submissionFormat: Format[ApplicantDetails] = Format[ApplicantDetails](submissionReads, submissionWrites)
 
-  private def optionalIds(appDetails: ApplicantDetails): (String, JsValueWrapper) =
+  private def optionalIds(appDetails: ApplicantDetails): JsObject =
     if (appDetails.bpSafeId.isDefined) {
-      "primeBPSafeID" -> appDetails.bpSafeId.map(JsString)
+      Json.obj(
+        "primeBPSafeID" -> appDetails.bpSafeId.map(JsString),
+        "name" -> Json.toJson(appDetails.name)(Name.submissionFormat),
+        "dateOfBirth" -> Json.toJson(appDetails.dateOfBirth)
+      )
     }
     else {
-      "customerID" -> Json.toJson(appDetails.companyIdentifiers)
+      Json.obj("customerID" -> Json.toJson(appDetails.companyIdentifiers))
     }
 
 }
