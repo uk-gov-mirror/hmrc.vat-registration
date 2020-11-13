@@ -23,6 +23,7 @@ import featureswitch.core.config.{FeatureSwitching, StubSubmission}
 import itutil.IntegrationStubbing
 import models.api.VatScheme
 import models.external.CurrentProfile
+import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.test.Helpers._
 
@@ -77,7 +78,7 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
       await(repo.insert(testFullVatScheme))
 
       val result: WSResponse = await(client(
-        controllers.routes.VatRegistrationController.submitVATRegistration(testRegId).url).put("")
+        controllers.routes.VatRegistrationController.submitVATRegistration(testRegId).url).put(Json.obj())
       )
 
       result.status mustBe OK
@@ -96,7 +97,7 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
       await(repo.insert(testFullVatScheme))
 
       val result: WSResponse = await(client(
-        controllers.routes.VatRegistrationController.submitVATRegistration(testRegId).url).put("")
+        controllers.routes.VatRegistrationController.submitVATRegistration(testRegId).url).put(Json.obj())
       )
 
       result.status mustBe OK

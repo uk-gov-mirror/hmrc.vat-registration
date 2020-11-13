@@ -105,11 +105,13 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
       }
   }
 
-  def submitVATRegistration(regId: String): Action[AnyContent] = Action.async {
+  def submitVATRegistration(regId: String): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
       isAuthorised(regId) { authResult =>
+        val userHeaders = (request.body \ "userHeaders").asOpt[Map[String, String]].getOrElse(Map.empty)
+
         authResult.ifAuthorised(regId, "VatRegistrationController", "submitVATRegistration") {
-          submissionService.submitVatRegistration(regId).map { ackRefs =>
+          submissionService.submitVatRegistration(regId, userHeaders).map { ackRefs =>
             Ok(Json.toJson(ackRefs))
           } recover {
             case ex =>

@@ -47,14 +47,14 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
                                   val authConnector: AuthConnector
                                  )(implicit executionContext: ExecutionContext) extends FutureInstances with AuthorisedFunctions {
 
-  def submitVatRegistration(regId: String)
+  def submitVatRegistration(regId: String, userHeaders: Map[String, String])
                            (implicit hc: HeaderCarrier,
                             request: Request[_]): Future[String] = {
     for {
       status <- getValidDocumentStatus(regId)
       ackRefs <- ensureAcknowledgementReference(regId, status)
       submission <- buildSubmission(regId)
-      _ <- submit(submission, regId) // TODO refactor so this returns a value from the VatRegStatus enum or maybe an ADT
+      _ <- submit(submission, regId, userHeaders) // TODO refactor so this returns a value from the VatRegStatus enum or maybe an ADT
       _ <- registrationRepository.finishRegistrationSubmission(regId, VatRegStatus.submitted)
     } yield {
       ackRefs
@@ -62,7 +62,8 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
   }
 
   private[services] def submit(submission: VatSubmission,
-                               regId: String
+                               regId: String,
+                               userHeaders: Map[String, String]
                               )(implicit hc: HeaderCarrier,
                                 request: Request[_]): Future[HttpResponse] = {
 
@@ -85,7 +86,7 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
 
             //TODO - Confirm what to send when postcode is not available
             val nonRepudiationPostcode = submission.businessContact.ppob.postcode.getOrElse("NoPostcodeSupplied")
-            nonRepudiationService.submitNonRepudiation(regId, nonRepudiationPayload, timeMachine.timestamp, nonRepudiationPostcode)
+            nonRepudiationService.submitNonRepudiation(regId, nonRepudiationPayload, timeMachine.timestamp, nonRepudiationPostcode, userHeaders)
             response
         }
     }

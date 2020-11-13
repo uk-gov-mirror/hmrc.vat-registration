@@ -71,7 +71,7 @@ class NonRepudiationServiceSpec extends VatRegSpec with MockAuditService with Va
         userSubmissionTimestamp = testDateTime,
         identityData = testNonRepudiationIdentityData,
         userAuthToken = testAuthToken,
-        headerData = request.headers.toSimpleMap,
+        headerData = testUserHeaders,
         searchKeys = Map("postCode" -> testPostcode)
       )
 
@@ -87,7 +87,7 @@ class NonRepudiationServiceSpec extends VatRegSpec with MockAuditService with Va
         ))(ArgumentMatchers.eq(hc), ArgumentMatchers.eq(executionContext))
       ).thenReturn(Future.successful(testAuthRetrievals))
 
-      val res = TestService.submitNonRepudiation(testRegistrationId, testPayloadString, testDateTime, testPostcode)
+      val res = TestService.submitNonRepudiation(testRegistrationId, testPayloadString, testDateTime, testPostcode, testUserHeaders)
 
       await(res) mustBe NonRepudiationSubmissionAccepted(testSubmissionId)
 
@@ -96,7 +96,6 @@ class NonRepudiationServiceSpec extends VatRegSpec with MockAuditService with Va
       }
     }
     "audit when the non repudiation call fails" in {
-      val testSubmissionId = "testSubmissionId"
       val testPayloadString = "testPayloadString"
       val testRegistrationId = "testRegistrationId"
 
@@ -115,7 +114,7 @@ class NonRepudiationServiceSpec extends VatRegSpec with MockAuditService with Va
         userSubmissionTimestamp = testDateTime,
         identityData = testNonRepudiationIdentityData,
         userAuthToken = testAuthToken,
-        headerData = request.headers.toSimpleMap,
+        headerData = testUserHeaders,
         searchKeys = Map("postCode" -> testPostcode)
       )
 
@@ -133,7 +132,7 @@ class NonRepudiationServiceSpec extends VatRegSpec with MockAuditService with Va
       )(ArgumentMatchers.eq(hc)))
         .thenReturn(Future.failed(new NotFoundException(testExceptionMessage)))
 
-      val res = TestService.submitNonRepudiation(testRegistrationId, testPayloadString, testDateTime, testPostcode)
+      val res = TestService.submitNonRepudiation(testRegistrationId, testPayloadString, testDateTime, testPostcode, testUserHeaders)
 
       intercept[NotFoundException](await(res))
 
