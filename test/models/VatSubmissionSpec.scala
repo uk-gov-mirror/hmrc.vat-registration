@@ -59,7 +59,7 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
         val vatSubmission = testVatSubmission.copy(applicantDetails = validApplicantDetails.copy(bpSafeId = None))
         val json = Json.toJson(vatSubmission)(VatSubmission.submissionFormat)
 
-        json mustBe vatSubmissionJson
+        json mustBe noBpIdVatSubmissionJson
       }
     }
     "safe id is present" should {
