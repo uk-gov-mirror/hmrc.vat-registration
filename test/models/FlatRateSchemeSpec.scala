@@ -44,21 +44,11 @@ class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegi
   "Creating a FRSDetails model from Json" should {
     "complete successfully" when {
       "optional fields not present" in {
-        Json.fromJson[FRSDetails](validFRSDetailsJsonWithoutOptionals) mustBe JsSuccess(validFullFRSDetails.copy(businessGoods = None, startDate = None))
+        Json.fromJson[FRSDetails](validFRSDetailsJsonWithoutOptionals) mustBe
+          JsSuccess(validFullFRSDetails.copy(businessGoods = None, startDate = None, categoryOfBusiness = None))
       }
     }
     "fail" when {
-      "categoryOfBusiness is missing" in {
-        val json = Json.parse(
-          s"""
-             |{
-             |  "startDate":"$testDate",
-             |  "percent":15.00
-             |}
-         """.stripMargin)
-        val result = Json.fromJson[FRSDetails](json)
-        result shouldHaveErrors (JsPath() \ "categoryOfBusiness" -> JsonValidationError("error.path.missing"))
-      }
       "percent is missing" in {
         val json = Json.parse(
           s"""
@@ -112,7 +102,7 @@ class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegi
   "Parsing FRSDetails to Json" should {
     "succeed" when {
       "FRSDetails is missing any optional field" in {
-        Json.toJson[FRSDetails](FRSDetails(None, None, "testCategory", 15.00, None)) mustBe
+        Json.toJson[FRSDetails](FRSDetails(None, None, Some("testCategory"), 15.00, None)) mustBe
           (validFullFRSDetailsJsonWithOptionals - "businessGoods" - "startDate" - "limitedCostTrader")
       }
     }

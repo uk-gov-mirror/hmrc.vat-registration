@@ -18,6 +18,7 @@ package models.api
 
 import java.time.LocalDate
 
+import models.api.Returns.JsonUtilities
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
@@ -36,7 +37,7 @@ object BusinessGoods {
 
 case class FRSDetails(businessGoods: Option[BusinessGoods],
                       startDate: Option[LocalDate],
-                      categoryOfBusiness: String,
+                      categoryOfBusiness: Option[String],
                       percent: BigDecimal,
                       limitedCostTrader: Option[Boolean])
 
@@ -45,9 +46,9 @@ object FRSDetails {
 
   val submissionReads: Reads[FRSDetails] = (
     (__ \ "startDate").readNullable[LocalDate] and
-    (__ \ "FRSCategory").read[String] and
+    (__ \ "FRSCategory").readNullable[String] and
     (__ \ "FRSPercentage").read[BigDecimal] and
-    (__ \ "FRSLimitedCostTrader").readNullable[Boolean]
+    (__ \ "limitedCostTrader").readNullable[Boolean]
   )(FRSDetails.apply(None, _, _, _, _))
 
   val submissionWrites: Writes[FRSDetails] = Writes[FRSDetails] { frs =>
@@ -55,8 +56,8 @@ object FRSDetails {
       "startDate" -> frs.startDate,
       "FRSCategory" -> frs.categoryOfBusiness,
       "FRSPercentage" -> frs.percent,
-      "FRSLimitedCostTrader" -> frs.limitedCostTrader
-    )
+      "limitedCostTrader" -> frs.limitedCostTrader
+    ).filterNullFields
   }
 
   val submissionFormat: Format[FRSDetails] = Format[FRSDetails](submissionReads, submissionWrites)
@@ -66,7 +67,7 @@ object FRSDetails {
       "startDate" -> frs.startDate,
       "frsCategory" -> frs.categoryOfBusiness,
       "frsPercentage" -> frs.percent,
-      "FRSLimitedCostTrader" -> frs.limitedCostTrader
+      "limitedCostTrader" -> frs.limitedCostTrader
     )
   }
 }
