@@ -4,15 +4,15 @@ package repository
 import java.time.LocalDate
 
 import itutil.{FakeTimeMachine, IntegrationSpecBase}
-import models.api.{Draft, OTRS, RegistrationInformation, Submitted, VatReg}
+import models.api._
 import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
-import scala.concurrent.ExecutionContext.Implicits.global
-import play.api.test.Helpers._
-import repositories.trafficmanagement.TrafficManagementRepository
-import uk.gov.hmrc.http.HeaderCarrier
 import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.Helpers._
+import uk.gov.hmrc.http.HeaderCarrier
 import utils.TimeMachine
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class TrafficManagementRepositoryISpec extends IntegrationSpecBase {
 
