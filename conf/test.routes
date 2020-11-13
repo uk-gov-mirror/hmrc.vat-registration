@@ -1,4 +1,6 @@
 GET         /api/feature-switches                                  featureswitch.api.controllers.FeatureSwitchApiController.getFeatureSwitches()
 POST        /api/feature-switches                                  featureswitch.api.controllers.FeatureSwitchApiController.updateFeatureSwitches()
 
+PUT         /api/daily-quota                                       controllers.test.UpdateTrafficManagementController.updateQuota
+
 POST        /vat/subscription                                      controllers.test.StubVatSubmissionController.processSubmission
