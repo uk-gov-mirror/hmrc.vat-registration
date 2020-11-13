@@ -77,11 +77,14 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
       when(mockTimeMachine.timestamp).thenReturn(testDateTime)
       val nonRepudiationPayloadString: String = Json.toJson(VatSubmission.fromVatScheme(testFullVatScheme)).toString()
       val testNonRepudiationSubmissionId = "testNonRepudiationSubmissionId"
+
+
       when(mockNonRepudiationService.submitNonRepudiation(
         ArgumentMatchers.eq(testRegId),
         ArgumentMatchers.eq(nonRepudiationPayloadString),
         ArgumentMatchers.eq(testDateTime),
-        ArgumentMatchers.eq(testPostcode)
+        ArgumentMatchers.eq(testPostcode),
+        ArgumentMatchers.eq(testUserHeaders)
       )(ArgumentMatchers.eq(hc), ArgumentMatchers.eq(request))).thenReturn(Future.successful(NonRepudiationSubmissionAccepted(testNonRepudiationSubmissionId)))
 
       mockAuthorise(Retrievals.credentials and Retrievals.affinityGroup and Retrievals.agentCode)(
@@ -90,7 +93,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
         )
       )
 
-      await(service.submitVatRegistration(testRegId)) mustBe "BRVT00000000100"
+      await(service.submitVatRegistration(testRegId, testUserHeaders)) mustBe "BRVT00000000100"
       eventually {
         verifyAudit(RegistrationSubmissionAuditModel(
           testFullSubmission,
@@ -103,7 +106,8 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
           ArgumentMatchers.eq(testRegId),
           ArgumentMatchers.eq(nonRepudiationPayloadString),
           ArgumentMatchers.eq(testDateTime),
-          ArgumentMatchers.eq(testPostcode)
+          ArgumentMatchers.eq(testPostcode),
+          ArgumentMatchers.eq(testUserHeaders)
         )(ArgumentMatchers.eq(hc), ArgumentMatchers.eq(request))
       }
     }
@@ -118,7 +122,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
         )
       )
 
-      await(service.submit(testFullSubmission, testRegId)).status mustBe OK
+      await(service.submit(testFullSubmission, testRegId, testUserHeaders)).status mustBe OK
       verifyAudit(RegistrationSubmissionAuditModel(
         testFullSubmission,
         testRegId,
@@ -136,7 +140,7 @@ class SubmissionServiceSpec extends VatRegSpec with VatRegistrationFixture with 
         )
       )
 
-      await(service.submit(testFullSubmission, testRegId)).status mustBe BAD_GATEWAY
+      await(service.submit(testFullSubmission, testRegId, testUserHeaders)).status mustBe BAD_GATEWAY
       verifyAudit(RegistrationSubmissionAuditModel(
         testFullSubmission,
         testRegId,

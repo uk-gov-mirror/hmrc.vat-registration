@@ -45,7 +45,8 @@ class NonRepudiationService @Inject()(nonRepudiationConnector: NonRepudiationCon
   def submitNonRepudiation(registrationId: String,
                            payloadString: String,
                            submissionTimestamp: LocalDateTime,
-                           postCode: String
+                           postCode: String,
+                           userHeaders: Map[String, String]
                           )(implicit hc: HeaderCarrier, request: Request[_]): Future[NonRepudiationSubmissionAccepted] = for {
     identityData <- retrieveIdentityData()
     payloadChecksum = MessageDigest.getInstance("SHA-256")
@@ -55,7 +56,6 @@ class NonRepudiationService @Inject()(nonRepudiationConnector: NonRepudiationCon
       case Some(Authorization(authToken)) => authToken
       case _ => throw new InternalServerException("No auth token available for NRS")
     }
-    headerData = request.headers.toSimpleMap
     nonRepudiationMetadata = NonRepudiationMetadata(
       "vrs",
       "vat-registration",
@@ -64,7 +64,7 @@ class NonRepudiationService @Inject()(nonRepudiationConnector: NonRepudiationCon
       submissionTimestamp,
       identityData,
       userAuthToken,
-      headerData,
+      userHeaders,
       Map("postCode" -> postCode)
     )
     encodedPayloadString = Base64.getEncoder.encodeToString(payloadString.getBytes(StandardCharsets.UTF_8))

@@ -23,6 +23,7 @@ import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import mocks.MockNewRegistrationService
 import models.api._
+import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito.when
 import play.api.http.Status
@@ -293,7 +294,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
     "return a Forbidden response if the user is not logged in" in new Setup {
       AuthorisationMocks.mockNotLoggedInOrAuthorised(testRegId)
 
-      val response: Future[Result] = controller.submitVATRegistration(testRegId)(FakeRequest())
+      val response: Future[Result] = controller.submitVATRegistration(testRegId)(FakeRequest().withBody(Json.obj()))
       status(response) mustBe Status.FORBIDDEN
     }
 
@@ -301,12 +302,16 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
       AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
       ServiceMocks.mockRetrieveVatScheme(testRegId, testVatScheme)
 
-      val idMatcher = anyString()
 
-      when(mockSubmissionService.submitVatRegistration(idMatcher)(any[HeaderCarrier], any[Request[_]]))
+      when(mockSubmissionService.submitVatRegistration(
+        ArgumentMatchers.eq(testRegId),
+        ArgumentMatchers.eq(testUserHeaders)
+      )(any[HeaderCarrier], any[Request[_]]))
         .thenReturn(Future.failed(Upstream5xxResponse("message", 501, 1)))
 
-      val response: Upstream5xxResponse = intercept[Upstream5xxResponse](await(controller.submitVATRegistration(testRegId)(FakeRequest())))
+      val response: Upstream5xxResponse = intercept[Upstream5xxResponse](await(controller.submitVATRegistration(testRegId)(FakeRequest().withBody(
+        Json.obj("userHeaders" -> testUserHeaders)
+      ))))
 
       response mustBe Upstream5xxResponse("message", 501, 1)
     }
@@ -314,12 +319,16 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
     "return an Ok response with acknowledgement reference for a valid submit" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
       ServiceMocks.mockRetrieveVatScheme(testRegId, testVatScheme)
-      val idMatcher = anyString()
 
-      when(mockSubmissionService.submitVatRegistration(idMatcher)(any[HeaderCarrier], any[Request[_]]))
+      when(mockSubmissionService.submitVatRegistration(
+        ArgumentMatchers.eq(testRegId),
+        ArgumentMatchers.eq(testUserHeaders)
+      )(any[HeaderCarrier], any[Request[_]]))
         .thenReturn(Future.successful("BRVT00000000001"))
 
-      val response: Future[Result] = controller.submitVATRegistration(testRegId)(FakeRequest())
+      val response: Future[Result] = controller.submitVATRegistration(testRegId)(FakeRequest().withBody(
+        Json.obj("userHeaders" -> testUserHeaders)
+      ))
       status(response) mustBe Status.OK
       contentAsJson(response) mustBe Json.toJson("BRVT00000000001")
     }

@@ -63,6 +63,8 @@ trait VatRegistrationFixture {
   lazy val testAffinityGroup: AffinityGroup = AffinityGroup.Organisation
   lazy val testAuthToken = "testAuthToken"
 
+  val testUserHeaders = Map("testKey" -> "testValue")
+
   lazy val testEligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
     threshold = testMandatoryThreshold,
     exceptionOrExemption = "0",
