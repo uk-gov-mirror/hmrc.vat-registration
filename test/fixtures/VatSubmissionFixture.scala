@@ -233,7 +233,8 @@ trait VatSubmissionFixture {
       |    "schemes": {
       |      "startDate": "2018-01-01",
       |      "FRSCategory": "testCategory",
-      |      "FRSPercentage": 15
+      |      "FRSPercentage": 15,
+      |      "FRSLimitedCostTrader": false
       |    },
       |    "businessActivities": {
       |      "SICCodes": {
