@@ -39,7 +39,7 @@ trait VatRegistrationFixture {
   lazy val testCompanyName = "testCompanyName"
   lazy val testCrn = "testCrn"
   lazy val testCtUtr = Some("testCtUtr")
-  lazy val testDateOFIncorp = LocalDate.of(2020, 1, 2)
+  lazy val testDateOFIncorp: LocalDate = LocalDate.of(2020, 1, 2)
   lazy val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some(Country(Some("UK"), None)))
   lazy val testPostcode = "ZZ1 1ZZ"
   lazy val testSicCode = SicCode("88888", "description", "displayDetails")
@@ -49,11 +49,16 @@ trait VatRegistrationFixture {
   lazy val testVatScheme: VatScheme = VatScheme(testRegId, internalId = testInternalid, status = VatRegStatus.draft)
   lazy val exception = new Exception("Exception")
   lazy val testVoluntaryThreshold = Threshold(mandatoryRegistration = false, None, None, None)
-  lazy val testMandatoryThreshold = Threshold(mandatoryRegistration = true, Some(LocalDate.of(2020, 10, 7)), Some(LocalDate.of(2020, 10, 7)), Some(LocalDate.of(2020, 10, 7)))
+  lazy val testMandatoryThreshold = Threshold(
+    mandatoryRegistration = true,
+    Some(LocalDate.of(2020, 10, 7)),
+    Some(LocalDate.of(2020, 10, 7)),
+    Some(LocalDate.of(2020, 10, 7))
+  )
   lazy val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
   lazy val testBankDetails = BankAccountDetails("Test Bank Account", "010203", "01023456")
   lazy val testFormerName = FormerName(Some(testName), Some(testDate))
-  lazy val testReturns = Returns(false, "quarterly", Some("jan"), StartDate(Some(testDate)), Some(12.99))
+  lazy val testReturns = Returns(reclaimVatOnMostReturns = false, "quarterly", Some("jan"), StartDate(Some(testDate)), Some(12.99))
   lazy val zeroRatedSupplies: BigDecimal = 12.99
   lazy val testBpSafeId = "testBpSafeId"
 
@@ -90,7 +95,7 @@ trait VatRegistrationFixture {
     bpSafeId = Some(testBpSafeId)
   )
 
-  lazy val otherBusinessActivitiesSicAndCompiliance =
+  lazy val otherBusinessActivitiesSicAndCompiliance: List[SicCode] =
     SicCode("00998", "otherBusiness desc 1", "fooBar 1") :: SicCode("00889", "otherBusiness desc 2", "fooBar 2") :: Nil
 
   lazy val testSicAndCompliance = Some(SicAndCompliance(
@@ -107,15 +112,16 @@ trait VatRegistrationFixture {
     commsPreference = Email
   ))
 
-  lazy val testBankAccount = BankAccount(true, Some(testBankDetails))
-  lazy val testBankAccountNotProvided = BankAccount(false, None)
+  lazy val testBankAccount = BankAccount(isProvided = true, details = Some(testBankDetails))
+  lazy val testBankAccountNotProvided = BankAccount(isProvided = false, details = None)
 
   lazy val validFullFRSDetails: FRSDetails =
     FRSDetails(
-      businessGoods = Some(BusinessGoods(1234567891011L, true)),
+      businessGoods = Some(BusinessGoods(1234567891011L, overTurnover = true)),
       startDate = Some(testDate),
       categoryOfBusiness = "testCategory",
-      percent = 15
+      percent = 15,
+      limitedCostTrader = Some(false)
     )
 
   lazy val validFullFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = true, Some(validFullFRSDetails))
@@ -147,7 +153,7 @@ trait VatRegistrationFixture {
     returns = testReturns
   )
 
-  lazy val validBusinessContactJson = Json.parse(
+  lazy val validBusinessContactJson: JsObject = Json.parse(
     s"""{
        |"digitalContact":{
        |"email": "email@email.com",
@@ -169,7 +175,7 @@ trait VatRegistrationFixture {
      """.stripMargin
   ).as[JsObject]
 
-  lazy val validSicAndComplianceJson = Json.parse(
+  lazy val validSicAndComplianceJson: JsObject = Json.parse(
     s"""
        |{
        | "businessDescription": "this is my business description",
@@ -194,7 +200,7 @@ trait VatRegistrationFixture {
        |}
     """.stripMargin).as[JsObject]
 
-  lazy val validFullTradingDetails: TradingDetails = TradingDetails(Some("trading-name"), true)
+  lazy val validFullTradingDetails: TradingDetails = TradingDetails(tradingName = Some("trading-name"), eoriRequested = true)
   lazy val validFullTradingDetailsJson: JsObject = Json.parse(
     s"""
        |{
@@ -220,7 +226,8 @@ trait VatRegistrationFixture {
        |  },
        |  "startDate": "$testDate",
        |  "categoryOfBusiness":"testCategory",
-       |  "percent":15.00
+       |  "percent":15.00,
+       |  "limitedCostTrader":false
        |}
      """.stripMargin).as[JsObject]
 
@@ -229,7 +236,8 @@ trait VatRegistrationFixture {
        |{
        |  "startDate": "$testDate",
        |  "categoryOfBusiness":"testCategory",
-       |  "percent":15.00
+       |  "percent":15.00,
+       |  "limitedCostTrader":false
        |}
      """.stripMargin).as[JsObject]
 
@@ -242,7 +250,8 @@ trait VatRegistrationFixture {
        |  },
        |  "startDate": "$testDate",
        |  "categoryOfBusiness":"testCategory",
-       |  "percent":15.00
+       |  "percent":15.00,
+       |  "limitedCostTrader":false
        |}
      """.stripMargin).as[JsObject]
 
@@ -250,7 +259,8 @@ trait VatRegistrationFixture {
     s"""
        |{
        |  "categoryOfBusiness":"testCategory",
-       |  "percent":15.00
+       |  "percent":15.00,
+       |  "limitedCostTrader":false
        |}
      """.stripMargin).as[JsObject]
 

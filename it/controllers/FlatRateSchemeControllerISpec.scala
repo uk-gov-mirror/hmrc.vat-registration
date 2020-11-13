@@ -33,7 +33,8 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing {
        |    },
        |    "startDate": "$dateNow",
        |    "categoryOfBusiness":"testCategory",
-       |    "percent":15.00
+       |    "percent":15.00,
+       |    "limitedCostTrader": false
        |  }
        |}
      """.stripMargin).as[JsObject]
