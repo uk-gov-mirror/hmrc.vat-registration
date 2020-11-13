@@ -104,15 +104,16 @@ class FlatRateSchemeSpec extends BaseSpec with JsonFormatValidation with VatRegi
         Json.toJson[FlatRateScheme](validFullFlatRateScheme) mustBe validFullFlatRateSchemeJson
       }
       "frsDetails is missing" in {
-        Json.toJson[FlatRateScheme](FlatRateScheme(true, None)) mustBe (validFullFlatRateSchemeJson - "frsDetails")
+        Json.toJson[FlatRateScheme](FlatRateScheme(joinFrs = true, frsDetails = None)) mustBe (validFullFlatRateSchemeJson - "frsDetails")
       }
     }
   }
 
   "Parsing FRSDetails to Json" should {
     "succeed" when {
-      "FRSDetails is missing either optional field" in {
-        Json.toJson[FRSDetails](FRSDetails(None, None, "testCategory", 15.00)) mustBe (validFullFRSDetailsJsonWithOptionals - "businessGoods" - "startDate")
+      "FRSDetails is missing any optional field" in {
+        Json.toJson[FRSDetails](FRSDetails(None, None, "testCategory", 15.00, None)) mustBe
+          (validFullFRSDetailsJsonWithOptionals - "businessGoods" - "startDate" - "limitedCostTrader")
       }
     }
   }

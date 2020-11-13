@@ -50,7 +50,8 @@ trait ITFixtures {
     businessGoods = Some(BusinessGoods(12345678L, true)),
     startDate = Some(testDate),
     categoryOfBusiness = "testCategory",
-    percent = 15
+    percent = 15,
+    limitedCostTrader = Some(false)
   )
 
   val testFlatRateScheme = FlatRateScheme(joinFrs = true, Some(frsDetails))

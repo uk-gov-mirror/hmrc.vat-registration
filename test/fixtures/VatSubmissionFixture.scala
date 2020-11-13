@@ -20,7 +20,7 @@ import play.api.libs.json.{JsValue, Json}
 
 trait VatSubmissionFixture {
 
-  val vatSubmissionJson = Json.parse(
+  val vatSubmissionJson: JsValue = Json.parse(
     """
       |{
       |  "messageType": "SubmissionCreate",
@@ -103,7 +103,8 @@ trait VatSubmissionFixture {
       |    "schemes": {
       |      "startDate": "2018-01-01",
       |      "FRSCategory": "testCategory",
-      |      "FRSPercentage": 15
+      |      "FRSPercentage": 15,
+      |      "FRSLimitedCostTrader": false
       |    },
       |    "businessActivities": {
       |      "SICCodes": {
@@ -256,7 +257,8 @@ trait VatSubmissionFixture {
       |    },
       |    "startDate": "2018-01-01",
       |    "categoryOfBusiness": "testCategory",
-      |    "percent": 15
+      |    "percent": 15,
+      |    "limitedCostTrader" : false
       |  },
       |  "returns": {
       |     "reclaimVatOnMostReturns" : false,
