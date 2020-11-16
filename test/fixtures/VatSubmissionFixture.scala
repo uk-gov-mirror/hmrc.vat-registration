@@ -104,7 +104,7 @@ trait VatSubmissionFixture {
       |      "startDate": "2018-01-01",
       |      "FRSCategory": "testCategory",
       |      "FRSPercentage": 15,
-      |      "FRSLimitedCostTrader": false
+      |      "limitedCostTrader": false
       |    },
       |    "businessActivities": {
       |      "SICCodes": {
@@ -234,7 +234,7 @@ trait VatSubmissionFixture {
       |      "startDate": "2018-01-01",
       |      "FRSCategory": "testCategory",
       |      "FRSPercentage": 15,
-      |      "FRSLimitedCostTrader": false
+      |      "limitedCostTrader": false
       |    },
       |    "businessActivities": {
       |      "SICCodes": {

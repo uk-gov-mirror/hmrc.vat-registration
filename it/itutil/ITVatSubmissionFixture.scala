@@ -88,7 +88,8 @@ trait ITVatSubmissionFixture {
       |    "schemes": {
       |      "startDate": "2018-01-01",
       |      "FRSCategory": "testCategory",
-      |      "FRSPercentage": 15
+      |      "FRSPercentage": 15,
+      |      "limitedCostTrader": false
       |    },
       |    "businessActivities": {
       |     "SICCodes": {

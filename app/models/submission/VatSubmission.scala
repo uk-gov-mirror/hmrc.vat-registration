@@ -64,7 +64,7 @@ object VatSubmission {
       sicAndCompliance = scheme.sicAndCompliance.getOrElse(missingSection("SIC and Compliance")),
       businessContact = scheme.businessContact.getOrElse(missingSection("Business contact")),
       tradingDetails = scheme.tradingDetails.getOrElse(missingSection("Trading details")),
-      flatRateScheme = scheme.flatRateScheme.flatMap(_.frsDetails),
+      flatRateScheme = scheme.flatRateScheme.flatMap(frs => if(frs.joinFrs) frs.frsDetails else None),
       eligibilitySubmissionData = scheme.eligibilitySubmissionData.getOrElse(missingSection("Eligibility")),
       returns = scheme.returns.getOrElse(missingSection("Returns"))
     )

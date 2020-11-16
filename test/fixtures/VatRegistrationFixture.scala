@@ -119,7 +119,7 @@ trait VatRegistrationFixture {
     FRSDetails(
       businessGoods = Some(BusinessGoods(1234567891011L, overTurnover = true)),
       startDate = Some(testDate),
-      categoryOfBusiness = "testCategory",
+      categoryOfBusiness = Some("testCategory"),
       percent = 15,
       limitedCostTrader = Some(false)
     )
@@ -258,7 +258,6 @@ trait VatRegistrationFixture {
   lazy val validFRSDetailsJsonWithoutOptionals: JsObject = Json.parse(
     s"""
        |{
-       |  "categoryOfBusiness":"testCategory",
        |  "percent":15.00,
        |  "limitedCostTrader":false
        |}
