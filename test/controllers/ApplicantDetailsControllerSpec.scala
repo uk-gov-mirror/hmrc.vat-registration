@@ -99,7 +99,6 @@ class ApplicantDetailsControllerSpec extends VatRegSpec with VatRegistrationFixt
   }
 
   "updateApplicantDetailsData" should {
-
     "returns 403 if user is not authorised" in new Setup {
       AuthorisationMocks.mockNotAuthorised(testRegId, testInternalid)
 
