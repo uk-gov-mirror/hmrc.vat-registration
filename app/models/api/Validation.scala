@@ -56,8 +56,8 @@ trait VatChoiceValidator extends Validation {
 
 trait VatDigitalContactValidator extends Validation {
   val emailValidator: Format[String]  = readToFmt(email)
-  val telValidator: Format[String]    = readToFmt(pattern("^(\\d){1,20}$".r))
-  val mobileValidator: Format[String] = readToFmt(pattern("^(\\d){1,20}$".r))
+  val telValidator: Format[String]    = readToFmt(pattern("^[A-Z0-9 )/(*#+-]+$".r))
+  val mobileValidator: Format[String] = readToFmt(pattern("^[A-Z0-9 )/(*#+-]+$".r))
 }
 
 trait VatApplicantDetailsValidator extends Validation {
