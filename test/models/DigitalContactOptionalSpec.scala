@@ -25,7 +25,7 @@ class DigitalContactOptionalSpec extends BaseSpec with JsonFormatValidation {
 
   "Creating a DigitalContactOptional model from Json" should {
 
-    implicit val format: OFormat[DigitalContact] = DigitalContact.format
+    implicit val format: OFormat[DigitalContact] = DigitalContact.submissionFormat
 
     "complete successfully" when {
       "from full Json" in {

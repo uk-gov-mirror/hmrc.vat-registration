@@ -27,8 +27,8 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
     s"""{
        |"digitalContact":{
        |"email": "email@email.com",
-       |"telephone": "12345",
-       |"mobileNumber": "54321"
+       |"tel": "12345",
+       |"mobile": "54321"
        |},
        |"website": "www.foo.com",
        |"ppob": {
@@ -48,8 +48,8 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
     s"""{
        |"digitalContact":{
        |"email": "email@email1.com",
-       |"telephone": "123456",
-       |"mobileNumber": "543210"
+       |"tel": "123456",
+       |"mobile": "543210"
        |},
        |"website": "www.foobar.com",
        |"ppob": {

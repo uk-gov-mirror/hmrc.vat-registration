@@ -157,8 +157,8 @@ trait VatRegistrationFixture {
     s"""{
        |"digitalContact":{
        |"email": "email@email.com",
-       |"telephone": "12345",
-       |"mobileNumber": "54321"
+       |"tel": "12345",
+       |"mobile": "54321"
        |},
        |"website": "www.foo.com",
        |"ppob": {
