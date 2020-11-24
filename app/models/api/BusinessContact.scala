@@ -26,15 +26,15 @@ case class BusinessContact(digitalContact: DigitalContact,
 
 object BusinessContact {
 
-  implicit val formats: OFormat[BusinessContact] = (
-    (__ \ "digitalContact").format[DigitalContact] and
+  implicit val format: OFormat[BusinessContact] = (
+    (__ \ "digitalContact").format[DigitalContact](DigitalContact.apiFormat) and
     (__ \ "website").formatNullable[String] and
     (__ \ "ppob").format[Address] and
     (__ \ "contactPreference").format[ContactPreference]
   )(BusinessContact.apply, unlift(BusinessContact.unapply))
 
   val submissionFormat: Format[BusinessContact] = (
-    (__ \ "commDetails").format[DigitalContact] and
+    (__ \ "commDetails").format[DigitalContact](DigitalContact.submissionFormat) and
     (__ \ "commDetails" \ "webAddress").formatNullable[String] and
     (__ \ "address").format[Address](Address.submissionFormat) and
     (__ \ "commDetails" \ "commsPreference").format[ContactPreference](ContactPreference.submissionFormat)

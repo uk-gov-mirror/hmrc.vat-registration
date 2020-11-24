@@ -25,7 +25,7 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
 
   "Creating a VatDigitalContact model from Json" should {
 
-    implicit val format: OFormat[DigitalContact] = DigitalContact.format
+    implicit val format: OFormat[DigitalContact] = DigitalContact.submissionFormat
 
     "complete successfully" when {
       "from full Json" in {

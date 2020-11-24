@@ -24,9 +24,16 @@ case class DigitalContact(email: String, tel: Option[String], mobile: Option[Str
 
 object DigitalContact extends VatDigitalContactValidator {
 
-  implicit val format: OFormat[DigitalContact] = (
+  val apiFormat: Format[DigitalContact] = (
+    (__ \ "email").format[String](maxLength[String](70) keepAnd emailValidator) and
+    (__ \ "tel").formatNullable[String](telValidator) and
+    (__ \ "mobile").formatNullable[String](mobileValidator)
+  )(DigitalContact.apply, unlift(DigitalContact.unapply))
+
+  val submissionFormat: OFormat[DigitalContact] = (
     (__ \ "email").format[String](maxLength[String](70) keepAnd emailValidator) and
     (__ \ "telephone").formatNullable[String](telValidator) and
     (__ \ "mobileNumber").formatNullable[String](mobileValidator)
   )(DigitalContact.apply, unlift(DigitalContact.unapply))
+
 }
