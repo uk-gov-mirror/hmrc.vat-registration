@@ -346,7 +346,7 @@ trait VatSubmissionFixture {
       |      "desc": "the flu",
       |      "indexes": "sic details"
       |    },
-      |    "otherBusinessActivities": [
+      |    "businessActivities": [
       |      {
       |        "code": "00998",
       |        "desc": "otherBusiness desc 1",

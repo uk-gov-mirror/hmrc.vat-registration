@@ -50,7 +50,7 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
     businessDescription = "this is my business description",
     labourCompliance = testSicAndCompliance.flatMap(_.labourCompliance),
     mainBusinessActivity = SicCode("12345", "", ""),
-    otherBusinessActivities = List(SicCode("00998", "", ""), SicCode("00889", "", ""))
+    businessActivities = List(SicCode("00998", "", ""), SicCode("00889", "", ""))
   )
 
   "converting a VatSubmission model into Json" when {

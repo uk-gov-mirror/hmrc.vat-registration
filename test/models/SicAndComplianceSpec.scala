@@ -16,25 +16,72 @@
 
 package models
 
-import fixtures.VatRegistrationFixture
 import helpers.BaseSpec
-import models.api.SicAndCompliance
-import play.api.libs.json.{JsSuccess, Json}
+import models.api.{ComplianceLabour, SicAndCompliance, SicCode}
+import play.api.libs.json.{JsValue, Json}
 
-class SicAndComplianceSpec extends BaseSpec with VatRegistrationFixture {
+class SicAndComplianceSpec extends BaseSpec {
 
-  val sicAndCompliance = testSicAndCompliance.get
+  lazy val businessActivities: List[SicCode] = List(
+    SicCode("00998", "testDesc", "testDetails"),
+    SicCode("12345", "testDesc", "testDetails"),
+    SicCode("00889", "testDesc", "testDetails")
+  )
 
-  "Submission reads" must {
-    "read successfully when there are no additional SIC codes" in {
-      val sicAndComplianceNoCodes = sicAndCompliance.copy(otherBusinessActivities = List())
-      val json = Json.toJson(sicAndComplianceNoCodes)(SicAndCompliance.submissionFormat)
-      val res = SicAndCompliance.submissionReads.reads(json)
+  lazy val sicAndCompliance: SicAndCompliance = SicAndCompliance(
+    "test business description",
+    Some(ComplianceLabour(1000, Some(true), Some(true))),
+    SicCode("12345", "testDesc", "testDetails"),
+    businessActivities
+  )
 
-      res.isSuccess mustBe true
+  val validFullSubmissionJson: JsValue = Json.parse(
+    """
+      |{
+      | "subscription": {
+      |   "businessActivities": {
+      |     "SICCodes": {
+      |       "primaryMainCode": "12345",
+      |       "mainCode2": "00998",
+      |       "mainCode3": "00889"
+      |     },
+      |     "description": "test business description"
+      |   }
+      | },
+      | "compliance": {
+      |   "numOfWorkers": 1000,
+      |   "tempWorkers": true,
+      |   "provisionOfLabour": true
+      | }
+      |}""".stripMargin)
+
+  val validSubmissionJson: JsValue = Json.parse(
+    """
+      |{
+      | "subscription": {
+      |   "businessActivities": {
+      |     "SICCodes": {
+      |       "primaryMainCode": "12345"
+      |     },
+      |     "description": "test business description"
+      |   }
+      | }
+      |}""".stripMargin)
+
+  "Submission writes" must {
+    "write successfully when there is more than 1 sic code and labour compliance" in {
+      val res = SicAndCompliance.submissionWrites.writes(sicAndCompliance)
+
+      res mustBe validFullSubmissionJson
     }
-    "read successfully when there are additional sic codes" in {
 
+    "write successfully when there is just one sic code" in {
+      val res = SicAndCompliance.submissionWrites.writes(sicAndCompliance.copy(
+        labourCompliance = None,
+        businessActivities = List(sicAndCompliance.mainBusinessActivity)
+      ))
+
+      res mustBe validSubmissionJson
     }
   }
 
