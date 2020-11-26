@@ -16,59 +16,73 @@
 
 package models.api
 
-import play.api.libs.json._
+import models.api.Returns.JsonUtilities
 import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
 case class SicAndCompliance(businessDescription: String,
                             labourCompliance: Option[ComplianceLabour],
                             mainBusinessActivity: SicCode,
-                            otherBusinessActivities: List[SicCode])
+                            businessActivities: List[SicCode]) {
+
+  def otherBusinessActivities: List[SicCode] =
+    businessActivities.filterNot(_ == mainBusinessActivity)
+}
 
 object SicAndCompliance {
 
   val mongoReads: Reads[SicAndCompliance] = {
-    implicit val sicCodeMongoFormat = SicCode.mongoFormat
-    ( (__ \ "businessDescription").read[String] and
+    implicit val sicCodeMongoFormat: Format[SicCode] = SicCode.mongoFormat
+    ((__ \ "businessDescription").read[String] and
       (__ \ "labourCompliance").readNullable[ComplianceLabour] and
       (__ \ "mainBusinessActivity").read[SicCode] and
-      (__ \ "otherBusinessActivities").read[List[SicCode]]
-      )(SicAndCompliance.apply _)
+      (__ \ "businessActivities").read[List[SicCode]]
+      ) (SicAndCompliance.apply _)
   }
 
   val apiReads: Reads[SicAndCompliance] = {
-    implicit val sicCodeApiFormat = SicCode.apiFormat
-    ( (__ \ "businessDescription").read[String] and
+    implicit val sicCodeApiFormat: Format[SicCode] = SicCode.apiFormat
+    ((__ \ "businessDescription").read[String] and
       (__ \ "labourCompliance").readNullable[ComplianceLabour] and
       (__ \ "mainBusinessActivity").read[SicCode] and
-      (__ \ "otherBusinessActivities").read[List[SicCode]]
-      )(SicAndCompliance.apply _)
+      (__ \ "businessActivities").read[List[SicCode]]
+      ) (SicAndCompliance.apply _)
   }
 
   val writes: Writes[SicAndCompliance] = {
-    implicit val sicCodeApiFormat = SicCode.mongoFormat
-    ( (__ \ "businessDescription").write[String] and
+    implicit val sicCodeApiFormat: Format[SicCode] = SicCode.mongoFormat
+    ((__ \ "businessDescription").write[String] and
       (__ \ "labourCompliance").writeNullable[ComplianceLabour] and
       (__ \ "mainBusinessActivity").write[SicCode] and
-      (__ \ "otherBusinessActivities").write[List[SicCode]]
-      )(unlift(SicAndCompliance.unapply))
+      (__ \ "businessActivities").write[List[SicCode]]
+      ) (unlift(SicAndCompliance.unapply))
   }
 
-  implicit val apiFormats: Format[SicAndCompliance] = Format(apiReads,writes)
-  val mongoFormats: Format[SicAndCompliance] = Format(mongoReads,writes)
+  implicit val apiFormats: Format[SicAndCompliance] = Format(apiReads, writes)
+  val mongoFormats: Format[SicAndCompliance] = Format(mongoReads, writes)
 
   val submissionReads: Reads[SicAndCompliance] = (
     (__ \ "subscription" \ "businessActivities" \ "description").read[String] and
-    (__ \ "compliance").readNullable[ComplianceLabour](ComplianceLabour.submissionFormat) and
-    (__ \ "subscription" \ "businessActivities" \ "SICCodes" \ "primaryMainCode").read[String].fmap(code => SicCode(code, "", "")) and
-    (__ \ "subscription" \ "businessActivities" \ "SICCodes").read[List[SicCode]](SicCode.sicCodeListReads).orElse(Reads.pure(List()))
-  )(apply(_, _, _, _))
+      (__ \ "compliance").readNullable[ComplianceLabour](ComplianceLabour.submissionFormat) and
+      (__ \ "subscription" \ "businessActivities" \ "SICCodes" \ "primaryMainCode").read[String].fmap(code => SicCode(code, "", "")) and
+      (__ \ "subscription" \ "businessActivities" \ "SICCodes").read[List[SicCode]](SicCode.sicCodeListReads).orElse(Reads.pure(List()))
+    ) (apply(_, _, _, _))
 
-  val submissionWrites: Writes[SicAndCompliance] = (
-    (__ \ "subscription" \ "businessActivities" \ "description").write[String] and
-    (__ \ "compliance").writeNullable[ComplianceLabour](ComplianceLabour.submissionFormat) and
-    (__ \ "subscription" \ "businessActivities" \ "SICCodes" \ "primaryMainCode").write[String].contramap[SicCode](code => code.id) and
-    (__ \ "subscription" \ "businessActivities" \ "SICCodes").write[List[SicCode]](SicCode.sicCodeListWrites)
-  )(unlift(unapply))
+  val submissionWrites: Writes[SicAndCompliance] = Writes { sicAndCompliance: SicAndCompliance =>
+    Json.obj(
+      "subscription" -> Json.obj(
+        "businessActivities" -> Json.obj(
+          "description" -> sicAndCompliance.businessDescription,
+          "SICCodes" -> (
+            Json.obj(
+              "primaryMainCode" -> sicAndCompliance.mainBusinessActivity.id
+            ) ++ Json.toJson(sicAndCompliance.otherBusinessActivities)(SicCode.sicCodeListWrites).as[JsObject]
+          )
+        )
+      ),
+      "compliance" -> sicAndCompliance.labourCompliance.map(Json.toJson(_)(ComplianceLabour.submissionFormat))
+    ).filterNullFields
+  }
 
   val submissionFormat: Format[SicAndCompliance] = Format[SicAndCompliance](submissionReads, submissionWrites)
 

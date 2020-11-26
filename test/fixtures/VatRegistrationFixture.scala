@@ -183,13 +183,13 @@ trait VatRegistrationFixture {
        | "numberOfWorkers": 1000,
        | "temporaryContracts":true,
        | "skilledWorkers":true
-           },
-       "mainBusinessActivity": {
-       "code": "12345",
-       "desc": "the flu",
-       "indexes": "sic details"
-           },
-       "otherBusinessActivities": [
+       |     },
+       | "mainBusinessActivity": {
+       | "code": "12345",
+       | "desc": "the flu",
+       | "indexes": "sic details"
+       |     },
+       | "businessActivities": [
        |    {  "code": "00998",
        |       "desc": "otherBusiness desc 1",
        |       "indexes": "fooBar 1" },

@@ -19,7 +19,7 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
     Nil
   ))
   val otherBusinessActivities = SicCode("00998", "otherBusiness desc 1", "fooBar 1") :: SicCode("00889", "otherBusiness desc 2", "fooBar 2") :: Nil
-  val validSicAndComplianceWithOtherBusinessActivities = Some(validSicAndCompliance.get.copy(otherBusinessActivities = otherBusinessActivities))
+  val validSicAndComplianceWithOtherBusinessActivities = Some(validSicAndCompliance.get.copy(businessActivities = otherBusinessActivities))
   val validSicAndComplianceJson = Json.parse(
     s"""
        |{
@@ -34,7 +34,7 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
        |    "desc": "the flu",
        |    "indexes": "sic details"
        |  },
-       |  "otherBusinessActivities":[]
+       |  "businessActivities":[]
        |}
     """.stripMargin).as[JsObject]
 
@@ -51,7 +51,7 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
        |    "desc": "the flu 1",
        |    "indexes": "sic details 1"
        |  },
-       |  "otherBusinessActivities": [
+       |  "businessActivities": [
        |    {
        |      "code": "99889",
        |      "desc": "oherBusiness",

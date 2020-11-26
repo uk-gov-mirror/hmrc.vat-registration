@@ -478,7 +478,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
       "this is my business description",
       Some(ComplianceLabour(1000, Some(true), Some(true))),
       SicCode("11111", "the flu", "sic details"),
-      otherBusinessActivities = Nil
+      businessActivities = Nil
     ))
     "return a SicAndComplianceModel from existing data based on the reg Id" in new Setup {
       val result: Future[Option[SicAndCompliance]] = for {
@@ -495,7 +495,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
         "foo",
         Some(ComplianceLabour(1, None, None)),
         SicCode("fooBARFIZZANDBANG1234", "bar", "wizz"),
-        otherBusinessActivities = List(SicCode("11111 FOO BAR WIZZ AND BANG", "barFoo", "amended other foo")))
+        businessActivities = List(SicCode("11111 FOO BAR WIZZ AND BANG", "barFoo", "amended other foo")))
       val result: Future[Option[SicAndCompliance]] = for {
         _ <- repository.insert(vatScheme.copy(sicAndCompliance = Some(modelThatDoesNotConformToApiValidation)))
         _ = count mustBe 1
@@ -529,7 +529,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
       "this is my business description",
       Some(ComplianceLabour(1000, Some(true), Some(true))),
       SicCode("12345", "the flu", "sic details"),
-      otherBusinessActivities = List(SicCode("99999", "fooBar", "other foo"))
+      businessActivities = List(SicCode("99999", "fooBar", "other foo"))
     ))
     "return an amended SicAndCompliance Model when an entry already exists in the repo for 1 field" in new Setup {
       val amendedModel: Option[SicAndCompliance] = validSicAndCompliance.map(a => a.copy(businessDescription = "fooBarWizz"))
@@ -546,7 +546,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
         "foo",
         Some(ComplianceLabour(1, None, None)),
         SicCode("foo", "bar", "wizz"),
-        otherBusinessActivities = List(SicCode("11111", "barFoo", "amended other foo")))
+        businessActivities = List(SicCode("11111", "barFoo", "amended other foo")))
       val result: Future[SicAndCompliance] = for {
         _ <- repository.insert(vatScheme.copy(sicAndCompliance = validSicAndCompliance))
         res <- repository.updateSicAndCompliance(vatScheme.id, amendedModel)
