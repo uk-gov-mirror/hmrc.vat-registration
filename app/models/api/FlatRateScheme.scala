@@ -60,8 +60,6 @@ object FRSDetails {
     ).filterNullFields
   }
 
-  val submissionFormat: Format[FRSDetails] = Format[FRSDetails](submissionReads, submissionWrites)
-
   val auditWrites: Writes[FRSDetails] = Writes[FRSDetails] { frs =>
     Json.obj(
       "startDate" -> frs.startDate,

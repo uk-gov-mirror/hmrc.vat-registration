@@ -18,8 +18,9 @@ package controllers.test
 
 import javax.inject.{Inject, Singleton}
 import models.api.VatSubmission
+import play.api.Logger
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
-import play.api.mvc.{Action, AnyContent, ControllerComponents, MessagesControllerComponents}
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.Future
@@ -29,8 +30,9 @@ class StubVatSubmissionController @Inject()(cc: ControllerComponents) extends Ba
 
   val processSubmission: Action[JsValue] = Action.async(parse.json) {
     implicit request =>
-      Json.fromJson[VatSubmission](request.body)(VatSubmission.submissionFormat) match {
+      Json.fromJson[VatSubmission](request.body)(VatSubmission.submissionReads) match {
         case JsSuccess(_, _) =>
+          Logger.info(s"[StubVatSubmissionController][processSubmission] Received submission: ${Json.prettyPrint(request.body)}")
           Future.successful(Ok)
         case JsError(errors) =>
           Future.successful(BadRequest(errors.toString()))

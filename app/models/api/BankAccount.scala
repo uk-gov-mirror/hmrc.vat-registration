@@ -52,20 +52,20 @@ object BankAccount {
 
   }
 
-  def submissionWrites(optBankAccount: Option[BankAccount]): Option[JsValue] = {
+  def submissionWrites: Writes[Option[BankAccount]] = Writes { optBankAccount: Option[BankAccount] =>
     optBankAccount match {
       case Some(BankAccount(true, Some(details))) =>
-        Some(Json.obj("UK" -> Json.obj(
+        Json.obj("UK" -> Json.obj(
           "accountName" -> details.name,
           "sortCode" -> details.sortCode.replaceAll("-", ""),
           "accountNumber" -> details.number
-        )))
+        ))
       case _ =>
-        Some(Json.obj(
+        Json.obj(
           "UK" -> Json.obj(
             "reasonBankAccNotProvided" -> "1"
           )
-        ))
+        )
     }
   }
 }
@@ -75,25 +75,25 @@ object BankAccountDetails extends VatBankAccountValidator {
 
   val submissionFormat: OFormat[BankAccountDetails] = (
     (__ \ "UK" \ "accountName").format[String] and
-    (__ \ "UK" \ "sortCode").format[String] and
-    (__ \ "UK" \ "accountNumber").format[String]
-  )(BankAccountDetails.apply, unlift(BankAccountDetails.unapply))
+      (__ \ "UK" \ "sortCode").format[String] and
+      (__ \ "UK" \ "accountNumber").format[String]
+    ) (BankAccountDetails.apply, unlift(BankAccountDetails.unapply))
 
   val submissionReads: Reads[BankAccountDetails] = (
     (__ \ "UK" \ "accountName").read[String] and
-    (__ \ "UK" \ "sortCode").read[String] and
-    (__ \ "UK" \ "accountNumber").read[String]
-  )(BankAccountDetails.apply _)
+      (__ \ "UK" \ "sortCode").read[String] and
+      (__ \ "UK" \ "accountNumber").read[String]
+    ) (BankAccountDetails.apply _)
 
 }
 
 object BankAccountDetailsMongoFormat extends VatBankAccountValidator {
   def format(crypto: CryptoSCRS): Format[BankAccountDetails] = (
     (__ \ "name").format[String] and
-    (__ \ "sortCode").format[String] and
-    (__ \ "number").format[String](crypto.rds)(crypto.wts)
-    )(BankAccountDetails.apply, unlift(BankAccountDetails.unapply))
-  }
+      (__ \ "sortCode").format[String] and
+      (__ \ "number").format[String](crypto.rds)(crypto.wts)
+    ) (BankAccountDetails.apply, unlift(BankAccountDetails.unapply))
+}
 
 
 object BankAccountMongoFormat extends VatBankAccountValidator {

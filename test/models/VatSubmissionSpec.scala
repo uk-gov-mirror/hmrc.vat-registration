@@ -63,10 +63,26 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
       }
     }
     "safe id is present" should {
-      "produce valid json for submission with a list of customer ids" in {
+      "produce valid json for a mandatory submission with a list of customer ids" in {
         val json = Json.toJson(testVatSubmission)(VatSubmission.submissionFormat)
         val expectedJson = (JsPath \ "customerIdentification" \ "customerID")
           .prune(vatSubmissionJson.as[JsObject].deepMerge(
+            Json.obj("customerIdentification" -> Json.obj(
+              "primeBPSafeID" -> testBpSafeId
+            ))
+          )).get
+
+        json mustBe expectedJson
+      }
+
+      "produce valid json for a voluntary submission with a list of customer ids" in {
+        val json = Json.toJson(testVatSubmission.copy(
+          eligibilitySubmissionData = testEligibilitySubmissionData.copy(
+            threshold = testVoluntaryThreshold
+          )
+        ))(VatSubmission.submissionFormat)
+        val expectedJson = (JsPath \ "customerIdentification" \ "customerID")
+          .prune(vatSubmissionVoluntaryJson.as[JsObject].deepMerge(
             Json.obj("customerIdentification" -> Json.obj(
               "primeBPSafeID" -> testBpSafeId
             ))

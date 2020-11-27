@@ -37,7 +37,7 @@ object RegistrationSubmissionAuditing {
     override val transactionName: String = vatRegTransactionName
     override val auditType: String = vatRegAuditType
 
-    override val detail: JsValue = (formatRegReason(vatSubmission.eligibilitySubmissionData.threshold) ++ Json.obj(
+    override val detail: JsValue = formatRegReason(vatSubmission.eligibilitySubmissionData.threshold).deepMerge(Json.obj(
       "authProviderId" -> authProviderId,
       "journeyId" -> regId,
       "userType" -> affinityGroup.toString,
