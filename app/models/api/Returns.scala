@@ -68,10 +68,11 @@ object Returns extends VatAccountingPeriodValidator with JsonUtilities {
     (__ \ "subscription" \ "yourTurnover" \ "zeroRatedSupplies").readNullable[BigDecimal]
   )(Returns.apply(_,_,_,_,_))
 
-  val submissionWrites = Writes[Returns] { returns =>
+  def submissionWrites(isMandatory: Boolean): Writes[Returns] = Writes[Returns] { returns =>
     Json.obj(
       "subscription" -> Json.obj(
         "reasonForSubscription" -> Json.obj(
+          "relevantDate" -> (if (isMandatory) JsNull else returns.start.date),
           "voluntaryOrEarlierDate" -> returns.start.date
         ),
         "yourTurnover" -> Json.obj(
@@ -84,8 +85,6 @@ object Returns extends VatAccountingPeriodValidator with JsonUtilities {
       )
     ).filterNullFields
   }
-
-  val submissionFormat: Format[Returns] = Format[Returns](submissionReads, submissionWrites)
 }
 
 case class TurnoverEstimates(turnoverEstimate: Long)

@@ -84,6 +84,4 @@ object SicAndCompliance {
     ).filterNullFields
   }
 
-  val submissionFormat: Format[SicAndCompliance] = Format[SicAndCompliance](submissionReads, submissionWrites)
-
 }

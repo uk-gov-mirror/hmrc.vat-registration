@@ -123,8 +123,6 @@ object ApplicantDetails extends VatApplicantDetailsValidator
       )
   }
 
-  val submissionFormat: Format[ApplicantDetails] = Format[ApplicantDetails](submissionReads, submissionWrites)
-
   private def optionalIds(appDetails: ApplicantDetails): JsObject =
     if (appDetails.bpSafeId.isDefined) {
       Json.obj(
