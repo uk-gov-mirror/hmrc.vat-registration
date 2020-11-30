@@ -17,9 +17,8 @@
 package models.api
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json._
 import play.api.libs.json.Reads._
-import utils.JsonUtilities
+import play.api.libs.json._
 
 case class DigitalContactOptional(email: Option[String] = None,
                                   tel: Option[String] = None,

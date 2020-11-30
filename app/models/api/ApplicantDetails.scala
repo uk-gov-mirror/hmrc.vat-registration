@@ -21,7 +21,6 @@ import java.time.LocalDate
 import helpers.ApplicantDetailsHelper
 import models.submission.DateOfBirth
 import play.api.libs.functional.syntax._
-import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 import utils.JsonUtilities
 

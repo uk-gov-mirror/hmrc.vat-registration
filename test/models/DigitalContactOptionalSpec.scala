@@ -17,16 +17,13 @@
 package models
 
 import helpers.BaseSpec
-import models.api.{DigitalContact, DigitalContactOptional}
+import models.api.DigitalContactOptional
 import play.api.libs.json._
 
 class DigitalContactOptionalSpec extends BaseSpec with JsonFormatValidation {
 
 
   "Creating a DigitalContactOptional model from Json" should {
-
-    implicit val format: OFormat[DigitalContact] = DigitalContact.submissionFormat
-
     "complete successfully" when {
       "from full Json" in {
         val json = Json.parse(

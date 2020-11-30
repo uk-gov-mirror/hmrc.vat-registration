@@ -16,12 +16,11 @@
 
 package services
 
-import javax.inject.{Inject, Singleton}
 import com.typesafe.config.{ConfigList, ConfigRenderOptions}
 import config.BackendConfig
+import javax.inject.{Inject, Singleton}
 import models.VatThreshold
 import org.joda.time.DateTime
-import play.api.Configuration
 import play.api.libs.json._
 
 @Singleton

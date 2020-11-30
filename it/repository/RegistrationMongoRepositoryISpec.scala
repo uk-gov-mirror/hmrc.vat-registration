@@ -18,8 +18,8 @@ package repository
 
 import java.time.LocalDate
 
-import common.exceptions._
 import common.TransactionId
+import common.exceptions._
 import enums.VatRegStatus
 import itutil.{FutureAssertions, ITFixtures, MongoBaseSpec}
 import models.AcknowledgementReferencePath
@@ -28,7 +28,6 @@ import play.api.libs.json._
 import play.api.test.Helpers._
 import reactivemongo.api.commands.WriteResult
 import repositories.RegistrationMongoRepository
-import uk.gov.hmrc.mongo.MongoSpecSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -169,12 +168,12 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
     "update Element object when one exists" in new Setup {
       val schemeWithAckRefNumber: VatScheme = vatScheme.copy(acknowledgementReference = Some(ACK_REF_NUM))
       repository.insert(schemeWithAckRefNumber).flatMap(_ => repository.updateByElement(vatScheme.id,
-                                                             AcknowledgementReferencePath, ACK_REF_NUM)) returns ACK_REF_NUM
+        AcknowledgementReferencePath, ACK_REF_NUM)) returns ACK_REF_NUM
     }
 
     "return a None when there is no corresponding VatScheme object" in new Setup {
       repository.insert(vatScheme).flatMap(_ => repository.updateByElement("fakeRegId",
-                                                AcknowledgementReferencePath, ACK_REF_NUM)) failedWith classOf[UpdateFailed]
+        AcknowledgementReferencePath, ACK_REF_NUM)) failedWith classOf[UpdateFailed]
     }
   }
 
@@ -266,7 +265,6 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
     }
 
     "update tradingDetails block in registration when there is already tradingDetails data" in new Setup {
-      val otherTradingDetails = TradingDetails(Some("other-trading-name"), true)
       val result: Future[Option[TradingDetails]] = for {
         _ <- repository.insert(vatScheme.copy(tradingDetails = Some(tradingDetails)))
         _ <- repository.updateTradingDetails(vatScheme.id, tradingDetails)
@@ -681,7 +679,6 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
     }
 
     "update flat rate scheme block in registration when there is already flat rate scheme data" in new Setup {
-      val otherFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = false, None)
       val result: Future[Option[FlatRateScheme]] = for {
         _ <- repository.insert(vatScheme.copy(flatRateScheme = Some(testFlatRateScheme)))
         _ <- repository.updateFlatRateScheme(vatScheme.id, testFlatRateScheme)
@@ -759,7 +756,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
 
       await(repository.insert(vatScheme))
       await(repository.count) mustBe 1
-      val res = await(repository.patchApplicantDetails(vatScheme.id, updatedApplicantDetails))
+      await(repository.patchApplicantDetails(vatScheme.id, updatedApplicantDetails))
       await(repository.count) mustBe 1
       (fetchAll.get \ "applicantDetails").as[JsObject] mustBe Json.toJson(updatedApplicantDetails)
     }

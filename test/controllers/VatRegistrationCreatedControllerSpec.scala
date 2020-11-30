@@ -24,14 +24,14 @@ import helpers.VatRegSpec
 import mocks.MockNewRegistrationService
 import models.api._
 import org.mockito.ArgumentMatchers
-import org.mockito.ArgumentMatchers.{any, anyString}
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import play.api.http.Status
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.{Request, Result}
 import play.api.test.FakeRequest
 import repositories.RegistrationMongoRepository
-import uk.gov.hmrc.http.{HeaderCarrier, Upstream5xxResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, Upstream5xxResponse, UpstreamErrorResponse}
 
 import scala.concurrent.Future
 
@@ -95,8 +95,6 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
 
     "updateBankAccountDetails" should {
 
-      val registrationId = "reg-12345"
-
       val accountNumber = "12345678"
       val sortCode = "12-34-56"
       val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
@@ -124,7 +122,6 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
     }
 
     "fetchBankAccountDetails" should {
-      val registrationId = "reg-12345"
       val accountNumber = "12345678"
       val sortCode = "12-34-56"
       val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
@@ -161,7 +158,6 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
     }
 
     "fetchReturns" should {
-      val registrationId = "reg-12345"
       val date = StartDate(Some(LocalDate.of(2017, 1, 1)))
       val returns = Returns(true, "quarterly", Some("jan"), date, None)
 
@@ -174,7 +170,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
 
       "return a OK if the returns is present in the database" in new Setup {
         AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-        when(mockRegistrationMongoRepository.fetchReturns(any())(any()))
+        when(mockRegistrationMongoRepository.fetchReturns(any()))
           .thenReturn(Future.successful(Some(returns)))
 
         val result: Future[Result] = controller.fetchReturns(testRegId)(FakeRequest())
@@ -184,7 +180,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
 
       "return a NOT_FOUND if the returns is not present" in new Setup {
         AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-        when(mockRegistrationMongoRepository.fetchReturns(any())(any()))
+        when(mockRegistrationMongoRepository.fetchReturns(any()))
           .thenReturn(Future.successful(None))
 
         val result: Future[Result] = controller.fetchReturns(testRegId)(FakeRequest())
@@ -196,7 +192,6 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
 
       import Returns._
 
-      val registrationId = "reg-12345"
       val startDate = StartDate(Some(LocalDate of(1990, 10, 10)))
       val returns: Returns = Returns(reclaimVatOnMostReturns = true, MONTHLY, Some(JAN), startDate, None)
 
@@ -307,13 +302,13 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
         ArgumentMatchers.eq(testRegId),
         ArgumentMatchers.eq(testUserHeaders)
       )(any[HeaderCarrier], any[Request[_]]))
-        .thenReturn(Future.failed(Upstream5xxResponse("message", 501, 1)))
+        .thenReturn(Future.failed(UpstreamErrorResponse("message", 501)))
 
-      val response: Upstream5xxResponse = intercept[Upstream5xxResponse](await(controller.submitVATRegistration(testRegId)(FakeRequest().withBody(
+      val response: UpstreamErrorResponse = intercept[UpstreamErrorResponse](await(controller.submitVATRegistration(testRegId)(FakeRequest().withBody(
         Json.obj("userHeaders" -> testUserHeaders)
       ))))
 
-      response mustBe Upstream5xxResponse("message", 501, 1)
+      response mustBe UpstreamErrorResponse("message", 501)
     }
 
     "return an Ok response with acknowledgement reference for a valid submit" in new Setup {
@@ -337,14 +332,14 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
   "call to clearDownDocument" should {
     "pass" when {
       "given a transactionid" in new Setup {
-        when(mockVatRegistrationService.clearDownDocument(any())(any())).thenReturn(Future.successful(true))
+        when(mockVatRegistrationService.clearDownDocument(any())).thenReturn(Future.successful(true))
         val resp: Future[Result] = controller.clearDownDocument("TransID")(FakeRequest())
         status(resp) mustBe Status.OK
       }
     }
     "fail" when {
       "given a transactionid that isn't found in mongo" in new Setup {
-        when(mockVatRegistrationService.clearDownDocument(any())(any())).thenReturn(Future.successful(false))
+        when(mockVatRegistrationService.clearDownDocument(any())).thenReturn(Future.successful(false))
         val resp: Future[Result] = controller.clearDownDocument("TransID")(FakeRequest())
         status(resp) mustBe Status.INTERNAL_SERVER_ERROR
       }
@@ -356,7 +351,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
       "the transaction id was saved to the document" in new Setup {
         val regId = "regId"
 
-        when(mockRegistrationMongoRepository.saveTransId(any(), any())(any()))
+        when(mockRegistrationMongoRepository.saveTransId(any(), any()))
           .thenReturn(Future.successful("transId"))
 
         lazy val fakeRequest: FakeRequest[JsValue] =

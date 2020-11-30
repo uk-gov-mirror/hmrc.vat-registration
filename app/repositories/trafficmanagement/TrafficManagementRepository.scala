@@ -26,10 +26,8 @@ import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.ReactiveRepository
-import utils.TimeMachine
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Success
 
 @Singleton
 class TrafficManagementRepository @Inject()(mongo: ReactiveMongoComponent)(implicit ec: ExecutionContext)
@@ -52,8 +50,7 @@ class TrafficManagementRepository @Inject()(mongo: ReactiveMongoComponent)(impli
     )
   )
 
-  def getRegistrationInformation(internalId: String)
-                                (implicit hc: HeaderCarrier): Future[Option[RegistrationInformation]] =
+  def getRegistrationInformation(internalId: String): Future[Option[RegistrationInformation]] =
     find("internalId" -> JsString(internalId))
       .map(_.headOption)
 
@@ -61,8 +58,7 @@ class TrafficManagementRepository @Inject()(mongo: ReactiveMongoComponent)(impli
                                     regId: String,
                                     status: RegistrationStatus,
                                     regStartDate: Option[LocalDate],
-                                    channel: RegistrationChannel)
-                                   (implicit hc: HeaderCarrier): Future[RegistrationInformation] = {
+                                    channel: RegistrationChannel): Future[RegistrationInformation] = {
 
     val newRecord = RegistrationInformation(
       internalId = internalId,

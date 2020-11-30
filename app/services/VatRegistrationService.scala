@@ -30,11 +30,10 @@ import models.api.{Threshold, TurnoverEstimates, VatScheme}
 import org.slf4j.LoggerFactory
 import play.api.libs.json._
 import repositories.RegistrationMongoRepository
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
 class VatRegistrationService @Inject()(registrationRepository: RegistrationMongoRepository,
@@ -53,7 +52,7 @@ class VatRegistrationService @Inject()(registrationRepository: RegistrationMongo
     case t: Throwable => Left(GenericError(t))
   }
 
-  private def getOrCreateVatScheme(registrationId: String, internalId: String)(implicit hc: HeaderCarrier): Future[Either[LeftState, VatScheme]] =
+  private def getOrCreateVatScheme(registrationId: String, internalId: String): Future[Either[LeftState, VatScheme]] =
     registrationRepository.retrieveVatScheme(registrationId).flatMap {
       case Some(vatScheme) => Future.successful(Right(vatScheme))
       case None => registrationRepository.createNewVatScheme(registrationId, internalId)
@@ -62,7 +61,7 @@ class VatRegistrationService @Inject()(registrationRepository: RegistrationMongo
 
   import cats.syntax.either._
 
-  def saveAcknowledgementReference(regID: String, ackRef: String)(implicit hc: HeaderCarrier): ServiceResult[String] =
+  def saveAcknowledgementReference(regID: String, ackRef: String): ServiceResult[String] =
     OptionT(registrationRepository.retrieveVatScheme(regID)).toRight(ResourceNotFound(s"VatScheme ID: $regID missing"))
       .flatMap(vs => vs.acknowledgementReference match {
         case Some(ar) =>
@@ -71,7 +70,7 @@ class VatRegistrationService @Inject()(registrationRepository: RegistrationMongo
           EitherT.liftT[Future, LeftState, String](registrationRepository.updateByElement(regID, AcknowledgementReferencePath, ackRef))
       })
 
-  def getStatus(regId: String)(implicit hc: HeaderCarrier): Future[JsValue] = {
+  def getStatus(regId: String): Future[JsValue] = {
     registrationRepository.retrieveVatScheme(regId) map {
       case Some(registration) =>
         val base = Json.obj(
@@ -89,19 +88,18 @@ class VatRegistrationService @Inject()(registrationRepository: RegistrationMongo
     }
   }
 
-  //TODO - confirm if this is correct
   def generateRegistrationId(): String = UUID.randomUUID().toString
 
-  def createNewRegistration(intId: String)(implicit headerCarrier: HeaderCarrier): ServiceResult[VatScheme] =
+  def createNewRegistration(intId: String): ServiceResult[VatScheme] =
     EitherT(getOrCreateVatScheme(generateRegistrationId(), intId))
 
-  def retrieveVatScheme(regId: String)(implicit hc: HeaderCarrier): ServiceResult[VatScheme] =
+  def retrieveVatScheme(regId: String): ServiceResult[VatScheme] =
     OptionT(registrationRepository.retrieveVatScheme(regId)).toRight(ResourceNotFound(regId))
 
-  def retrieveVatSchemeByInternalId(internalId: String)(implicit hc: HeaderCarrier): ServiceResult[VatScheme] =
+  def retrieveVatSchemeByInternalId(internalId: String): ServiceResult[VatScheme] =
     OptionT(registrationRepository.retrieveVatSchemeByInternalId(internalId)).toRight(ResourceNotFound(internalId))
 
-  def deleteVatScheme(regId: String, validStatuses: VatRegStatus.Value*)(implicit hc: HeaderCarrier): Future[Boolean] = {
+  def deleteVatScheme(regId: String, validStatuses: VatRegStatus.Value*): Future[Boolean] = {
     for {
       someDocument <- registrationRepository.retrieveVatScheme(regId)
       document <- someDocument.fold(throw new MissingRegDocument(regId))(doc => Future.successful(doc))
@@ -113,11 +111,11 @@ class VatRegistrationService @Inject()(registrationRepository: RegistrationMongo
     } yield deleted
   }
 
-  def clearDownDocument(transId: String)(implicit hc: HeaderCarrier): Future[Boolean] = {
+  def clearDownDocument(transId: String): Future[Boolean] = {
     registrationRepository.clearDownDocument(transId)
   }
 
-  def retrieveAcknowledgementReference(regId: String)(implicit hc: HeaderCarrier): ServiceResult[String] = {
+  def retrieveAcknowledgementReference(regId: String): ServiceResult[String] = {
     retrieveVatScheme(regId).subflatMap(_.acknowledgementReference.toRight(ResourceNotFound("AcknowledgementId")))
   }
 

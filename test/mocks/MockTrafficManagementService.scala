@@ -16,14 +16,13 @@
 
 package mocks
 
-import models.api.{RegistrationChannel, RegistrationInformation, RegistrationStatus}
+import models.api.{RegistrationInformation, RegistrationStatus}
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.Suite
 import org.scalatestplus.mockito.MockitoSugar
 import services.{AllocationResponse, TrafficManagementService}
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
@@ -37,16 +36,12 @@ trait MockTrafficManagementService extends MockitoSugar {
     when(mockTrafficManagementService.allocate(
       ArgumentMatchers.eq(internalId),
       ArgumentMatchers.eq(regId)
-    )(
-      ArgumentMatchers.any[HeaderCarrier]
     )).thenReturn(response)
 
   def mockGetRegInfo(internalId: String)
                     (response: Future[Option[RegistrationInformation]]): OngoingStubbing[Future[Option[RegistrationInformation]]] =
     when(mockTrafficManagementService.getRegistrationInformation(
       ArgumentMatchers.eq(internalId)
-    )(
-      ArgumentMatchers.any[HeaderCarrier]
     )).thenReturn(response)
 
   def mockUpdateStatus(regId: String, channel: RegistrationStatus)
@@ -54,8 +49,6 @@ trait MockTrafficManagementService extends MockitoSugar {
     when(mockTrafficManagementService.updateStatus(
       ArgumentMatchers.eq(regId),
       ArgumentMatchers.eq(channel)
-    )(
-      ArgumentMatchers.any[HeaderCarrier]
     )) thenReturn response
 
 }

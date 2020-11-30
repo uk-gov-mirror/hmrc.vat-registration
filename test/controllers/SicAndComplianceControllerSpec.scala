@@ -41,10 +41,10 @@ class SicAndComplianceControllerSpec extends VatRegSpec with VatRegistrationFixt
   }
 
   def mockGetSicAndComplianceFromService(res:Future[Option[SicAndCompliance]]):OngoingStubbing[Future[Option[SicAndCompliance]]]=
-    when(mockSicAndComplianceService.getSicAndCompliance(any())(any())).thenReturn(res)
+    when(mockSicAndComplianceService.getSicAndCompliance(any())).thenReturn(res)
 
   def mockUpdateSicAndComplianceFromService(res:Future[SicAndCompliance]) :OngoingStubbing[Future[SicAndCompliance]] =
-    when(mockSicAndComplianceService.updateSicAndCompliance(any(),any())(any())).thenReturn(res)
+    when(mockSicAndComplianceService.updateSicAndCompliance(any(),any())).thenReturn(res)
 
   "getSicAndCompliance" should {
     "return valid Json if record returned from service" in new Setup {

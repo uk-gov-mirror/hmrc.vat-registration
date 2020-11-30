@@ -18,7 +18,7 @@ package models.api
 
 import java.util.regex.Pattern
 
-import play.api.libs.json.Reads.{email, maxLength, pattern}
+import play.api.libs.json.Reads.{email, pattern}
 import play.api.libs.json._
 
 trait Validation {
@@ -40,10 +40,6 @@ trait VatAccountingPeriodValidator extends Validation {
 
   val MONTHLY = "monthly"
   val QUARTERLY = "quarterly"
-
-
-  @deprecated("use staggerStartValidator instead")
-  val periodStartValidator: Format[String] = acceptOnly("feb_may_aug_nov", "mar_jun_sep_dec", "jan_apr_jul_oct")
 
   val staggerStartValidator: Format[String] = acceptOnly(JAN, FEB, MAR)
   val frequencyValidator: Format[String]    = acceptOnly(MONTHLY, QUARTERLY)

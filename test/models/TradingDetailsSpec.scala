@@ -18,16 +18,16 @@ package models
 
 import helpers.BaseSpec
 import models.api.TradingDetails
-import play.api.libs.json.{JsError, JsPath, JsSuccess, JsValue, Json, JsonValidationError}
+import play.api.libs.json._
 
 class TradingDetailsSpec extends BaseSpec with JsonFormatValidation {
 
   val fullJson: JsValue = Json.parse(
     """
-       |{
-       |  "tradingName":"test-name",
-       |  "eoriRequested":true
-       |}
+      |{
+      |  "tradingName":"test-name",
+      |  "eoriRequested":true
+      |}
          """.stripMargin
   )
   val fullModel: TradingDetails = TradingDetails(Some("test-name"), true)

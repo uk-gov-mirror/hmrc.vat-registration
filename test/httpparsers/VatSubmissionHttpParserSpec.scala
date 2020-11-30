@@ -54,7 +54,7 @@ class VatSubmissionHttpParserSpec extends PlaySpec {
 
     "throw an INTERNAL SERVER EXCEPTION" when {
       "the VAT Submission API returns an unexpected response" in {
-        intercept[InternalServerException](VatSubmissionHttpReads.read(testHttpVerb, testUri, HttpResponse(INTERNAL_SERVER_ERROR)))
+        intercept[InternalServerException](VatSubmissionHttpReads.read(testHttpVerb, testUri, HttpResponse(INTERNAL_SERVER_ERROR, "{}")))
       }
     }
 

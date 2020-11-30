@@ -16,7 +16,6 @@
 
 package models.api
 
-import models.submission.{IdUnverifiable, IdVerificationFailed, IdVerified}
 import play.api.libs.json.{Format, JsResult, JsString, JsValue}
 
 
