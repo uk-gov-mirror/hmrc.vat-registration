@@ -40,7 +40,7 @@ trait VatRegistrationFixture {
   lazy val testCrn = "testCrn"
   lazy val testCtUtr = Some("testCtUtr")
   lazy val testDateOFIncorp: LocalDate = LocalDate.of(2020, 1, 2)
-  lazy val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some(Country(Some("UK"), None)))
+  lazy val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some(Country(Some("UK"), None)), addressValidated = Some(true))
   lazy val testPostcode = "ZZ1 1ZZ"
   lazy val testSicCode = SicCode("88888", "description", "displayDetails")
   lazy val testName = Name(first = Some("Forename"), middle = None, last = "Surname")

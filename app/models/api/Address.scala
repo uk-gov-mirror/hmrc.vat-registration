@@ -35,7 +35,8 @@ case class Address(line1: String,
                    line3: Option[String] = None,
                    line4: Option[String] = None,
                    postcode: Option[String] = None,
-                   country: Option[Country] = None)
+                   country: Option[Country] = None,
+                   addressValidated: Option[Boolean] = None)
 
 object Address {
 
@@ -51,7 +52,8 @@ object Address {
         .inmap[Option[Country]](
           optCode => optCode.map(code => Country(Some(code), None)),
           optCountry => optCountry.flatMap(country => country.code)
-        )
+        ) and
+    (__ \ "addressValidated").formatNullable[Boolean]
     ) (Address.apply, unlift(Address.unapply))
 
   val auditFormat: Format[Address] = (
@@ -64,7 +66,8 @@ object Address {
         .inmap[Option[Country]](
           optCode => optCode.map(code => Country(Some(code), None)),
           optCountry => optCountry.flatMap(country => country.code)
-        )
+        ) and
+      (__ \ "addressValidated").formatNullable[Boolean]
     ) (Address.apply, unlift(Address.unapply))
 
 }
