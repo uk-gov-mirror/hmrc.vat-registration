@@ -16,7 +16,6 @@
 
 package utils
 
-import models.api.{CustomerStatus, Threshold, TurnoverEstimates}
 import play.api.libs.json._
 
 object EligibilityDataJsonUtils {

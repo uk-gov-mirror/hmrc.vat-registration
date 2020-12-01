@@ -20,9 +20,9 @@ import javax.inject.{Inject, Singleton}
 import models.api.Sequence
 import play.api.libs.json.JsValue
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.api.WriteConcern
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import reactivemongo.play.json.ImplicitBSONHandlers._
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -35,11 +35,22 @@ class SequenceMongoRepository @Inject()(mongo: ReactiveMongoComponent)
   extends ReactiveRepository[Sequence, BSONObjectID]("sequence", mongo.mongoConnector.db, Sequence.formats, ReactiveMongoFormats.objectIdFormats)
     with ReactiveMongoFormats {
 
-  def getNext(sequenceID: String)(implicit hc: HeaderCarrier): Future[Int] = {
+  def getNext(sequenceID: String): Future[Int] = {
     val selector = BSONDocument("_id" -> sequenceID)
     val modifier = BSONDocument("$inc" -> BSONDocument("seq" -> 1))
 
-    collection.findAndUpdate(selector, modifier, fetchNewObject = true, upsert = true) map {
+    collection.findAndUpdate(
+      selector,
+      modifier,
+      fetchNewObject = true,
+      upsert = true,
+      sort = None,
+      fields = None,
+      bypassDocumentValidation = false,
+      writeConcern = WriteConcern.Default,
+      maxTime = None,
+      collation = None,
+      arrayFilters = Seq()) map {
       _.result[JsValue] match {
         case None =>
           logger.error("[SequenceRepository] - [getNext] returned a None when Upserting")

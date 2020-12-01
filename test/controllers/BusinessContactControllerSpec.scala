@@ -43,10 +43,10 @@ class BusinessContactControllerSpec extends VatRegSpec with VatRegistrationFixtu
     }
   }
     def mockGetBusinessContactFromService(res:Future[Option[BusinessContact]]):OngoingStubbing[Future[Option[BusinessContact]]] =
-      when(mockBusinessContactService.getBusinessContact(any())(any())).thenReturn(res)
+      when(mockBusinessContactService.getBusinessContact(any())).thenReturn(res)
 
     def mockUpdateBusinessContactToSoService(res:Future[BusinessContact]) :OngoingStubbing[Future[BusinessContact]] =
-      when(mockBusinessContactService.updateBusinessContact(any(),any())(any())).thenReturn(res)
+      when(mockBusinessContactService.updateBusinessContact(any(),any())).thenReturn(res)
 
 
   "getBusinessContact" should {

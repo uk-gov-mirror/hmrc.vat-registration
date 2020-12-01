@@ -24,12 +24,11 @@ import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models._
 import models.api.{Threshold, _}
-import models.external.CurrentProfile
 import models.submission.OwnerProprietor
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
-import play.api.libs.json.{JsValue, Json, Reads}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -38,7 +37,7 @@ import scala.concurrent.Future
 class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationFixture {
 
   class Setup {
-    lazy val service: VatRegistrationService = new VatRegistrationService (mockRegistrationMongoRepository, backendConfig, mockHttpClient){
+    lazy val service: VatRegistrationService = new VatRegistrationService(mockRegistrationMongoRepository, backendConfig, mockHttpClient) {
       override lazy val vatCancelUrl = "/test/uri"
       override lazy val vatRestartUrl = "/test-uri"
     }
@@ -49,10 +48,9 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
   //TODO - fix these tests when we define how to create new journeys
   "createNewRegistration" ignore {
 
-    val vatScheme = VatScheme(testRegId,testInternalid, None, None, None, status = VatRegStatus.draft)
+    val vatScheme = VatScheme(testRegId, testInternalid, None, None, None, status = VatRegStatus.draft)
 
     "return a existing VatScheme response " in new Setup {
-      val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
 
       when(mockRegistrationMongoRepository.retrieveVatScheme(testRegId)).thenReturn(Future.successful(Some(vatScheme)))
 
@@ -70,26 +68,23 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
     }
 
     "return a new VatScheme response " in new Setup {
-      val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
 
       when(mockRegistrationMongoRepository.retrieveVatScheme(testRegId)).thenReturn(Future.successful(None))
-      when(mockRegistrationMongoRepository.createNewVatScheme(testRegId,testInternalid)).thenReturn(Future.successful(vatScheme))
+      when(mockRegistrationMongoRepository.createNewVatScheme(testRegId, testInternalid)).thenReturn(Future.successful(vatScheme))
 
       await(service.createNewRegistration(testInternalid).value) mustBe Right(vatScheme)
     }
 
     "error when creating VatScheme" in new Setup {
-      val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
       val t = new Exception("Exception")
 
       when(mockRegistrationMongoRepository.retrieveVatScheme(testRegId)).thenReturn(Future.successful(None))
-      when(mockRegistrationMongoRepository.createNewVatScheme(testRegId,testInternalid)).thenReturn(Future.failed(t))
+      when(mockRegistrationMongoRepository.createNewVatScheme(testRegId, testInternalid)).thenReturn(Future.failed(t))
 
       service.createNewRegistration(testInternalid) returnsLeft GenericError(t)
     }
 
     "error with the DB when creating VatScheme" in new Setup {
-      val businessRegistrationSuccessResponse = Right(CurrentProfile("1", None, ""))
       val t = InsertFailed("regId", "VatScheme")
 
       when(mockRegistrationMongoRepository.retrieveVatScheme(testRegId)).thenReturn(Future.successful(None))
@@ -118,10 +113,10 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
     "return true" when {
       "the document has been deleted" in new Setup {
         AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-        when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.any())(ArgumentMatchers.any()))
+        when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.any()))
           .thenReturn(Future.successful(Some(testVatScheme)))
 
-        when(mockRegistrationMongoRepository.deleteVatScheme(ArgumentMatchers.any())(ArgumentMatchers.any()))
+        when(mockRegistrationMongoRepository.deleteVatScheme(ArgumentMatchers.any()))
           .thenReturn(Future.successful(true))
 
         await(service.deleteVatScheme(testRegId, VatRegStatus.draft, VatRegStatus.rejected)) mustBe true
@@ -131,7 +126,7 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
     "throw a MissingRegDoc exception" when {
       "no reg doc is found" in new Setup {
         AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-        when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.any())(ArgumentMatchers.any()))
+        when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.any()))
           .thenReturn(Future.successful(None))
 
         intercept[MissingRegDocument](await(service.deleteVatScheme(testRegId, VatRegStatus.draft, VatRegStatus.rejected)))
@@ -141,7 +136,7 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
     "throw an InvalidSubmissionStatus exception" when {
       "the reg doc status is not valid for cancellation" in new Setup {
         AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-        when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.any())(ArgumentMatchers.any()))
+        when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.any()))
           .thenReturn(Future.successful(Some(testVatScheme.copy(status = VatRegStatus.submitted))))
 
         intercept[InvalidSubmissionStatus](await(service.deleteVatScheme(testRegId, VatRegStatus.draft, VatRegStatus.rejected)))
@@ -262,8 +257,6 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
 
       when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any())).thenReturn(Future.successful(Some(eligibilitySubmissionData)))
 
-      implicit val read: Reads[Threshold] = Threshold.eligibilityDataJsonReads
-
       await(service.getThreshold("regId")) mustBe Some(expected)
     }
   }
@@ -289,8 +282,6 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
       val expected: TurnoverEstimates = TurnoverEstimates(turnoverEstimate = 10001)
 
       when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any())).thenReturn(Future.successful(Some(eligibilitySubmissionData)))
-
-      implicit val read: Reads[TurnoverEstimates] = TurnoverEstimates.eligibilityDataJsonReads
 
       await(service.getTurnoverEstimates("regId")) mustBe Some(expected)
     }

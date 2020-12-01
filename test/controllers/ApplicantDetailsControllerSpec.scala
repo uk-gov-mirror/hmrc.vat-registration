@@ -22,7 +22,6 @@ import helpers.VatRegSpec
 import models.api.{ApplicantDetails, BvPass}
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
-import org.mockito.stubbing.OngoingStubbing
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.FakeRequest
@@ -62,7 +61,7 @@ class ApplicantDetailsControllerSpec extends VatRegSpec with VatRegistrationFixt
   "getApplicantDetailsData" should {
     "returns a valid json if found for id" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-      when(mockApplicantDetailsService.getApplicantDetailsData(any())(any()))
+      when(mockApplicantDetailsService.getApplicantDetailsData(any()))
         .thenReturn(Future.successful(Some(validApplicantDetails)))
 
       val result: Future[Result] = controller.getApplicantDetailsData(testRegId)(FakeRequest())
@@ -73,7 +72,7 @@ class ApplicantDetailsControllerSpec extends VatRegSpec with VatRegistrationFixt
 
     "returns 204 if none found" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-      when(mockApplicantDetailsService.getApplicantDetailsData(any())(any()))
+      when(mockApplicantDetailsService.getApplicantDetailsData(any()))
         .thenReturn(Future.successful(None))
 
       val result: Future[Result] = controller.getApplicantDetailsData(testRegId)(FakeRequest())
@@ -83,7 +82,7 @@ class ApplicantDetailsControllerSpec extends VatRegSpec with VatRegistrationFixt
 
     "returns 404 if none found" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-      when(mockApplicantDetailsService.getApplicantDetailsData(any())(any()))
+      when(mockApplicantDetailsService.getApplicantDetailsData(any()))
         .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
       val result: Future[Result] = controller.getApplicantDetailsData(testRegId)(FakeRequest())
@@ -108,7 +107,7 @@ class ApplicantDetailsControllerSpec extends VatRegSpec with VatRegistrationFixt
 
     "returns 200 if successful" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-      when(mockApplicantDetailsService.updateApplicantDetailsData(any(), any())(any()))
+      when(mockApplicantDetailsService.updateApplicantDetailsData(any(), any()))
         .thenReturn(Future.successful(upsertApplicantDetails))
 
       val result: Future[Result] = controller.updateApplicantDetailsData(testRegId)(FakeRequest().withBody(upsertApplicantDetailsJson))
@@ -118,7 +117,7 @@ class ApplicantDetailsControllerSpec extends VatRegSpec with VatRegistrationFixt
 
     "returns 404 if the registration is not found" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-      when(mockApplicantDetailsService.updateApplicantDetailsData(any(), any())(any()))
+      when(mockApplicantDetailsService.updateApplicantDetailsData(any(), any()))
         .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
       val result: Future[Result] = controller.updateApplicantDetailsData(testRegId)(FakeRequest().withBody(upsertApplicantDetailsJson))
@@ -127,7 +126,7 @@ class ApplicantDetailsControllerSpec extends VatRegSpec with VatRegistrationFixt
 
     "returns 500 if an error occurs" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
-      when(mockApplicantDetailsService.updateApplicantDetailsData(any(), any())(any()))
+      when(mockApplicantDetailsService.updateApplicantDetailsData(any(), any()))
         .thenReturn(Future.failed(new Exception))
 
       val result: Future[Result] = controller.updateApplicantDetailsData(testRegId)(FakeRequest().withBody(upsertApplicantDetailsJson))

@@ -17,13 +17,12 @@
 package helpers
 
 import cats.instances.FutureInstances
-import cats.implicits._
 import config.BackendConfig
 import mocks.VatMocks
 import org.mockito.Mockito.reset
+import org.scalatest.{BeforeAndAfterEach, Inside}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
-import org.scalatest.{BeforeAndAfterEach, Inside, ParallelTestExecution}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 import scala.concurrent.ExecutionContext

@@ -19,7 +19,7 @@ package auth
 import play.api.Logger
 import play.api.mvc.Result
 import play.api.mvc.Results._
-import uk.gov.hmrc.auth.core.retrieve.Retrievals.internalId
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.auth.core.{AuthorisationException, AuthorisedFunctions}
 import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits.global

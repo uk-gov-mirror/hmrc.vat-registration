@@ -18,7 +18,6 @@ package repositories.trafficmanagement
 
 import java.time.LocalDate
 
-import auth.AuthorisationResource
 import config.BackendConfig
 import javax.inject.{Inject, Singleton}
 import models.api.DailyQuota
@@ -26,10 +25,7 @@ import play.api.libs.json.{JsString, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONObjectID
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import utils.TimeMachine
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -55,7 +51,7 @@ class DailyQuotaRepository @Inject()(mongo: ReactiveMongoComponent,
 
   private def today: LocalDate = timeMachine.today
 
-  def checkQuota(implicit hc: HeaderCarrier): Future[Boolean] =
+  def checkQuota: Future[Boolean] =
     find("date" -> JsString(today.toString))
       .map(_.headOption.getOrElse(DailyQuota(today)))
       .flatMap {
@@ -65,7 +61,7 @@ class DailyQuotaRepository @Inject()(mongo: ReactiveMongoComponent,
           incrementTotal.map(_ => false)
       }
 
-  def incrementTotal(implicit hc: HeaderCarrier): Future[Int] = {
+  def incrementTotal: Future[Int] = {
     val selector = Json.obj("date" -> today.toString)
     val modifier = Json.obj("$inc" -> Json.obj("currentTotal" -> 1))
 

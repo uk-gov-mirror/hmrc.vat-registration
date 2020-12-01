@@ -41,7 +41,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
   "fetchFlatRateScheme" should {
     "return an OK with a full valid flat rate scheme json if the document contains it" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId,testInternalid)
-      when(mockFlatRateSchemeService.retrieveFlatRateScheme(any())(any()))
+      when(mockFlatRateSchemeService.retrieveFlatRateScheme(any()))
         .thenReturn(Future.successful(Some(validFullFlatRateScheme)))
 
       val result: Future[Result] = controller.fetchFlatRateScheme(testRegId)(FakeRequest())
@@ -51,7 +51,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
 
     "return an OK with a valid flat rate scheme json where the frsDetails is not present" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId,testInternalid)
-      when(mockFlatRateSchemeService.retrieveFlatRateScheme(any())(any()))
+      when(mockFlatRateSchemeService.retrieveFlatRateScheme(any()))
         .thenReturn(Future.successful(Some(validEmptyFlatRateScheme)))
 
       val result: Future[Result] = controller.fetchFlatRateScheme(testRegId)(FakeRequest())
@@ -61,7 +61,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
 
     "return a NoContent if the flat rate scheme block is not present in the document" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId,testInternalid)
-      when(mockFlatRateSchemeService.retrieveFlatRateScheme(any())(any()))
+      when(mockFlatRateSchemeService.retrieveFlatRateScheme(any()))
         .thenReturn(Future.successful(None))
 
       val result: Future[Result] = controller.fetchFlatRateScheme(testRegId)(FakeRequest())
@@ -70,7 +70,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
 
     "return NotFound if the registration document was not found for the regId provided" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId,testInternalid)
-      when(mockFlatRateSchemeService.retrieveFlatRateScheme(any())(any()))
+      when(mockFlatRateSchemeService.retrieveFlatRateScheme(any()))
         .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
       val result: Future[Result] = controller.fetchFlatRateScheme(testRegId)(FakeRequest())
@@ -88,7 +88,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
   "updateFlatRateScheme" should {
     "returns Ok if successful with a full flat rate scheme" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId,testInternalid)
-      when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any())(any()))
+      when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any()))
         .thenReturn(Future.successful(validFullFlatRateScheme))
 
       val result: Future[Result] = controller.updateFlatRateScheme(testRegId)(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
@@ -98,7 +98,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
 
     "returns Ok if successful with a missing frsDetails" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId,testInternalid)
-      when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any())(any()))
+      when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any()))
         .thenReturn(Future.successful(validEmptyFlatRateScheme))
 
       val result: Future[Result] = controller.updateFlatRateScheme(testRegId)(FakeRequest().withBody[JsObject](validEmptyFlatRateSchemeJson))
@@ -108,7 +108,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
 
     "returns NotFound if the registration is not found" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId,testInternalid)
-      when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any())(any()))
+      when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any()))
         .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
       val result: Future[Result] = controller.updateFlatRateScheme(testRegId)(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
@@ -117,7 +117,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
 
     "returns InternalServerError if an error occurs" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId,testInternalid)
-      when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any())(any()))
+      when(mockFlatRateSchemeService.updateFlatRateScheme(any(), any()))
         .thenReturn(Future.failed(new Exception))
 
       val result: Future[Result] = controller.updateFlatRateScheme(testRegId)(FakeRequest().withBody[JsObject](validFullFlatRateSchemeJson))
@@ -135,7 +135,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
   "removeFlatRateScheme" should {
     "returns Ok if successful" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId,testInternalid)
-      when(mockFlatRateSchemeService.removeFlatRateScheme(any())(any()))
+      when(mockFlatRateSchemeService.removeFlatRateScheme(any()))
         .thenReturn(Future.successful(true))
 
       val result: Future[Result] = controller.removeFlatRateScheme(testRegId)(FakeRequest())
@@ -144,7 +144,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
 
     "returns NotFound if the registration is not found" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId,testInternalid)
-      when(mockFlatRateSchemeService.removeFlatRateScheme(any())(any()))
+      when(mockFlatRateSchemeService.removeFlatRateScheme(any()))
         .thenReturn(Future.failed(MissingRegDocument(testRegId)))
 
       val result: Future[Result] = controller.removeFlatRateScheme(testRegId)(FakeRequest())
@@ -153,7 +153,7 @@ class FlatRateSchemeControllerSpec extends VatRegSpec with VatRegistrationFixtur
 
     "returns InternalServerError if an error occurs" in new Setup {
       AuthorisationMocks.mockAuthorised(testRegId,testInternalid)
-      when(mockFlatRateSchemeService.removeFlatRateScheme(any())(any()))
+      when(mockFlatRateSchemeService.removeFlatRateScheme(any()))
         .thenReturn(Future.failed(new Exception))
 
       val result: Future[Result] = controller.removeFlatRateScheme(testRegId)(FakeRequest())

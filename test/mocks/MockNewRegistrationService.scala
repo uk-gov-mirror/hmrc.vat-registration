@@ -23,7 +23,6 @@ import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.Suite
 import org.scalatestplus.mockito.MockitoSugar
 import services.NewRegistrationService
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
@@ -34,7 +33,7 @@ trait MockNewRegistrationService extends MockitoSugar {
 
   def mockNewRegistration(internalId: String)
                          (response: Future[VatScheme]): OngoingStubbing[Future[VatScheme]] =
-    when(mockNewRegistrationService.newRegistration(ArgumentMatchers.eq(internalId))(ArgumentMatchers.any[HeaderCarrier]))
+    when(mockNewRegistrationService.newRegistration(ArgumentMatchers.eq(internalId)))
     .thenReturn(response)
 
 }

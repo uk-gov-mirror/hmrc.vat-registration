@@ -17,7 +17,6 @@
 package itutil
 
 import cats.data.{EitherT, OptionT}
-import org.scalatest.Matchers
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.PlaySpec
 import play.api.mvc.Result

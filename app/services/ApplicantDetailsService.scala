@@ -20,16 +20,16 @@ import javax.inject.{Inject, Singleton}
 import models.api.ApplicantDetails
 import repositories.RegistrationMongoRepository
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
 class ApplicantDetailsService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
-  def getApplicantDetailsData(regId: String)(implicit ex: ExecutionContext): Future[Option[ApplicantDetails]] = {
+  def getApplicantDetailsData(regId: String): Future[Option[ApplicantDetails]] = {
     registrationRepository.getApplicantDetails(regId)
   }
 
-  def updateApplicantDetailsData(regId: String, applicantDetails: ApplicantDetails)(implicit ex: ExecutionContext): Future[ApplicantDetails] = {
+  def updateApplicantDetailsData(regId: String, applicantDetails: ApplicantDetails): Future[ApplicantDetails] = {
     registrationRepository.patchApplicantDetails(regId, applicantDetails)
   }
 

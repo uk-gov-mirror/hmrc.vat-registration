@@ -16,8 +16,6 @@
 
 package models
 
-import java.util
-
 import auth.CryptoSCRS
 import com.typesafe.config.ConfigFactory
 import helpers.VatRegSpec
@@ -64,7 +62,6 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
         Json.fromJson[BankAccount](fullBankAccountJson) mustBe JsSuccess(fullBankAccountModel)
       }
       "from full Json without details" in {
-        val bankAccount = BankAccount(isProvided = false, None)
         Json.fromJson[BankAccount](noDetailsBankAccountJson) mustBe JsSuccess(noDetailsBankAccountModel)
       }
     }

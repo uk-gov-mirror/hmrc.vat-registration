@@ -18,7 +18,6 @@ package auth
 
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
-import org.scalatest.Matchers
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status
@@ -26,9 +25,8 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.retrieve.Credentials
-import uk.gov.hmrc.auth.core.retrieve.~
-import uk.gov.hmrc.auth.core.retrieve.Retrievals._
+import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
@@ -59,7 +57,7 @@ class AuthClient101Spec extends PlaySpec with MockitoSugar {
 
     def isAuthorisedWithCredId: Action[AnyContent] = Action.async { implicit request =>
       authorised().retrieve(credentials) {
-        cred => Future.successful(Ok(cred.providerId))
+        case Some(cred) => Future.successful(Ok(cred.providerId))
       } recover {
         case _ => Forbidden
       }
@@ -67,7 +65,7 @@ class AuthClient101Spec extends PlaySpec with MockitoSugar {
 
     def isAuthorisedWithExternalIdAndCredId: Action[AnyContent] = Action.async { implicit request =>
       authorised().retrieve(externalId and credentials) {
-        case Some(id) ~ cred =>
+        case Some(id) ~ Some(cred) =>
           val json = Json.obj("externalId" -> id, "providerId" -> cred.providerId)
           Future.successful(Ok(Json.toJson(json)))
         case _ => Future.successful(NoContent)
@@ -116,8 +114,8 @@ class AuthClient101Spec extends PlaySpec with MockitoSugar {
 
   "Calling authorise().retrieve(credentials)" should {
     "return 200 with a valid providerId" in {
-      when(mockAuthConnector.authorise[Credentials](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any()))
-        .thenReturn(Future.successful(Credentials("some-provider-id", "some-provider-type")))
+      when(mockAuthConnector.authorise[Option[Credentials]](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any()))
+        .thenReturn(Future.successful(Some(Credentials("some-provider-id", "some-provider-type"))))
 
       val result = TestController.isAuthorisedWithCredId(FakeRequest())
       status(result) mustBe OK
@@ -129,8 +127,8 @@ class AuthClient101Spec extends PlaySpec with MockitoSugar {
     "return 200 with a valid externalId and providerId" in {
       val cred = Credentials("some-provider-id", "some-provider-type")
 
-      when(mockAuthConnector.authorise[Option[String] ~ Credentials](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(),
-        ArgumentMatchers.any())).thenReturn(Future.successful(new ~(Some("some-external-id"), cred)))
+      when(mockAuthConnector.authorise[Option[String] ~ Option[Credentials]](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(),
+        ArgumentMatchers.any())).thenReturn(Future.successful(new ~(Some("some-external-id"), Some(cred))))
 
       val result = TestController.isAuthorisedWithExternalIdAndCredId(FakeRequest())
       status(result) mustBe OK
@@ -141,17 +139,15 @@ class AuthClient101Spec extends PlaySpec with MockitoSugar {
     "return 204 if there is no externalId" in {
       val cred = Credentials("some-provider-id", "some-provider-type")
 
-      when(mockAuthConnector.authorise[Option[String] ~ Credentials](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(),
-        ArgumentMatchers.any())).thenReturn(Future.successful(new ~(None, cred)))
+      when(mockAuthConnector.authorise[Option[String] ~ Option[Credentials]](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(),
+        ArgumentMatchers.any())).thenReturn(Future.successful(new ~(None, Some(cred))))
 
       val result = TestController.isAuthorisedWithExternalIdAndCredId(FakeRequest())
       status(result) mustBe NO_CONTENT
     }
 
     "return 403 if something failed" in {
-      val cred = Credentials("some-provider-id", "some-provider-type")
-
-      when(mockAuthConnector.authorise[Option[String] ~ Credentials](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(),
+      when(mockAuthConnector.authorise[Option[String] ~ Option[Credentials]](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(),
         ArgumentMatchers.any())).thenReturn(Future.failed(new Exception("something wrong")))
 
       val result = TestController.isAuthorisedWithExternalIdAndCredId(FakeRequest())

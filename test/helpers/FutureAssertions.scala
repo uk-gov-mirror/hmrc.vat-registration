@@ -16,9 +16,9 @@
 
 package helpers
 
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.Materializer
 import cats.data.{EitherT, OptionT}
-import org.scalatest.{Assertion, Matchers}
+import org.scalatest.Assertion
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.JsValue

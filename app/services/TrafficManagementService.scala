@@ -22,7 +22,6 @@ import javax.inject.{Inject, Singleton}
 import models.api._
 import play.api.libs.json.Json
 import repositories.trafficmanagement.{DailyQuotaRepository, TrafficManagementRepository}
-import uk.gov.hmrc.http.HeaderCarrier
 import utils.TimeMachine
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,7 +32,7 @@ class TrafficManagementService @Inject()(dailyQuotaRepository: DailyQuotaReposit
                                          timeMachine: TimeMachine)
                                         (implicit ec: ExecutionContext) {
 
-  def allocate(internalId: String, regId: String)(implicit hc: HeaderCarrier): Future[AllocationResponse] = {
+  def allocate(internalId: String, regId: String): Future[AllocationResponse] = {
     for {
       quotaReached <- dailyQuotaRepository.checkQuota
       channel = if (quotaReached) OTRS else VatReg
@@ -41,14 +40,14 @@ class TrafficManagementService @Inject()(dailyQuotaRepository: DailyQuotaReposit
     } yield if (quotaReached) QuotaReached else Allocated
   }
 
-  def getRegistrationInformation(internalId: String)(implicit hc: HeaderCarrier): Future[Option[RegistrationInformation]] =
+  def getRegistrationInformation(internalId: String): Future[Option[RegistrationInformation]] =
     trafficManagementRepository.getRegistrationInformation(internalId)
 
   def upsertRegistrationInformation(internalId: String,
                                     registrationId: String,
                                     status: RegistrationStatus,
                                     regStartDate: Option[LocalDate],
-                                    channel: RegistrationChannel)(implicit hc: HeaderCarrier): Future[RegistrationInformation] =
+                                    channel: RegistrationChannel): Future[RegistrationInformation] =
     trafficManagementRepository.upsertRegistrationInformation(
       internalId = internalId,
       regId = registrationId,
@@ -56,9 +55,9 @@ class TrafficManagementService @Inject()(dailyQuotaRepository: DailyQuotaReposit
       regStartDate = regStartDate,
       channel = channel)
 
-  def updateStatus(regId: String, status: RegistrationStatus) (implicit hc: HeaderCarrier): Future[Option[RegistrationInformation]] =
+  def updateStatus(regId: String, status: RegistrationStatus): Future[Option[RegistrationInformation]] =
     trafficManagementRepository.findAndUpdate(
-      query = Json.obj("registrationId"-> regId),
+      query = Json.obj("registrationId" -> regId),
       update = Json.obj("$set" -> Json.obj(
         "status" -> RegistrationStatus.toJsString(status))
       ),

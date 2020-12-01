@@ -16,7 +16,6 @@
 
 package httpparsers
 
-import play.api.Logger
 import play.api.http.Status.{BAD_REQUEST, CONFLICT, OK}
 import play.api.libs.json.JsSuccess
 import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}

@@ -18,20 +18,17 @@ package services
 
 import java.util.UUID
 
-import config.BackendConfig
 import featureswitch.core.config.FeatureSwitching
 import javax.inject.{Inject, Singleton}
 import models.api.VatScheme
 import repositories.RegistrationMongoRepository
-import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
-class NewRegistrationService @Inject()(registrationRepository: RegistrationMongoRepository)
-                                      (implicit ec: ExecutionContext, config: BackendConfig) extends FeatureSwitching {
+class NewRegistrationService @Inject()(registrationRepository: RegistrationMongoRepository) extends FeatureSwitching {
 
-  def newRegistration(internalId: String)(implicit hc: HeaderCarrier): Future[VatScheme] = {
+  def newRegistration(internalId: String): Future[VatScheme] = {
     val regId = generateRegistrationId()
 
     registrationRepository.createNewVatScheme(regId, internalId)

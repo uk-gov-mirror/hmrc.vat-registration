@@ -17,12 +17,10 @@
 package repository
 
 import itutil.{ITFixtures, MongoBaseSpec}
-import javax.inject.Inject
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import org.scalatest.{BeforeAndAfterAll, Matchers}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.Helpers._
-import play.modules.reactivemongo.ReactiveMongoComponent
 import repositories.SequenceMongoRepository
 import uk.gov.hmrc.mongo.MongoSpecSupport
 

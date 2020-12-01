@@ -19,7 +19,6 @@ package auth
 import helpers.VatRegSpec
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
-import org.scalatest._
 import play.api.mvc.Results
 import play.api.test.Helpers._
 import repositories.RegistrationMongoRepository

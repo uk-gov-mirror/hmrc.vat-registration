@@ -16,8 +16,8 @@
 
 package helpers
 
+import org.scalatest.{BeforeAndAfterEach, ParallelTestExecution}
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, Matchers, ParallelTestExecution}
 import org.scalatestplus.play.PlaySpec
 
 trait BaseSpec extends PlaySpec with MockitoSugar with BeforeAndAfterEach with ParallelTestExecution

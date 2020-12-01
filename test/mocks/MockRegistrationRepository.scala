@@ -23,7 +23,6 @@ import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.Suite
 import org.scalatestplus.mockito.MockitoSugar
 import repositories.RegistrationMongoRepository
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
@@ -36,8 +35,6 @@ trait MockRegistrationRepository extends MockitoSugar {
     when(mockRegistrationRepository.createNewVatScheme(
       ArgumentMatchers.eq(regId),
       ArgumentMatchers.eq(internalId)
-    )(
-      ArgumentMatchers.any[HeaderCarrier])
-    ).thenReturn(Future.successful(response))
+    )).thenReturn(Future.successful(response))
 
 }

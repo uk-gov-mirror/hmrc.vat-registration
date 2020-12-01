@@ -3,14 +3,10 @@ package repository
 
 import java.time.LocalDate
 
-import itutil.{FakeTimeMachine, IntegrationSpecBase}
+import itutil.IntegrationSpecBase
 import models.api._
-import play.api.Application
-import play.api.inject.bind
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.TimeMachine
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

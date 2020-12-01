@@ -36,7 +36,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import utils.TimeMachine
 
 import scala.concurrent.{ExecutionContext, Future}
-import repositories.trafficmanagement.TrafficManagementRepository
 
 trait VatMocks extends HttpClientMock {
 
@@ -124,69 +123,69 @@ trait VatMocks extends HttpClientMock {
     def mockRetrieveVatSchemeThrowsException(id: String): Unit = {
       val exception = new Exception("Exception")
       val idMatcher: String = anyString()
-      when(mockVatRegistrationService.retrieveVatScheme(idMatcher)(any()))
+      when(mockVatRegistrationService.retrieveVatScheme(idMatcher))
         .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
     }
 
     def mockRetrieveVatScheme(id: String, vatScheme: VatScheme): Unit = {
       val idMatcher: String = anyString()
-      when(mockVatRegistrationService.retrieveVatScheme(idMatcher)(any()))
+      when(mockVatRegistrationService.retrieveVatScheme(idMatcher))
         .thenReturn(serviceResult(vatScheme))
     }
 
     def mockDeleteVatScheme(id: String): Unit = {
-      when(mockVatRegistrationService.deleteVatScheme(Matchers.eq(id), any())(any()))
+      when(mockVatRegistrationService.deleteVatScheme(Matchers.eq(id), any()))
         .thenReturn(Future.successful(true))
     }
 
     def mockDeleteVatSchemeFail(id: String): Unit = {
-      when(mockVatRegistrationService.deleteVatScheme(Matchers.eq(id), any())(any()))
+      when(mockVatRegistrationService.deleteVatScheme(Matchers.eq(id), any()))
         .thenReturn(Future.successful(false))
     }
 
     def mockDeleteVatSchemeInvalidStatus(id: String): Unit = {
-      when(mockVatRegistrationService.deleteVatScheme(Matchers.eq(id), any())(any()))
+      when(mockVatRegistrationService.deleteVatScheme(Matchers.eq(id), any()))
         .thenReturn(Future.failed(new InvalidSubmissionStatus("")))
     }
 
 
     def mockSuccessfulCreateNewRegistration(registrationId: String, internalId: String): Unit = {
-      when(mockVatRegistrationService.createNewRegistration(Matchers.eq(internalId))(any[HeaderCarrier]()))
+      when(mockVatRegistrationService.createNewRegistration(Matchers.eq(internalId)))
         .thenReturn(serviceResult(VatScheme(registrationId, internalId, None, None, None, status = VatRegStatus.draft)))
     }
 
     def mockFailedCreateNewRegistration(registrationId: String, internalId: String): Unit = {
-      when(mockVatRegistrationService.createNewRegistration(Matchers.eq(internalId))(any[HeaderCarrier]()))
+      when(mockVatRegistrationService.createNewRegistration(Matchers.eq(internalId)))
         .thenReturn(serviceError[VatScheme](GenericError(new RuntimeException("something went wrong"))))
     }
 
     def mockFailedCreateNewRegistrationWithDbError(registrationId: String, internalId: String): Unit = {
       val exception = new Exception("Exception")
-      when(mockVatRegistrationService.createNewRegistration(Matchers.eq(internalId))(any[HeaderCarrier]()))
+      when(mockVatRegistrationService.createNewRegistration(Matchers.eq(internalId)))
         .thenReturn(serviceError[VatScheme](GenericDatabaseError(exception, Some("regId"))))
     }
 
     def mockGetAcknowledgementReference(ackRef: String): Unit = {
       val idMatcher: String = anyString()
-      when(mockVatRegistrationService.retrieveAcknowledgementReference(idMatcher)(any()))
+      when(mockVatRegistrationService.retrieveAcknowledgementReference(idMatcher))
         .thenReturn(serviceResult(ackRef))
     }
 
     def mockGetAcknowledgementReferenceServiceUnavailable(exception: Exception): Unit = {
       val idMatcher: String = anyString()
-      when(mockVatRegistrationService.retrieveAcknowledgementReference(idMatcher)(any()))
+      when(mockVatRegistrationService.retrieveAcknowledgementReference(idMatcher))
         .thenReturn(serviceError[String](GenericDatabaseError(exception, Some("regId"))))
     }
 
     def mockGetDocumentStatus(json: JsValue): Unit = {
       val idMatcher: String = anyString()
-      when(mockVatRegistrationService.getStatus(idMatcher)(any()))
+      when(mockVatRegistrationService.getStatus(idMatcher))
         .thenReturn(Future.successful(json))
     }
 
     def mockGetAcknowledgementReferenceExistsError(): Unit = {
       val idMatcher: String = anyString()
-      when(mockVatRegistrationService.retrieveAcknowledgementReference(idMatcher)(any()))
+      when(mockVatRegistrationService.retrieveAcknowledgementReference(idMatcher))
         .thenReturn(serviceError[String](AcknowledgementReferenceExists("regId")))
     }
   }

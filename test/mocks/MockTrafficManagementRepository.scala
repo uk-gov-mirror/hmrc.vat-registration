@@ -24,7 +24,6 @@ import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar
 import repositories.trafficmanagement.TrafficManagementRepository
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
@@ -36,7 +35,7 @@ trait MockTrafficManagementRepository extends MockitoSugar {
                     (response: Future[Option[RegistrationInformation]]): OngoingStubbing[Future[Option[RegistrationInformation]]] =
     when(mockTrafficManagementRepository.getRegistrationInformation(
       ArgumentMatchers.eq(internalId)
-    )(ArgumentMatchers.any[HeaderCarrier])).thenReturn(response)
+    )).thenReturn(response)
 
   def mockUpsertRegInfo(internalId: String,
                         regId: String,
@@ -49,7 +48,7 @@ trait MockTrafficManagementRepository extends MockitoSugar {
       ArgumentMatchers.eq(regId),
       ArgumentMatchers.eq(status),
       ArgumentMatchers.eq(regStartDate),
-      ArgumentMatchers.eq(channel),
-    )(ArgumentMatchers.any[HeaderCarrier])) thenReturn response
+      ArgumentMatchers.eq(channel)
+    )) thenReturn response
 
 }

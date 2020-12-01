@@ -3,7 +3,6 @@ package controllers
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import itutil.IntegrationStubbing
-import models.api._
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.test.Helpers._
@@ -11,7 +10,7 @@ import play.api.test.Helpers._
 class ApplicantDetailsControllerISpec extends IntegrationStubbing {
 
   class Setup extends SetupHelper {
-    def writeAudit: StubMapping = stubPost("/write/audit/merged",200,"")
+    def writeAudit: StubMapping = stubPost("/write/audit/merged", 200, "")
   }
 
   val testApplicantDetailsJson = Json.toJson(testApplicantDetails)

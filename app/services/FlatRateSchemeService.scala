@@ -20,20 +20,20 @@ import javax.inject.{Inject, Singleton}
 import models.api.FlatRateScheme
 import repositories.RegistrationMongoRepository
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
 class FlatRateSchemeService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
-  def retrieveFlatRateScheme(regId: String)(implicit ec: ExecutionContext): Future[Option[FlatRateScheme]] = {
+  def retrieveFlatRateScheme(regId: String): Future[Option[FlatRateScheme]] = {
     registrationRepository.fetchFlatRateScheme(regId)
   }
 
-  def updateFlatRateScheme(regId: String, flatRateScheme: FlatRateScheme)(implicit ec: ExecutionContext): Future[FlatRateScheme] = {
+  def updateFlatRateScheme(regId: String, flatRateScheme: FlatRateScheme): Future[FlatRateScheme] = {
     registrationRepository.updateFlatRateScheme(regId, flatRateScheme)
   }
 
-  def removeFlatRateScheme(regId: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+  def removeFlatRateScheme(regId: String): Future[Boolean] = {
     registrationRepository.removeFlatRateScheme(regId)
   }
 

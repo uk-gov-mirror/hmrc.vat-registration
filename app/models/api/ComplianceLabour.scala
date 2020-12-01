@@ -17,8 +17,7 @@
 package models.api
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Format, Json, OFormat, Reads, Writes, __}
-import play.api.libs.functional.syntax._
+import play.api.libs.json.{Format, OFormat, __}
 
 case class ComplianceLabour(numberOfWorkers: Int,
                             temporaryContracts: Option[Boolean],

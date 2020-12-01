@@ -22,7 +22,7 @@ import common.exceptions._
 import enums.VatRegStatus
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import mocks.{MockTrafficManagementRepository, MockTrafficManagementService}
+import mocks.MockTrafficManagementService
 import mocks.monitoring.MockAuditService
 import models.api._
 import models.monitoring.RegistrationSubmissionAuditing.RegistrationSubmissionAuditModel
@@ -35,7 +35,6 @@ import play.api.libs.json.Json
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import reactivemongo.api.commands.FindAndModifyCommand._
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -71,7 +70,7 @@ class SubmissionServiceSpec extends VatRegSpec
     )
   }
 
-  val testRegInfo = RegistrationInformation(
+  val testRegInfo: RegistrationInformation = RegistrationInformation(
     internalId = testInternalid,
     registrationId = testRegId,
     status = Submitted,
@@ -84,13 +83,13 @@ class SubmissionServiceSpec extends VatRegSpec
 
   "submitVatRegistration" should {
     "successfully submit and return an acknowledgment reference" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
+      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString()))
         .thenReturn(Future.successful(Some(testFullVatScheme)))
-      when(mockSequenceRepository.getNext(any())(any())).thenReturn(Future.successful(100))
-      when(mockRegistrationMongoRepository.prepareRegistrationSubmission(anyString(), any(), any())(any())).thenReturn(Future.successful(true))
-      when(mockRegistrationMongoRepository.saveTransId(any(), anyString())(any())).thenReturn(Future.successful("transID"))
-      when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString(), anyString())(any())).thenReturn(Future.successful(HttpResponse(200)))
-      when(mockRegistrationMongoRepository.finishRegistrationSubmission(anyString(), any())(any())).thenReturn(Future.successful(VatRegStatus.submitted))
+      when(mockSequenceRepository.getNext(any())).thenReturn(Future.successful(100))
+      when(mockRegistrationMongoRepository.prepareRegistrationSubmission(anyString(), any(), any())).thenReturn(Future.successful(true))
+      when(mockRegistrationMongoRepository.saveTransId(any(), anyString())).thenReturn(Future.successful("transID"))
+      when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString(), anyString())(any())).thenReturn(Future.successful(HttpResponse(200, "{}")))
+      when(mockRegistrationMongoRepository.finishRegistrationSubmission(anyString(), any())).thenReturn(Future.successful(VatRegStatus.submitted))
       mockUpdateStatus(testRegId, Submitted)(Future.successful(Some(testRegInfo)))
       when(mockTimeMachine.timestamp).thenReturn(testDateTime)
       val nonRepudiationPayloadString: String = Json.toJson(VatSubmission.fromVatScheme(testFullVatScheme)).toString()
@@ -133,7 +132,7 @@ class SubmissionServiceSpec extends VatRegSpec
 
   "submit" should {
     "return a 200 response and successfully audit when all calls succeed" in new Setup {
-      when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString(), anyString())(any())).thenReturn(Future.successful(HttpResponse(200)))
+      when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString(), anyString())(any())).thenReturn(Future.successful(HttpResponse(200, "{}")))
       mockAuthorise(Retrievals.credentials and Retrievals.affinityGroup and Retrievals.agentCode)(
         Future.successful(
           Some(testCredentials) ~ Some(testAffinityGroup) ~ None
@@ -151,7 +150,7 @@ class SubmissionServiceSpec extends VatRegSpec
     }
 
     "return a 502 response and successfully audit when submission fails with a 502" in new Setup {
-      when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString(), anyString())(any())).thenReturn(Future.successful(HttpResponse(502)))
+      when(mockVatSubmissionConnector.submit(any[VatSubmission], anyString(), anyString())(any())).thenReturn(Future.successful(HttpResponse(502, "{}")))
       mockAuthorise(Retrievals.credentials and Retrievals.affinityGroup and Retrievals.agentCode)(
         Future.successful(
           Some(testCredentials) ~ Some(testAffinityGroup) ~ None
@@ -175,25 +174,25 @@ class SubmissionServiceSpec extends VatRegSpec
     val formattedRefNumber = f"BRVT$sequenceNo%011d"
 
     "throw an exception if the document is not available" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
+      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString()))
         .thenReturn(Future.successful(None))
 
       intercept[MissingRegDocument](await(service.ensureAcknowledgementReference(testRegId, VatRegStatus.draft)))
     }
 
     "get the acknowledgement references if they are available" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
+      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString()))
         .thenReturn(Future.successful(Some(vatScheme)))
 
       await(service.ensureAcknowledgementReference(testRegId, VatRegStatus.draft)) mustBe "testref"
     }
 
     "generate acknowledgment reference if it does not exist" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
+      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString()))
         .thenReturn(Future.successful(Some(vatScheme.copy(status = VatRegStatus.draft, acknowledgementReference = None))))
-      when(mockSequenceRepository.getNext(ArgumentMatchers.eq("AcknowledgementID"))(ArgumentMatchers.any())).thenReturn(sequenceNo.pure)
+      when(mockSequenceRepository.getNext(ArgumentMatchers.eq("AcknowledgementID"))).thenReturn(sequenceNo.pure)
       when(mockRegistrationMongoRepository.prepareRegistrationSubmission(anyString(), ArgumentMatchers.any(),
-        ArgumentMatchers.any())(ArgumentMatchers.any())).thenReturn(Future.successful(true))
+        ArgumentMatchers.any())).thenReturn(Future.successful(true))
 
       await(service.ensureAcknowledgementReference(testRegId, VatRegStatus.draft)) mustBe formattedRefNumber
     }
@@ -211,21 +210,21 @@ class SubmissionServiceSpec extends VatRegSpec
     )
 
     "throw an exception if the document is not available" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.eq(testRegId))(ArgumentMatchers.any()))
+      when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.eq(testRegId)))
         .thenReturn(Future.successful(None))
 
       intercept[MissingRegDocument](await(service.getValidDocumentStatus(testRegId)))
     }
 
     "throw an exception if the document is not locked or draft" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.eq(testRegId))(ArgumentMatchers.any()))
+      when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.eq(testRegId)))
         .thenReturn(Future.successful(Some(vatScheme.copy(status = VatRegStatus.cancelled))))
 
       intercept[InvalidSubmissionStatus](await(service.getValidDocumentStatus(testRegId)))
     }
 
     "return the status as being draft" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.eq(testRegId))(ArgumentMatchers.any()))
+      when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.eq(testRegId)))
         .thenReturn(Future.successful(Some(vatScheme)))
 
       await(service.getValidDocumentStatus(testRegId)) mustBe VatRegStatus.draft
@@ -234,7 +233,7 @@ class SubmissionServiceSpec extends VatRegSpec
 
   "Calling buildDesSubmission" should {
     "successfully create a full DES submission" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.eq(testRegId))(ArgumentMatchers.any()))
+      when(mockRegistrationMongoRepository.retrieveVatScheme(ArgumentMatchers.eq(testRegId)))
         .thenReturn(Future.successful(Some(testFullVatScheme)))
 
       await(service.buildSubmission(testRegId)) mustBe testFullSubmission
@@ -244,14 +243,14 @@ class SubmissionServiceSpec extends VatRegSpec
       val partialScheme: VatScheme = testFullVatScheme.copy(bankAccount = None, flatRateScheme = None)
       val partialDESSubmission: VatSubmission = testFullSubmission.copy(bankDetails = None, flatRateScheme = None)
 
-      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
+      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString()))
         .thenReturn(Future.successful(Some(partialScheme)))
 
       await(service.buildSubmission(testRegId)) mustBe partialDESSubmission
     }
 
     "throw a MissingRegDocument exception when there is no registration in mongo" in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
+      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString()))
         .thenReturn(Future.successful(None))
       intercept[MissingRegDocument](await(service.buildSubmission(testRegId)))
     }
@@ -259,7 +258,7 @@ class SubmissionServiceSpec extends VatRegSpec
     "throw a IllegalStateException when the vat scheme doesn't contain returns" in new Setup {
       val vatSchemeNoTradingDetails: VatScheme = VatScheme(testRegId, testInternalid, None, None, None, status = VatRegStatus.draft)
 
-      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString())(ArgumentMatchers.any()))
+      when(mockRegistrationMongoRepository.retrieveVatScheme(anyString()))
         .thenReturn(Future.successful(Some(vatSchemeNoTradingDetails)))
 
       intercept[IllegalStateException](await(service.buildSubmission(testRegId)))

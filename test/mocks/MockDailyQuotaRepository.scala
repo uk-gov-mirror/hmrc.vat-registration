@@ -16,13 +16,11 @@
 
 package mocks
 
-import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.Suite
 import org.scalatestplus.mockito.MockitoSugar
 import repositories.trafficmanagement.DailyQuotaRepository
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
@@ -32,7 +30,7 @@ trait MockDailyQuotaRepository extends MockitoSugar {
   val mockDailyQuotaRepository = mock[DailyQuotaRepository]
 
   def mockCheckQuota(response: Boolean): OngoingStubbing[Future[Boolean]] =
-    when(mockDailyQuotaRepository.checkQuota(ArgumentMatchers.any[HeaderCarrier]))
+    when(mockDailyQuotaRepository.checkQuota)
       .thenReturn(Future.successful(response))
 
 }

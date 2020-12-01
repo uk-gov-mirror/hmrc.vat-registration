@@ -95,8 +95,7 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
   }
 
   private[services] def ensureAcknowledgementReference(regId: String,
-                                                       status: VatRegStatus.Value
-                                                      )(implicit hc: HeaderCarrier): Future[String] = {
+                                                       status: VatRegStatus.Value): Future[String] = {
     registrationRepository.retrieveVatScheme(regId) flatMap {
       case Some(vs) => vs.acknowledgementReference.fold(
         for {
@@ -108,16 +107,14 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
     }
   }
 
-  private[services] def buildSubmission(regId: String)
-                                       (implicit hc: HeaderCarrier): Future[VatSubmission] = {
+  private[services] def buildSubmission(regId: String): Future[VatSubmission] = {
     registrationRepository.retrieveVatScheme(regId) map {
       case Some(vatScheme) => VatSubmission.fromVatScheme(vatScheme)
       case _ => throw MissingRegDocument(regId)
     }
   }
 
-  private[services] def getValidDocumentStatus(regID: String)
-                                              (implicit hc: HeaderCarrier): Future[VatRegStatus.Value] = {
+  private[services] def getValidDocumentStatus(regID: String): Future[VatRegStatus.Value] = {
     registrationRepository.retrieveVatScheme(regID) map {
       case Some(registration) => registration.status match {
         case VatRegStatus.draft | VatRegStatus.locked => registration.status

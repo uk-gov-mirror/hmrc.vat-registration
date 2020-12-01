@@ -20,14 +20,14 @@ import javax.inject.{Inject, Singleton}
 import models.api.BusinessContact
 import repositories.RegistrationMongoRepository
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
 class BusinessContactService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
-  def getBusinessContact(regId: String)(implicit ec: ExecutionContext): Future[Option[BusinessContact]] =
+  def getBusinessContact(regId: String): Future[Option[BusinessContact]] =
     registrationRepository.fetchBusinessContact(regId)
 
-  def updateBusinessContact(regId: String, businessCont: BusinessContact)(implicit ec: ExecutionContext): Future[BusinessContact] =
-    registrationRepository.updateBusinessContact(regId,businessCont)
+  def updateBusinessContact(regId: String, businessCont: BusinessContact): Future[BusinessContact] =
+    registrationRepository.updateBusinessContact(regId, businessCont)
 }

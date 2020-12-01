@@ -27,7 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class EligibilityService @Inject()(val registrationRepository: RegistrationMongoRepository) {
 
-  def getEligibilityData(regId: String)(implicit ex: ExecutionContext): Future[Option[JsObject]] =
+  def getEligibilityData(regId: String): Future[Option[JsObject]] =
     registrationRepository.fetchEligibilityData(regId)
 
   def updateEligibilityData(regId: String, eligibilityData: JsObject)(implicit ex: ExecutionContext): Future[JsObject] = {

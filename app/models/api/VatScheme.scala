@@ -39,7 +39,7 @@ case class VatScheme(id: String,
 
 object VatScheme {
 
-  val apiWrites : OWrites[VatScheme] = (
+  implicit val apiWrites : OWrites[VatScheme] = (
     (__ \ "registrationId").write[String] and
     (__ \ "internalId").write[String] and
     (__ \ "transactionId").writeNullable[TransactionId] and
