@@ -58,7 +58,7 @@ trait ITFixtures {
   val EstimateValue: Long = 1000L
   val zeroRatedTurnoverEstimate: Long = 1000L
   val testCountry = Country(Some("UK"), None)
-  val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some(testCountry))
+  val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some(testCountry), addressValidated = Some(false))
   val testContactDetails = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
   val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
   val testNino = "NB686868C"

@@ -19,6 +19,7 @@ package models.api
 import models.submission.{PartyType, UkCompany}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import utils.JsonUtilities
 
 case class VatSubmission(messageType: String = "SubscriptionCreate",
                          tradersPartyType: Option[PartyType],
@@ -33,7 +34,7 @@ case class VatSubmission(messageType: String = "SubscriptionCreate",
                          eligibilitySubmissionData: EligibilitySubmissionData,
                          returns: Returns)
 
-object VatSubmission {
+object VatSubmission extends JsonUtilities {
   def submissionFormat: Format[VatSubmission] = Format(submissionReads, submissionWrites)
 
   def submissionReads: Reads[VatSubmission] = (
@@ -76,7 +77,7 @@ object VatSubmission {
       .deepMerge(Json.toJson(vatSubmission.eligibilitySubmissionData)(EligibilitySubmissionData.submissionFormat).as[JsObject])
       .deepMerge(Json.toJson(vatSubmission.returns)(Returns.submissionWrites(
         vatSubmission.eligibilitySubmissionData.threshold.mandatoryRegistration
-      )).as[JsObject])
+      )).as[JsObject]) filterNullFields
   }
 
   implicit val mongoFormat: OFormat[VatSubmission] = Json.format[VatSubmission]

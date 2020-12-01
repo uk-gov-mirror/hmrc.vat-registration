@@ -64,7 +64,8 @@ trait ITVatSubmissionFixture {
       |        "line1": "line1",
       |        "line2": "line2",
       |        "postCode": "XX XX",
-      |        "countryCode": "UK"
+      |        "countryCode": "UK",
+      |        "addressValidated": false
       |      }
       |    }
       |  },

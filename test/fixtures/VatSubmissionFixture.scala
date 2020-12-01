@@ -79,7 +79,8 @@ trait VatSubmissionFixture {
       |        "line1": "line1",
       |        "line2": "line2",
       |        "postCode": "XX XX",
-      |        "countryCode": "UK"
+      |        "countryCode": "UK",
+      |        "addressValidated": true
       |      }
       |    }
       |  },
@@ -214,7 +215,8 @@ trait VatSubmissionFixture {
       |        "line1": "line1",
       |        "line2": "line2",
       |        "postCode": "XX XX",
-      |        "countryCode": "UK"
+      |        "countryCode": "UK",
+      |        "addressValidated": true
       |      }
       |    }
       |  },
@@ -344,7 +346,8 @@ trait VatSubmissionFixture {
       |        "line1": "line1",
       |        "line2": "line2",
       |        "postCode": "XX XX",
-      |        "countryCode": "UK"
+      |        "countryCode": "UK",
+      |        "addressValidated": true
       |      }
       |    }
       |  },
@@ -447,7 +450,8 @@ trait VatSubmissionFixture {
       |      "postcode": "XX XX",
       |      "country": {
       |         "code": "UK"
-      |      }
+      |      },
+      |      "addressValidated": true
       |    },
       |    "contact": {
       |      "email": "skylake@vilikariet.com"
