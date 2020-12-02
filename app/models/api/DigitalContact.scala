@@ -22,18 +22,18 @@ import play.api.libs.json.Reads._
 
 case class DigitalContact(email: String, tel: Option[String], mobile: Option[String])
 
-object DigitalContact extends VatDigitalContactValidator {
+object DigitalContact {
 
   val apiFormat: Format[DigitalContact] = (
-    (__ \ "email").format[String](maxLength[String](70) keepAnd emailValidator) and
-    (__ \ "tel").formatNullable[String](telValidator) and
-    (__ \ "mobile").formatNullable[String](mobileValidator)
+    (__ \ "email").format[String] and
+    (__ \ "tel").formatNullable[String] and
+    (__ \ "mobile").formatNullable[String]
   )(DigitalContact.apply, unlift(DigitalContact.unapply))
 
   val submissionFormat: OFormat[DigitalContact] = (
-    (__ \ "email").format[String](maxLength[String](70) keepAnd emailValidator) and
-    (__ \ "telephone").formatNullable[String](telValidator) and
-    (__ \ "mobileNumber").formatNullable[String](mobileValidator)
+    (__ \ "email").format[String] and
+    (__ \ "telephone").formatNullable[String] and
+    (__ \ "mobileNumber").formatNullable[String]
   )(DigitalContact.apply, unlift(DigitalContact.unapply))
 
 }

@@ -25,12 +25,12 @@ case class DigitalContactOptional(email: Option[String] = None,
                                   mobile: Option[String] = None,
                                   emailVerified: Option[Boolean] = None)
 
-object DigitalContactOptional extends VatDigitalContactValidator {
+object DigitalContactOptional {
   implicit val format: Format[DigitalContactOptional] = new Format[DigitalContactOptional] {
     val defaultFormat: Format[DigitalContactOptional] = (
-      (__ \ "email").formatNullable[String](readToFmt(maxLength[String](70) keepAnd email)) and
-      (__ \ "tel").formatNullable[String](telValidator) and
-      (__ \ "mobile").formatNullable[String](mobileValidator) and
+      (__ \ "email").formatNullable[String] and
+      (__ \ "tel").formatNullable[String] and
+      (__ \ "mobile").formatNullable[String] and
       (__ \ "emailVerified").formatNullable[Boolean]
     )(DigitalContactOptional.apply, unlift(DigitalContactOptional.unapply))
 
@@ -54,4 +54,5 @@ object DigitalContactOptional extends VatDigitalContactValidator {
       write = { _: Option[Boolean] => Json.obj() }
     )
   )(DigitalContactOptional.apply, unlift(DigitalContactOptional.unapply))
+
 }

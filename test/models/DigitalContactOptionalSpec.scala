@@ -62,62 +62,6 @@ class DigitalContactOptionalSpec extends BaseSpec with JsonFormatValidation {
         val result = Json.fromJson[DigitalContactOptional](json)
         result shouldHaveErrors (JsPath() -> JsonValidationError("error.path.missing.atLeast.oneValue"))
       }
-
-      "Json with invalid char email" in {
-        val json = Json.parse(
-          s"""
-             |{
-             |  "email":"test%£@test.com",
-             |  "tel":"12345678910",
-             |  "mobile":"12345678910"
-             |}
-        """.stripMargin)
-
-        val result = Json.fromJson[DigitalContactOptional](json)
-        result shouldHaveErrors (JsPath() \ "email" -> JsonValidationError("error.email"))
-      }
-
-      "Json with invalid email length" in {
-        val json = Json.parse(
-          s"""
-             |{
-             |  "email":"testtesttesttesttesttestesttesttesttestteyyyysttettesttesttesttesttesttestteuutttttt@test.com",
-             |  "tel":"12345678910",
-             |  "mobile":"12345678910"
-             |}
-        """.stripMargin)
-
-        val result = Json.fromJson[DigitalContactOptional](json)
-        result shouldHaveErrors (JsPath() \ "email" -> JsonValidationError("error.maxLength", 70))
-      }
-
-      "Json with invalid Telephone" in {
-        val json = Json.parse(
-          s"""
-             |{
-             |  "email":"test@test.com",
-             |  "tel":"ABC_12345678910",
-             |  "mobile":"12345678910"
-             |}
-        """.stripMargin)
-
-        val result = Json.fromJson[DigitalContactOptional](json)
-        result shouldHaveErrors (JsPath() \ "tel" -> JsonValidationError("error.pattern"))
-      }
-
-      "Json with invalid Mobile" in {
-        val json = Json.parse(
-          s"""
-             |{
-             |  "email":"test@test.com",
-             |  "tel":"12345678910",
-             |  "mobile":"ABC_12345678910"
-             |}
-        """.stripMargin)
-
-        val result = Json.fromJson[DigitalContactOptional](json)
-        result shouldHaveErrors (JsPath() \ "mobile" -> JsonValidationError("error.pattern"))
-      }
     }
   }
 }
