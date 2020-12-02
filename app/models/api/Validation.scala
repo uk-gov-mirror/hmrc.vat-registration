@@ -50,12 +50,6 @@ trait VatChoiceValidator extends Validation {
   val reasonValidator: Format[String]    = acceptOnly("COMPANY_ALREADY_SELLS_TAXABLE_GOODS_OR_SERVICES", "COMPANY_INTENDS_TO_SELLS_TAXABLE_GOODS_OR_SERVICES_IN_THE_FUTURE", "NEITHER")
 }
 
-trait VatDigitalContactValidator extends Validation {
-  val emailValidator: Format[String]  = readToFmt(email)
-  val telValidator: Format[String]    = readToFmt(pattern("^[A-Z0-9 )/(*#+-]+$".r))
-  val mobileValidator: Format[String] = readToFmt(pattern("^[A-Z0-9 )/(*#+-]+$".r))
-}
-
 trait VatApplicantDetailsValidator extends Validation {
   val ninoValidator: Format[String]   = readToFmt(pattern("[[A-Z]&&[^DFIQUV]][[A-Z]&&[^DFIQUVO]] ?\\d{2} ?\\d{2} ?\\d{2} ?[A-D]{1}".r))
   val roleValidator: Format[String]   = acceptOnly("director", "secretary")
