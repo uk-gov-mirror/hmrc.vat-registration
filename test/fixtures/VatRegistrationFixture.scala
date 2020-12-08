@@ -100,7 +100,7 @@ trait VatRegistrationFixture {
 
   lazy val testSicAndCompliance = Some(SicAndCompliance(
     "this is my business description",
-    Some(ComplianceLabour(1000, Some(true), Some(true))),
+    Some(ComplianceLabour(numOfWorkersSupplied = Some(1000), intermediaryArrangement = Some(true), supplyWorkers = true)),
     SicCode("12345", "the flu", "sic details"),
     otherBusinessActivitiesSicAndCompiliance
   ))
@@ -180,9 +180,9 @@ trait VatRegistrationFixture {
        |{
        | "businessDescription": "this is my business description",
        | "labourCompliance" : {
-       | "numberOfWorkers": 1000,
-       | "temporaryContracts":true,
-       | "skilledWorkers":true
+       | "numOfWorkersSupplied": 1000,
+       | "intermediaryArrangement":true,
+       | "supplyWorkers":true
        |     },
        | "mainBusinessActivity": {
        | "code": "12345",

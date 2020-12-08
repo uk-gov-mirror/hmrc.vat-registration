@@ -474,7 +474,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
   "calling getSicAndCompliance" should {
     val validSicAndCompliance = Some(SicAndCompliance(
       "this is my business description",
-      Some(ComplianceLabour(1000, Some(true), Some(true))),
+      Some(ComplianceLabour(numOfWorkersSupplied = Some(1000), intermediaryArrangement = Some(true), supplyWorkers = true)),
       SicCode("11111", "the flu", "sic details"),
       businessActivities = Nil
     ))
@@ -491,7 +491,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
     "read data to a SicAndCompliance model regardless of whether apivalidation is valid" in new Setup {
       val modelThatDoesNotConformToApiValidation: SicAndCompliance = SicAndCompliance(
         "foo",
-        Some(ComplianceLabour(1, None, None)),
+        Some(ComplianceLabour(numOfWorkersSupplied = Some(1), intermediaryArrangement = None, supplyWorkers = true)),
         SicCode("fooBARFIZZANDBANG1234", "bar", "wizz"),
         businessActivities = List(SicCode("11111 FOO BAR WIZZ AND BANG", "barFoo", "amended other foo")))
       val result: Future[Option[SicAndCompliance]] = for {
@@ -525,7 +525,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
   "calling updateSicAndCompliance" should {
     val validSicAndCompliance: Option[SicAndCompliance] = Some(SicAndCompliance(
       "this is my business description",
-      Some(ComplianceLabour(1000, Some(true), Some(true))),
+      Some(ComplianceLabour(numOfWorkersSupplied = Some(1000), intermediaryArrangement = Some(true), supplyWorkers = true)),
       SicCode("12345", "the flu", "sic details"),
       businessActivities = List(SicCode("99999", "fooBar", "other foo"))
     ))
@@ -542,7 +542,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
     "return an amended Option SicAndCompliance Model when an entry already exists and all fields have changed in the model" in new Setup {
       val amendedModel: SicAndCompliance = SicAndCompliance(
         "foo",
-        Some(ComplianceLabour(1, None, None)),
+        Some(ComplianceLabour(numOfWorkersSupplied = Some(1), intermediaryArrangement = None, supplyWorkers = true)),
         SicCode("foo", "bar", "wizz"),
         businessActivities = List(SicCode("11111", "barFoo", "amended other foo")))
       val result: Future[SicAndCompliance] = for {

@@ -30,43 +30,39 @@ class SicAndComplianceSpec extends BaseSpec {
 
   lazy val sicAndCompliance: SicAndCompliance = SicAndCompliance(
     "test business description",
-    Some(ComplianceLabour(1000, Some(true), Some(true))),
+    Some(ComplianceLabour(numOfWorkersSupplied = Some(1000), intermediaryArrangement = Some(true), supplyWorkers = true)),
     SicCode("12345", "testDesc", "testDetails"),
     businessActivities
   )
 
-  val validFullSubmissionJson: JsValue = Json.parse(
-    """
-      |{
-      | "subscription": {
-      |   "businessActivities": {
-      |     "SICCodes": {
-      |       "primaryMainCode": "12345",
-      |       "mainCode2": "00998",
-      |       "mainCode3": "00889"
-      |     },
-      |     "description": "test business description"
-      |   }
-      | },
-      | "compliance": {
-      |   "numOfWorkers": 1000,
-      |   "tempWorkers": true,
-      |   "provisionOfLabour": true
-      | }
-      |}""".stripMargin)
+  val validFullSubmissionJson: JsValue = Json.obj(
+    "subscription" -> Json.obj(
+      "businessActivities" -> Json.obj(
+        "SICCodes" -> Json.obj(
+          "primaryMainCode" -> "12345",
+          "mainCode2" -> "00998",
+          "mainCode3" -> "00889"
+        ),
+        "description" -> "test business description"
+      )
+    ),
+    "compliance" -> Json.obj(
+      "numOfWorkersSupplied" -> 1000,
+      "intermediaryArrangement" -> true,
+      "supplyWorkers" -> true
+    )
+  )
 
-  val validSubmissionJson: JsValue = Json.parse(
-    """
-      |{
-      | "subscription": {
-      |   "businessActivities": {
-      |     "SICCodes": {
-      |       "primaryMainCode": "12345"
-      |     },
-      |     "description": "test business description"
-      |   }
-      | }
-      |}""".stripMargin)
+  val validSubmissionJson: JsValue = Json.obj(
+    "subscription" -> Json.obj(
+      "businessActivities" -> Json.obj(
+        "SICCodes" -> Json.obj(
+          "primaryMainCode" -> "12345"
+        ),
+        "description" -> "test business description"
+      )
+    )
+  )
 
   "Submission writes" must {
     "write successfully when there is more than 1 sic code and labour compliance" in {

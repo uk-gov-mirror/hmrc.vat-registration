@@ -89,7 +89,15 @@ trait ITFixtures {
   )
 
   val testBusinessContactDetails = BusinessContact(digitalContact = testContactDetails, website = None, ppob = testAddress, commsPreference = Email)
-  val testSicAndCompliance = SicAndCompliance("businessDesc", Some(ComplianceLabour(1, Some(true), Some(true))), SicCode("12345", "sicDesc", "sicDetail"), List(SicCode("12345", "sicDesc", "sicDetail")))
+  val testSicAndCompliance = SicAndCompliance(
+    businessDescription = "businessDesc",
+    labourCompliance = Some(ComplianceLabour(
+      numOfWorkersSupplied = Some(1),
+      intermediaryArrangement = Some(true),
+      supplyWorkers = true)
+    ),
+    mainBusinessActivity = SicCode("12345", "sicDesc", "sicDetail"),
+    businessActivities = List(SicCode("12345", "sicDesc", "sicDetail")))
   val testTurnoverEstimates = TurnoverEstimates(12345678L)
   val testBankDetails = BankAccount(false, None)
   val testThreshold = Threshold(mandatoryRegistration = true, Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))

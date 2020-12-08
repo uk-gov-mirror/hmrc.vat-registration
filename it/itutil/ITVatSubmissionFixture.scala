@@ -109,9 +109,9 @@ trait ITVatSubmissionFixture {
       |    }
       |  },
       |  "compliance": {
-      |    "numOfWorkers": 1000,
-      |    "tempWorkers": true,
-      |    "provisionOfLabour": true
+      |    "numOfWorkersSupplied": 1000,
+      |    "intermediaryArrangement": true,
+      |    "supplyWorkers": true
       |  },
       |  "contact": {
       |    "commDetails": {
