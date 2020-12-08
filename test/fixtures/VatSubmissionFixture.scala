@@ -124,9 +124,9 @@ trait VatSubmissionFixture {
       |    }
       |  },
       |  "compliance": {
-      |    "numOfWorkers": 1000,
-      |    "tempWorkers": true,
-      |    "provisionOfLabour": true
+      |    "numOfWorkersSupplied": 1000,
+      |    "intermediaryArrangement": true,
+      |    "supplyWorkers": true
       |  },
       |  "contact": {
       |    "commDetails": {
@@ -260,9 +260,9 @@ trait VatSubmissionFixture {
       |    }
       |  },
       |  "compliance": {
-      |    "numOfWorkers": 1000,
-      |    "tempWorkers": true,
-      |    "provisionOfLabour": true
+      |    "numOfWorkersSupplied": 1000,
+      |    "intermediaryArrangement": true,
+      |    "supplyWorkers": true
       |  },
       |  "contact": {
       |    "commDetails": {
@@ -391,9 +391,9 @@ trait VatSubmissionFixture {
       |    }
       |  },
       |  "compliance": {
-      |    "numOfWorkers": 1000,
-      |    "tempWorkers": true,
-      |    "provisionOfLabour": true
+      |    "numOfWorkersSupplied": 1000,
+      |    "intermediaryArrangement": true,
+      |    "supplyWorkers": true
       |  },
       |  "contact": {
       |    "commDetails": {
@@ -476,9 +476,9 @@ trait VatSubmissionFixture {
       |  "sicAndCompliance": {
       |    "businessDescription": "this is my business description",
       |    "labourCompliance": {
-      |      "numberOfWorkers": 1000,
-      |      "temporaryContracts": true,
-      |      "skilledWorkers": true
+      |      "numOfWorkersSupplied": 1000,
+      |      "intermediaryArrangement": true,
+      |      "supplyWorkers": true
       |    },
       |    "mainBusinessActivity": {
       |      "code": "12345",

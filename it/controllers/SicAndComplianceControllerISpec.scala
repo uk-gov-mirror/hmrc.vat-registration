@@ -14,7 +14,7 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
 
   val validSicAndCompliance: Option[SicAndCompliance] = Some(SicAndCompliance(
     "this is my business description",
-    Some(ComplianceLabour(1000, Some(true), Some(true))),
+    Some(ComplianceLabour(numOfWorkersSupplied = Some(1000), intermediaryArrangement = Some(true), supplyWorkers = true)),
     SicCode("12345", "the flu", "sic details"),
     Nil
   ))
@@ -25,9 +25,9 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
        |{
        |  "businessDescription": "this is my business description",
        |  "labourCompliance" : {
-       |    "numberOfWorkers": 1000,
-       |    "temporaryContracts":true,
-       |    "skilledWorkers":true
+       |    "numOfWorkersSupplied": 1000,
+       |    "intermediaryArrangement":true,
+       |    "supplyWorkers":true
        |  },
        |  "mainBusinessActivity": {
        |    "code": "12345",
@@ -43,8 +43,8 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
        |{
        |  "businessDescription": "fooBar",
        |  "labourCompliance" : {
-       |    "numberOfWorkers": 10,
-       |    "temporaryContracts":false
+       |    "supplyWorkers": true,
+       |    "intermediaryArrangement":false
        |  },
        |  "mainBusinessActivity": {
        |    "code": "12345",
@@ -66,8 +66,8 @@ class SicAndComplianceControllerISpec extends IntegrationStubbing {
        |{
        |  "businessDescription": "this is my business description",
        |  "labourCompliance" : {
-       |    "numberOfWorkers": 10,
-       |    "temporaryContracts":false
+       |    "supplyWorkers": true,
+       |    "intermediaryArrangement":false
        |  },
        |  "mainBusinessActivity": {
        |    "code": "12345",
