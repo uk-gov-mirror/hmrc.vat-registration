@@ -214,4 +214,14 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
       }
   }
 
+  def storeHonestyDeclaration(regId: String): Action[JsValue] = Action.async(parse.json) {
+    implicit request =>
+      withJsonBody[JsValue] { json =>
+        val honestyDeclarationStatus: Boolean = (json \ "honestyDeclaration").as[Boolean]
+        registrationService.storeHonestyDeclaration(regId, honestyDeclarationStatus).map {
+          _ => Ok
+        }
+      }
+  }
+
 }

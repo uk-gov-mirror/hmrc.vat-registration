@@ -128,7 +128,7 @@ object RegistrationSubmissionAuditing {
             ),
             "previousAddress" -> vatSubmission.applicantDetails.previousAddress.map(Json.toJson(_)(Address.auditFormat)),
             "declarationSigning" -> Json.obj(
-              "confirmInformationDeclaration" -> true,
+              "confirmInformationDeclaration" -> vatSubmission.confirmInformationDeclaration,
               "declarationCapacity" -> vatSubmission.applicantDetails.role
             )
           )

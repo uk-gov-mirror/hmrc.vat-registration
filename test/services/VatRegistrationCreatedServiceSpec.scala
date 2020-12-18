@@ -286,4 +286,13 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
       await(service.getTurnoverEstimates("regId")) mustBe Some(expected)
     }
   }
+
+  "call to store Honesty Declaration status" should {
+    "return value being stored" in new Setup {
+      val testValue = "testValue"
+      when(mockRegistrationMongoRepository.storeHonestyDeclaration("regId", true)).thenReturn(Future(true))
+
+      await(service.storeHonestyDeclaration("regId", true)) mustBe true
+    }
+  }
 }
