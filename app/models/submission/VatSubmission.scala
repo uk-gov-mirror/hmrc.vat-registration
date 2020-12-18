@@ -39,18 +39,18 @@ object VatSubmission extends JsonUtilities {
 
   def submissionReads: Reads[VatSubmission] = (
     (__ \ "messageType").read[String] and
-    (__ \ "customerIdentification" \ "tradersPartyType").readNullable[PartyType] and
-    (__ \ "declaration" \ "declarationSigning" \ "confirmInformationDeclaration").readNullable[Boolean] and
-    (__ \ "subscription" \ "corporateBodyRegistered" \ "companyRegistrationNumber").readNullable[String] and
-    (__).format[ApplicantDetails](ApplicantDetails.submissionReads) and
-    (__ \ "bankDetails").readNullable[JsValue].fmap[Option[BankAccount]](BankAccount.submissionReads) and
-    (__).read[SicAndCompliance](SicAndCompliance.submissionReads) and
-    (__ \ "contact").read[BusinessContact](BusinessContact.submissionFormat) and
-    (__).read[TradingDetails](TradingDetails.submissionFormat) and
-    (__ \ "subscription" \ "schemes").readNullable[FRSDetails](FRSDetails.submissionReads) and
-    (__).read[EligibilitySubmissionData](EligibilitySubmissionData.submissionFormat) and
-    (__).read[Returns](Returns.submissionReads)
-  )(VatSubmission.apply(_, _, _, _, _, _, _, _, _, _, _, _))
+      (__ \ "customerIdentification" \ "tradersPartyType").readNullable[PartyType] and
+      (__ \ "declaration" \ "declarationSigning" \ "confirmInformationDeclaration").readNullable[Boolean] and
+      (__ \ "subscription" \ "corporateBodyRegistered" \ "companyRegistrationNumber").readNullable[String] and
+      (__).format[ApplicantDetails](ApplicantDetails.submissionReads) and
+      (__ \ "bankDetails").readNullable[JsValue].fmap[Option[BankAccount]](BankAccount.submissionReads) and
+      (__).read[SicAndCompliance](SicAndCompliance.submissionReads) and
+      (__ \ "contact").read[BusinessContact](BusinessContact.submissionFormat) and
+      (__).read[TradingDetails](TradingDetails.submissionFormat) and
+      (__ \ "subscription" \ "schemes").readNullable[FRSDetails](FRSDetails.submissionReads) and
+      (__).read[EligibilitySubmissionData](EligibilitySubmissionData.submissionFormat) and
+      (__).read[Returns](Returns.submissionReads)
+    ) (VatSubmission.apply(_, _, _, _, _, _, _, _, _, _, _, _))
 
   def submissionWrites: Writes[VatSubmission] = Writes { vatSubmission: VatSubmission =>
     Json.obj(
@@ -87,7 +87,7 @@ object VatSubmission extends JsonUtilities {
   def fromVatScheme(scheme: VatScheme): VatSubmission =
     VatSubmission(
       tradersPartyType = Some(UkCompany),
-      confirmInformationDeclaration = Some(true),
+      confirmInformationDeclaration = scheme.confirmInformationDeclaration,
       companyRegistrationNumber = Some("CRN"),
       applicantDetails = scheme.applicantDetails.getOrElse(missingSection("ApplicantDetails")),
       bankDetails = scheme.bankAccount,

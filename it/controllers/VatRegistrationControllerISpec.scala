@@ -5,7 +5,7 @@ import enums.VatRegStatus
 import featureswitch.core.config.{FeatureSwitching, StubSubmission}
 import itutil.IntegrationStubbing
 import models.api.VatScheme
-import play.api.libs.json.Json
+import play.api.libs.json.{JsString, Json}
 import play.api.test.Helpers._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -86,6 +86,22 @@ class VatRegistrationControllerISpec extends IntegrationStubbing with FeatureSwi
       )
 
       res.status mustBe INTERNAL_SERVER_ERROR
+    }
+  }
+
+  "PATCH  /:regId/honesty-declaration" should {
+    "return Ok if the honesty declaration is successfully stored" in new Setup {
+      given
+        .user.isAuthorised
+
+      insertIntoDb(testEmptyVatScheme("regId"))
+
+      val res = await(client(controllers.routes.VatRegistrationController.storeHonestyDeclaration(testRegId).url)
+      .patch(Json.obj("honestyDeclaration" -> true))
+      )
+
+      res.status mustBe OK
+      await(repo.findAll()).head.confirmInformationDeclaration mustBe Some(true)
     }
   }
 

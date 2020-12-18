@@ -136,6 +136,7 @@ trait VatRegistrationFixture {
     flatRateScheme = Some(validFullFlatRateScheme),
     applicantDetails = Some(validApplicantDetails),
     eligibilitySubmissionData = Some(testEligibilitySubmissionData),
+    confirmInformationDeclaration = Some(true),
     returns = Some(testReturns.copy(zeroRatedSupplies = Some(zeroRatedSupplies)))
   )
 

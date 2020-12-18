@@ -49,3 +49,5 @@ GET         /:regId/turnover-estimates-data         controllers.VatRegistrationC
 
 GET         /:regId/applicant-details               controllers.ApplicantDetailsController.getApplicantDetailsData(regId: String)
 PATCH       /:regId/applicant-details               controllers.ApplicantDetailsController.updateApplicantDetailsData(regId: String)
+
+PATCH       /:regId/honesty-declaration             controllers.VatRegistrationController.storeHonestyDeclaration(regId: String)

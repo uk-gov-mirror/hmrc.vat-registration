@@ -35,29 +35,31 @@ case class VatScheme(id: String,
                      status: VatRegStatus.Value,
                      eligibilityData: Option[JsObject] = None,
                      eligibilitySubmissionData: Option[EligibilitySubmissionData] = None,
-                     applicantDetails: Option[ApplicantDetails] = None)
+                     applicantDetails: Option[ApplicantDetails] = None,
+                     confirmInformationDeclaration: Option[Boolean] = None)
 
 object VatScheme {
 
-  implicit val apiWrites : OWrites[VatScheme] = (
+  implicit val apiWrites: OWrites[VatScheme] = (
     (__ \ "registrationId").write[String] and
-    (__ \ "internalId").write[String] and
-    (__ \ "transactionId").writeNullable[TransactionId] and
-    (__ \ "tradingDetails").writeNullable[TradingDetails] and
-    (__ \ "returns").writeNullable[Returns] and
-    (__ \ "sicAndCompliance").writeNullable[SicAndCompliance] and
-    (__ \ "businessContact").writeNullable[BusinessContact] and
-    (__ \ "bankAccount").writeNullable[BankAccount] and
-    (__ \ "acknowledgementReference").writeNullable[String] and
-    (__ \ "flatRateScheme").writeNullable[FlatRateScheme] and
-    (__ \ "status").write[VatRegStatus.Value] and
-    (__ \ "eligibilityData").writeNullable[JsObject] and
-    (__ \ "eligibilitySubmissionData").writeNullable[EligibilitySubmissionData] and
-    (__ \ "applicantDetails").writeNullable[ApplicantDetails]
-  )(unlift(VatScheme.unapply))
+      (__ \ "internalId").write[String] and
+      (__ \ "transactionId").writeNullable[TransactionId] and
+      (__ \ "tradingDetails").writeNullable[TradingDetails] and
+      (__ \ "returns").writeNullable[Returns] and
+      (__ \ "sicAndCompliance").writeNullable[SicAndCompliance] and
+      (__ \ "businessContact").writeNullable[BusinessContact] and
+      (__ \ "bankAccount").writeNullable[BankAccount] and
+      (__ \ "acknowledgementReference").writeNullable[String] and
+      (__ \ "flatRateScheme").writeNullable[FlatRateScheme] and
+      (__ \ "status").write[VatRegStatus.Value] and
+      (__ \ "eligibilityData").writeNullable[JsObject] and
+      (__ \ "eligibilitySubmissionData").writeNullable[EligibilitySubmissionData] and
+      (__ \ "applicantDetails").writeNullable[ApplicantDetails] and
+      (__ \ "confirmInformationDeclaration").writeNullable[Boolean]
+    ) (unlift(VatScheme.unapply))
 
   def mongoFormat(crypto: CryptoSCRS): OFormat[VatScheme] = (
-      (__ \ "registrationId").format[String] and
+    (__ \ "registrationId").format[String] and
       (__ \ "internalId").format[String] and
       (__ \ "transactionId").formatNullable[TransactionId] and
       (__ \ "tradingDetails").formatNullable[TradingDetails] and
@@ -70,7 +72,8 @@ object VatScheme {
       (__ \ "status").format[VatRegStatus.Value] and
       (__ \ "eligibilityData").formatNullable[JsObject] and
       (__ \ "eligibilitySubmissionData").formatNullable[EligibilitySubmissionData] and
-      (__ \ "applicantDetails").formatNullable[ApplicantDetails]
-    )(VatScheme.apply, unlift(VatScheme.unapply))
+      (__ \ "applicantDetails").formatNullable[ApplicantDetails] and
+      (__ \ "confirmInformationDeclaration").formatNullable[Boolean]
+    ) (VatScheme.apply, unlift(VatScheme.unapply))
 
 }

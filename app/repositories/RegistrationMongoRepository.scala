@@ -353,4 +353,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
   def updateEligibilitySubmissionData(regId: String, eligibilitySubmissionData: EligibilitySubmissionData): Future[EligibilitySubmissionData] =
     updateBlock(regId, eligibilitySubmissionData, "eligibilitySubmissionData")
 
+  def storeHonestyDeclaration(regId: String, honestyDeclarationData: Boolean): Future[Boolean] =
+    updateBlock(regId, honestyDeclarationData, "confirmInformationDeclaration")
+
 }

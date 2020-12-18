@@ -203,7 +203,8 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
         flatRateScheme = Some(validFullFlatRateScheme),
         tradingDetails = Some(validFullTradingDetails),
         eligibilitySubmissionData = Some(testEligibilitySubmissionData),
-        returns = Some(testReturns.copy(zeroRatedSupplies = Some(zeroRatedSupplies)))
+        returns = Some(testReturns.copy(zeroRatedSupplies = Some(zeroRatedSupplies))),
+        confirmInformationDeclaration = Some(true)
       )
 
       val res = VatSubmission.fromVatScheme(scheme)

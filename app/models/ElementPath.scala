@@ -24,6 +24,7 @@ sealed trait ElementPath {
 }
 
 object ElementPath {
+
   implicit object ElementPathFormatter extends Format[ElementPath] {
     private val pathMap: Map[String, ElementPath] = Seq[ElementPath](
       VatBankAccountPath,
@@ -51,6 +52,7 @@ object ElementPath {
       pathMap.get(json.as[String]).fold[JsResult[ElementPath]](JsError("unrecognised element name"))(ep => JsSuccess(ep))
 
   }
+
 }
 
 case object VatBankAccountPath extends ElementPath {

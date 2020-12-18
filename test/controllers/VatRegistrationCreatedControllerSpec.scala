@@ -433,4 +433,20 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
       status(result) mustBe 404
     }
   }
+
+  "call to storeHonestyDeclaration" should {
+    "return Ok and HonestyDeclaration json when it is returned from the repository" in new Setup {
+      AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
+      val testValue = true
+      when(mockVatRegistrationService.storeHonestyDeclaration(any(), any()))
+        .thenReturn(Future.successful(true))
+
+      lazy val fakeRequest: FakeRequest[JsValue] =
+        FakeRequest().withBody[JsValue](Json.parse(s"""{"honestyDeclaration":$testValue}"""))
+
+      val result: Future[Result] = controller.storeHonestyDeclaration(testRegId)(fakeRequest)
+
+      status(result) mustBe 200
+    }
+  }
 }
