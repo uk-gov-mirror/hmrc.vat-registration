@@ -3,14 +3,15 @@ package controllers
 
 import enums.VatRegStatus
 import featureswitch.core.config.{FeatureSwitching, StubSubmission}
-import itutil.IntegrationStubbing
+import itutil.{ITVatSubmissionFixture, IntegrationStubbing}
 import models.api.VatScheme
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.Json
+import play.api.libs.ws.WSResponse
 import play.api.test.Helpers._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class VatRegistrationControllerISpec extends IntegrationStubbing with FeatureSwitching {
+class VatRegistrationControllerISpec extends IntegrationStubbing with FeatureSwitching with ITVatSubmissionFixture {
 
   class Setup extends SetupHelper
 
@@ -28,15 +29,32 @@ class VatRegistrationControllerISpec extends IntegrationStubbing with FeatureSwi
   }
 
   "PUT /:regID/submit-registration" should {
-    "return OK if the submission is successful" in new Setup {
+    "return OK if the submission is successful with an unregistered business partner" in new Setup {
       enable(StubSubmission)
 
       given
         .user.isAuthorised
-        .regRepo.insertIntoDb(testFullVatScheme, repo.insert)
-        .subscriptionApi.respondsWith(OK)
+        .regRepo.insertIntoDb(testFullVatSchemeWithUnregisteredBusinessPartner, repo.insert)
 
-      val res = await(client(controllers.routes.VatRegistrationController.submitVATRegistration(testRegId).url)
+      stubPost("/vatreg/test-only/vat/subscription", testSubmissionJson, OK, "")
+
+      val res: WSResponse = await(client(controllers.routes.VatRegistrationController.submitVATRegistration(testRegId).url)
+        .put(Json.obj())
+      )
+
+      res.status mustBe OK
+    }
+
+    "return OK if the submission is successful where the business partner is already registered" in new Setup {
+      enable(StubSubmission)
+
+      given
+        .user.isAuthorised
+        .regRepo.insertIntoDb(testMinimalVatSchemeWithRegisteredBusinessPartner, repo.insert)
+
+      stubPost("/vatreg/test-only/vat/subscription", testRegisteredBusinessPartnerSubmissionJson, OK, "")
+
+      val res: WSResponse = await(client(controllers.routes.VatRegistrationController.submitVATRegistration(testRegId).url)
         .put(Json.obj())
       )
 
@@ -63,7 +81,7 @@ class VatRegistrationControllerISpec extends IntegrationStubbing with FeatureSwi
 
       given
         .user.isAuthorised
-        .regRepo.insertIntoDb(testFullVatScheme, repo.insert)
+        .regRepo.insertIntoDb(testFullVatSchemeWithUnregisteredBusinessPartner, repo.insert)
         .subscriptionApi.respondsWith(BAD_GATEWAY)
 
       val res = await(client(controllers.routes.VatRegistrationController.submitVATRegistration(testRegId).url)
@@ -78,7 +96,7 @@ class VatRegistrationControllerISpec extends IntegrationStubbing with FeatureSwi
 
       given
         .user.isAuthorised
-        .regRepo.insertIntoDb(testFullVatScheme, repo.insert)
+        .regRepo.insertIntoDb(testFullVatSchemeWithUnregisteredBusinessPartner, repo.insert)
         .subscriptionApi.respondsWith(BAD_REQUEST)
 
       val res = await(client(controllers.routes.VatRegistrationController.submitVATRegistration(testRegId).url)

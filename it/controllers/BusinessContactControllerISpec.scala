@@ -35,7 +35,7 @@ class BusinessContactControllerISpec extends IntegrationStubbing {
        |  "line1": "line1",
        |  "line2": "line2",
        |  "country": {
-       |    "code": "UK"
+       |    "code": "GB"
        |  }
        | },
        | "contactPreference": "Letter"

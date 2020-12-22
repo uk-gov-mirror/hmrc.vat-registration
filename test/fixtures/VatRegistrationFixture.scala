@@ -28,7 +28,7 @@ import uk.gov.hmrc.auth.core.retrieve.Credentials
 
 trait VatRegistrationFixture {
   lazy val testNino = "AB123456A"
-  lazy val testRole = Some("secretary")
+  lazy val testRole = Some("03") //code for director
   lazy val testRegId = "testRegId"
   lazy val testInternalid = "INT-123-456-789"
   lazy val testTxId: TransactionId = TransactionId("1")
@@ -40,7 +40,7 @@ trait VatRegistrationFixture {
   lazy val testCrn = "testCrn"
   lazy val testCtUtr = Some("testCtUtr")
   lazy val testDateOFIncorp: LocalDate = LocalDate.of(2020, 1, 2)
-  lazy val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some(Country(Some("UK"), None)), addressValidated = Some(true))
+  lazy val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some(Country(Some("GB"), None)), addressValidated = Some(true))
   lazy val testPostcode = "ZZ1 1ZZ"
   lazy val testSicCode = SicCode("88888", "description", "displayDetails")
   lazy val testName = Name(first = Some("Forename"), middle = None, last = "Surname")
@@ -91,8 +91,8 @@ trait VatRegistrationFixture {
     contact = testDigitalContactOptional,
     changeOfName = Some(testFormerName),
     previousAddress = None,
-    businessVerification = Some(BvPass),
-    bpSafeId = Some(testBpSafeId)
+    businessVerification = Some(BvFail),
+    bpSafeId = None
   )
 
   lazy val otherBusinessActivitiesSicAndCompiliance: List[SicCode] =
@@ -108,7 +108,7 @@ trait VatRegistrationFixture {
   lazy val testBusinessContact = Some(BusinessContact(
     digitalContact = DigitalContact("email@email.com", Some("12345"), Some("54321")),
     website = Some("www.foo.com"),
-    ppob = Address("line1", "line2", None, None, Some(testPostcode), Some(Country(Some("UK"), None))),
+    ppob = Address("line1", "line2", None, None, Some(testPostcode), Some(Country(Some("GB"), None))),
     commsPreference = Email
   ))
 
@@ -167,7 +167,7 @@ trait VatRegistrationFixture {
        |  "line2": "line2",
        |  "postcode": "ZZ1 1ZZ",
        |  "country": {
-       |    "code": "UK"
+       |    "code": "GB"
        |  }
        | },
        | "contactPreference": "Email"

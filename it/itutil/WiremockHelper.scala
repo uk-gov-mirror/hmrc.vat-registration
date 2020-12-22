@@ -20,6 +20,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import play.api.libs.json.JsValue
 
 object WiremockHelper {
   val wiremockPort = 11111
@@ -54,6 +55,16 @@ trait WiremockHelper {
 
   def stubPost(url: String, status: Integer, responseBody: String): StubMapping =
     stubFor(post(urlMatching(url))
+      .willReturn(
+        aResponse().
+          withStatus(status).
+          withBody(responseBody)
+      )
+    )
+
+  def stubPost(url: String, requestBody: JsValue, status: Integer, responseBody: String): StubMapping =
+    stubFor(post(urlMatching(url))
+      .withRequestBody(equalToJson(requestBody.toString()))
       .willReturn(
         aResponse().
           withStatus(status).

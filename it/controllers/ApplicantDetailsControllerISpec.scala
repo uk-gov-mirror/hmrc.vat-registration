@@ -13,7 +13,7 @@ class ApplicantDetailsControllerISpec extends IntegrationStubbing {
     def writeAudit: StubMapping = stubPost("/write/audit/merged", 200, "")
   }
 
-  val testApplicantDetailsJson = Json.toJson(testApplicantDetails)
+  val testApplicantDetailsJson = Json.toJson(testUnregisteredApplicantDetails)
 
   val invalidTestApplicantDetailsJson = Json.obj(
     "nino" -> testNino,
@@ -24,7 +24,7 @@ class ApplicantDetailsControllerISpec extends IntegrationStubbing {
     "return OK" in new Setup {
       given.user.isAuthorised
 
-      insertIntoDb(testEmptyVatScheme(testRegId).copy(applicantDetails = Some(testApplicantDetails)))
+      insertIntoDb(testEmptyVatScheme(testRegId).copy(applicantDetails = Some(testUnregisteredApplicantDetails)))
 
       val response: WSResponse = await(client(routes.ApplicantDetailsController.getApplicantDetailsData(testRegId).url).get())
 
@@ -92,7 +92,7 @@ class ApplicantDetailsControllerISpec extends IntegrationStubbing {
 
     "return OK if no data updated because data is same" in new Setup {
       given.user.isAuthorised
-      val scheme = testEmptyVatScheme(testRegId).copy(applicantDetails = Some(testApplicantDetails))
+      val scheme = testEmptyVatScheme(testRegId).copy(applicantDetails = Some(testUnregisteredApplicantDetails))
       insertIntoDb(scheme)
 
       val response: WSResponse = await(client(routes.ApplicantDetailsController.updateApplicantDetailsData(testRegId).url)
