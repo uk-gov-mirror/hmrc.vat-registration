@@ -20,7 +20,7 @@ import java.time.{LocalDate, LocalDateTime, LocalTime}
 import common.TransactionId
 import enums.VatRegStatus
 import models.api._
-import models.submission.{DateOfBirth, OwnerProprietor}
+import models.submission.{DateOfBirth, Director}
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -57,28 +57,45 @@ trait ITFixtures {
   val testFlatRateScheme = FlatRateScheme(joinFrs = true, Some(frsDetails))
   val EstimateValue: Long = 1000L
   val zeroRatedTurnoverEstimate: Long = 1000L
-  val testCountry = Country(Some("UK"), None)
-  val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some(testCountry), addressValidated = Some(false))
+  val testCountry = Country(Some("GB"), None)
+  val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some(testCountry), addressValidated = Some(true))
   val testContactDetails = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
   val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
   val testNino = "NB686868C"
-  val testRole = Some("secretary")
+  val testRole = Some("03") //Code for director role
   val testName = Name(first = Some("Forename"), middle = None, last = "Surname")
   val testFormerName = FormerName(name = Some(oldName), change = Some(testDate))
   val testCompanyName = "testCompanyName"
   val testCrn = "testCrn"
   val testCtUtr = Some("testCtUtr")
-  val testDateOFIncorp = LocalDate.of(2020, 1, 2)
+  val testDateOfIncorp = LocalDate.of(2020, 1, 2)
   val testBpSafeId = "testBpSafeId"
 
-  val testApplicantDetails = ApplicantDetails(
+  val testUnregisteredApplicantDetails: ApplicantDetails = ApplicantDetails(
     nino = testNino,
     role = testRole,
     name = testName,
     dateOfBirth = DateOfBirth(testDate),
     companyName = testCompanyName,
     companyNumber = Some(testCrn),
-    dateOfIncorporation = testDateOFIncorp,
+    dateOfIncorporation = testDateOfIncorp,
+    ctutr = testCtUtr,
+    currentAddress = testAddress,
+    contact = testDigitalContactOptional,
+    changeOfName = Some(testFormerName),
+    previousAddress = None,
+    businessVerification = Some(BvUnchallenged),
+    bpSafeId = None
+  )
+
+  val testRegisteredApplicantDetails: ApplicantDetails = ApplicantDetails(
+    nino = testNino,
+    role = testRole,
+    name = testName,
+    dateOfBirth = DateOfBirth(testDate),
+    companyName = testCompanyName,
+    companyNumber = Some(testCrn),
+    dateOfIncorporation = testDateOfIncorp,
     ctutr = testCtUtr,
     currentAddress = testAddress,
     contact = testDigitalContactOptional,
@@ -99,18 +116,23 @@ trait ITFixtures {
     mainBusinessActivity = SicCode("12345", "sicDesc", "sicDetail"),
     businessActivities = List(SicCode("12345", "sicDesc", "sicDetail")))
   val testTurnoverEstimates = TurnoverEstimates(12345678L)
-  val testBankDetails = BankAccount(false, None)
-  val testThreshold = Threshold(mandatoryRegistration = true, Some(LocalDate.now()), Some(LocalDate.now()), Some(LocalDate.now()))
+  val testBankDetails = BankAccountDetails(
+    name = "testBankName",
+    sortCode = "111111",
+    number = "01234567"
+  )
+
+  val testThreshold = Threshold(mandatoryRegistration = true, Some(testDate), Some(testDate), Some(testDate))
 
   val testEligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
     threshold = testThreshold,
     exceptionOrExemption = "0",
     estimates = TurnoverEstimates(123456),
     customerStatus = MTDfB,
-    completionCapacity = OwnerProprietor
+    completionCapacity = Director
   )
 
-  val testFullVatScheme: VatScheme =
+  lazy val testFullVatSchemeWithUnregisteredBusinessPartner: VatScheme =
     VatScheme(
       id = testRegId,
       internalId = testInternalid,
@@ -119,12 +141,31 @@ trait ITFixtures {
       returns = Some(testReturns),
       sicAndCompliance = Some(testSicAndCompliance),
       businessContact = Some(testBusinessContactDetails),
-      bankAccount = Some(testBankDetails),
+      bankAccount = Some(BankAccount(isProvided = true, Some(testBankDetails))),
       acknowledgementReference = Some("ackRef"),
       flatRateScheme = Some(testFlatRateScheme),
       status = VatRegStatus.draft,
-      applicantDetails = Some(testApplicantDetails),
-      eligibilitySubmissionData = Some(testEligibilitySubmissionData)
+      applicantDetails = Some(testUnregisteredApplicantDetails),
+      eligibilitySubmissionData = Some(testEligibilitySubmissionData),
+      confirmInformationDeclaration = Some(true)
+    )
+
+  lazy val testMinimalVatSchemeWithRegisteredBusinessPartner: VatScheme =
+    VatScheme(
+      id = testRegId,
+      internalId = testInternalid,
+      transactionId = Some(TransactionId(testTransactionId)),
+      tradingDetails = Some(testTradingDetails),
+      returns = Some(testReturns),
+      sicAndCompliance = Some(testSicAndCompliance),
+      businessContact = Some(testBusinessContactDetails),
+      bankAccount = Some(BankAccount(isProvided = false, None)),
+      acknowledgementReference = Some("ackRef"),
+      flatRateScheme = Some(FlatRateScheme(joinFrs = false, None)),
+      status = VatRegStatus.draft,
+      applicantDetails = Some(testRegisteredApplicantDetails),
+      eligibilitySubmissionData = Some(testEligibilitySubmissionData),
+      confirmInformationDeclaration = Some(true)
     )
 
   def testEmptyVatScheme(regId: String): VatScheme = VatScheme(

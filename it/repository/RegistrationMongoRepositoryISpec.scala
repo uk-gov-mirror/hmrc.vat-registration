@@ -148,12 +148,12 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
 
   "Calling clearDownScheme" should {
     "clear any optional data from the vat scheme object" in new Setup {
-      await(repository.insert(testFullVatScheme))
+      await(repository.insert(testFullVatSchemeWithUnregisteredBusinessPartner))
       await(repository.clearDownDocument(testTransactionId)) mustBe true
       await(repository.retrieveVatScheme(testRegId)) mustBe None
     }
     "fail when a already cleared document is cleared" in new Setup {
-      await(repository.insert(testFullVatScheme))
+      await(repository.insert(testFullVatSchemeWithUnregisteredBusinessPartner))
       await(repository.clearDownDocument(testTransactionId)) mustBe true
       await(repository.retrieveVatScheme(testRegId)) mustBe None
       await(repository.clearDownDocument(testTransactionId)) mustBe true
@@ -730,11 +730,11 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
   }
   "getApplicantDetails" should {
     "return applicant details if they exist" in new Setup {
-      await(repository.insert(vatScheme.copy(applicantDetails = Some(testApplicantDetails))))
+      await(repository.insert(vatScheme.copy(applicantDetails = Some(testUnregisteredApplicantDetails))))
       await(repository.count) mustBe 1
 
       val res = await(repository.getApplicantDetails(vatScheme.id))
-      res mustBe Some(testApplicantDetails)
+      res mustBe Some(testUnregisteredApplicantDetails)
     }
 
     "return None if the record is missing" in new Setup {
@@ -752,7 +752,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
 
   "patchApplicantDetails" should {
     "patch with details only" in new Setup {
-      val updatedApplicantDetails = testApplicantDetails.copy(previousAddress = Some(testAddress))
+      val updatedApplicantDetails = testUnregisteredApplicantDetails.copy(previousAddress = Some(testAddress))
 
       await(repository.insert(vatScheme))
       await(repository.count) mustBe 1

@@ -125,9 +125,7 @@ object ApplicantDetails extends VatApplicantDetailsValidator
   private def optionalIds(appDetails: ApplicantDetails): JsObject =
     if (appDetails.bpSafeId.isDefined) {
       Json.obj(
-        "primeBPSafeID" -> appDetails.bpSafeId.map(JsString),
-        "name" -> Json.toJson(appDetails.name)(Name.submissionFormat),
-        "dateOfBirth" -> Json.toJson(appDetails.dateOfBirth)
+        "primeBPSafeID" -> appDetails.bpSafeId.map(JsString)
       )
     }
     else {

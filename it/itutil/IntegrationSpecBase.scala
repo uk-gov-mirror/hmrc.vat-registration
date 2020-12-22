@@ -15,21 +15,17 @@
  */
 package itutil
 
-import auth.CryptoSCRS
-import config.BackendConfig
 import models.api.VatScheme
 import org.scalatest._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsString, Reads, Writes}
 import play.api.libs.ws.{WSClient, WSRequest}
 import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers._
-import play.api.{Application, Configuration}
-import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.WriteResult
 import repositories.trafficmanagement.{DailyQuotaRepository, TrafficManagementRepository}
 import repositories.{RegistrationMongoRepository, SequenceMongoRepository}
@@ -40,12 +36,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait IntegrationSpecBase extends PlaySpec
   with GuiceOneServerPerSuite with ScalaFutures with IntegrationPatience
   with WiremockHelper with BeforeAndAfterEach with BeforeAndAfterAll with DefaultAwaitTimeout {
-
-  lazy val cryptoForTest: CryptoSCRS = new CryptoSCRS(config = app.injector.instanceOf(classOf[Configuration])) {
-
-    override val rds: Reads[String] = Reads[String](_.validate[String])
-    override val wts: Writes[String] = Writes[String](s => JsString(s))
-  }
 
   val mockUrl: String = WiremockHelper.url
   val mockHost: String = WiremockHelper.wiremockHost
@@ -84,14 +74,12 @@ trait IntegrationSpecBase extends PlaySpec
     .overrides(bind[TimeMachine].to[FakeTimeMachine])
     .build()
 
-  trait SetupHelper {
-    lazy val reactiveMongoComponent: ReactiveMongoComponent = app.injector.instanceOf[ReactiveMongoComponent]
-    val fakeTimeMachine = new FakeTimeMachine()
-    val repo: RegistrationMongoRepository = new RegistrationMongoRepository(reactiveMongoComponent, cryptoForTest)
-    val sequenceRepository: SequenceMongoRepository = new SequenceMongoRepository(reactiveMongoComponent)
-    val dailyQuotaRepo: DailyQuotaRepository = new DailyQuotaRepository(reactiveMongoComponent, fakeTimeMachine, app.injector.instanceOf[BackendConfig])
-    val trafficManagementRepo: TrafficManagementRepository = new TrafficManagementRepository(reactiveMongoComponent)
+  lazy val repo: RegistrationMongoRepository = app.injector.instanceOf[RegistrationMongoRepository]
+  lazy val sequenceRepository: SequenceMongoRepository = app.injector.instanceOf[SequenceMongoRepository]
+  lazy val dailyQuotaRepo: DailyQuotaRepository = app.injector.instanceOf[DailyQuotaRepository]
+  lazy val trafficManagementRepo: TrafficManagementRepository = app.injector.instanceOf[TrafficManagementRepository]
 
+  trait SetupHelper {
     await(repo.drop)
     await(repo.ensureIndexes)
     await(sequenceRepository.drop)

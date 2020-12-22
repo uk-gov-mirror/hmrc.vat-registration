@@ -56,7 +56,7 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
   "converting a VatSubmission model into Json" when {
     "safe id is not present" should {
       "produce a valid Json for submission" in {
-        val vatSubmission = testVatSubmission.copy(applicantDetails = validApplicantDetails.copy(bpSafeId = None))
+        val vatSubmission = testVatSubmission
         val json = Json.toJson(vatSubmission)(VatSubmission.submissionFormat)
 
         json mustBe noBpIdVatSubmissionJson
@@ -64,31 +64,22 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
     }
     "safe id is present" should {
       "produce valid json for a mandatory submission with a list of customer ids" in {
-        val json = Json.toJson(testVatSubmission)(VatSubmission.submissionFormat)
-        val expectedJson = (JsPath \ "customerIdentification" \ "customerID")
-          .prune(vatSubmissionJson.as[JsObject].deepMerge(
-            Json.obj("customerIdentification" -> Json.obj(
-              "primeBPSafeID" -> testBpSafeId
-            ))
-          )).get
+        val vatSubmission = testVatSubmission.copy(applicantDetails = validApplicantDetails.copy(bpSafeId = Some(testBpSafeId)))
+        val json = Json.toJson(vatSubmission)(VatSubmission.submissionFormat)
 
-        json mustBe expectedJson
+        json mustBe vatSubmissionJsonWithBp
       }
 
       "produce valid json for a voluntary submission with a list of customer ids" in {
-        val json = Json.toJson(testVatSubmission.copy(
+        val vatSubmission = testVatSubmission.copy(
+          applicantDetails = validApplicantDetails.copy(bpSafeId = Some(testBpSafeId)),
           eligibilitySubmissionData = testEligibilitySubmissionData.copy(
             threshold = testVoluntaryThreshold
           )
-        ))(VatSubmission.submissionFormat)
-        val expectedJson = (JsPath \ "customerIdentification" \ "customerID")
-          .prune(vatSubmissionVoluntaryJson.as[JsObject].deepMerge(
-            Json.obj("customerIdentification" -> Json.obj(
-              "primeBPSafeID" -> testBpSafeId
-            ))
-          )).get
+        )
+        val json = Json.toJson(vatSubmission)(VatSubmission.submissionFormat)
 
-        json mustBe expectedJson
+        json mustBe vatSubmissionVoluntaryJsonWithBp
       }
     }
     "produce a Json to store it in a Mongo DB" in {

@@ -75,7 +75,7 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
 
       stubVatSubmission(OK)()
 
-      await(repo.insert(testFullVatScheme))
+      await(repo.insert(testFullVatSchemeWithUnregisteredBusinessPartner))
 
       val result: WSResponse = await(client(
         controllers.routes.VatRegistrationController.submitVATRegistration(testRegId).url).put(Json.obj())
@@ -94,7 +94,7 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
       given.user.isAuthorised
       stubVatSubmission(OK)()
 
-      await(repo.insert(testFullVatScheme))
+      await(repo.insert(testFullVatSchemeWithUnregisteredBusinessPartner))
 
       val result: WSResponse = await(client(
         controllers.routes.VatRegistrationController.submitVATRegistration(testRegId).url).put(Json.obj())
