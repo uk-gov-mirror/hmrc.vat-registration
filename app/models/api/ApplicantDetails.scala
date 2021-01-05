@@ -35,6 +35,8 @@ case class ApplicantDetails(nino: String,
                             dateOfIncorporation: LocalDate,
                             ctutr: Option[String] = None,
                             businessVerification: Option[BusinessVerificationStatus] = None,
+                            registration: Option[BusinessRegistrationStatus] = None,
+                            identifiersMatch: Option[Boolean] = None,
                             bpSafeId: Option[String] = None,
                             currentAddress: Address,
                             contact: DigitalContactOptional,
@@ -60,6 +62,8 @@ object ApplicantDetails extends VatApplicantDetailsValidator
       (__ \ "dateOfIncorporation").format[LocalDate] and
       (__ \ "ctutr").formatNullable[String] and
       (__ \ "businessVerification").formatNullable[BusinessVerificationStatus] and
+      (__ \ "registration").formatNullable[BusinessRegistrationStatus] and
+      (__ \ "identifiersMatch").formatNullable[Boolean] and
       (__ \ "bpSafeId").formatNullable[String] and
       (__ \ "currentAddress").format[Address] and
       (__ \ "contact").format[DigitalContactOptional] and
@@ -80,6 +84,8 @@ object ApplicantDetails extends VatApplicantDetailsValidator
         dateOfIncorporation = json.getField[LocalDate](corpBodySection \ "dateOfIncorporation"),
         ctutr = json.ctUtr.orElse(None),
         businessVerification = json.businessVerificationStatus,
+        registration  = json.businessRegistrationStatus,
+        identifiersMatch = json.identifiersMatch,
         bpSafeId = json.getOptionalField[String](custInfoSection \ "primeBPSafeID").orElse(None),
         currentAddress = json.getField[Address](appDetailsSection \ "currAddress")(Address.submissionFormat),
         contact = json.getField[DigitalContactOptional](appDetailsSection \ "commDetails")(DigitalContactOptional.submissionFormat),

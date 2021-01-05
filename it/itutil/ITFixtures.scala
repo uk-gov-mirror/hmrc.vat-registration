@@ -85,6 +85,8 @@ trait ITFixtures {
     changeOfName = Some(testFormerName),
     previousAddress = None,
     businessVerification = Some(BvUnchallenged),
+    registration = Some(NotCalledStatus),
+    identifiersMatch = Some(true),
     bpSafeId = None
   )
 

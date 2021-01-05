@@ -27,17 +27,21 @@ case object BvFail extends BusinessVerificationStatus
 
 case object BvUnchallenged extends BusinessVerificationStatus
 
+case object BvCtEnrolled extends BusinessVerificationStatus
+
 object BusinessVerificationStatus {
   implicit val format: Format[BusinessVerificationStatus] = new Format[BusinessVerificationStatus] {
     val BvPassKey = "PASS"
     val BvFailKey = "FAIL"
     val BvUnchallengedKey = "UNCHALLENGED"
+    val BvCtEnrolledKey = "CT_ENROLLED"
 
     override def writes(bvState: BusinessVerificationStatus): JsValue =
       bvState match {
         case BvPass => JsString(BvPassKey)
         case BvFail => JsString(BvFailKey)
         case BvUnchallenged => JsString(BvUnchallengedKey)
+        case BvCtEnrolled => JsString(BvCtEnrolledKey)
       }
 
     override def reads(json: JsValue): JsResult[BusinessVerificationStatus] =
@@ -45,6 +49,7 @@ object BusinessVerificationStatus {
         case BvPassKey => BvPass
         case BvFailKey => BvFail
         case BvUnchallengedKey => BvUnchallenged
+        case BvCtEnrolledKey => BvCtEnrolled
       }
   }
 

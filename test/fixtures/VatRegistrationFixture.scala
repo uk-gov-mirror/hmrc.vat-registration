@@ -92,6 +92,8 @@ trait VatRegistrationFixture {
     changeOfName = Some(testFormerName),
     previousAddress = None,
     businessVerification = Some(BvFail),
+    registration = Some(NotCalledStatus),
+    identifiersMatch = Some(true),
     bpSafeId = None
   )
 
