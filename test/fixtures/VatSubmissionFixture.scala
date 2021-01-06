@@ -681,6 +681,8 @@ trait VatSubmissionFixture {
       |    "dateOfIncorporation": "2020-01-02",
       |    "ctutr": "testCtUtr",
       |    "businessVerification": "FAIL",
+      |    "registration": "REGISTRATION_NOT_CALLED",
+      |    "identifiersMatch": true,
       |    "currentAddress": {
       |      "line1": "line1",
       |      "line2": "line2",

@@ -18,19 +18,149 @@ package models
 
 import fixtures.VatRegistrationFixture
 import helpers.BaseSpec
+import models.api.Returns.JsonUtilities
 import models.api._
-import play.api.libs.json.{Format, JsPath, Json, JsonValidationError}
+import models.submission.{IdUnverifiable, IdVerificationFailed, IdVerificationStatus, IdVerified}
+import play.api.libs.json._
+import uk.gov.hmrc.http.InternalServerException
 
 class ApplicantDetailsSpec extends BaseSpec with JsonFormatValidation with VatRegistrationFixture {
 
   private def writeAndRead[T](t: T)(implicit fmt: Format[T]) = fmt.reads(Json.toJson(fmt.writes(t)))
 
+  val testSafeId = "testSafeId"
+
+  def testJson(idVerificationStatus: Option[IdVerificationStatus] = None,
+               safeId: Option[String] = None): JsValue =
+    Json.obj(
+      "customerIdentification" -> Json.obj(
+        "shortOrgName" -> testCompanyName,
+        "primeBPSafeID" -> safeId,
+        "customerID" -> idVerificationStatus.map(status => Json.arr(
+          Json.obj(
+            "idValue" -> testCtUtr,
+            "idType" -> "UTR",
+            "IDsVerificationStatus" -> status
+          ),
+          Json.obj(
+            "idValue" -> testCrn,
+            "idType" -> "CRN",
+            "IDsVerificationStatus" -> status,
+            "date" -> testDateOFIncorp
+          )
+        ))
+      ),
+      "subscription" -> Json.obj(
+        "corporateBodyRegistered" -> Json.obj(
+          "companyRegistrationNumber" -> testCrn,
+          "dateOfIncorporation" -> testDateOFIncorp,
+          "countryOfIncorporation" -> "GB"
+        )
+      ),
+      "declaration" -> Json.obj(
+        "applicantDetails" -> Json.obj(
+          "commDetails" -> Json.obj(
+            "email" -> "skylake@vilikariet.com"
+          ),
+          "name" -> Json.obj(
+            "firstName" -> "Forename",
+            "lastName" -> "Surname"
+          ),
+          "dateOfBirth" -> testDateOfBirth,
+          "roleInBusiness" -> testRole,
+          "identifiers" -> Json.arr(
+            Json.obj(
+              "idValue" -> testNino,
+              "idType" -> "NINO",
+              "IDsVerificationStatus" -> "1",
+              "date" -> testDate
+            )
+          ),
+          "prevName" -> Json.obj(
+            "firstName" -> "Forename",
+            "lastName" -> "Surname",
+            "nameChangeDate" -> testDate
+          ),
+          "currAddress" -> Json.obj(
+            "postCode" -> "XX XX",
+            "line1" -> "line1",
+            "line2" -> "line2",
+            "addressValidated" -> true,
+            "countryCode" -> "GB"
+          )
+        )
+      )
+    ).filterNullFields
+
   "Creating a Json from a valid VatApplicantDetails model" should {
     "complete successfully" in {
       writeAndRead(validApplicantDetails) resultsIn validApplicantDetails
     }
+
     "complete successfully when 'role' is missing" in {
       writeAndRead(validApplicantDetails.copy(role = None)) resultsIn validApplicantDetails.copy(role = None)
+    }
+  }
+
+  "Creating a Json from a valid VatApplicantDetails model using submission format" should {
+    implicit val format: Format[ApplicantDetails] = Format(ApplicantDetails.submissionReads, ApplicantDetails.submissionWrites)
+
+    "produce a valid json when bpSafeId is present" in {
+      val applicantDetails = validApplicantDetails.copy(
+        bpSafeId = Some(testSafeId),
+        businessVerification = None,
+        registration = None
+      )
+      Json.toJson(applicantDetails) mustBe testJson(safeId = Some(testSafeId))
+    }
+
+    "produce a valid json with BvPassed and registration failed" in {
+      val applicantDetails = validApplicantDetails.copy(
+        businessVerification = Some(BvPass),
+        registration = Some(FailedStatus)
+      )
+      Json.toJson(applicantDetails) mustBe testJson(idVerificationStatus = Some(IdVerified))
+    }
+
+    "produce a valid json with BvCtEnrolled and registration failed" in {
+      val applicantDetails = validApplicantDetails.copy(
+        businessVerification = Some(BvCtEnrolled),
+        registration = Some(FailedStatus)
+      )
+      Json.toJson(applicantDetails) mustBe testJson(idVerificationStatus = Some(IdVerified))
+    }
+
+    "cproduce a valid json with BvFail and registration not called" in {
+      val applicantDetails = validApplicantDetails.copy(
+        businessVerification = Some(BvFail),
+        registration = Some(NotCalledStatus)
+      )
+      Json.toJson(applicantDetails) mustBe testJson(idVerificationStatus = Some(IdVerificationFailed))
+    }
+
+    "produce a valid json with BvUnchallenged and registration not called" in {
+      val applicantDetails = validApplicantDetails.copy(
+        businessVerification = Some(BvUnchallenged),
+        registration = Some(NotCalledStatus)
+      )
+      Json.toJson(applicantDetails) mustBe testJson(idVerificationStatus = Some(IdVerificationFailed))
+    }
+
+    "produce a valid json with no Bv response and registration not called" in {
+      val applicantDetails = validApplicantDetails.copy(
+        businessVerification = Some(BvUnchallenged),
+        registration = Some(NotCalledStatus),
+        identifiersMatch = Some(false)
+      )
+      Json.toJson(applicantDetails) mustBe testJson(idVerificationStatus = Some(IdUnverifiable))
+    }
+
+    "fail to produce valid json with an unsupported response from incorpId" in {
+      val applicantDetails = validApplicantDetails.copy(
+        businessVerification = Some(BvUnchallenged),
+        registration = Some(FailedStatus)
+      )
+      intercept[InternalServerException](Json.toJson(applicantDetails))
     }
   }
 
@@ -53,5 +183,4 @@ class ApplicantDetailsSpec extends BaseSpec with JsonFormatValidation with VatRe
       }
     }
   }
-
 }

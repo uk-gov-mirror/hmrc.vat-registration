@@ -16,18 +16,24 @@
 
 package helpers
 
-import models.api.{ApplicantDetails, BvFail, BvPass, BvUnchallenged}
+import models.api._
 import models.submission._
 import play.api.libs.json.JsValue
+import uk.gov.hmrc.http.InternalServerException
 
 trait ApplicantDetailsHelper {
 
   implicit class ApplicantDetailsWriter(applicantDetails: ApplicantDetails) {
-    val businessVerificationStatus = applicantDetails.businessVerification collect {
-      case BvPass => IdVerified
-      case BvFail => IdVerificationFailed
-      case BvUnchallenged => IdVerificationFailed
-    }
+
+    def idVerificationStatus: Option[IdVerificationStatus] =
+      (applicantDetails.identifiersMatch, applicantDetails.businessVerification, applicantDetails.registration) match {
+        case (Some(true), Some(BvPass), Some(FailedStatus)) => Some(IdVerified)
+        case (Some(true), Some(BvCtEnrolled), Some(FailedStatus)) => Some(IdVerified)
+        case (Some(true), Some(BvFail), Some(NotCalledStatus)) => Some(IdVerificationFailed)
+        case (Some(true), Some(BvUnchallenged), Some(NotCalledStatus)) => Some(IdVerificationFailed)
+        case (Some(false), Some(BvUnchallenged), Some(NotCalledStatus)) => Some(IdUnverifiable)
+        case _ => throw new InternalServerException("[ApplicantDetailsHelper][idVerificationStatus] method called with unsupported data from incorpId")
+      }
 
     def personalIdentifiers: List[CustomerId] = List(
       CustomerId(applicantDetails.nino, NinoIdType, Some(IdVerified), date = Some(applicantDetails.dateOfBirth.date))
@@ -38,14 +44,14 @@ trait ApplicantDetailsHelper {
         CustomerId(
           idValue = utr,
           idType = UtrIdType,
-          IDsVerificationStatus = businessVerificationStatus
+          IDsVerificationStatus = idVerificationStatus
         )
       ),
       applicantDetails.companyNumber.map(crn =>
         CustomerId(
           idValue = crn,
           idType = CrnIdType,
-          IDsVerificationStatus = businessVerificationStatus,
+          IDsVerificationStatus = idVerificationStatus,
           date = Some(applicantDetails.dateOfIncorporation)
         )
       )
@@ -67,19 +73,21 @@ trait ApplicantDetailsHelper {
       .asOpt[List[CustomerId]]
       .getOrElse(List())
 
-    val personalIds : List[CustomerId] = (json \ "declaration" \ "applicantDetails" \ "identifiers").as[List[CustomerId]]
+    val personalIds: List[CustomerId] = (json \ "declaration" \ "applicantDetails" \ "identifiers").as[List[CustomerId]]
     val crn: Option[String] = getOptionalId(customerIds, CrnIdType)
     val ctUtr: Option[String] = getOptionalId(customerIds, UtrIdType)
     val nino: String = getId(personalIds, NinoIdType)
 
-    val businessVerificationStatus =
+    val (identifiersMatch, businessVerificationStatus, businessRegistrationStatus):
+      (Option[Boolean], Option[BusinessVerificationStatus], Option[BusinessRegistrationStatus]) =
       (for {
         ids <- customerIds.find(_.idType == CrnIdType)
         status <- ids.IDsVerificationStatus
-      } yield status) collect {
-        case IdVerified => BvPass
-        case IdUnverifiable => BvUnchallenged
-        case IdVerificationFailed => BvFail
+      } yield status) match {
+        case Some(IdVerified) => (Some(true), Some(BvPass), Some(FailedStatus))
+        case Some(IdUnverifiable) => (Some(false), Some(BvUnchallenged), Some(NotCalledStatus))
+        case Some(IdVerificationFailed) => (Some(true), Some(BvFail), Some(NotCalledStatus))
+        case None => (Some(true), Some(BvPass), Some(RegisteredStatus))
       }
   }
 
