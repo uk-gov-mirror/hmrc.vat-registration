@@ -95,10 +95,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
 
     "updateBankAccountDetails" should {
 
-      val accountNumber = "12345678"
-      val sortCode = "12-34-56"
-      val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
-      val bankAccount = BankAccount(true, Some(bankAccountDetails))
+      val bankAccount = testBankAccount
 
       "return a 200 if the update to mongo was successful" in new Setup {
         AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
@@ -110,8 +107,8 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
             "isProvided" -> true,
             "details" -> Json.obj(
               "name" -> "testAccountName",
-              "sortCode" -> sortCode,
-              "number" -> accountNumber
+              "sortCode" -> "010203",
+              "number" -> "01023456"
             )
           )
         )
@@ -122,10 +119,7 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
     }
 
     "fetchBankAccountDetails" should {
-      val accountNumber = "12345678"
-      val sortCode = "12-34-56"
-      val bankAccountDetails = BankAccountDetails("testAccountName", sortCode, accountNumber)
-      val bankAccount = BankAccount(true, Some(bankAccountDetails))
+      val bankAccount = testBankAccount
 
       "return a 200 if the fetch from mongo was successful" in new Setup {
         AuthorisationMocks.mockAuthorised(testRegId, testInternalid)
@@ -135,9 +129,9 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
         val expected: JsObject = Json.obj(
           "isProvided" -> true,
           "details" -> Json.obj(
-            "name" -> "testAccountName",
-            "sortCode" -> sortCode,
-            "number" -> accountNumber
+            "name" -> "Test Bank Account",
+            "sortCode" -> "010203",
+            "number" -> "01023456"
           )
         )
 

@@ -17,11 +17,13 @@
 package models.api
 
 import auth.CryptoSCRS
+import models.api.NoUKBankAccount
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class BankAccount(isProvided: Boolean,
-                       details: Option[BankAccountDetails])
+                       details: Option[BankAccountDetails],
+                       reason: Option[NoUKBankAccount])
 
 case class BankAccountDetails(name: String,
                               sortCode: String,
@@ -36,34 +38,34 @@ object BankAccount {
         val bankNameResult = (json \ "UK" \ "accountName").validate[String]
         val sortCodeResult = (json \ "UK" \ "sortCode").validate[String]
         val accNumberResult = (json \ "UK" \ "accountNumber").validate[String]
-        val reasonNoAccount = (json \ "UK" \ "reasonBankAccNotProvided").validate[String]
+        val reasonNoAccount = (json \ "UK" \ "reasonBankAccNotProvided").validate[NoUKBankAccount](NoUKBankAccount.submissionReads)
 
-        (bankNameResult, sortCodeResult, accNumberResult) match {
-          case (JsSuccess(name, _), JsSuccess(sortCode, _), JsSuccess(accNumber, _)) =>
-            Some(BankAccount(isProvided = true, details = Some(BankAccountDetails(name, sortCode, accNumber))))
-          case _ if reasonNoAccount.isSuccess =>
-            Some(BankAccount(isProvided = false, details = None))
+        (bankNameResult, sortCodeResult, accNumberResult, reasonNoAccount) match {
+          case (JsSuccess(name, _), JsSuccess(sortCode, _), JsSuccess(accNumber, _), _) =>
+            Some(BankAccount(isProvided = true, details = Some(BankAccountDetails(name, sortCode, accNumber)), None))
+          case (_, _, _, JsSuccess(reason, _)) =>
+            Some(BankAccount(isProvided = false, details = None, reason = Some(reason)))
           case _ =>
             throw new Exception("Could not parse bank details")
         }
       case None =>
-        Some(BankAccount(isProvided = false, details = None))
+        Some(BankAccount(isProvided = false, details = None, reason = None))
     }
 
   }
 
   def submissionWrites: Writes[Option[BankAccount]] = Writes { optBankAccount: Option[BankAccount] =>
     optBankAccount match {
-      case Some(BankAccount(true, Some(details))) =>
+      case Some(BankAccount(true, Some(details), _)) =>
         Json.obj("UK" -> Json.obj(
           "accountName" -> details.name,
           "sortCode" -> details.sortCode.replaceAll("-", ""),
           "accountNumber" -> details.number
         ))
-      case _ =>
+      case Some(BankAccount(false, _, Some(reason))) =>
         Json.obj(
           "UK" -> Json.obj(
-            "reasonBankAccNotProvided" -> "1"
+            "reasonBankAccNotProvided" -> Json.toJson(reason)(NoUKBankAccount.submissionWrites)
           )
         )
     }
@@ -99,6 +101,7 @@ object BankAccountDetailsMongoFormat extends VatBankAccountValidator {
 object BankAccountMongoFormat extends VatBankAccountValidator {
   def encryptedFormat(crypto: CryptoSCRS): OFormat[BankAccount] = (
     (__ \ "isProvided").format[Boolean] and
-      (__ \ "details").formatNullable[BankAccountDetails](BankAccountDetailsMongoFormat.format(crypto))
+      (__ \ "details").formatNullable[BankAccountDetails](BankAccountDetailsMongoFormat.format(crypto)) and
+      (__ \ "reason").formatNullable[NoUKBankAccount]
     ) (BankAccount.apply, unlift(BankAccount.unapply))
 }
