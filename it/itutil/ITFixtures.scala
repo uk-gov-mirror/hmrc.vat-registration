@@ -20,7 +20,7 @@ import java.time.{LocalDate, LocalDateTime, LocalTime}
 import common.TransactionId
 import enums.VatRegStatus
 import models.api._
-import models.submission.{DateOfBirth, Director}
+import models.submission.{DateOfBirth, Director, RoleInBusiness}
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -62,7 +62,7 @@ trait ITFixtures {
   val testContactDetails = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
   val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
   val testNino = "NB686868C"
-  val testRole = Some("03") //Code for director role
+  val testRole: RoleInBusiness = Director
   val testName = Name(first = Some("Forename"), middle = None, last = "Surname")
   val testFormerName = FormerName(name = Some(oldName), change = Some(testDate))
   val testCompanyName = "testCompanyName"
@@ -73,7 +73,7 @@ trait ITFixtures {
 
   val testUnregisteredApplicantDetails: ApplicantDetails = ApplicantDetails(
     nino = testNino,
-    role = testRole,
+    roleInBusiness = testRole,
     name = testName,
     dateOfBirth = DateOfBirth(testDate),
     companyName = testCompanyName,
@@ -92,7 +92,7 @@ trait ITFixtures {
 
   val testRegisteredApplicantDetails: ApplicantDetails = ApplicantDetails(
     nino = testNino,
-    role = testRole,
+    roleInBusiness = testRole,
     name = testName,
     dateOfBirth = DateOfBirth(testDate),
     companyName = testCompanyName,
@@ -130,8 +130,7 @@ trait ITFixtures {
     threshold = testThreshold,
     exceptionOrExemption = "0",
     estimates = TurnoverEstimates(123456),
-    customerStatus = MTDfB,
-    completionCapacity = Director
+    customerStatus = MTDfB
   )
 
   lazy val testFullVatSchemeWithUnregisteredBusinessPartner: VatScheme =

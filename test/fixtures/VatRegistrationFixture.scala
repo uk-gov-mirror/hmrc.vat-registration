@@ -21,14 +21,14 @@ import java.time.{LocalDate, LocalDateTime, LocalTime}
 import common.TransactionId
 import enums.VatRegStatus
 import models.api._
-import models.submission.{DateOfBirth, OwnerProprietor, UkCompany}
+import models.submission.{DateOfBirth, Director, RoleInBusiness, UkCompany}
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 
 trait VatRegistrationFixture {
   lazy val testNino = "AB123456A"
-  lazy val testRole = Some("03") //code for director
+  lazy val testRole: RoleInBusiness = Director
   lazy val testRegId = "testRegId"
   lazy val testInternalid = "INT-123-456-789"
   lazy val testTxId: TransactionId = TransactionId("1")
@@ -74,13 +74,12 @@ trait VatRegistrationFixture {
     threshold = testMandatoryThreshold,
     exceptionOrExemption = "0",
     estimates = TurnoverEstimates(123456),
-    customerStatus = MTDfB,
-    completionCapacity = OwnerProprietor
+    customerStatus = MTDfB
   )
 
   lazy val validApplicantDetails: ApplicantDetails = ApplicantDetails(
     nino = testNino,
-    role = testRole,
+    roleInBusiness = testRole,
     name = testName,
     dateOfBirth = DateOfBirth(testDate),
     companyName = testCompanyName,

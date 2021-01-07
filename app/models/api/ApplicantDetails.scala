@@ -19,7 +19,7 @@ package models.api
 import java.time.LocalDate
 
 import helpers.ApplicantDetailsHelper
-import models.submission.DateOfBirth
+import models.submission.{DateOfBirth, RoleInBusiness}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import utils.JsonUtilities
@@ -27,7 +27,7 @@ import utils.JsonUtilities
 import scala.util.{Failure, Success, Try}
 
 case class ApplicantDetails(nino: String,
-                            role: Option[String] = None,
+                            roleInBusiness: RoleInBusiness,
                             name: Name,
                             dateOfBirth: DateOfBirth,
                             companyName: String,
@@ -54,7 +54,7 @@ object ApplicantDetails extends VatApplicantDetailsValidator
 
   implicit val format: Format[ApplicantDetails] = (
     (__ \ "nino").format[String] and
-      (__ \ "role").formatNullable[String] and
+      (__ \ "roleInTheBusiness").format[RoleInBusiness] and
       (__ \ "name").format[Name] and
       (__ \ "dateOfBirth").format[DateOfBirth] and
       (__ \ "companyName").format[String] and
@@ -76,7 +76,7 @@ object ApplicantDetails extends VatApplicantDetailsValidator
     Try {
       ApplicantDetails(
         nino = json.nino,
-        role = json.getOptionalField[String](appDetailsSection \ "roleInBusiness"),
+        roleInBusiness = json.getField[RoleInBusiness](appDetailsSection \ "roleInBusiness"),
         name = json.getField[Name](appDetailsSection \ "name")(Name.submissionFormat),
         dateOfBirth = json.getField[DateOfBirth](appDetailsSection \ "dateOfBirth"),
         companyName = json.getField[String](custInfoSection \ "shortOrgName"),
@@ -84,7 +84,7 @@ object ApplicantDetails extends VatApplicantDetailsValidator
         dateOfIncorporation = json.getField[LocalDate](corpBodySection \ "dateOfIncorporation"),
         ctutr = json.ctUtr.orElse(None),
         businessVerification = json.businessVerificationStatus,
-        registration  = json.businessRegistrationStatus,
+        registration = json.businessRegistrationStatus,
         identifiersMatch = json.identifiersMatch,
         bpSafeId = json.getOptionalField[String](custInfoSection \ "primeBPSafeID").orElse(None),
         currentAddress = json.getField[Address](appDetailsSection \ "currAddress")(Address.submissionFormat),
@@ -114,8 +114,11 @@ object ApplicantDetails extends VatApplicantDetailsValidator
           )
         ),
         "declaration" -> Json.obj(
+          "declarationSigning" -> Json.obj(
+            "declarationCapacity" -> Json.toJson(appDetails.roleInBusiness)
+          ),
           "applicantDetails" -> Json.obj(
-            "roleInBusiness" -> appDetails.role,
+            "roleInBusiness" -> Json.toJson(appDetails.roleInBusiness),
             "name" -> Json.toJson(appDetails.name)(Name.submissionFormat),
             "prevName" -> Json.toJson(appDetails.changeOfName.map(FormerName.submissionFormat.writes)),
             "dateOfBirth" -> Json.toJson(appDetails.dateOfBirth),

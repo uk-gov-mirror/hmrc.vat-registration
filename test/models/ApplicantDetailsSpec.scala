@@ -58,6 +58,9 @@ class ApplicantDetailsSpec extends BaseSpec with JsonFormatValidation with VatRe
         )
       ),
       "declaration" -> Json.obj(
+        "declarationSigning" -> Json.obj(
+          "declarationCapacity" -> Json.toJson(testRole)
+        ),
         "applicantDetails" -> Json.obj(
           "commDetails" -> Json.obj(
             "email" -> "skylake@vilikariet.com"
@@ -67,7 +70,7 @@ class ApplicantDetailsSpec extends BaseSpec with JsonFormatValidation with VatRe
             "lastName" -> "Surname"
           ),
           "dateOfBirth" -> testDateOfBirth,
-          "roleInBusiness" -> testRole,
+          "roleInBusiness" -> Json.toJson(testRole),
           "identifiers" -> Json.arr(
             Json.obj(
               "idValue" -> testNino,
@@ -95,10 +98,6 @@ class ApplicantDetailsSpec extends BaseSpec with JsonFormatValidation with VatRe
   "Creating a Json from a valid VatApplicantDetails model" should {
     "complete successfully" in {
       writeAndRead(validApplicantDetails) resultsIn validApplicantDetails
-    }
-
-    "complete successfully when 'role' is missing" in {
-      writeAndRead(validApplicantDetails.copy(role = None)) resultsIn validApplicantDetails.copy(role = None)
     }
   }
 
@@ -130,7 +129,7 @@ class ApplicantDetailsSpec extends BaseSpec with JsonFormatValidation with VatRe
       Json.toJson(applicantDetails) mustBe testJson(idVerificationStatus = Some(IdVerified))
     }
 
-    "cproduce a valid json with BvFail and registration not called" in {
+    "produce a valid json with BvFail and registration not called" in {
       val applicantDetails = validApplicantDetails.copy(
         businessVerification = Some(BvFail),
         registration = Some(NotCalledStatus)
@@ -169,11 +168,6 @@ class ApplicantDetailsSpec extends BaseSpec with JsonFormatValidation with VatRe
       "NINO is invalid" in {
         val applicantDetails = validApplicantDetails.copy(nino = "NB888")
         writeAndRead(applicantDetails) shouldHaveErrors (JsPath() \ "nino" -> JsonValidationError("error.pattern"))
-      }
-
-      "Role is invalid" in {
-        val applicantDetails = validApplicantDetails.copy(role = Some("magician"))
-        writeAndRead(applicantDetails) shouldHaveErrors (JsPath() \ "role" -> JsonValidationError("error.pattern"))
       }
 
       "Name is invalid" in {

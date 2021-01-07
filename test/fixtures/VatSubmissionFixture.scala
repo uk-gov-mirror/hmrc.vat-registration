@@ -32,7 +32,7 @@ trait VatSubmissionFixture {
       |  },
       |  "declaration": {
       |    "declarationSigning": {
-      |      "declarationCapacity": "01",
+      |      "declarationCapacity": "03",
       |      "confirmInformationDeclaration": true
       |    },
       |    "applicantDetails": {
@@ -151,7 +151,7 @@ trait VatSubmissionFixture {
       |  },
       |  "declaration": {
       |    "declarationSigning": {
-      |      "declarationCapacity": "01",
+      |      "declarationCapacity": "03",
       |      "confirmInformationDeclaration": true
       |    },
       |    "applicantDetails": {
@@ -287,7 +287,7 @@ trait VatSubmissionFixture {
       |  },
       |  "declaration": {
       |    "declarationSigning": {
-      |      "declarationCapacity": "01",
+      |      "declarationCapacity": "03",
       |      "confirmInformationDeclaration": true
       |    },
       |    "applicantDetails": {
@@ -423,7 +423,7 @@ trait VatSubmissionFixture {
       |  },
       |  "declaration": {
       |    "declarationSigning": {
-      |      "declarationCapacity": "01",
+      |      "declarationCapacity": "03",
       |      "confirmInformationDeclaration": true
       |    },
       |    "applicantDetails": {
@@ -554,7 +554,7 @@ trait VatSubmissionFixture {
       |  },
       |  "declaration": {
       |    "declarationSigning": {
-      |      "declarationCapacity": "01",
+      |      "declarationCapacity": "03",
       |      "confirmInformationDeclaration": true
       |    },
       |    "applicantDetails": {
@@ -670,7 +670,7 @@ trait VatSubmissionFixture {
       |  "companyRegistrationNumber": "testCrn",
       |  "applicantDetails": {
       |    "nino": "AB123456A",
-      |    "role": "03",
+      |    "roleInTheBusiness": "03",
       |    "name": {
       |      "first": "Forename",
       |      "last": "Surname"
@@ -788,8 +788,7 @@ trait VatSubmissionFixture {
       |    "estimates": {
       |      "turnoverEstimate": 123456
       |    },
-      |    "customerStatus": "2",
-      |    "completionCapacity": "01"
+      |    "customerStatus": "2"
       |  }
       |}""".stripMargin)
 

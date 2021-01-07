@@ -20,9 +20,10 @@ import common.exceptions.MissingRegDocument
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models.api.{ApplicantDetails, BvPass}
+import models.submission.Director
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -38,10 +39,10 @@ class ApplicantDetailsControllerSpec extends VatRegSpec with VatRegistrationFixt
     }
   }
 
-  val upsertApplicantDetails = ApplicantDetails(
+  val upsertApplicantDetails: ApplicantDetails = ApplicantDetails(
     nino = testNino,
     name = testName,
-    role = testRole,
+    roleInBusiness = testRole,
     dateOfBirth = testDateOfBirth,
     companyName = testCompanyName,
     companyNumber = Some(testCrn),
@@ -55,8 +56,8 @@ class ApplicantDetailsControllerSpec extends VatRegSpec with VatRegistrationFixt
     bpSafeId = Some(testBpSafeId)
   )
 
-  val upsertApplicantDetailsJson = Json.toJson(upsertApplicantDetails)
-  val validApplicantDetailsJson = Json.toJson(validApplicantDetails)
+  val upsertApplicantDetailsJson: JsValue = Json.toJson(upsertApplicantDetails)
+  val validApplicantDetailsJson: JsValue = Json.toJson(validApplicantDetails)
 
   "getApplicantDetailsData" should {
     "returns a valid json if found for id" in new Setup {

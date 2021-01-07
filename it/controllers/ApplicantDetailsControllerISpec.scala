@@ -17,7 +17,7 @@ class ApplicantDetailsControllerISpec extends IntegrationStubbing {
 
   val invalidTestApplicantDetailsJson = Json.obj(
     "nino" -> testNino,
-    "role" -> testRole
+    "role" -> Json.toJson(testRole)
   )
 
   "getApplicantDetailsData" must {
