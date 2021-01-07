@@ -99,13 +99,13 @@ object RegistrationSubmissionAuditing {
           "customerPreferredPeriodicity" -> vatSubmission.returns.frequency
         ),
         "bankDetails" -> vatSubmission.bankDetails.map {
-          case BankAccount(true, Some(details)) => Json.obj(
+          case BankAccount(true, Some(details), _) => Json.obj(
             "accountName" -> details.name,
             "sortCode" -> details.sortCode,
             "accountNumber" -> details.number
           )
-          case BankAccount(false, _) => Json.obj(
-            "reasonBankAccNotProvided" -> "1"
+          case BankAccount(false, _, Some(reason)) => Json.obj(
+            "reasonBankAccNotProvided" -> Json.toJson(reason)(NoUKBankAccount.submissionWrites)
           )
         },
         "compliance" -> vatSubmission.sicAndCompliance.labourCompliance.map(

@@ -114,8 +114,8 @@ trait VatRegistrationFixture {
     commsPreference = Email
   ))
 
-  lazy val testBankAccount = BankAccount(isProvided = true, details = Some(testBankDetails))
-  lazy val testBankAccountNotProvided = BankAccount(isProvided = false, details = None)
+  lazy val testBankAccount = BankAccount(isProvided = true, details = Some(testBankDetails), None)
+  lazy val testBankAccountNotProvided = BankAccount(isProvided = false, details = None, reason = Some(BeingSetup))
 
   lazy val validFullFRSDetails: FRSDetails =
     FRSDetails(

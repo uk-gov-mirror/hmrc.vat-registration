@@ -19,7 +19,7 @@ package models
 import auth.CryptoSCRS
 import com.typesafe.config.ConfigFactory
 import helpers.VatRegSpec
-import models.api.{BankAccount, BankAccountDetails, BankAccountMongoFormat}
+import models.api.{BankAccount, BankAccountDetails, BankAccountMongoFormat, BeingSetup}
 import play.api.Configuration
 import play.api.libs.json._
 import org.mockito.Mockito._
@@ -32,7 +32,8 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
       name = "Test Account name",
       sortCode = "00-99-22",
       number = "12345678"
-    ))
+    )),
+    reason = None
   )
   val fullBankAccountJson: JsValue = Json.parse(
     s"""
@@ -46,11 +47,12 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
        |}
         """.stripMargin)
 
-  val noDetailsBankAccountModel: BankAccount = BankAccount(isProvided = false, None)
+  val noDetailsBankAccountModel: BankAccount = BankAccount(isProvided = false, None, Some(BeingSetup))
   val noDetailsBankAccountJson: JsValue = Json.parse(
     s"""
        |{
-       |  "isProvided":false
+       |  "isProvided":false,
+       |  "reason":"BeingSetup"
        |}
         """.stripMargin)
 
@@ -166,7 +168,8 @@ class BankAccountSpec extends VatRegSpec with JsonFormatValidation {
         name = "Test Account name",
         sortCode = "00-99-22",
         number = "12345678"
-      ))
+      )),
+      reason = None
     )
 
     val encryptedJson = Json.parse(

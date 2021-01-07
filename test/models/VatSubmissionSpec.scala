@@ -18,7 +18,7 @@ package models
 
 import fixtures.{VatRegistrationFixture, VatSubmissionFixture}
 import helpers.BaseSpec
-import models.api.{BankAccount, SicAndCompliance, SicCode, VatSubmission}
+import models.api.{BankAccount, BeingSetup, NoUKBankAccount, SicAndCompliance, SicCode, VatSubmission}
 import models.submission.UkCompany
 import play.api.libs.json._
 
@@ -103,7 +103,7 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
         Some(true),
         Some(testCrn),
         validApplicantDetails,
-        None,
+        Option(BankAccount.apply(false, None, Some(BeingSetup))),
         testSicAndCompliance.get,
         testBusinessContact.get,
         validFullTradingDetails,
@@ -189,7 +189,7 @@ class VatSubmissionSpec extends BaseSpec with JsonFormatValidation with VatRegis
       val scheme = testVatScheme.copy(
         applicantDetails = Some(validApplicantDetails),
         businessContact = testBusinessContact,
-        bankAccount = Some(BankAccount(true, Some(testBankDetails))),
+        bankAccount = Some(BankAccount(true, Some(testBankDetails), None)),
         sicAndCompliance = testSicAndCompliance,
         flatRateScheme = Some(validFullFlatRateScheme),
         tradingDetails = Some(validFullTradingDetails),
