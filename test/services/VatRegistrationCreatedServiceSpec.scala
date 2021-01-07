@@ -24,7 +24,6 @@ import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models._
 import models.api.{Threshold, _}
-import models.submission.OwnerProprietor
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
@@ -85,12 +84,12 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
     }
 
     "error with the DB when creating VatScheme" in new Setup {
-      val t = InsertFailed("regId", "VatScheme")
+      val error: InsertFailed = InsertFailed("regId", "VatScheme")
 
       when(mockRegistrationMongoRepository.retrieveVatScheme(testRegId)).thenReturn(Future.successful(None))
-      when(mockRegistrationMongoRepository.createNewVatScheme(testRegId, testInternalid)).thenReturn(Future.failed(t))
+      when(mockRegistrationMongoRepository.createNewVatScheme(testRegId, testInternalid)).thenReturn(Future.failed(error))
 
-      service.createNewRegistration(testInternalid) returnsLeft GenericDatabaseError(t, Some("regId"))
+      service.createNewRegistration(testInternalid) returnsLeft GenericDatabaseError(error, Some("regId"))
     }
 
     "call to business service return ForbiddenException response " in new Setup {
@@ -244,8 +243,7 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
         ),
         exceptionOrExemption = "0",
         estimates = TurnoverEstimates(123456),
-        customerStatus = MTDfB,
-        completionCapacity = OwnerProprietor
+        customerStatus = MTDfB
       )
 
       val expected: Threshold = Threshold(
@@ -275,8 +273,7 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
         ),
         exceptionOrExemption = "0",
         estimates = TurnoverEstimates(10001),
-        customerStatus = MTDfB,
-        completionCapacity = OwnerProprietor
+        customerStatus = MTDfB
       )
 
       val expected: TurnoverEstimates = TurnoverEstimates(turnoverEstimate = 10001)
@@ -290,9 +287,9 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
   "call to store Honesty Declaration status" should {
     "return value being stored" in new Setup {
       val testValue = "testValue"
-      when(mockRegistrationMongoRepository.storeHonestyDeclaration("regId", true)).thenReturn(Future(true))
+      when(mockRegistrationMongoRepository.storeHonestyDeclaration("regId", honestyDeclarationData = true)).thenReturn(Future(true))
 
-      await(service.storeHonestyDeclaration("regId", true)) mustBe true
+      await(service.storeHonestyDeclaration("regId", honestyDeclarationStatus = true)) mustBe true
     }
   }
 }

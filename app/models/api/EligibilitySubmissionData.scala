@@ -16,7 +16,6 @@
 
 package models.api
 
-import models.submission.{DeclarationCapacity, Other, OwnerProprietor}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.http.InternalServerException
@@ -24,8 +23,7 @@ import uk.gov.hmrc.http.InternalServerException
 case class EligibilitySubmissionData(threshold: Threshold,
                                      exceptionOrExemption: String,
                                      estimates: TurnoverEstimates,
-                                     customerStatus: CustomerStatus,
-                                     completionCapacity: DeclarationCapacity)
+                                     customerStatus: CustomerStatus)
 
 object EligibilitySubmissionData {
 
@@ -37,8 +35,7 @@ object EligibilitySubmissionData {
     (__ \ "subscription" \ "reasonForSubscription").format[Threshold](Threshold.submissionFormat) and
     (__ \ "subscription" \ "reasonForSubscription" \ "exemptionOrException").format[String] and
     (__ \ "subscription" \ "yourTurnover" \ "turnoverNext12Months").format[TurnoverEstimates](TurnoverEstimates.submissionFormat) and
-    (__ \ "admin" \ "additionalInformation" \ "customerStatus").format[CustomerStatus](CustomerStatus.format) and
-    (__ \ "declaration" \ "declarationSigning" \ "declarationCapacity").format[DeclarationCapacity]
+    (__ \ "admin" \ "additionalInformation" \ "customerStatus").format[CustomerStatus](CustomerStatus.format)
   ) (EligibilitySubmissionData.apply, unlift(EligibilitySubmissionData.unapply))
 
   val eligibilityReads: Reads[EligibilitySubmissionData] = Reads { json =>
@@ -57,9 +54,7 @@ object EligibilitySubmissionData {
         }
       ) and
       json.validate[TurnoverEstimates](TurnoverEstimates.eligibilityDataJsonReads) and
-      json.validate[CustomerStatus](CustomerStatus.eligibilityDataJsonReads) and
-      (json \ "registeringBusiness").validate[Boolean]
-        .fmap(registeringForSelf => if (registeringForSelf) OwnerProprietor else Other)
+      json.validate[CustomerStatus](CustomerStatus.eligibilityDataJsonReads)
     ) (EligibilitySubmissionData.apply _)
   }
 

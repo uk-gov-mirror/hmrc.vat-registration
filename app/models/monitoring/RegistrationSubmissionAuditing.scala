@@ -113,7 +113,7 @@ object RegistrationSubmissionAuditing {
         ),
         "declaration" -> Json.obj(
           "applicant" -> Json.obj(
-            "roleInBusiness" -> vatSubmission.applicantDetails.role,
+            "roleInBusiness" -> Json.toJson(vatSubmission.applicantDetails.roleInBusiness),
             "otherRole" -> "None",
             "name" -> Json.toJson(vatSubmission.applicantDetails.name)(Name.submissionFormat),
             "previousName" -> vatSubmission.applicantDetails.changeOfName.map(Json.toJson(_)(FormerName.submissionFormat)),
@@ -129,7 +129,7 @@ object RegistrationSubmissionAuditing {
             "previousAddress" -> vatSubmission.applicantDetails.previousAddress.map(Json.toJson(_)(Address.auditFormat)),
             "declarationSigning" -> Json.obj(
               "confirmInformationDeclaration" -> vatSubmission.confirmInformationDeclaration,
-              "declarationCapacity" -> vatSubmission.applicantDetails.role
+              "declarationCapacity" -> Json.toJson(vatSubmission.applicantDetails.roleInBusiness)
             )
           )
         )

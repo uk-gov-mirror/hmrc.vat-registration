@@ -34,7 +34,7 @@ trait ITVatSubmissionFixture extends ITFixtures {
       |  },
       |  "declaration": {
       |    "declarationSigning": {
-      |      "declarationCapacity": "01",
+      |      "declarationCapacity": "03",
       |      "confirmInformationDeclaration": true
       |    },
       |    "applicantDetails": {
@@ -46,7 +46,7 @@ trait ITVatSubmissionFixture extends ITFixtures {
       |        "lastName": "Surname"
       |      },
       |      "dateOfBirth": "2018-01-01",
-      |      "roleInBusiness": "secretary",
+      |      "roleInBusiness": "03",
       |      "identifiers": [
       |        {
       |          "idValue": "AB123456A",
@@ -206,7 +206,7 @@ trait ITVatSubmissionFixture extends ITFixtures {
       "businessActivities" -> Json.obj(
         "description" -> testSicAndCompliance.businessDescription,
         "SICCodes" -> Json.obj(
-          "primaryMainCode" -> testSicAndCompliance.mainBusinessActivity.id,
+          "primaryMainCode" -> testSicAndCompliance.mainBusinessActivity.id
         )
       ),
       "yourTurnover" -> Json.obj(
@@ -222,7 +222,7 @@ trait ITVatSubmissionFixture extends ITFixtures {
       )
     ),
     "periods" -> Json.obj(
-      "customerPreferredPeriodicity" -> "MA",
+      "customerPreferredPeriodicity" -> "MA"
     ),
     "bankDetails" -> Json.obj(
       "UK" -> Json.obj(
@@ -242,7 +242,7 @@ trait ITVatSubmissionFixture extends ITFixtures {
         "roleInBusiness" -> "03",
         "name" -> Json.obj(
           "firstName" -> testName.first,
-          "lastName" -> testName.last,
+          "lastName" -> testName.last
         ),
         "prevName" -> Json.obj(
           "firstName" -> testFormerName.name.get.first,
@@ -257,7 +257,7 @@ trait ITVatSubmissionFixture extends ITFixtures {
           "addressValidated" -> true
         ),
         "commDetails" -> Json.obj(
-          "email" -> testDigitalContactOptional.email.get,
+          "email" -> testDigitalContactOptional.email.get
         ),
         "dateOfBirth" -> testDate,
         "identifiers" -> Json.arr(
@@ -326,7 +326,7 @@ trait ITVatSubmissionFixture extends ITFixtures {
       "businessActivities" -> Json.obj(
         "description" -> testSicAndCompliance.businessDescription,
         "SICCodes" -> Json.obj(
-          "primaryMainCode" -> testSicAndCompliance.mainBusinessActivity.id,
+          "primaryMainCode" -> testSicAndCompliance.mainBusinessActivity.id
         )
       ),
       "yourTurnover" -> Json.obj(
@@ -336,7 +336,7 @@ trait ITVatSubmissionFixture extends ITFixtures {
       )
     ),
     "periods" -> Json.obj(
-      "customerPreferredPeriodicity" -> "MA",
+      "customerPreferredPeriodicity" -> "MA"
     ),
     "bankDetails" -> Json.obj(
       "UK" -> Json.obj(
@@ -353,7 +353,7 @@ trait ITVatSubmissionFixture extends ITFixtures {
         "roleInBusiness" -> "03",
         "name" -> Json.obj(
           "firstName" -> testName.first,
-          "lastName" -> testName.last,
+          "lastName" -> testName.last
         ),
         "currAddress" -> Json.obj(
           "line1" -> testAddress.line1,
@@ -363,7 +363,7 @@ trait ITVatSubmissionFixture extends ITFixtures {
           "addressValidated" -> true
         ),
         "commDetails" -> Json.obj(
-          "email" -> testDigitalContactOptional.email.get,
+          "email" -> testDigitalContactOptional.email.get
         ),
         "dateOfBirth" -> testDate,
         "identifiers" -> Json.arr(
