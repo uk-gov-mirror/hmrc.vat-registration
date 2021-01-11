@@ -23,7 +23,7 @@ import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
 import models.api.{Submitted, VatSubmission}
 import models.monitoring.RegistrationSubmissionAuditing.RegistrationSubmissionAuditModel
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.Request
 import repositories._
@@ -46,7 +46,7 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
                                   auditService: AuditService,
                                   idGenerator: IdGenerator,
                                   val authConnector: AuthConnector
-                                 )(implicit executionContext: ExecutionContext) extends FutureInstances with AuthorisedFunctions {
+                                 )(implicit executionContext: ExecutionContext) extends FutureInstances with AuthorisedFunctions with Logging {
 
   def submitVatRegistration(regId: String, userHeaders: Map[String, String])
                            (implicit hc: HeaderCarrier,
@@ -70,7 +70,7 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
                                 request: Request[_]): Future[HttpResponse] = {
 
     val correlationId = idGenerator.createId
-    Logger.info(s"VAT Submission API Correlation Id: $correlationId for the following regId: $regId")
+    logger.info(s"VAT Submission API Correlation Id: $correlationId for the following regId: $regId")
 
     authorised().retrieve(credentials and affinityGroup and agentCode) {
       case Some(credentials) ~ Some(affinity) ~ optAgentCode =>

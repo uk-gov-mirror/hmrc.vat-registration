@@ -16,24 +16,24 @@
 
 import auth._
 import common.exceptions.MissingRegDocument
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{Json, Writes}
-import play.api.mvc.{Result, Results}
 import play.api.mvc.Results._
+import play.api.mvc.{Result, Results}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-package object controllers {
+package object controllers extends Logging {
 
   trait SendResult {
     def sendResult(method:String, regId:String): Future[Result]
     def missingDoc(method:String,regId:String):Results.Status = {
-      Logger.warn(s"[$method] User has attempted to perform an action, after being authorised, but the document is now missing for regId: $regId")
+      logger.warn(s"[$method] User has attempted to perform an action, after being authorised, but the document is now missing for regId: $regId")
       NotFound
     }
     def unexpectedException(method:String,regId:String, e:String):Results.Status = {
-      Logger.warn(s"[$method] An unexpected exception has occurred for regId: $regId in [sendResult] with error: ${e}")
+      logger.warn(s"[$method] An unexpected exception has occurred for regId: $regId in [sendResult] with error: ${e}")
       InternalServerError
     }
   }
@@ -67,13 +67,13 @@ package object controllers {
       case Authorised(_) =>
         f
       case NotLoggedInOrAuthorised =>
-        Logger.info(s"[$controller] [$method] [ifAuthorised] User not logged in")
+        logger.info(s"[$controller] [$method] [ifAuthorised] User not logged in")
         Future.successful(Forbidden)
       case NotAuthorised(_) =>
-        Logger.info(s"[$controller] [$method] [ifAuthorised] User logged in but not authorised for resource $regID")
+        logger.info(s"[$controller] [$method] [ifAuthorised] User logged in but not authorised for resource $regID")
         Future.successful(Forbidden)
       case AuthResourceNotFound(_) =>
-        Logger.info(s"[$controller] [$method] [ifAuthorised] User logged in but no resource found for regId $regID")
+        logger.info(s"[$controller] [$method] [ifAuthorised] User logged in but no resource found for regId $regID")
         Future.successful(NotFound)
     }
   }

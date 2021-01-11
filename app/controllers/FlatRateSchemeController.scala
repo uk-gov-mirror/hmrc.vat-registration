@@ -20,7 +20,6 @@ import auth.Authorisation
 import common.exceptions.MissingRegDocument
 import javax.inject.{Inject, Singleton}
 import models.api.FlatRateScheme
-import play.api.Logger
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.RegistrationMongoRepository
@@ -28,12 +27,14 @@ import services.FlatRateSchemeService
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class FlatRateSchemeController @Inject()(val flatRateSchemeService: FlatRateSchemeService,
-                                             val authConnector: AuthConnector,
-                                             controllerComponents: ControllerComponents) extends BackendController(controllerComponents) with Authorisation {
+                                         val authConnector: AuthConnector,
+                                         controllerComponents: ControllerComponents
+                                        )(implicit executionContext: ExecutionContext)
+  extends BackendController(controllerComponents) with Authorisation {
 
   val resourceConn: RegistrationMongoRepository = flatRateSchemeService.registrationRepository
 
@@ -52,7 +53,7 @@ class FlatRateSchemeController @Inject()(val flatRateSchemeService: FlatRateSche
       isAuthorised(regId) { authResult =>
         authResult.ifAuthorised(regId, "FlatRateSchemeController", "updateFlatRateScheme") {
           withJsonBody[FlatRateScheme] { flatRateScheme =>
-            flatRateSchemeService.updateFlatRateScheme(regId, flatRateScheme) sendResult("updateFlatRateScheme",regId)
+            flatRateSchemeService.updateFlatRateScheme(regId, flatRateScheme) sendResult("updateFlatRateScheme", regId)
           }
         }
       }
@@ -66,10 +67,10 @@ class FlatRateSchemeController @Inject()(val flatRateSchemeService: FlatRateSche
             Ok
           } recover {
             case mrd: MissingRegDocument =>
-              Logger.error(s"[FlatRateSchemeController] [removeFlatRateScheme] Registration not found for regId: $regId", mrd)
+              logger.error(s"[FlatRateSchemeController] [removeFlatRateScheme] Registration not found for regId: $regId", mrd)
               NotFound
             case e =>
-              Logger.error(s"[FlatRateSchemeController] [removeFlatRateScheme] " +
+              logger.error(s"[FlatRateSchemeController] [removeFlatRateScheme] " +
                 s"An error occurred while remove flat rate scheme: for regId: $regId, ${e.getMessage}", e)
               InternalServerError
           }

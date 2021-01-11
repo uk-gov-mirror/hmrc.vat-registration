@@ -22,7 +22,6 @@ import common.exceptions.{InvalidSubmissionStatus, LeftState}
 import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
 import models.api._
-import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
 import repositories.RegistrationMongoRepository
@@ -115,7 +114,7 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
             Ok(Json.toJson(ackRefs))
           } recover {
             case ex =>
-              Logger.warn(s"Submission failed - ${ex.getMessage}")
+              logger.warn(s"Submission failed - ${ex.getMessage}")
               throw ex
           }
         }

@@ -24,7 +24,6 @@ import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
 import models._
 import models.api._
-import play.api.Logger
 import play.api.libs.json._
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.WriteConcern
@@ -88,7 +87,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
       VatScheme(regId, internalId = intId, status = VatRegStatus.draft)
     }.recover {
       case e: Exception =>
-        Logger.error(s"[RegistrationMongoRepository] [createNewVatScheme] threw an exception when attempting to create a new record with exception: ${e.getMessage} for regId: $regId and internalid: $intId")
+        logger.error(s"[RegistrationMongoRepository] [createNewVatScheme] threw an exception when attempting to create a new record with exception: ${e.getMessage} for regId: $regId and internalid: $intId")
         throw InsertFailed(regId, "VatScheme")
     }
   }
@@ -167,15 +166,15 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
 
     collection.update.one(querySelect, setDoc) map { updateResult =>
       if (updateResult.n == 0) {
-        Logger.warn(s"[ApplicantDetails] updating ivPassed for regId : $regId - No document found or the document does not have applicantDetails defined")
+        logger.warn(s"[ApplicantDetails] updating ivPassed for regId : $regId - No document found or the document does not have applicantDetails defined")
         throw MissingRegDocument(regId)
       } else {
-        Logger.info(s"[ApplicantDetails] updating ivPassed for regId : $regId - documents modified : ${updateResult.nModified}")
+        logger.info(s"[ApplicantDetails] updating ivPassed for regId : $regId - documents modified : ${updateResult.nModified}")
         ivStatus
       }
     } recover {
       case e =>
-        Logger.warn(s"Unable to update ivPassed in ApplicantDetails for regId: $regId, Error: ${e.getMessage}")
+        logger.warn(s"Unable to update ivPassed in ApplicantDetails for regId: $regId, Error: ${e.getMessage}")
         throw e
     }
   }
@@ -202,7 +201,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     val selector = regIdSelector(regId)
     val update = BSONDocument("$set" -> BSONDocument("returns" -> Json.toJson(returns)))
     collection.update.one(selector, update) map { updateResult =>
-      Logger.info(s"[Returns] updating returns for regId : $regId - documents modified : ${updateResult.nModified}")
+      logger.info(s"[Returns] updating returns for regId : $regId - documents modified : ${updateResult.nModified}")
       returns
     }
   }
@@ -219,7 +218,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     val selector = regIdSelector(regId)
     val update = BSONDocument("$set" -> Json.obj("bankAccount" -> Json.toJson(bankAccount)(bankAccountCryptoFormatter)))
     collection.update.one(selector, update) map { updateResult =>
-      Logger.info(s"[Returns] updating bank account for regId : $regId - documents modified : ${updateResult.nModified}")
+      logger.info(s"[Returns] updating bank account for regId : $regId - documents modified : ${updateResult.nModified}")
       bankAccount
     }
   }
@@ -240,7 +239,7 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
           case JsSuccess(applicantDetails, _) =>
             applicantDetails
           case JsError(errors) =>
-            Logger.warn(s"[getApplicantDetails] Failed to parse applicant details for regId: $regId, Error: ${errors.mkString(" ")}")
+            logger.warn(s"[getApplicantDetails] Failed to parse applicant details for regId: $regId, Error: ${errors.mkString(" ")}")
             None
         }
       )
@@ -253,15 +252,15 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
 
     collection.update.one(query, updateData, upsert = true) map { updateResult =>
       if (updateResult.n == 0) {
-        Logger.warn(s"[patchApplicantDetails] regId: $regId - No document found or the document does not have applicantDetails defined")
+        logger.warn(s"[patchApplicantDetails] regId: $regId - No document found or the document does not have applicantDetails defined")
         throw MissingRegDocument(regId)
       } else {
-        Logger.info(s"[patchApplicantDetails] regId: $regId - documents modified : ${updateResult.nModified}")
+        logger.info(s"[patchApplicantDetails] regId: $regId - documents modified : ${updateResult.nModified}")
         applicantDetails
       }
     } recover {
       case error =>
-        Logger.warn(s"[ApplicantDetails] [patchApplicantDetails] regId: $regId, Error: ${error.getMessage}")
+        logger.warn(s"[ApplicantDetails] [patchApplicantDetails] regId: $regId, Error: ${error.getMessage}")
         throw error
     }
   }
@@ -273,15 +272,15 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     val update = BSONDocument("$unset" -> BSONDocument("flatRateScheme" -> ""))
     collection.update.one(selector, update) map { updateResult =>
       if (updateResult.n == 0) {
-        Logger.warn(s"[RegistrationMongoRepository][removeFlatRateScheme] removing for regId : $regId - No document found")
+        logger.warn(s"[RegistrationMongoRepository][removeFlatRateScheme] removing for regId : $regId - No document found")
         throw MissingRegDocument(regId)
       } else {
-        Logger.info(s"[RegistrationMongoRepository][removeFlatRateScheme] removing for regId : $regId - documents modified : ${updateResult.nModified}")
+        logger.info(s"[RegistrationMongoRepository][removeFlatRateScheme] removing for regId : $regId - documents modified : ${updateResult.nModified}")
         true
       }
     } recover {
       case e =>
-        Logger.warn(s"[RegistrationMongoRepository][removeFlatRateScheme] Unable to remove for regId: $regId, Error: ${e.getMessage}")
+        logger.warn(s"[RegistrationMongoRepository][removeFlatRateScheme] Unable to remove for regId: $regId, Error: ${e.getMessage}")
         throw e
     }
   }
@@ -310,15 +309,15 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     val setDoc = Json.obj("$set" -> Json.obj(selectorKey -> Json.toJson(data)))
     collection.update.one(regIdSelector(regId), setDoc) map { updateResult =>
       if (updateResult.n == 0) {
-        Logger.warn(s"[${data.getClass.getSimpleName}] updating for regId : $regId - No document found")
+        logger.warn(s"[${data.getClass.getSimpleName}] updating for regId : $regId - No document found")
         throw MissingRegDocument(regId)
       } else {
-        Logger.info(s"[${data.getClass.getSimpleName}] updating for regId : $regId - documents modified : ${updateResult.nModified}")
+        logger.info(s"[${data.getClass.getSimpleName}] updating for regId : $regId - documents modified : ${updateResult.nModified}")
         data
       }
     } recover {
       case e =>
-        Logger.warn(s"Unable to update ${toCamelCase(data.getClass.getSimpleName)} for regId: $regId, Error: ${e.getMessage}")
+        logger.warn(s"Unable to update ${toCamelCase(data.getClass.getSimpleName)} for regId: $regId, Error: ${e.getMessage}")
         throw e
     }
   }

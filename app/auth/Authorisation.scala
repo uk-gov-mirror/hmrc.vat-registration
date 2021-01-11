@@ -16,12 +16,13 @@
 
 package auth
 
-import play.api.Logger
+import play.api.Logging
 import play.api.mvc.Result
 import play.api.mvc.Results._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.auth.core.{AuthorisationException, AuthorisedFunctions}
 import uk.gov.hmrc.http.HeaderCarrier
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -31,21 +32,20 @@ case class NotAuthorised(intId: String) extends AuthorisationResult
 case class Authorised(intId: String) extends AuthorisationResult
 case class AuthResourceNotFound(intId: String) extends AuthorisationResult
 
-trait Authorisation extends AuthorisedFunctions {
+trait Authorisation extends AuthorisedFunctions with Logging {
 
   val resourceConn : AuthorisationResource
 
   def isAuthenticated(f: String => Future[Result])(implicit hc: HeaderCarrier): Future[Result] = {
     authorised().retrieve(internalId) { id =>
       id.fold {
-        Logger.warn("[Authorisation] - [isAuthenticated] : No internalId present; FORBIDDEN")
+        logger.warn("[Authorisation] - [isAuthenticated] : No internalId present; FORBIDDEN")
         Future.successful(Forbidden("Missing internalId for the logged in user"))
       }(f)
     }.recoverWith {
-      case e: AuthorisationException => {
-        Logger.warn("[Authorisation] - [isAuthenticated]: AuthorisationException (auth returned a 401")
+      case e: AuthorisationException =>
+        logger.warn("[Authorisation] - [isAuthenticated]: AuthorisationException (auth returned a 401")
         Future.successful(Forbidden)
-      }
       case ex: Exception => Future.failed(throw ex)
     }
   }
@@ -57,27 +57,27 @@ trait Authorisation extends AuthorisedFunctions {
       }
     } recoverWith {
       case ar: AuthorisationException =>
-        Logger.warn(s"[Authorisation] - [isAuthorised]: An error occurred, err: ${ar.getMessage}")
+        logger.warn(s"[Authorisation] - [isAuthorised]: An error occurred, err: ${ar.getMessage}")
         f(NotLoggedInOrAuthorised)
       case e =>
         throw e
     }
   }
 
-  private def mapToAuthResult(authContext: Option[String], resource: Option[(String)] ) : AuthorisationResult = {
+  private def mapToAuthResult(authContext: Option[String], resource: Option[String] ) : AuthorisationResult = {
     authContext match {
       case None =>
-        Logger.warn("[mapToAuthResult]: No authority was found")
+        logger.warn("[mapToAuthResult]: No authority was found")
         NotLoggedInOrAuthorised
       case Some(id) =>
         resource match {
         case None =>
-          Logger.info("[Authorisation] [mapToAuthResult]: No auth resource was found for the current user")
+          logger.info("[Authorisation] [mapToAuthResult]: No auth resource was found for the current user")
           AuthResourceNotFound(id)
         case Some(resourceId) if resourceId == id =>
           Authorised(id)
         case _ =>
-          Logger.warn("[mapToAuthResult]: The current user is not authorised to access this resource")
+          logger.warn("[mapToAuthResult]: The current user is not authorised to access this resource")
           NotAuthorised(id)
       }
     }
