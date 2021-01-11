@@ -17,9 +17,9 @@
 package models.api
 
 import auth.CryptoSCRS
-import models.api.NoUKBankAccount
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import uk.gov.hmrc.http.InternalServerException
 
 case class BankAccount(isProvided: Boolean,
                        details: Option[BankAccountDetails],
@@ -68,6 +68,7 @@ object BankAccount {
             "reasonBankAccNotProvided" -> Json.toJson(reason)(NoUKBankAccount.submissionWrites)
           )
         )
+      case _ => throw new InternalServerException("[BankAccount][submissionWrites] attempted to write with an invalid model")
     }
   }
 }

@@ -19,7 +19,6 @@ package models
 import java.time.LocalDate
 
 import models.api.{EligibilitySubmissionData, MTDfB, Threshold, TurnoverEstimates}
-import models.submission.{Other, OwnerProprietor}
 import play.api.libs.json.{JsArray, JsObject, JsSuccess, Json}
 import utils.EligibilityDataJsonUtils
 

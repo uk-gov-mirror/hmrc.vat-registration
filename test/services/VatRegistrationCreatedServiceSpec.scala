@@ -286,7 +286,6 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
 
   "call to store Honesty Declaration status" should {
     "return value being stored" in new Setup {
-      val testValue = "testValue"
       when(mockRegistrationMongoRepository.storeHonestyDeclaration("regId", honestyDeclarationData = true)).thenReturn(Future(true))
 
       await(service.storeHonestyDeclaration("regId", honestyDeclarationStatus = true)) mustBe true

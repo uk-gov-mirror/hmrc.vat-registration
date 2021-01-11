@@ -22,7 +22,7 @@ import models.nonrepudiation.{NonRepudiationMetadata, NonRepudiationSubmissionAc
 import play.api.http.Status.ACCEPTED
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpReadsHttpResponse, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
 

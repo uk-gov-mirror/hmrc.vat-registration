@@ -18,7 +18,7 @@ package models
 
 import fixtures.{VatRegistrationFixture, VatSubmissionFixture}
 import helpers.BaseSpec
-import models.api.{BankAccount, BeingSetup, NoUKBankAccount, SicAndCompliance, SicCode, VatSubmission}
+import models.api.{BankAccount, BeingSetup, SicAndCompliance, SicCode, VatSubmission}
 import models.submission.UkCompany
 import play.api.libs.json._
 
