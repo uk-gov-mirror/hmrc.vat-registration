@@ -21,7 +21,7 @@ import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.VatThresholdService
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 @Singleton
 class VatThresholdController @Inject()(val vatThresholdService: VatThresholdService,

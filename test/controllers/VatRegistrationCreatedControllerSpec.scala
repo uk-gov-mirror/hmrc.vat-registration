@@ -31,7 +31,7 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.{Request, Result}
 import play.api.test.FakeRequest
 import repositories.RegistrationMongoRepository
-import uk.gov.hmrc.http.{HeaderCarrier, Upstream5xxResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 
 import scala.concurrent.Future
 

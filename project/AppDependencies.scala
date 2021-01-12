@@ -21,18 +21,18 @@ object AppDependencies {
 }
 
 object CompileDependencies {
-  val domainVersion = "5.10.0-play-26"
-  val bootstrapVersion = "2.1.0"
-  val simpleReactiveMongoVersion = "7.30.0-play-26"
-  val catsVersion = "0.9.0"
-  private val authClientVersion = "3.2.0-play-26"
-  private val playJsonVersion = "2.9.1"
+  val domainVersion = "5.10.0-play-27"
+  val bootstrapVersion = "3.2.0"
+  val simpleReactiveMongoVersion = "7.31.0-play-27"
+  val catsVersion = "1.0.0"
+  private val authClientVersion = "3.2.0-play-27"
+  private val playJsonVersion = "2.9.2"
 
   val compile = Seq(
     "uk.gov.hmrc" %% "simple-reactivemongo" % simpleReactiveMongoVersion,
-    "uk.gov.hmrc" %% "bootstrap-play-26" % bootstrapVersion,
+    "uk.gov.hmrc" %% "bootstrap-backend-play-27" % bootstrapVersion,
     "uk.gov.hmrc" %% "domain" % domainVersion,
-    "org.typelevel" %% "cats" % catsVersion,
+    "org.typelevel" %% "cats-core" % catsVersion,
     "uk.gov.hmrc" %% "auth-client" % authClientVersion,
     "com.typesafe.play" %% "play-json-joda" % playJsonVersion
   )
@@ -71,9 +71,9 @@ object IntegrationTestDependencies extends CommonTestDependencies {
 }
 
 trait CommonTestDependencies {
-  val scalaTestPlusVersion = "3.1.3"
+  val scalaTestPlusVersion = "4.0.3"
   val scoverageVersion = "1.4.1"
-  val reactiveMongoTestVersion = "4.21.0-play-26"
+  val reactiveMongoTestVersion = "4.22.0-play-27"
   val scope: Configuration
   val testDependencies: Seq[ModuleID]
 }

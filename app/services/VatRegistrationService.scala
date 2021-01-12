@@ -30,7 +30,7 @@ import models.api.{Threshold, TurnoverEstimates, VatScheme}
 import org.slf4j.LoggerFactory
 import play.api.libs.json._
 import repositories.RegistrationMongoRepository
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -67,7 +67,7 @@ class VatRegistrationService @Inject()(registrationRepository: RegistrationMongo
         case Some(ar) =>
           Left[LeftState, String](AcknowledgementReferenceExists(s"""Registration ID $regID already has an acknowledgement reference of: $ar""")).toEitherT
         case None =>
-          EitherT.liftT[Future, LeftState, String](registrationRepository.updateByElement(regID, AcknowledgementReferencePath, ackRef))
+          EitherT.liftF[Future, LeftState, String](registrationRepository.updateByElement(regID, AcknowledgementReferencePath, ackRef))
       })
 
   def getStatus(regId: String): Future[JsValue] = {
