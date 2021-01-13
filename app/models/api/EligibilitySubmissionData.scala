@@ -16,16 +16,37 @@
 
 package models.api
 
+import java.time.LocalDate
+
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import uk.gov.hmrc.http.InternalServerException
+import EligibilitySubmissionData._
 
 case class EligibilitySubmissionData(threshold: Threshold,
                                      exceptionOrExemption: String,
                                      estimates: TurnoverEstimates,
-                                     customerStatus: CustomerStatus)
+                                     customerStatus: CustomerStatus) {
+  def earliestDate: LocalDate = Seq(
+    threshold.thresholdPreviousThirtyDays,
+    threshold.thresholdInTwelveMonths.map(_.withDayOfMonth(1).plusMonths(2)),
+    threshold.thresholdNextThirtyDays
+  ).flatten.min(Ordering.by((date: LocalDate) => date.toEpochDay))
+
+  def reasonForRegistration: String = threshold match {
+    case Threshold(false, _, _, _) =>
+      voluntaryKey
+    case Threshold(true, forwardLook1, _, forwardLook2) if forwardLook1.contains(earliestDate) || forwardLook2.contains(earliestDate) =>
+      forwardLookKey
+    case _ =>
+      backwardLookKey
+  }
+}
 
 object EligibilitySubmissionData {
+  val voluntaryKey = "0018"
+  val forwardLookKey = "0016"
+  val backwardLookKey = "0015"
 
   val exceptionKey = "2"
   val exemptionKey = "1"
@@ -33,29 +54,29 @@ object EligibilitySubmissionData {
 
   val submissionFormat: Format[EligibilitySubmissionData] = (
     (__ \ "subscription" \ "reasonForSubscription").format[Threshold](Threshold.submissionFormat) and
-    (__ \ "subscription" \ "reasonForSubscription" \ "exemptionOrException").format[String] and
-    (__ \ "subscription" \ "yourTurnover" \ "turnoverNext12Months").format[TurnoverEstimates](TurnoverEstimates.submissionFormat) and
-    (__ \ "admin" \ "additionalInformation" \ "customerStatus").format[CustomerStatus](CustomerStatus.format)
-  ) (EligibilitySubmissionData.apply, unlift(EligibilitySubmissionData.unapply))
+      (__ \ "subscription" \ "reasonForSubscription" \ "exemptionOrException").format[String] and
+      (__ \ "subscription" \ "yourTurnover" \ "turnoverNext12Months").format[TurnoverEstimates](TurnoverEstimates.submissionFormat) and
+      (__ \ "admin" \ "additionalInformation" \ "customerStatus").format[CustomerStatus](CustomerStatus.format)
+    ) (EligibilitySubmissionData.apply, unlift(EligibilitySubmissionData.unapply))
 
   val eligibilityReads: Reads[EligibilitySubmissionData] = Reads { json =>
     (
       json.validate[Threshold](Threshold.eligibilityDataJsonReads) and
-      (
-        (json \ "vatRegistrationException").validateOpt[Boolean] and
-        (json \ "vatExemption").validateOpt[Boolean]
-      ) ((exception, exemption) =>
-        (exception.contains(true), exemption.contains(true)) match {
-          case (excepted, exempt) if !excepted && !exempt => nonExceptionOrExemptionKey
-          case (excepted, _) if excepted => exceptionKey
-          case (_, exempt) if exempt => exemptionKey
-          case (_, _) =>
-            throw new InternalServerException("[EligibilitySubmissionData][eligibilityReads] eligibility returned invalid exception/exemption data")
-        }
-      ) and
-      json.validate[TurnoverEstimates](TurnoverEstimates.eligibilityDataJsonReads) and
-      json.validate[CustomerStatus](CustomerStatus.eligibilityDataJsonReads)
-    ) (EligibilitySubmissionData.apply _)
+        (
+          (json \ "vatRegistrationException").validateOpt[Boolean] and
+            (json \ "vatExemption").validateOpt[Boolean]
+          ) ((exception, exemption) =>
+          (exception.contains(true), exemption.contains(true)) match {
+            case (excepted, exempt) if !excepted && !exempt => nonExceptionOrExemptionKey
+            case (excepted, _) if excepted => exceptionKey
+            case (_, exempt) if exempt => exemptionKey
+            case (_, _) =>
+              throw new InternalServerException("[EligibilitySubmissionData][eligibilityReads] eligibility returned invalid exception/exemption data")
+          }
+        ) and
+        json.validate[TurnoverEstimates](TurnoverEstimates.eligibilityDataJsonReads) and
+        json.validate[CustomerStatus](CustomerStatus.eligibilityDataJsonReads)
+      ) (EligibilitySubmissionData.apply _)
   }
 
   implicit val format: Format[EligibilitySubmissionData] = Json.format[EligibilitySubmissionData]
