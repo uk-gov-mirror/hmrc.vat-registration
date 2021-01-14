@@ -17,5 +17,4 @@
 package services.submission
 
 class SubmissionService {
-
 }

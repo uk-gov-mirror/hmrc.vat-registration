@@ -37,4 +37,7 @@ trait MockRegistrationRepository extends MockitoSugar {
       ArgumentMatchers.eq(internalId)
     )).thenReturn(Future.successful(response))
 
+  def mockGetVatScheme(regId: String)(response: Option[VatScheme]): OngoingStubbing[Future[Option[VatScheme]]] =
+    when(mockRegistrationRepository.retrieveVatScheme(regId)).thenReturn(Future.successful(response))
+
 }
