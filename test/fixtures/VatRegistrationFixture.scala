@@ -16,8 +16,6 @@
 
 package fixtures
 
-import java.time.{LocalDate, LocalDateTime, LocalTime}
-
 import common.TransactionId
 import enums.VatRegStatus
 import models.api._
@@ -25,6 +23,8 @@ import models.submission.{DateOfBirth, Director, RoleInBusiness, UkCompany}
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.auth.core.retrieve.Credentials
+
+import java.time.{LocalDate, LocalDateTime, LocalTime}
 
 trait VatRegistrationFixture {
   lazy val testNino = "AB123456A"
