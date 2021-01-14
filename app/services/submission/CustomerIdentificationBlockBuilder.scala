@@ -54,12 +54,20 @@ class CustomerIdentificationBlockBuilder(registrationMongoRepository: Registrati
                 )
               )
             )
+          case (_, None, Some(ctutr)) =>
+            throw new InternalServerException("Could not build customer identification block for submission due to missing Company Number")
+          case (_, Some(companyNumber), None) =>
+            throw new InternalServerException("Could not build customer identification block for submission due to missing CTUTR")
           case _ =>
-            throw new InternalServerException("Could not build customer identification block for submission due to missing data")
+            throw new InternalServerException("Could not build customer identification block for submission due to missing Company Number, Ctutr and/or BPSafeID")
         }
       }
+    case (None, Some(tradingDetails)) =>
+      throw new InternalServerException("Could not build customer identification block for submission due to missing applicant details data")
+    case (Some(applicantDetails), None) =>
+      throw new InternalServerException("Could not build customer identification block for submission due to missing trading details data")
     case _ =>
-      throw new InternalServerException("Could not build customer identification block for submission due to missing data")
+      throw new InternalServerException("Could not build customer identification block for submission due to missing data from applicant and trading details")
   }
 
 }

@@ -23,6 +23,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
+import uk.gov.hmrc.http.InternalServerException
 
 import scala.concurrent.Future
 
@@ -143,6 +144,62 @@ class CustomerIdentificationBlockBuilderSpec extends VatRegSpec with VatRegistra
 
         val result: JsObject = await(service.buildCustomerIdentificationBlock(testRegId))
         result mustBe customerIdentificationBlockWithBPJson
+      }
+    }
+    "throw an Interval Server Exception" when {
+      "applicant details is missing" in new Setup {
+        when(mockRegistrationMongoRepository.getApplicantDetails(any()))
+          .thenReturn(Future.successful(None))
+
+        when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
+          .thenReturn(Future.successful(Some(validFullTradingDetails)))
+
+        intercept[InternalServerException](await(service.buildCustomerIdentificationBlock(testRegId)))
+      }
+      "trading details is missing" in new Setup {
+        when(mockRegistrationMongoRepository.getApplicantDetails(any()))
+          .thenReturn(Future.successful(Some(validApplicantDetails)))
+
+        when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
+          .thenReturn(Future.successful(None))
+
+        intercept[InternalServerException](await(service.buildCustomerIdentificationBlock(testRegId)))
+      }
+      "applicant details and trading details are missing" in new Setup {
+        when(mockRegistrationMongoRepository.getApplicantDetails(any()))
+          .thenReturn(Future.successful(None))
+
+        when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
+          .thenReturn(Future.successful(None))
+
+        intercept[InternalServerException](await(service.buildCustomerIdentificationBlock(testRegId)))
+      }
+      "the ctutr is missing" in new Setup {
+        when(mockRegistrationMongoRepository.getApplicantDetails(any()))
+          .thenReturn(Future.successful(Some(validApplicantDetails.copy(ctutr = None))))
+
+        when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
+          .thenReturn(Future.successful(Some(validFullTradingDetails)))
+
+        intercept[InternalServerException](await(service.buildCustomerIdentificationBlock(testRegId)))
+      }
+      "the company number is missing" in new Setup {
+        when(mockRegistrationMongoRepository.getApplicantDetails(any()))
+          .thenReturn(Future.successful(Some(validApplicantDetails.copy(companyNumber = None))))
+
+        when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
+          .thenReturn(Future.successful(Some(validFullTradingDetails)))
+
+        intercept[InternalServerException](await(service.buildCustomerIdentificationBlock(testRegId)))
+      }
+      "the ctutr and company number are missing" in new Setup {
+        when(mockRegistrationMongoRepository.getApplicantDetails(any()))
+          .thenReturn(Future.successful(Some(validApplicantDetails.copy(ctutr = None, companyNumber = None))))
+
+        when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
+          .thenReturn(Future.successful(Some(validFullTradingDetails)))
+
+        intercept[InternalServerException](await(service.buildCustomerIdentificationBlock(testRegId)))
       }
     }
   }
