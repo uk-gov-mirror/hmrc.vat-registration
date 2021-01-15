@@ -17,115 +17,35 @@
 package services.submission
 
 import models.api.EligibilitySubmissionData.voluntaryKey
-import models.api.{ContactPreference, Email, Letter}
-import play.api.libs.json.{JsObject, JsValue, Json, Writes}
+import play.api.libs.json.{JsObject, Json}
 import repositories.RegistrationMongoRepository
-import services.submission.JsonUtils.{optional, _}
 import uk.gov.hmrc.http.InternalServerException
+import utils.JsonUtils._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SubmissionPayloadBuilder @Inject()(registrationMongoRepository: RegistrationMongoRepository,
+                                         adminBlockBuilder: AdminBlockBuilder,
+                                         customerIdentificationBlockBuilder: CustomerIdentificationBlockBuilder,
+                                         contactBlockBuilder: ContactBlockBuilder,
                                          periodsBlockBuilder: PeriodsBlockBuilder
                                         )(implicit ec: ExecutionContext) {
 
   def buildSubmissionPayload(regId: String): Future[JsObject] = for {
-    adminBlock <- buildAdminBlock(regId)
-    customerIdentificationBlock <- buildCustomerIdentificationBlock(regId)
-    contactBlock <- buildContactBlock(regId)
+    adminBlock <- adminBlockBuilder.buildAdminBlock(regId)
+    customerIdentificationBlock <- customerIdentificationBlockBuilder.buildCustomerIdentificationBlock(regId)
+    contactBlock <- contactBlockBuilder.buildContactBlock(regId)
     subscriptionBlock <- buildSubscriptionBlock(regId)
     periodsBlock <- periodsBlockBuilder.buildPeriodsBlock(regId)
-  } yield jsonObject(
+  } yield Json.obj(
     "admin" -> adminBlock,
     "customerIdentification" -> customerIdentificationBlock,
     "contact" -> contactBlock,
     "subscription" -> subscriptionBlock,
     "periods" -> periodsBlock
   )
-
-  private def buildAdminBlock(regId: String): Future[JsObject] = for {
-    optEligibilityData <- registrationMongoRepository.fetchEligibilitySubmissionData(regId)
-    optTradingDetails <- registrationMongoRepository.retrieveTradingDetails(regId)
-  } yield (optEligibilityData, optTradingDetails) match {
-    case (Some(eligibilityData), Some(tradingDetails)) =>
-      Json.obj(
-        "additionalInformation" -> Json.obj(
-          "customerStatus" -> eligibilityData.customerStatus
-        ),
-        "attachments" -> Json.obj(
-          "EORIrequested" -> tradingDetails.eoriRequested
-        )
-      )
-    case _ =>
-      throw new InternalServerException("Could not build admin block for submission due to missing data")
-  }
-
-  private def buildCustomerIdentificationBlock(regId: String): Future[JsObject] = for {
-    optApplicantDetails <- registrationMongoRepository.getApplicantDetails(regId)
-    optTradingDetails <- registrationMongoRepository.retrieveTradingDetails(regId)
-  } yield (optApplicantDetails, optTradingDetails) match {
-    case (Some(applicantDetails), Some(tradingDetails)) =>
-      jsonObject(
-        "tradersPartyType" -> "50",
-        "shortOrgName" -> applicantDetails.companyName,
-        optional("tradingName" -> tradingDetails.tradingName)
-      ) ++ {
-        (applicantDetails.bpSafeId, applicantDetails.companyNumber, applicantDetails.ctutr) match {
-          case (Some(bpSafeId), _, _) =>
-            Json.obj("primeBPSafeID" -> bpSafeId)
-          case (None, Some(companyNumber), Some(ctutr)) =>
-            Json.obj("customerID" ->
-              Json.arr(
-                jsonObject(
-                  "idType" -> "UTR",
-                  "IDsVerificationStatus" -> "3",
-                  "idValue" -> ctutr
-                ),
-                jsonObject(
-                  "idType" -> "CRN",
-                  "idValue" -> companyNumber,
-                  "date" -> applicantDetails.dateOfIncorporation,
-                  "IDsVerificationStatus" -> "3"
-                )
-              )
-            )
-          case _ =>
-            throw new InternalServerException("Could not build customer identification block for submission due to missing data")
-        }
-      }
-    case _ =>
-      throw new InternalServerException("Could not build customer identification block for submission due to missing data")
-  }
-
-  private def buildContactBlock(regId: String): Future[JsObject] = for {
-    optBusinessContact <- registrationMongoRepository.fetchBusinessContact(regId)
-  } yield optBusinessContact match {
-    case Some(businessContact) =>
-      Json.obj(
-        "address" -> jsonObject(
-          "line1" -> businessContact.ppob.line1,
-          "line2" -> businessContact.ppob.line2,
-          optional("line3" -> businessContact.ppob.line3),
-          optional("line4" -> businessContact.ppob.line4),
-          optional("postCode" -> businessContact.ppob.postcode),
-          optional("countryCode" -> businessContact.ppob.country.flatMap(_.code)),
-          optional("addressValidated" -> businessContact.ppob.addressValidated)
-        ),
-        "commDetails" -> jsonObject(
-          optional("telephone" -> businessContact.digitalContact.tel),
-          optional("mobileNumber" -> businessContact.digitalContact.mobile),
-          "email" -> businessContact.digitalContact.email,
-          "commsPreference" -> (businessContact.commsPreference match {
-            case Email => ContactPreference.electronic
-            case Letter => ContactPreference.paper
-          })
-        )
-      )
-    case _ =>
-      throw new InternalServerException("Could not build contact block for submission due to missing data")
-  }
 
   private def buildSubscriptionBlock(regId: String): Future[JsObject] = for {
     optEligibilityData <- registrationMongoRepository.fetchEligibilitySubmissionData(regId)
@@ -174,23 +94,3 @@ class SubmissionPayloadBuilder @Inject()(registrationMongoRepository: Registrati
   }
 
 }
-
-object JsonUtils {
-
-  case class JsonField private(json: Option[(String, JsValue)])
-
-  def jsonObject(fields: JsonField*): JsObject =
-    JsObject(fields.flatMap(_.json))
-
-  implicit def toJsonField[T](field: (String, T))(implicit writer: Writes[T]): JsonField =
-    JsonField(Some(field._1 -> writer.writes(field._2)))
-
-  def optional[T](field: (String, Option[T]))(implicit writer: Writes[T]): JsonField =
-    field match {
-      case (key, Some(value)) =>
-        JsonField(Some(field._1 -> writer.writes(value)))
-      case (key, None) =>
-        JsonField(None)
-    }
-}
-

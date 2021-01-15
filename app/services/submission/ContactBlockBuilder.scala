@@ -19,12 +19,15 @@ package services.submission
 import models.api.{ContactPreference, Email, Letter}
 import play.api.libs.json.{JsObject, Json}
 import repositories.RegistrationMongoRepository
-import services.submission.JsonUtils.{jsonObject, optional}
 import uk.gov.hmrc.http.InternalServerException
+import utils.JsonUtils._
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-class ContactBlockBuilder(registrationMongoRepository: RegistrationMongoRepository)(implicit ec: ExecutionContext) {
+@Singleton
+class ContactBlockBuilder @Inject()(registrationMongoRepository: RegistrationMongoRepository)
+                                   (implicit ec: ExecutionContext) {
 
   def buildContactBlock(regId: String): Future[JsObject] = for {
     optBusinessContact <- registrationMongoRepository.fetchBusinessContact(regId)
