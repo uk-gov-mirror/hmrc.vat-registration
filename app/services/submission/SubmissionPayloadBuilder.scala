@@ -23,19 +23,26 @@ import repositories.RegistrationMongoRepository
 import services.submission.JsonUtils.{optional, _}
 import uk.gov.hmrc.http.InternalServerException
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-class SubmissionPayloadBuilder(registrationMongoRepository: RegistrationMongoRepository)(implicit ec: ExecutionContext) {
+@Singleton
+class SubmissionPayloadBuilder @Inject()(registrationMongoRepository: RegistrationMongoRepository,
+                                         periodsBlockBuilder: PeriodsBlockBuilder
+                                        )(implicit ec: ExecutionContext) {
+
   def buildSubmissionPayload(regId: String): Future[JsObject] = for {
     adminBlock <- buildAdminBlock(regId)
     customerIdentificationBlock <- buildCustomerIdentificationBlock(regId)
     contactBlock <- buildContactBlock(regId)
     subscriptionBlock <- buildSubscriptionBlock(regId)
-  } yield Json.obj(
+    periodsBlock <- periodsBlockBuilder.buildPeriodsBlock(regId)
+  } yield jsonObject(
     "admin" -> adminBlock,
     "customerIdentification" -> customerIdentificationBlock,
     "contact" -> contactBlock,
-    "subscription" -> subscriptionBlock
+    "subscription" -> subscriptionBlock,
+    "periods" -> periodsBlock
   )
 
   private def buildAdminBlock(regId: String): Future[JsObject] = for {

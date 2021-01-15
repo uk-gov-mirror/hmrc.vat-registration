@@ -21,9 +21,12 @@ import repositories.RegistrationMongoRepository
 import services.submission.JsonUtils.{jsonObject, optional}
 import uk.gov.hmrc.http.InternalServerException
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-class CustomerIdentificationBlockBuilder(registrationMongoRepository: RegistrationMongoRepository)(implicit ec: ExecutionContext) {
+@Singleton
+class CustomerIdentificationBlockBuilder @Inject()(registrationMongoRepository: RegistrationMongoRepository)
+                                                  (implicit ec: ExecutionContext) {
 
   def buildCustomerIdentificationBlock(regId: String): Future[JsObject] = for {
     optApplicantDetails <- registrationMongoRepository.getApplicantDetails(regId)
