@@ -25,7 +25,7 @@ case class SicAndCompliance(businessDescription: String,
                             mainBusinessActivity: SicCode,
                             businessActivities: List[SicCode]) {
 
-  def otherBusinessActivities: List[SicCode] =
+  lazy val otherBusinessActivities: List[SicCode] =
     businessActivities.filterNot(_ == mainBusinessActivity)
 }
 

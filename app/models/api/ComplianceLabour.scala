@@ -26,9 +26,9 @@ case class ComplianceLabour(numOfWorkersSupplied: Option[Int],
 object ComplianceLabour {
 
   implicit val formats: OFormat[ComplianceLabour] = (
-    (__ \"numOfWorkersSupplied").formatNullable[Int] and
-    (__ \"intermediaryArrangement").formatNullable[Boolean] and
-    (__ \"supplyWorkers").format[Boolean]
+    (__ \ "numOfWorkersSupplied").formatNullable[Int] and
+    (__ \ "intermediaryArrangement").formatNullable[Boolean] and
+    (__ \ "supplyWorkers").format[Boolean]
   )(apply, unlift(unapply))
 
   val submissionFormat: Format[ComplianceLabour] = (
