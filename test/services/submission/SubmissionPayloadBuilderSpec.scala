@@ -18,11 +18,9 @@ package services.submission
 
 import fixtures.{VatRegistrationFixture, VatSubmissionFixture}
 import helpers.VatRegSpec
-import org.mockito.ArgumentMatchers
-import org.mockito.Mockito._
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
-import services.submission.buildermocks.{MockAdminBlockBuilder, MockBankDetailsBlockBuilder, MockComplianceBlockBuilder, MockContactBlockBuilder, MockCustomerIdentificationBlockBuilder, MockPeriodsBlockBuilder}
+import services.submission.buildermocks._
 import uk.gov.hmrc.http.InternalServerException
 
 import scala.concurrent.Future
@@ -36,7 +34,7 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
   with MockPeriodsBlockBuilder
   with MockBankDetailsBlockBuilder
   with MockComplianceBlockBuilder
-{
+  with MockSubscriptionBlockBuilder {
 
   object TestBuilder extends SubmissionPayloadBuilder(
     mockRegistrationMongoRepository,
@@ -44,6 +42,7 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
     mockCustomerIdentificationBlockBuilder,
     mockContactBlockBuilder,
     mockPeriodsBlockBuilder,
+    mockSubscriptionBlockBuilder,
     mockBankDetailsBlockBuilder,
     mockComplianceBlockBuilder
   )
@@ -95,15 +94,12 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
     "supplyWorkers" -> true
   )
 
-  val expectedJson: JsObject = Json.obj(
-    "admin" -> testAdminBlockJson,
-    "customerIdentification" -> testCustomerIdentificationBlockJson,
-    "contact" -> testContactBlockJson,
+  val testSubscriptionBlockJson: JsObject = Json.obj(
     "subscription" -> Json.obj(
       "reasonForSubscription" -> Json.obj(
         "registrationReason" -> "0016",
         "relevantDate" -> "2020-10-07",
-        "voluntaryOrEarlierDate" -> "2018-01-01",
+        "voluntaryOrEarlierDate" -> "2020-02-02",
         "exemptionOrException" -> "0"
       ),
       "corporateBodyRegistered" -> Json.obj(
@@ -112,25 +108,35 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
         "countryOfIncorporation" -> "GB"
       ),
       "businessActivities" -> Json.obj(
-        "description" -> "this is my business description",
+        "description" -> "testDescription",
         "SICCodes" -> Json.obj(
-          "primaryMainCode" -> "12345"
+          "primaryMainCode" -> "12345",
+          "mainCode2" -> "00002",
+          "mainCode3" -> "00003",
+          "mainCode4" -> "00004"
         )
       ),
       "yourTurnover" -> Json.obj(
-        "turnoverNext12Months" -> "",
+        "turnoverNext12Months" -> 123456,
         "zeroRatedSupplies" -> 12.99,
         "VATRepaymentExpected" -> true
       ),
       "schemes" -> Json.obj(
-        "FRSCategory" -> "",
-        "FRSPercentage" -> "",
-        "startDate" -> "",
-        "limitedCostTrader" -> ""
+        "FRSCategory" -> "testCategory",
+        "FRSPercentage" -> 15,
+        "startDate" -> "2020-02-02",
+        "limitedCostTrader" -> false
       )
-    ),
-    "periods" -> testPeriodsBlockJson,
+    )
+  )
+
+  val expectedJson: JsObject = Json.obj(
+    "admin" -> testAdminBlockJson,
+    "customerIdentification" -> testCustomerIdentificationBlockJson,
+    "contact" -> testContactBlockJson,
+    "subscription" -> testSubscriptionBlockJson,
     "bankDetails" -> testBankDetailsBlockJson,
+    "periods" -> testPeriodsBlockJson,
     "compliance" -> testComplianceJson
   )
 
@@ -143,21 +149,11 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
 
         mockBuildContactBlock(testRegId)(Future.successful(testContactBlockJson))
 
+        mockBuildSubscriptionBlock(testRegId)(Future.successful(testSubscriptionBlockJson))
+
         mockBuildBankDetailsBlock(testRegId)(Future.successful(testBankDetailsBlockJson))
 
         mockBuildComplianceBlock(testRegId)(Future.successful(Some(testComplianceJson)))
-
-        when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(ArgumentMatchers.eq(testRegId)))
-          .thenReturn(Future.successful(Some(testEligibilitySubmissionData)))
-
-        when(mockRegistrationMongoRepository.fetchReturns(ArgumentMatchers.eq(testRegId)))
-          .thenReturn(Future.successful(Some(testReturns)))
-
-        when(mockRegistrationMongoRepository.getApplicantDetails(ArgumentMatchers.eq(testRegId)))
-          .thenReturn(Future.successful(Some(validApplicantDetails)))
-
-        when(mockRegistrationMongoRepository.fetchSicAndCompliance(ArgumentMatchers.eq(testRegId)))
-          .thenReturn(Future.successful(testSicAndCompliance))
 
         mockBuildPeriodsBlock(testRegId)(Future.successful(testPeriodsBlockJson))
 
@@ -174,19 +170,9 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
 
         mockBuildBankDetailsBlock(testRegId)(Future.successful(testBankDetailsBlockJson))
 
+        mockBuildSubscriptionBlock(testRegId)(Future.successful(testSubscriptionBlockJson))
+
         mockBuildComplianceBlock(testRegId)(Future.successful(None))
-
-        when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(ArgumentMatchers.eq(testRegId)))
-          .thenReturn(Future.successful(Some(testEligibilitySubmissionData)))
-
-        when(mockRegistrationMongoRepository.fetchReturns(ArgumentMatchers.eq(testRegId)))
-          .thenReturn(Future.successful(Some(testReturns)))
-
-        when(mockRegistrationMongoRepository.getApplicantDetails(ArgumentMatchers.eq(testRegId)))
-          .thenReturn(Future.successful(Some(validApplicantDetails)))
-
-        when(mockRegistrationMongoRepository.fetchSicAndCompliance(ArgumentMatchers.eq(testRegId)))
-          .thenReturn(Future.successful(testSicAndCompliance))
 
         mockBuildPeriodsBlock(testRegId)(Future.successful(testPeriodsBlockJson))
 
@@ -206,5 +192,4 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
       }
     }
   }
-
 }

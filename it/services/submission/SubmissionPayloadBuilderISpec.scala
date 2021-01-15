@@ -1,15 +1,30 @@
+/*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package services.submission
 
 import itutil.{IntegrationSpecBase, IntegrationStubbing}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SubmissionPayloadBuilderISpec extends IntegrationSpecBase with IntegrationStubbing {
 
-  val testService = app.injector.instanceOf[SubmissionPayloadBuilder]
+  val testService: SubmissionPayloadBuilder = app.injector.instanceOf[SubmissionPayloadBuilder]
 
   class Setup extends SetupHelper
 
@@ -19,7 +34,7 @@ class SubmissionPayloadBuilderISpec extends IntegrationSpecBase with Integration
         .user.isAuthorised
         .regRepo.insertIntoDb(testMinimalVatSchemeWithRegisteredBusinessPartner, repo.insert)
 
-      val res = await(testService.buildSubmissionPayload(testRegId))
+      val res: JsObject = await(testService.buildSubmissionPayload(testRegId))
 
       res mustBe Json.parse(
         """
@@ -72,15 +87,9 @@ class SubmissionPayloadBuilderISpec extends IntegrationSpecBase with Integration
           |      }
           |    },
           |    "yourTurnover": {
-          |      "turnoverNext12Months": "",
+          |      "turnoverNext12Months": 123456,
           |      "zeroRatedSupplies": 12.99,
           |      "VATRepaymentExpected": true
-          |    },
-          |    "schemes": {
-          |      "FRSCategory": "",
-          |      "FRSPercentage": "",
-          |      "startDate": "",
-          |      "limitedCostTrader": ""
           |    }
           |  },
           |  "periods": {
@@ -103,7 +112,7 @@ class SubmissionPayloadBuilderISpec extends IntegrationSpecBase with Integration
         .user.isAuthorised
         .regRepo.insertIntoDb(testFullVatSchemeWithUnregisteredBusinessPartner, repo.insert)
 
-      val res = await(testService.buildSubmissionPayload(testRegId))
+      val res: JsObject = await(testService.buildSubmissionPayload(testRegId))
 
       res mustBe Json.parse(
         """
@@ -168,15 +177,15 @@ class SubmissionPayloadBuilderISpec extends IntegrationSpecBase with Integration
           |      }
           |    },
           |    "yourTurnover": {
-          |      "turnoverNext12Months": "",
+          |      "turnoverNext12Months": 123456,
           |      "zeroRatedSupplies": 12.99,
           |      "VATRepaymentExpected": true
           |    },
           |    "schemes": {
-          |      "FRSCategory": "",
-          |      "FRSPercentage": "",
-          |      "startDate": "",
-          |      "limitedCostTrader": ""
+          |      "FRSCategory": "testCategory",
+          |      "FRSPercentage": 15,
+          |      "startDate": "2017-01-01",
+          |      "limitedCostTrader": false
           |    }
           |  },
           |  "periods": {

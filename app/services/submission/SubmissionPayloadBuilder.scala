@@ -16,13 +16,11 @@
 
 package services.submission
 
-import models.api.EligibilitySubmissionData.voluntaryKey
-import play.api.libs.json.{JsObject, Json}
+import javax.inject.{Inject, Singleton}
+import play.api.libs.json.JsObject
 import repositories.RegistrationMongoRepository
-import uk.gov.hmrc.http.InternalServerException
 import utils.JsonUtils._
 
-import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -31,6 +29,7 @@ class SubmissionPayloadBuilder @Inject()(registrationMongoRepository: Registrati
                                          customerIdentificationBlockBuilder: CustomerIdentificationBlockBuilder,
                                          contactBlockBuilder: ContactBlockBuilder,
                                          periodsBlockBuilder: PeriodsBlockBuilder,
+                                         subscriptionBlockBuilder: SubscriptionBlockBuilder,
                                          bankDetailsBlockBuilder: BankDetailsBlockBuilder,
                                          complianceBlockBuilder: ComplianceBlockBuilder
                                         )(implicit ec: ExecutionContext) {
@@ -39,7 +38,7 @@ class SubmissionPayloadBuilder @Inject()(registrationMongoRepository: Registrati
     adminBlock <- adminBlockBuilder.buildAdminBlock(regId)
     customerIdentificationBlock <- customerIdentificationBlockBuilder.buildCustomerIdentificationBlock(regId)
     contactBlock <- contactBlockBuilder.buildContactBlock(regId)
-    subscriptionBlock <- buildSubscriptionBlock(regId)
+    subscriptionBlock <- subscriptionBlockBuilder.buildSubscriptionBlock(regId)
     periodsBlock <- periodsBlockBuilder.buildPeriodsBlock(regId)
     complianceBlock <- complianceBlockBuilder.buildComplianceBlock(regId)
     bankDetailsBlock <- bankDetailsBlockBuilder.buildBankDetailsBlock(regId)
@@ -52,51 +51,4 @@ class SubmissionPayloadBuilder @Inject()(registrationMongoRepository: Registrati
     "bankDetails" -> bankDetailsBlock,
     optional("compliance" -> complianceBlock)
   )
-
-  private def buildSubscriptionBlock(regId: String): Future[JsObject] = for {
-    optEligibilityData <- registrationMongoRepository.fetchEligibilitySubmissionData(regId)
-    optReturns <- registrationMongoRepository.fetchReturns(regId)
-    optApplicantDetails <- registrationMongoRepository.getApplicantDetails(regId)
-    optSicAndCompliance <- registrationMongoRepository.fetchSicAndCompliance(regId)
-  } yield (optEligibilityData, optReturns, optApplicantDetails, optSicAndCompliance) match {
-    case (Some(eligibilityData), Some(returns), Some(applicantDetails), Some(sicAndCompliance)) => Json.obj(
-      "reasonForSubscription" -> jsonObject(
-        "registrationReason" -> eligibilityData.reasonForRegistration,
-        optional("relevantDate" -> {
-          if (eligibilityData.reasonForRegistration != voluntaryKey) {
-            Some(eligibilityData.earliestDate)
-          } else {
-            returns.start.date
-          }
-        }),
-        optional("voluntaryOrEarlierDate" -> returns.start.date),
-        "exemptionOrException" -> eligibilityData.exceptionOrExemption
-      ),
-      "corporateBodyRegistered" -> jsonObject(
-        optional("companyRegistrationNumber" -> applicantDetails.companyNumber),
-        "dateOfIncorporation" -> applicantDetails.dateOfIncorporation,
-        "countryOfIncorporation" -> applicantDetails.countryOfIncorporation
-      ),
-      "businessActivities" -> Json.obj(
-        "description" -> sicAndCompliance.businessDescription,
-        "SICCodes" -> Json.obj(
-          "primaryMainCode" -> sicAndCompliance.mainBusinessActivity.id
-        )
-      ),
-      "yourTurnover" -> Json.obj(
-        "turnoverNext12Months" -> "",
-        "zeroRatedSupplies" -> 12.99,
-        "VATRepaymentExpected" -> true
-      ),
-      "schemes" -> Json.obj(
-        "FRSCategory" -> "",
-        "FRSPercentage" -> "",
-        "startDate" -> "",
-        "limitedCostTrader" -> ""
-      )
-    )
-    case _ =>
-      throw new InternalServerException("Could not build subscription block for submission due to missing data")
-  }
-
 }
