@@ -16,7 +16,7 @@
 
 package services.submission
 
-import fixtures.{VatRegistrationFixture, VatSubmissionFixture}
+import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models.api.{BvCtEnrolled, BvPass, BvUnchallenged, FailedStatus}
 import org.mockito.ArgumentMatchers.any
@@ -27,7 +27,7 @@ import uk.gov.hmrc.http.InternalServerException
 
 import scala.concurrent.Future
 
-class CustomerIdentificationBlockBuilderSpec extends VatRegSpec with VatRegistrationFixture with VatSubmissionFixture {
+class CustomerIdentificationBlockBuilderSpec extends VatRegSpec with VatRegistrationFixture {
 
   class Setup {
     val service: CustomerIdentificationBlockBuilder = new CustomerIdentificationBlockBuilder(

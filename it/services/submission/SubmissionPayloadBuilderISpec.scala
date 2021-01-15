@@ -85,6 +85,11 @@ class SubmissionPayloadBuilderISpec extends IntegrationSpecBase with Integration
           |  },
           |  "periods": {
           |    "customerPreferredPeriodicity": "MA"
+          |  },
+          |  "bankDetails": {
+          |    "UK": {
+          |      "reasonBankAccNotProvided": "BeingSetup"
+          |    }
           |  }
           |}""".stripMargin)
     }
@@ -171,7 +176,14 @@ class SubmissionPayloadBuilderISpec extends IntegrationSpecBase with Integration
           |  },
           |  "periods": {
           |    "customerPreferredPeriodicity": "MA"
-          |  }
+          |  },
+          |  "bankDetails": {
+          |    "UK": {
+          |      "accountName": "testBankName",
+          |       "sortCode": "111111",
+          |       "accountNumber": "01234567"
+          |     }
+          |   }
           |}""".stripMargin)
     }
   }

@@ -22,7 +22,7 @@ import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
-import services.submission.buildermocks.{MockAdminBlockBuilder, MockContactBlockBuilder, MockCustomerIdentificationBlockBuilder, MockPeriodsBlockBuilder}
+import services.submission.buildermocks._
 import uk.gov.hmrc.http.InternalServerException
 
 import scala.concurrent.Future
@@ -34,14 +34,15 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
   with MockCustomerIdentificationBlockBuilder
   with MockContactBlockBuilder
   with MockPeriodsBlockBuilder
-{
+  with MockBankDetailsBlockBuilder {
 
   object TestBuilder extends SubmissionPayloadBuilder(
     mockRegistrationMongoRepository,
     mockAdminBlockBuilder,
     mockCustomerIdentificationBlockBuilder,
     mockContactBlockBuilder,
-    mockPeriodsBlockBuilder
+    mockPeriodsBlockBuilder,
+    mockBankDetailsBlockBuilder
   )
 
   val testAdminBlockJson: JsObject = Json.obj(
@@ -77,6 +78,14 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
 
   val testPeriodsBlockJson: JsObject = Json.obj("customerPreferredPeriodicity" -> "MM")
 
+  val testBankDetailsBlockJson: JsObject = Json.obj(
+    "UK" -> Json.obj(
+      "accountName" -> "Test Bank Account",
+      "sortCode" -> "010203",
+      "accountNumber" -> "01023456"
+    )
+  )
+
   val expectedJson: JsObject = Json.obj(
     "admin" -> testAdminBlockJson,
     "customerIdentification" -> testCustomerIdentificationBlockJson,
@@ -111,7 +120,8 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
         "limitedCostTrader" -> ""
       )
     ),
-    "periods" -> testPeriodsBlockJson
+    "periods" -> testPeriodsBlockJson,
+    "bankDetails" -> testBankDetailsBlockJson
   )
 
   "buildSubmissionPayload" should {
@@ -136,6 +146,8 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
           .thenReturn(Future.successful(testSicAndCompliance))
 
         mockBuildPeriodsBlock(testRegId)(Future.successful(testPeriodsBlockJson))
+
+        mockBuildBankDetailsBlock(testRegId)(Future.successful(testBankDetailsBlockJson))
 
         val result = await(TestBuilder.buildSubmissionPayload(testRegId))
 
