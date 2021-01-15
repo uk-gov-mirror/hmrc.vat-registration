@@ -17,7 +17,7 @@
 package services.submission
 
 import models.api.Returns.writePeriod
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.{JsObject, Json}
 import repositories.RegistrationMongoRepository
 import uk.gov.hmrc.http.InternalServerException
 
@@ -33,8 +33,8 @@ class PeriodsBlockBuilder @Inject()(registrationMongoRepository: RegistrationMon
       scheme.flatMap(_.returns) match {
         case Some(returns) =>
           writePeriod(returns.frequency, returns.staggerStart)
-            .map(_ => Json.obj(
-              "customerPreferredPeriodicity" -> writePeriod(returns.frequency, returns.staggerStart)
+            .map(period => Json.obj(
+              "customerPreferredPeriodicity" -> period
             ))
             .getOrElse(
               throw new InternalServerException("Couldn't build periods section due to either an invalid frequency or stagger start")
