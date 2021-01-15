@@ -22,7 +22,7 @@ import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
-import services.submission.buildermocks._
+import services.submission.buildermocks.{MockAdminBlockBuilder, MockBankDetailsBlockBuilder, MockComplianceBlockBuilder, MockContactBlockBuilder, MockCustomerIdentificationBlockBuilder, MockPeriodsBlockBuilder}
 import uk.gov.hmrc.http.InternalServerException
 
 import scala.concurrent.Future
@@ -34,7 +34,9 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
   with MockCustomerIdentificationBlockBuilder
   with MockContactBlockBuilder
   with MockPeriodsBlockBuilder
-  with MockBankDetailsBlockBuilder {
+  with MockBankDetailsBlockBuilder
+  with MockComplianceBlockBuilder
+{
 
   object TestBuilder extends SubmissionPayloadBuilder(
     mockRegistrationMongoRepository,
@@ -42,7 +44,8 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
     mockCustomerIdentificationBlockBuilder,
     mockContactBlockBuilder,
     mockPeriodsBlockBuilder,
-    mockBankDetailsBlockBuilder
+    mockBankDetailsBlockBuilder,
+    mockComplianceBlockBuilder
   )
 
   val testAdminBlockJson: JsObject = Json.obj(
@@ -86,6 +89,12 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
     )
   )
 
+  val testComplianceJson: JsObject = Json.obj(
+    "numOfWorkersSupplied" -> 1,
+    "intermediaryArrangement" -> true,
+    "supplyWorkers" -> true
+  )
+
   val expectedJson: JsObject = Json.obj(
     "admin" -> testAdminBlockJson,
     "customerIdentification" -> testCustomerIdentificationBlockJson,
@@ -121,7 +130,8 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
       )
     ),
     "periods" -> testPeriodsBlockJson,
-    "bankDetails" -> testBankDetailsBlockJson
+    "bankDetails" -> testBankDetailsBlockJson,
+    "compliance" -> testComplianceJson
   )
 
   "buildSubmissionPayload" should {
@@ -132,6 +142,10 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
         mockBuildCustomerIdentificationBlock(testRegId)(Future.successful(testCustomerIdentificationBlockJson))
 
         mockBuildContactBlock(testRegId)(Future.successful(testContactBlockJson))
+
+        mockBuildBankDetailsBlock(testRegId)(Future.successful(testBankDetailsBlockJson))
+
+        mockBuildComplianceBlock(testRegId)(Future.successful(Some(testComplianceJson)))
 
         when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(ArgumentMatchers.eq(testRegId)))
           .thenReturn(Future.successful(Some(testEligibilitySubmissionData)))
@@ -147,12 +161,38 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
 
         mockBuildPeriodsBlock(testRegId)(Future.successful(testPeriodsBlockJson))
 
-        mockBuildBankDetailsBlock(testRegId)(Future.successful(testBankDetailsBlockJson))
-
         val result = await(TestBuilder.buildSubmissionPayload(testRegId))
 
         result mustBe expectedJson
+      }
+      "there are no compliance answers in the database" in {
+        mockBuildAdminBlock(testRegId)(Future.successful(testAdminBlockJson))
 
+        mockBuildCustomerIdentificationBlock(testRegId)(Future.successful(testCustomerIdentificationBlockJson))
+
+        mockBuildContactBlock(testRegId)(Future.successful(testContactBlockJson))
+
+        mockBuildBankDetailsBlock(testRegId)(Future.successful(testBankDetailsBlockJson))
+
+        mockBuildComplianceBlock(testRegId)(Future.successful(None))
+
+        when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(ArgumentMatchers.eq(testRegId)))
+          .thenReturn(Future.successful(Some(testEligibilitySubmissionData)))
+
+        when(mockRegistrationMongoRepository.fetchReturns(ArgumentMatchers.eq(testRegId)))
+          .thenReturn(Future.successful(Some(testReturns)))
+
+        when(mockRegistrationMongoRepository.getApplicantDetails(ArgumentMatchers.eq(testRegId)))
+          .thenReturn(Future.successful(Some(validApplicantDetails)))
+
+        when(mockRegistrationMongoRepository.fetchSicAndCompliance(ArgumentMatchers.eq(testRegId)))
+          .thenReturn(Future.successful(testSicAndCompliance))
+
+        mockBuildPeriodsBlock(testRegId)(Future.successful(testPeriodsBlockJson))
+
+        val result = await(TestBuilder.buildSubmissionPayload(testRegId))
+
+        result mustBe expectedJson - "compliance"
       }
     }
 

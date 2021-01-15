@@ -90,6 +90,11 @@ class SubmissionPayloadBuilderISpec extends IntegrationSpecBase with Integration
           |    "UK": {
           |      "reasonBankAccNotProvided": "BeingSetup"
           |    }
+          |  },
+          |  "compliance": {
+          |    "numOfWorkersSupplied": 1,
+          |    "intermediaryArrangement": true,
+          |    "supplyWorkers": true
           |  }
           |}""".stripMargin)
     }
@@ -183,7 +188,12 @@ class SubmissionPayloadBuilderISpec extends IntegrationSpecBase with Integration
           |       "sortCode": "111111",
           |       "accountNumber": "01234567"
           |     }
-          |   }
+          |  },
+          |  "compliance": {
+          |    "numOfWorkersSupplied": 1,
+          |    "intermediaryArrangement": true,
+          |    "supplyWorkers": true
+          |  }
           |}""".stripMargin)
     }
   }
