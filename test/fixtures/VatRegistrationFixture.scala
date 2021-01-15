@@ -129,6 +129,16 @@ trait VatRegistrationFixture {
   lazy val validEmptyFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = false, None)
   lazy val invalidEmptyFlatRateScheme: FlatRateScheme = FlatRateScheme(joinFrs = true, None)
 
+  lazy val validFullBusinessContact: BusinessContact = BusinessContact(
+    digitalContact = DigitalContact(email = "email@email.com", tel = Some("12345"), mobile = Some("54321")),
+    website = Some("www.foo.com"),
+    ppob = Address(
+      line1 = "line1",
+      line2 = "line2",
+      postcode = Some("ZZ1 1ZZ"),
+      country = Some(Country(code = Some("GB"), name = Some("UK")))),
+    commsPreference = Email)
+
   lazy val testFullVatScheme: VatScheme = testVatScheme.copy(
     tradingDetails = Some(validFullTradingDetails),
     sicAndCompliance = testSicAndCompliance,

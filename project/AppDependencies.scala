@@ -22,7 +22,7 @@ object AppDependencies {
 
 object CompileDependencies {
   val domainVersion = "5.10.0-play-27"
-  val bootstrapVersion = "3.2.0"
+  val bootstrapVersion = "3.3.0"
   val simpleReactiveMongoVersion = "7.31.0-play-27"
   val catsVersion = "1.0.0"
   private val authClientVersion = "3.2.0-play-27"
