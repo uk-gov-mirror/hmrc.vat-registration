@@ -30,7 +30,8 @@ class SubmissionPayloadBuilder @Inject()(registrationMongoRepository: Registrati
                                          adminBlockBuilder: AdminBlockBuilder,
                                          customerIdentificationBlockBuilder: CustomerIdentificationBlockBuilder,
                                          contactBlockBuilder: ContactBlockBuilder,
-                                         periodsBlockBuilder: PeriodsBlockBuilder
+                                         periodsBlockBuilder: PeriodsBlockBuilder,
+                                         bankDetailsBlockBuilder: BankDetailsBlockBuilder
                                         )(implicit ec: ExecutionContext) {
 
   def buildSubmissionPayload(regId: String): Future[JsObject] = for {
@@ -39,12 +40,14 @@ class SubmissionPayloadBuilder @Inject()(registrationMongoRepository: Registrati
     contactBlock <- contactBlockBuilder.buildContactBlock(regId)
     subscriptionBlock <- buildSubscriptionBlock(regId)
     periodsBlock <- periodsBlockBuilder.buildPeriodsBlock(regId)
+    bankDetailsBlock <- bankDetailsBlockBuilder.buildBankDetailsBlock(regId)
   } yield Json.obj(
     "admin" -> adminBlock,
     "customerIdentification" -> customerIdentificationBlock,
     "contact" -> contactBlock,
     "subscription" -> subscriptionBlock,
-    "periods" -> periodsBlock
+    "periods" -> periodsBlock,
+    "bankDetails" -> bankDetailsBlock
   )
 
   private def buildSubscriptionBlock(regId: String): Future[JsObject] = for {
