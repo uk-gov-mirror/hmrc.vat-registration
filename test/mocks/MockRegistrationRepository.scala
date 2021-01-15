@@ -16,7 +16,7 @@
 
 package mocks
 
-import models.api.VatScheme
+import models.api.{SicAndCompliance, VatScheme}
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
@@ -39,5 +39,8 @@ trait MockRegistrationRepository extends MockitoSugar {
 
   def mockGetVatScheme(regId: String)(response: Option[VatScheme]): OngoingStubbing[Future[Option[VatScheme]]] =
     when(mockRegistrationRepository.retrieveVatScheme(regId)).thenReturn(Future.successful(response))
+
+  def mockFetchSicAndCompliance(regid: String)(response: Option[SicAndCompliance]): OngoingStubbing[Future[Option[SicAndCompliance]]] =
+    when(mockRegistrationRepository.fetchSicAndCompliance(regid)).thenReturn(Future.successful(response))
 
 }
