@@ -34,11 +34,12 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
   with MockPeriodsBlockBuilder
   with MockBankDetailsBlockBuilder
   with MockComplianceBlockBuilder
-  with MockSubscriptionBlockBuilder {
+  with MockSubscriptionBlockBuilder
+  with MockDeclarationBlockBuilder {
 
   object TestBuilder extends SubmissionPayloadBuilder(
-    mockRegistrationMongoRepository,
     mockAdminBlockBuilder,
+    mockDeclarationBlockBuilder,
     mockCustomerIdentificationBlockBuilder,
     mockContactBlockBuilder,
     mockPeriodsBlockBuilder,
@@ -53,6 +54,38 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
     ),
     "attachments" -> Json.obj(
       "EORIrequested" -> true
+    )
+  )
+
+  val testDeclarationBlockJson: JsObject = Json.obj(
+    "declarationSigning" -> Json.obj(
+      "confirmInformationDeclaration" -> true,
+      "declarationCapacity" -> "03"
+    ),
+    "applicantDetails" -> Json.obj(
+      "roleInBusiness" -> "Director",
+      "name" -> Json.obj(
+        "firstName" -> "Test",
+        "lastName" -> "Name"
+      ),
+      "dateOfBirth" -> "2000-10-20",
+      "currAddress" -> Json.obj(
+        "line1" -> "line1",
+        "line2" -> "line2",
+        "postCode" -> "ZZ1 1ZZ",
+        "countryCode" -> "GB"
+      ),
+      "commDetails" -> Json.obj(
+        "email" -> "email@email.com",
+      ),
+      "identifiers" -> Json.arr(
+        Json.obj(
+          "idValue" -> "AB123456A",
+          "idType" -> "NINO",
+          "IDsVerificationStatus" -> "1",
+          "date" -> "2018-01-01"
+        )
+      )
     )
   )
 
@@ -132,6 +165,7 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
 
   val expectedJson: JsObject = Json.obj(
     "admin" -> testAdminBlockJson,
+    "declaration" -> testDeclarationBlockJson,
     "customerIdentification" -> testCustomerIdentificationBlockJson,
     "contact" -> testContactBlockJson,
     "subscription" -> testSubscriptionBlockJson,
@@ -144,6 +178,8 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
     "return a submission json object" when {
       "all required pieces of data are available in the database" in {
         mockBuildAdminBlock(testRegId)(Future.successful(testAdminBlockJson))
+
+        mockBuildDeclarationBlock(testRegId)(Future.successful(testDeclarationBlockJson))
 
         mockBuildCustomerIdentificationBlock(testRegId)(Future.successful(testCustomerIdentificationBlockJson))
 
@@ -163,6 +199,8 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
       }
       "there are no compliance answers in the database" in {
         mockBuildAdminBlock(testRegId)(Future.successful(testAdminBlockJson))
+
+        mockBuildDeclarationBlock(testRegId)(Future.successful(testDeclarationBlockJson))
 
         mockBuildCustomerIdentificationBlock(testRegId)(Future.successful(testCustomerIdentificationBlockJson))
 
