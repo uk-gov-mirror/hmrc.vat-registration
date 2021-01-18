@@ -323,10 +323,10 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
   }
 
   def fetchSicAndCompliance(regId: String): Future[Option[SicAndCompliance]] =
-    fetchBlock[SicAndCompliance](regId, "sicAndCompliance")(SicAndCompliance.mongoFormats)
+    fetchBlock[SicAndCompliance](regId, "sicAndCompliance")(SicAndCompliance.apiFormat)
 
   def updateSicAndCompliance(regId: String, sicAndCompliance: SicAndCompliance): Future[SicAndCompliance] =
-    updateBlock(regId, sicAndCompliance, "sicAndCompliance")(SicAndCompliance.mongoFormats)
+    updateBlock(regId, sicAndCompliance, "sicAndCompliance")(SicAndCompliance.apiFormat)
 
   def fetchBusinessContact(regId: String): Future[Option[BusinessContact]] =
     fetchBlock[BusinessContact](regId, "businessContact")

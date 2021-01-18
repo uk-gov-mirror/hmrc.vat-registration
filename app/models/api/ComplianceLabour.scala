@@ -17,7 +17,7 @@
 package models.api
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Format, OFormat, __}
+import play.api.libs.json.{OFormat, __}
 
 case class ComplianceLabour(numOfWorkersSupplied: Option[Int],
                             intermediaryArrangement: Option[Boolean],
@@ -27,14 +27,8 @@ object ComplianceLabour {
 
   implicit val formats: OFormat[ComplianceLabour] = (
     (__ \ "numOfWorkersSupplied").formatNullable[Int] and
-    (__ \ "intermediaryArrangement").formatNullable[Boolean] and
-    (__ \ "supplyWorkers").format[Boolean]
-  )(apply, unlift(unapply))
-
-  val submissionFormat: Format[ComplianceLabour] = (
-    (__ \ "numOfWorkersSupplied").formatNullable[Int] and
-    (__ \ "intermediaryArrangement").formatNullable[Boolean] and
-    (__ \ "supplyWorkers").format[Boolean]
-  )(apply, unlift(unapply))
+      (__ \ "intermediaryArrangement").formatNullable[Boolean] and
+      (__ \ "supplyWorkers").format[Boolean]
+    ) (apply, unlift(unapply))
 
 }

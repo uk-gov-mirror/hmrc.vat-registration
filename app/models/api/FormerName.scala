@@ -27,8 +27,8 @@ case class FormerName(name: Option[Name],
 object FormerName {
   implicit val format = Json.format[FormerName]
 
-  val submissionFormat: Format[FormerName] = (
-    (__).formatNullable[Name](Name.submissionFormat) and
+  val auditWrites: Format[FormerName] = (
+    (__).formatNullable[Name](Name.auditWrites) and
     (__ \ "nameChangeDate").formatNullable[LocalDate]
   )(FormerName.apply, unlift(FormerName.unapply))
 }

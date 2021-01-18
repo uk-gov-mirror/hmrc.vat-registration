@@ -19,6 +19,7 @@ package models.monitoring
 import java.time.LocalDate
 
 import models.api._
+import models.submission.VatSubmission
 import play.api.libs.json.{JsObject, JsValue, Json}
 import services.monitoring.AuditModel
 import uk.gov.hmrc.auth.core.AffinityGroup
@@ -105,18 +106,16 @@ object RegistrationSubmissionAuditing {
             "accountNumber" -> details.number
           )
           case BankAccount(false, _, Some(reason)) => Json.obj(
-            "reasonBankAccNotProvided" -> Json.toJson(reason)(NoUKBankAccount.submissionWrites)
+            "reasonBankAccNotProvided" -> NoUKBankAccount.reasonId(reason)
           )
         },
-        "compliance" -> vatSubmission.sicAndCompliance.labourCompliance.map(
-          Json.toJson(_)(ComplianceLabour.submissionFormat)
-        ),
+        "compliance" -> vatSubmission.sicAndCompliance.labourCompliance.map(Json.toJson(_)),
         "declaration" -> Json.obj(
           "applicant" -> Json.obj(
             "roleInBusiness" -> Json.toJson(vatSubmission.applicantDetails.roleInBusiness),
             "otherRole" -> "None",
-            "name" -> Json.toJson(vatSubmission.applicantDetails.name)(Name.submissionFormat),
-            "previousName" -> vatSubmission.applicantDetails.changeOfName.map(Json.toJson(_)(FormerName.submissionFormat)),
+            "name" -> Json.toJson(vatSubmission.applicantDetails.name)(Name.auditWrites),
+            "previousName" -> vatSubmission.applicantDetails.changeOfName.map(Json.toJson(_)(FormerName.auditWrites)),
             "currentAddress" -> Json.toJson(vatSubmission.applicantDetails.currentAddress)(Address.auditFormat),
             "communicationDetails" -> Json.obj(
               "telephone" -> vatSubmission.applicantDetails.contact.tel,

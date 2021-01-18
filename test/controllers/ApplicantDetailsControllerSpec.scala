@@ -19,7 +19,7 @@ package controllers
 import common.exceptions.MissingRegDocument
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
-import models.api.{ApplicantDetails, BvPass}
+import models.api.{ApplicantDetails, BvPass, RegisteredStatus}
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import play.api.libs.json.{JsValue, Json}
@@ -33,7 +33,7 @@ import scala.concurrent.Future
 class ApplicantDetailsControllerSpec extends VatRegSpec with VatRegistrationFixture {
 
   class Setup {
-    val controller: ApplicantDetailsController = new ApplicantDetailsController(mockApplicantDetailsService, mockAuthConnector, stubControllerComponents()){
+    val controller: ApplicantDetailsController = new ApplicantDetailsController(mockApplicantDetailsService, mockAuthConnector, stubControllerComponents()) {
       override val resourceConn: RegistrationMongoRepository = mockRegistrationMongoRepository
     }
   }
@@ -44,14 +44,16 @@ class ApplicantDetailsControllerSpec extends VatRegSpec with VatRegistrationFixt
     roleInBusiness = testRole,
     dateOfBirth = testDateOfBirth,
     companyName = testCompanyName,
-    companyNumber = Some(testCrn),
+    companyNumber = testCrn,
     dateOfIncorporation = testDateOFIncorp,
     ctutr = testCtUtr,
     currentAddress = testAddress,
     contact = testDigitalContactOptional,
     changeOfName = None,
     previousAddress = None,
-    businessVerification = Some(BvPass),
+    businessVerification = BvPass,
+    registration = RegisteredStatus,
+    identifiersMatch = true,
     bpSafeId = Some(testBpSafeId)
   )
 

@@ -39,6 +39,7 @@ class SubmissionPayloadBuilderISpec extends IntegrationSpecBase with Integration
       res mustBe Json.parse(
         """
           |{
+          |  "messageType": "SubscriptionCreate",
           |  "admin": {
           |    "additionalInformation": {
           |      "customerStatus": "2"
@@ -129,7 +130,7 @@ class SubmissionPayloadBuilderISpec extends IntegrationSpecBase with Integration
           |  },
           |  "bankDetails": {
           |    "UK": {
-          |      "reasonBankAccNotProvided": "BeingSetup"
+          |      "reasonBankAccNotProvided": "1"
           |    }
           |  },
           |  "compliance": {
@@ -149,6 +150,7 @@ class SubmissionPayloadBuilderISpec extends IntegrationSpecBase with Integration
       res mustBe Json.parse(
         """
           |{
+          |  "messageType": "SubscriptionCreate",
           |  "admin": {
           |    "additionalInformation": {
           |      "customerStatus": "2"

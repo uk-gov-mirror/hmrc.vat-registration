@@ -52,13 +52,6 @@ object EligibilitySubmissionData {
   val exemptionKey = "1"
   val nonExceptionOrExemptionKey = "0"
 
-  val submissionFormat: Format[EligibilitySubmissionData] = (
-    (__ \ "subscription" \ "reasonForSubscription").format[Threshold](Threshold.submissionFormat) and
-      (__ \ "subscription" \ "reasonForSubscription" \ "exemptionOrException").format[String] and
-      (__ \ "subscription" \ "yourTurnover" \ "turnoverNext12Months").format[TurnoverEstimates](TurnoverEstimates.submissionFormat) and
-      (__ \ "admin" \ "additionalInformation" \ "customerStatus").format[CustomerStatus](CustomerStatus.format)
-    ) (EligibilitySubmissionData.apply, unlift(EligibilitySubmissionData.unapply))
-
   val eligibilityReads: Reads[EligibilitySubmissionData] = Reads { json =>
     (
       json.validate[Threshold](Threshold.eligibilityDataJsonReads) and

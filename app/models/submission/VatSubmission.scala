@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package models.api
+package models.submission
 
-import models.submission.{PartyType, UkCompany}
-import play.api.libs.functional.syntax._
+import models.api._
 import play.api.libs.json._
 import utils.JsonUtilities
 
@@ -35,50 +34,6 @@ case class VatSubmission(messageType: String = "SubscriptionCreate",
                          returns: Returns)
 
 object VatSubmission extends JsonUtilities {
-  def submissionFormat: Format[VatSubmission] = Format(submissionReads, submissionWrites)
-
-  def submissionReads: Reads[VatSubmission] = (
-    (__ \ "messageType").read[String] and
-      (__ \ "customerIdentification" \ "tradersPartyType").readNullable[PartyType] and
-      (__ \ "declaration" \ "declarationSigning" \ "confirmInformationDeclaration").readNullable[Boolean] and
-      (__ \ "subscription" \ "corporateBodyRegistered" \ "companyRegistrationNumber").readNullable[String] and
-      (__).format[ApplicantDetails](ApplicantDetails.submissionReads) and
-      (__ \ "bankDetails").readNullable[JsValue].fmap[Option[BankAccount]](BankAccount.submissionReads) and
-      (__).read[SicAndCompliance](SicAndCompliance.submissionReads) and
-      (__ \ "contact").read[BusinessContact](BusinessContact.submissionFormat) and
-      (__).read[TradingDetails](TradingDetails.submissionFormat) and
-      (__ \ "subscription" \ "schemes").readNullable[FRSDetails](FRSDetails.submissionReads) and
-      (__).read[EligibilitySubmissionData](EligibilitySubmissionData.submissionFormat) and
-      (__).read[Returns](Returns.submissionReads)
-    ) (VatSubmission.apply(_, _, _, _, _, _, _, _, _, _, _, _))
-
-  def submissionWrites: Writes[VatSubmission] = Writes { vatSubmission: VatSubmission =>
-    Json.obj(
-      "messageType" -> vatSubmission.messageType,
-      "customerIdentification" -> Json.obj(
-        "tradersPartyType" -> Json.toJson(vatSubmission.tradersPartyType)
-      ),
-      "declaration" -> Json.obj(
-        "declarationSigning" -> Json.obj(
-          "confirmInformationDeclaration" -> vatSubmission.confirmInformationDeclaration
-        )
-      ),
-      "subscription" -> Json.obj(
-        "corporateBodyRegistered" -> Json.obj(
-          "companyRegistrationNumber" -> vatSubmission.companyRegistrationNumber
-        ),
-        "schemes" -> vatSubmission.flatRateScheme.map(Json.toJson(_)(FRSDetails.submissionWrites))
-      ),
-      "bankDetails" -> Json.toJson(vatSubmission.bankDetails)(BankAccount.submissionWrites),
-      "contact" -> Json.toJson(vatSubmission.businessContact)(BusinessContact.submissionFormat)
-    ).deepMerge(Json.toJson(vatSubmission.applicantDetails)(ApplicantDetails.submissionWrites).as[JsObject])
-      .deepMerge(Json.toJson(vatSubmission.sicAndCompliance)(SicAndCompliance.submissionWrites).as[JsObject])
-      .deepMerge(Json.toJson(vatSubmission.tradingDetails)(TradingDetails.submissionFormat).as[JsObject])
-      .deepMerge(Json.toJson(vatSubmission.eligibilitySubmissionData)(EligibilitySubmissionData.submissionFormat).as[JsObject])
-      .deepMerge(Json.toJson(vatSubmission.returns)(Returns.submissionWrites(
-        vatSubmission.eligibilitySubmissionData.threshold.mandatoryRegistration
-      )).as[JsObject]) filterNullFields
-  }
 
   implicit val mongoFormat: OFormat[VatSubmission] = Json.format[VatSubmission]
 

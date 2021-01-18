@@ -28,52 +28,6 @@ case class Threshold(mandatoryRegistration: Boolean,
 
 object Threshold {
 
-  val voluntaryKey = "0018"
-  val forwardLookKey = "0016"
-  val backwardLookKey = "0015"
-
-  val submissionReads: Reads[Threshold] = Reads { json =>
-    (
-      (json \ "registrationReason").validate[String],
-      (json \ "relevantDate").validateOpt[LocalDate]
-    ) match {
-      case (JsSuccess(`voluntaryKey`, _), _) =>
-        JsSuccess(Threshold(mandatoryRegistration = false))
-      case (JsSuccess(`forwardLookKey`, _), JsSuccess(date, _)) =>
-        JsSuccess(Threshold(mandatoryRegistration = true, date, date, date))
-      case (JsSuccess(`backwardLookKey`, _), JsSuccess(date, _)) =>
-        JsSuccess(Threshold(mandatoryRegistration = true, date, date, date))
-      case _ => throw new InternalServerException("[Threshold][submissionReads] could not parse the Threshold block")
-    }
-  }
-
-  val submissionWrites: Writes[Threshold] = Writes {
-    case Threshold(false, _, _, _) => Json.obj(
-      "registrationReason" -> voluntaryKey
-    )
-    case Threshold(true, forwardLook1, backwardLook, forwardLook2) =>
-      val earliestDate = Seq(
-        forwardLook1,
-        backwardLook.map(_.withDayOfMonth(1).plusMonths(2)),
-        forwardLook2
-      ).flatten.min(Ordering.by((date: LocalDate) => date.toEpochDay))
-
-      if (forwardLook1.contains(earliestDate) || forwardLook2.contains(earliestDate)) {
-        Json.obj(
-          "registrationReason" -> forwardLookKey,
-          "relevantDate" -> earliestDate
-        )
-      }
-      else {
-        Json.obj(
-          "registrationReason" -> backwardLookKey,
-          "relevantDate" -> earliestDate
-        )
-      }
-  }
-
-  val submissionFormat: Format[Threshold] = Format(submissionReads, submissionWrites)
-
   val eligibilityDataJsonReads: Reads[Threshold] = Reads { json =>
     (
       (json \ "voluntaryRegistration").validateOpt[Boolean],

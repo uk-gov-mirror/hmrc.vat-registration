@@ -16,20 +16,17 @@
 
 package models.api
 
-import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import play.api.libs.json._
+
 case class TradingDetails(tradingName: Option[String],
                           eoriRequested: Boolean)
 
 object TradingDetails {
+
   implicit val format: OFormat[TradingDetails] = (
     (__ \ "tradingName").formatNullable[String] and
-    (__ \ "eoriRequested").format[Boolean]
-  )(TradingDetails.apply, unlift(TradingDetails.unapply))
-
-  val submissionFormat: Format[TradingDetails] = (
-    (__ \ "customerIdentification" \ "tradingName").formatNullable[String] and
-    (__ \ "admin" \ "attachments" \ "EORIrequested").format[Boolean]
-  )(TradingDetails.apply, unlift(TradingDetails.unapply))
+      (__ \ "eoriRequested").format[Boolean]
+    ) (TradingDetails.apply, unlift(TradingDetails.unapply))
 
 }

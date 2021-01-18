@@ -67,7 +67,7 @@ trait ITFixtures {
   val testFormerName = FormerName(name = Some(oldName), change = Some(testDate))
   val testCompanyName = "testCompanyName"
   val testCrn = "testCrn"
-  val testCtUtr = Some("testCtUtr")
+  val testCtUtr = "testCtUtr"
   val testDateOfIncorp = LocalDate.of(2020, 1, 2)
   val testBpSafeId = "testBpSafeId"
 
@@ -77,16 +77,16 @@ trait ITFixtures {
     name = testName,
     dateOfBirth = DateOfBirth(testDate),
     companyName = testCompanyName,
-    companyNumber = Some(testCrn),
+    companyNumber = testCrn,
     dateOfIncorporation = testDateOfIncorp,
     ctutr = testCtUtr,
     currentAddress = testAddress,
     contact = testDigitalContactOptional,
     changeOfName = Some(testFormerName),
     previousAddress = None,
-    businessVerification = Some(BvUnchallenged),
-    registration = Some(NotCalledStatus),
-    identifiersMatch = Some(true),
+    businessVerification = BvUnchallenged,
+    registration = NotCalledStatus,
+    identifiersMatch = true,
     bpSafeId = None
   )
 
@@ -96,14 +96,16 @@ trait ITFixtures {
     name = testName,
     dateOfBirth = DateOfBirth(testDate),
     companyName = testCompanyName,
-    companyNumber = Some(testCrn),
+    companyNumber = testCrn,
     dateOfIncorporation = testDateOfIncorp,
     ctutr = testCtUtr,
     currentAddress = testAddress,
     contact = testDigitalContactOptional,
     changeOfName = None,
     previousAddress = None,
-    businessVerification = Some(BvPass),
+    businessVerification = BvPass,
+    registration = RegisteredStatus,
+    identifiersMatch = true,
     bpSafeId = Some(testBpSafeId)
   )
 

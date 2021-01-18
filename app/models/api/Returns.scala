@@ -18,7 +18,6 @@ package models.api
 
 import java.time.LocalDate
 
-import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import utils.JsonUtilities
 
@@ -59,45 +58,12 @@ object Returns extends VatAccountingPeriodValidator with JsonUtilities {
       case (_, Some("mar")) => Some("MC")
       case _ => None
     }
-
-  val submissionReads: Reads[Returns] = (
-    (__ \ "subscription" \ "yourTurnover" \ "VATRepaymentExpected").read[Boolean] and
-    (__ \ "periods" \ "customerPreferredPeriodicity").read[String].fmap(readPeriod) and
-    (__ \ "periods" \ "customerPreferredPeriodicity").readNullable[String].fmap(readStaggerStart) and
-    (__ \ "subscription" \ "reasonForSubscription" \ "voluntaryOrEarlierDate").readNullable[LocalDate].fmap(date => StartDate(date)) and
-    (__ \ "subscription" \ "yourTurnover" \ "zeroRatedSupplies").readNullable[BigDecimal]
-  )(Returns.apply(_,_,_,_,_))
-
-  def submissionWrites(isMandatory: Boolean): Writes[Returns] = Writes[Returns] { returns =>
-    Json.obj(
-      "subscription" -> Json.obj(
-        "reasonForSubscription" -> Json.obj(
-          "relevantDate" -> (if (isMandatory) JsNull else returns.start.date),
-          "voluntaryOrEarlierDate" -> returns.start.date
-        ),
-        "yourTurnover" -> Json.obj(
-          "VATRepaymentExpected" -> returns.reclaimVatOnMostReturns,
-          "zeroRatedSupplies" -> returns.zeroRatedSupplies
-        )
-      ),
-      "periods" -> Json.obj(
-        "customerPreferredPeriodicity" -> writePeriod(returns.frequency, returns.staggerStart)
-      )
-    ).filterNullFields
-  }
 }
 
 case class TurnoverEstimates(turnoverEstimate: Long)
 
 object TurnoverEstimates {
 
-  val submissionReads: Reads[TurnoverEstimates] = JsPath.read[Long].map(TurnoverEstimates(_))
-
-  val submissionWrites: Writes[TurnoverEstimates] = Writes {
-    estimates: TurnoverEstimates => JsNumber(BigDecimal(estimates.turnoverEstimate))
-  }
-
-  val submissionFormat: Format[TurnoverEstimates] = Format(submissionReads, submissionWrites)
   val eligibilityDataJsonReads: Reads[TurnoverEstimates] = Reads { json =>
     (json \ "turnoverEstimate-value").validate[Long].map(turnOverEstimateAmount =>
       TurnoverEstimates(turnoverEstimate = turnOverEstimateAmount)
@@ -105,4 +71,5 @@ object TurnoverEstimates {
   }
 
   implicit val format: Format[TurnoverEstimates] = Json.format
+
 }

@@ -18,9 +18,7 @@ package models.api
 
 import java.time.LocalDate
 
-import models.api.Returns.JsonUtilities
 import play.api.libs.json._
-import play.api.libs.functional.syntax._
 
 case class FlatRateScheme(joinFrs: Boolean,
                           frsDetails: Option[FRSDetails])
@@ -43,22 +41,6 @@ case class FRSDetails(businessGoods: Option[BusinessGoods],
 
 object FRSDetails {
   implicit val format: Format[FRSDetails] = Json.format[FRSDetails]
-
-  val submissionReads: Reads[FRSDetails] = (
-    (__ \ "startDate").readNullable[LocalDate] and
-    (__ \ "FRSCategory").readNullable[String] and
-    (__ \ "FRSPercentage").read[BigDecimal] and
-    (__ \ "limitedCostTrader").readNullable[Boolean]
-  )(FRSDetails.apply(None, _, _, _, _))
-
-  val submissionWrites: Writes[FRSDetails] = Writes[FRSDetails] { frs =>
-    Json.obj(
-      "startDate" -> frs.startDate,
-      "FRSCategory" -> frs.categoryOfBusiness,
-      "FRSPercentage" -> frs.percent,
-      "limitedCostTrader" -> frs.limitedCostTrader
-    ).filterNullFields
-  }
 
   val auditWrites: Writes[FRSDetails] = Writes[FRSDetails] { frs =>
     Json.obj(

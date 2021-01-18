@@ -22,7 +22,7 @@ import play.api.libs.json.Json
 
 case class CustomerId(idValue: String,
                       idType: IdType,
-                      IDsVerificationStatus: Option[IdVerificationStatus] = Some(IdVerified),
+                      IDsVerificationStatus: IdVerificationStatus = IdVerified,
                       countryOfIncorporation: Option[String] = None,
                       date: Option[LocalDate] = None,
                       safeIDBPFound: Option[String] = None,

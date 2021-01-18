@@ -23,11 +23,6 @@ case class Country(code: Option[String], name: Option[String])
 
 object Country {
   implicit val format: Format[Country] = Json.format[Country]
-
-  val submissionFormat: Format[Country] = Format[Country](
-    Reads[Country] { json => (json \ "country").validate[Country] },
-    Writes[Country] { country => country.code.map(JsString).getOrElse(JsNull) }
-  )
 }
 
 case class Address(line1: String,
@@ -41,20 +36,6 @@ case class Address(line1: String,
 object Address {
 
   implicit val format: Format[Address] = Json.format[Address]
-
-  val submissionFormat: Format[Address] = (
-    (__ \ "line1").format[String] and
-      (__ \ "line2").format[String] and
-      (__ \ "line3").formatNullable[String] and
-      (__ \ "line4").formatNullable[String] and
-      (__ \ "postCode").formatNullable[String] and
-      (__ \ "countryCode").formatNullable[String]
-        .inmap[Option[Country]](
-          optCode => optCode.map(code => Country(Some(code), None)),
-          optCountry => optCountry.flatMap(country => country.code)
-        ) and
-    (__ \ "addressValidated").formatNullable[Boolean]
-    ) (Address.apply, unlift(Address.unapply))
 
   val auditFormat: Format[Address] = (
     (__ \ "line1").format[String] and

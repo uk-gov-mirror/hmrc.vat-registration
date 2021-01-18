@@ -24,16 +24,10 @@ case class DigitalContact(email: String, tel: Option[String], mobile: Option[Str
 
 object DigitalContact {
 
-  val apiFormat: Format[DigitalContact] = (
+  implicit val apiFormat: Format[DigitalContact] = (
     (__ \ "email").format[String] and
     (__ \ "tel").formatNullable[String] and
     (__ \ "mobile").formatNullable[String]
-  )(DigitalContact.apply, unlift(DigitalContact.unapply))
-
-  val submissionFormat: OFormat[DigitalContact] = (
-    (__ \ "email").format[String] and
-    (__ \ "telephone").formatNullable[String] and
-    (__ \ "mobileNumber").formatNullable[String]
   )(DigitalContact.apply, unlift(DigitalContact.unapply))
 
 }
