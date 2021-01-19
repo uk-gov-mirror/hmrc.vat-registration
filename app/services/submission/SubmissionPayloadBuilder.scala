@@ -16,16 +16,15 @@
 
 package services.submission
 
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsObject
-import repositories.RegistrationMongoRepository
 import utils.JsonUtils._
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SubmissionPayloadBuilder @Inject()(registrationMongoRepository: RegistrationMongoRepository,
-                                         adminBlockBuilder: AdminBlockBuilder,
+class SubmissionPayloadBuilder @Inject()(adminBlockBuilder: AdminBlockBuilder,
+                                         declarationBlockBuilder: DeclarationBlockBuilder,
                                          customerIdentificationBlockBuilder: CustomerIdentificationBlockBuilder,
                                          contactBlockBuilder: ContactBlockBuilder,
                                          periodsBlockBuilder: PeriodsBlockBuilder,
@@ -36,6 +35,7 @@ class SubmissionPayloadBuilder @Inject()(registrationMongoRepository: Registrati
 
   def buildSubmissionPayload(regId: String): Future[JsObject] = for {
     adminBlock <- adminBlockBuilder.buildAdminBlock(regId)
+    declarationBlock <- declarationBlockBuilder.buildDeclarationBlock(regId)
     customerIdentificationBlock <- customerIdentificationBlockBuilder.buildCustomerIdentificationBlock(regId)
     contactBlock <- contactBlockBuilder.buildContactBlock(regId)
     subscriptionBlock <- subscriptionBlockBuilder.buildSubscriptionBlock(regId)
@@ -44,6 +44,7 @@ class SubmissionPayloadBuilder @Inject()(registrationMongoRepository: Registrati
     bankDetailsBlock <- bankDetailsBlockBuilder.buildBankDetailsBlock(regId)
   } yield jsonObject(
     "admin" -> adminBlock,
+    "declaration" -> declarationBlock,
     "customerIdentification" -> customerIdentificationBlock,
     "contact" -> contactBlock,
     "subscription" -> subscriptionBlock,

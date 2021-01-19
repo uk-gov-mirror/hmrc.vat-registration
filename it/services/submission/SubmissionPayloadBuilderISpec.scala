@@ -47,6 +47,38 @@ class SubmissionPayloadBuilderISpec extends IntegrationSpecBase with Integration
           |      "EORIrequested": true
           |    }
           |  },
+          |  "declaration": {
+          |    "declarationSigning": {
+          |      "confirmInformationDeclaration": true,
+          |      "declarationCapacity": "03"
+          |    },
+          |    "applicantDetails": {
+          |      "roleInBusiness": "03",
+          |      "name": {
+          |        "firstName": "Forename",
+          |        "lastName": "Surname"
+          |      },
+          |      "dateOfBirth": "2017-01-01",
+          |      "currAddress": {
+          |        "line1": "line1",
+          |        "line2": "line2",
+          |        "postCode": "XX XX",
+          |        "countryCode": "GB",
+          |        "addressValidated": true
+          |      },
+          |      "commDetails": {
+          |        "email": "skylake@vilikariet.com"
+          |      },
+          |      "identifiers": [
+          |        {
+          |          "idValue": "NB686868C",
+          |          "idType": "NINO",
+          |          "IDsVerificationStatus": "1",
+          |          "date": "2017-01-01"
+          |        }
+          |      ]
+          |    }
+          |  },
           |  "customerIdentification": {
           |    "tradersPartyType": "50",
           |    "shortOrgName": "testCompanyName",
@@ -123,6 +155,43 @@ class SubmissionPayloadBuilderISpec extends IntegrationSpecBase with Integration
           |    },
           |    "attachments": {
           |      "EORIrequested": true
+          |    }
+          |  },
+          |  "declaration": {
+          |    "declarationSigning": {
+          |      "confirmInformationDeclaration": true,
+          |      "declarationCapacity": "03"
+          |    },
+          |    "applicantDetails": {
+          |      "roleInBusiness": "03",
+          |      "name": {
+          |        "firstName": "Forename",
+          |        "lastName": "Surname"
+          |      },
+          |      "prevName": {
+          |        "firstName": "Bob",
+          |        "lastName": "Smith",
+          |        "nameChangeDate": "2017-01-01"
+          |      },
+          |      "dateOfBirth": "2017-01-01",
+          |      "currAddress": {
+          |        "line1": "line1",
+          |        "line2": "line2",
+          |        "postCode": "XX XX",
+          |        "countryCode": "GB",
+          |        "addressValidated": true
+          |      },
+          |      "commDetails": {
+          |        "email": "skylake@vilikariet.com"
+          |      },
+          |      "identifiers": [
+          |        {
+          |          "idValue": "NB686868C",
+          |          "idType": "NINO",
+          |          "IDsVerificationStatus": "1",
+          |          "date": "2017-01-01"
+          |        }
+          |      ]
           |    }
           |  },
           |  "customerIdentification": {
