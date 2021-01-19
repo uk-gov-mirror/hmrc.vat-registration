@@ -24,6 +24,7 @@ import utils.JsonUtils._
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+// scalastyle:off
 @Singleton
 class CustomerIdentificationBlockBuilder @Inject()(registrationMongoRepository: RegistrationMongoRepository
                                                   )(implicit ec: ExecutionContext) {
@@ -41,28 +42,24 @@ class CustomerIdentificationBlockBuilder @Inject()(registrationMongoRepository: 
         (applicantDetails.bpSafeId, applicantDetails.companyNumber, applicantDetails.ctutr) match {
           case (Some(bpSafeId), _, _) =>
             Json.obj("primeBPSafeID" -> bpSafeId)
-          case (None, Some(companyNumber), Some(ctutr)) =>
+          case (None, companyNumber, ctutr) =>
             Json.obj("customerID" ->
               Json.arr(
                 jsonObject(
                   "idType" -> "UTR",
-                  optional("IDsVerificationStatus" -> applicantDetails.idVerificationStatus),
+                  "IDsVerificationStatus" -> applicantDetails.idVerificationStatus,
                   "idValue" -> ctutr
                 ),
                 jsonObject(
                   "idType" -> "CRN",
                   "idValue" -> companyNumber,
                   "date" -> applicantDetails.dateOfIncorporation,
-                  optional("IDsVerificationStatus" -> applicantDetails.idVerificationStatus)
+                  "IDsVerificationStatus" -> applicantDetails.idVerificationStatus
                 )
               )
             )
-          case (_, None, Some(ctutr)) =>
-            throw new InternalServerException("Could not build customer identification block for submission due to missing Company Number")
-          case (_, Some(companyNumber), None) =>
-            throw new InternalServerException("Could not build customer identification block for submission due to missing CTUTR")
           case _ =>
-            throw new InternalServerException("Could not build customer identification block for submission due to missing Company Number, Ctutr and/or BPSafeID")
+            throw new InternalServerException("Could not build customer identification block for submission due to missing BPSafeID")
         }
       }
     case (None, Some(tradingDetails)) =>

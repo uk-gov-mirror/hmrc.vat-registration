@@ -44,15 +44,4 @@ object DigitalContactOptional {
 
     override def writes(o: DigitalContactOptional): JsObject = Json.toJson(o)(defaultFormat).as[JsObject]
   }
-
-  val submissionFormat: Format[DigitalContactOptional] = (
-    (__ \ "email").formatNullable[String] and
-    (__ \ "telephone").formatNullable[String] and
-    (__ \ "mobileNumber").formatNullable[String] and
-    OFormat[Option[Boolean]](
-      read =  { _: JsValue => JsSuccess(None) },
-      write = { _: Option[Boolean] => Json.obj() }
-    )
-  )(DigitalContactOptional.apply, unlift(DigitalContactOptional.unapply))
-
 }

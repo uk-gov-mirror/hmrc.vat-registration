@@ -19,7 +19,7 @@ package fixtures
 import common.TransactionId
 import enums.VatRegStatus
 import models.api._
-import models.submission.{DateOfBirth, Director, RoleInBusiness, UkCompany}
+import models.submission.{DateOfBirth, Director, RoleInBusiness, UkCompany, VatSubmission}
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.auth.core.retrieve.Credentials
@@ -38,7 +38,7 @@ trait VatRegistrationFixture {
   lazy val testDateOfBirth = DateOfBirth(testDate)
   lazy val testCompanyName = "testCompanyName"
   lazy val testCrn = "testCrn"
-  lazy val testCtUtr = Some("testCtUtr")
+  lazy val testCtUtr = "testCtUtr"
   lazy val testDateOFIncorp: LocalDate = LocalDate.of(2020, 1, 2)
   lazy val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some(Country(Some("GB"), None)), addressValidated = Some(true))
   lazy val testPostcode = "ZZ1 1ZZ"
@@ -83,16 +83,16 @@ trait VatRegistrationFixture {
     name = testName,
     dateOfBirth = DateOfBirth(testDate),
     companyName = testCompanyName,
-    companyNumber = Some(testCrn),
+    companyNumber = testCrn,
     dateOfIncorporation = testDateOFIncorp,
     ctutr = testCtUtr,
     currentAddress = testAddress,
     contact = testDigitalContactOptional,
     changeOfName = Some(testFormerName),
     previousAddress = None,
-    businessVerification = Some(BvFail),
-    registration = Some(NotCalledStatus),
-    identifiersMatch = Some(true),
+    businessVerification = BvFail,
+    registration = NotCalledStatus,
+    identifiersMatch = true,
     bpSafeId = None
   )
 

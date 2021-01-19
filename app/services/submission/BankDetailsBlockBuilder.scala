@@ -20,8 +20,9 @@ import play.api.libs.json.JsObject
 import repositories.RegistrationMongoRepository
 import uk.gov.hmrc.http.InternalServerException
 import utils.JsonUtils.jsonObject
-
 import javax.inject.{Inject, Singleton}
+import models.api.NoUKBankAccount
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -47,7 +48,7 @@ class BankDetailsBlockBuilder @Inject()(registrationMongoRepository: Registratio
       else {
         jsonObject(
           "UK" -> jsonObject(
-            "reasonBankAccNotProvided" -> bankAccount.reason
+            "reasonBankAccNotProvided" -> bankAccount.reason.map(NoUKBankAccount.reasonId)
           )
         )
       }

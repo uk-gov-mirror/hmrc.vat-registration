@@ -30,7 +30,7 @@ object Name extends VatApplicantDetailsValidator {
     (__ \ "last").format[String](nameValidator)
   )(Name.apply, unlift(Name.unapply))
 
-  val submissionFormat: Format[Name] = (
+  val auditWrites: Format[Name] = (
     (__ \ "firstName").formatNullable[String](nameValidator) and
     (__ \ "middleName").formatNullable[String](nameValidator) and
     (__ \ "lastName").format[String](nameValidator)

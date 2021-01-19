@@ -488,19 +488,6 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
 
       await(result).get mustBe validSicAndCompliance.get
     }
-    "read data to a SicAndCompliance model regardless of whether apivalidation is valid" in new Setup {
-      val modelThatDoesNotConformToApiValidation: SicAndCompliance = SicAndCompliance(
-        "foo",
-        Some(ComplianceLabour(numOfWorkersSupplied = Some(1), intermediaryArrangement = None, supplyWorkers = true)),
-        SicCode("fooBARFIZZANDBANG1234", "bar", "wizz"),
-        businessActivities = List(SicCode("11111 FOO BAR WIZZ AND BANG", "barFoo", "amended other foo")))
-      val result: Future[Option[SicAndCompliance]] = for {
-        _ <- repository.insert(vatScheme.copy(sicAndCompliance = Some(modelThatDoesNotConformToApiValidation)))
-        _ = count mustBe 1
-        res <- repository.fetchSicAndCompliance(vatScheme.id)
-      } yield res
-      await(result).get mustBe modelThatDoesNotConformToApiValidation
-    }
     "return None from an existing registration that exists but SicAndCompliance does not exist" in new Setup {
       val result: Future[Option[SicAndCompliance]] = for {
         _ <- repository.insert(vatScheme)

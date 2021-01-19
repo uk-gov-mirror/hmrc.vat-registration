@@ -24,17 +24,14 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
 
 
   "Creating a VatDigitalContact model from Json" should {
-
-    implicit val format: OFormat[DigitalContact] = DigitalContact.submissionFormat
-
     "complete successfully" when {
       "from full Json" in {
         val json = Json.parse(
           s"""
              |{
              |  "email":"test@test.com",
-             |  "telephone":"12345678910",
-             |  "mobileNumber":"12345678910"
+             |  "tel":"12345678910",
+             |  "mobile":"12345678910"
              |}
         """.stripMargin)
         val tstVatDigitalContact = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
@@ -42,6 +39,5 @@ class VatDigitalContactSpec extends VatRegSpec with JsonFormatValidation {
         Json.fromJson[DigitalContact](json) mustBe JsSuccess(tstVatDigitalContact)
       }
     }
-
   }
 }

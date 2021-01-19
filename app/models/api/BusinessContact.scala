@@ -28,16 +28,9 @@ object BusinessContact {
 
   implicit val format: OFormat[BusinessContact] = (
     (__ \ "digitalContact").format[DigitalContact](DigitalContact.apiFormat) and
-    (__ \ "website").formatNullable[String] and
-    (__ \ "ppob").format[Address] and
-    (__ \ "contactPreference").format[ContactPreference]
-  )(BusinessContact.apply, unlift(BusinessContact.unapply))
-
-  val submissionFormat: Format[BusinessContact] = (
-    (__ \ "commDetails").format[DigitalContact](DigitalContact.submissionFormat) and
-    (__ \ "commDetails" \ "webAddress").formatNullable[String] and
-    (__ \ "address").format[Address](Address.submissionFormat) and
-    (__ \ "commDetails" \ "commsPreference").format[ContactPreference](ContactPreference.submissionFormat)
-    )(BusinessContact.apply, unlift(BusinessContact.unapply))
+      (__ \ "website").formatNullable[String] and
+      (__ \ "ppob").format[Address] and
+      (__ \ "contactPreference").format[ContactPreference]
+    ) (BusinessContact.apply, unlift(BusinessContact.unapply))
 
 }

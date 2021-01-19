@@ -164,6 +164,7 @@ class SubmissionPayloadBuilderSpec extends VatRegSpec
   )
 
   val expectedJson: JsObject = Json.obj(
+    "messageType" -> "SubscriptionCreate",
     "admin" -> testAdminBlockJson,
     "declaration" -> testDeclarationBlockJson,
     "customerIdentification" -> testCustomerIdentificationBlockJson,

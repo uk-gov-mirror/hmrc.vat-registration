@@ -20,39 +20,16 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class SicCode(id: String,
-                description: String,
-                displayDetails: String)
+                   description: String,
+                   displayDetails: String)
 
 object SicCode extends SicCodeValidator {
 
-  val writes: Writes[SicCode] = (
-    (__ \ "code").write[String] and
-    (__ \ "desc").write[String] and
-    (__ \ "indexes").write[String]
-  )(unlift(SicCode.unapply))
-
-  val mongoReads: Reads[SicCode] = (
-      (__ \ "code").read[String] and
-      (__ \ "desc").read[String] and
-      (__ \ "indexes").read[String]
-    )(SicCode.apply _)
-
-  val apiReads: Reads[SicCode] = (
-      (__ \ "code").read[String](idValidator) and
-      (__ \ "desc").read[String] and
-      (__ \ "indexes").read[String]
-    )(SicCode.apply _)
-
-  val apiFormat = Format(apiReads,writes)
-  val mongoFormat = Format(mongoReads,writes)
-
-  val sicCodeListReads = Reads[List[SicCode]] { json =>
-    (
-      (__ \ "mainCode2").readNullable[String] and
-      (__ \ "mainCode3").readNullable[String] and
-      (__ \ "mainCode4").readNullable[String]
-    ) ((code1, code2, code3) => (code1 ++ code2 ++ code3).toList.map(c => SicCode(c, "", ""))).reads(json)
-  }
+  val apiFormat: Format[SicCode] = (
+    (__ \ "code").format[String](idValidator) and
+      (__ \ "desc").format[String] and
+      (__ \ "indexes").format[String]
+    ) (SicCode.apply, unlift(SicCode.unapply))
 
   val sicCodeListWrites = Writes[List[SicCode]] { codes =>
     Json.obj(

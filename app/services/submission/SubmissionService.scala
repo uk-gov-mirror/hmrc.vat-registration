@@ -16,27 +16,115 @@
 
 package services.submission
 
+import cats.instances.FutureInstances
+import common.exceptions._
 import connectors.VatSubmissionConnector
-import models.api.Submitted
-import uk.gov.hmrc.http.HeaderCarrier
-import utils.IdGenerator
-
+import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import models.api.Submitted
+import models.monitoring.RegistrationSubmissionAuditing.RegistrationSubmissionAuditModel
+import models.submission.VatSubmission
+import play.api.Logging
+import play.api.libs.json.{JsObject, Json}
+import play.api.mvc.Request
+import repositories._
+import services.monitoring.AuditService
+import services.{NonRepudiationService, TrafficManagementService}
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{credentials, _}
+import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import utils.{IdGenerator, TimeMachine}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SubmissionService @Inject()(vatSubmissionConnector: VatSubmissionConnector,
+class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoRepository,
+                                  registrationRepository: RegistrationMongoRepository,
+                                  vatSubmissionConnector: VatSubmissionConnector,
+                                  nonRepudiationService: NonRepudiationService,
+                                  trafficManagementService: TrafficManagementService,
                                   submissionPayloadBuilder: SubmissionPayloadBuilder,
-                                  idGenerator: IdGenerator
-                                 )(implicit ec: ExecutionContext) {
+                                  timeMachine: TimeMachine,
+                                  auditService: AuditService,
+                                  idGenerator: IdGenerator,
+                                  val authConnector: AuthConnector
+                                 )(implicit executionContext: ExecutionContext) extends FutureInstances with AuthorisedFunctions with Logging {
 
- def submit(regId: String)(implicit hc: HeaderCarrier) = {
-//    for {
-//      correlationId <- idGenerator.createId
-//      submission <- submissionPayloadBuilder.buildSubmissionPayload(regId)
-//      _ <- vatSubmissionConnector.submit(submission, correlationId, credentialId)
-//    } yield Submitted
-// TODO complete when all other blocks are completed
- }
+  def submitVatRegistration(regId: String, userHeaders: Map[String, String])
+                           (implicit hc: HeaderCarrier,
+                            request: Request[_]): Future[String] = {
+    for {
+      status <- getValidDocumentStatus(regId)
+      ackRefs <- ensureAcknowledgementReference(regId, status)
+      oldSubmission <- buildOldSubmission(regId)
+      submission <- submissionPayloadBuilder.buildSubmissionPayload(regId)
+      _ <- submit(submission, oldSubmission, regId, userHeaders) // TODO refactor so this returns a value from the VatRegStatus enum or maybe an ADT
+      _ <- registrationRepository.finishRegistrationSubmission(regId, VatRegStatus.submitted)
+      _ <- trafficManagementService.updateStatus(regId, Submitted)
+    } yield {
+      ackRefs
+    }
+  }
+
+  private[services] def submit(submission: JsObject,
+                               oldSubmission: VatSubmission,
+                               regId: String,
+                               userHeaders: Map[String, String]
+                              )(implicit hc: HeaderCarrier,
+                                request: Request[_]): Future[HttpResponse] = {
+
+    val correlationId = idGenerator.createId
+    logger.info(s"VAT Submission API Correlation Id: $correlationId for the following regId: $regId")
+
+    authorised().retrieve(credentials and affinityGroup and agentCode) {
+      case Some(credentials) ~ Some(affinity) ~ optAgentCode =>
+        vatSubmissionConnector.submit(submission, correlationId, credentials.providerId).map {
+          response =>
+            auditService.audit(RegistrationSubmissionAuditModel(
+              vatSubmission = oldSubmission,
+              regId = regId,
+              authProviderId = credentials.providerId,
+              affinityGroup = affinity,
+              optAgentReferenceNumber = optAgentCode
+            ))
+
+            //TODO - Confirm what to send when postcode is not available
+            val nonRepudiationPostcode = oldSubmission.businessContact.ppob.postcode.getOrElse("NoPostcodeSupplied")
+            nonRepudiationService.submitNonRepudiation(regId, Json.toJson(submission).toString, timeMachine.timestamp, nonRepudiationPostcode, userHeaders)
+            response
+        }
+    }
+  }
+
+  private[services] def ensureAcknowledgementReference(regId: String,
+                                                       status: VatRegStatus.Value): Future[String] = {
+    registrationRepository.retrieveVatScheme(regId) flatMap {
+      case Some(vs) => vs.acknowledgementReference.fold(
+        for {
+          newAckref <- sequenceMongoRepository.getNext("AcknowledgementID").map(ref => f"BRVT$ref%011d")
+          _ <- registrationRepository.prepareRegistrationSubmission(regId, newAckref, status)
+        } yield newAckref
+      )(ar => Future.successful(ar))
+      case _ => throw MissingRegDocument(regId)
+    }
+  }
+
+  private[services] def buildOldSubmission(regId: String): Future[VatSubmission] = {
+    registrationRepository.retrieveVatScheme(regId) map {
+      case Some(vatScheme) => VatSubmission.fromVatScheme(vatScheme)
+      case _ => throw MissingRegDocument(regId)
+    }
+  }
+
+  private[services] def getValidDocumentStatus(regID: String): Future[VatRegStatus.Value] = {
+    registrationRepository.retrieveVatScheme(regID) map {
+      case Some(registration) => registration.status match {
+        case VatRegStatus.draft | VatRegStatus.locked => registration.status
+        case _ => throw InvalidSubmissionStatus(s"VAT submission status was in a ${registration.status} state")
+      }
+      case _ => throw MissingRegDocument(regID)
+    }
+  }
 
 }

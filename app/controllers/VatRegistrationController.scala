@@ -26,6 +26,7 @@ import play.api.libs.json._
 import play.api.mvc._
 import repositories.RegistrationMongoRepository
 import services._
+import services.submission.SubmissionService
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 

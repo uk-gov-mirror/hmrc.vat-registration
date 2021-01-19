@@ -45,9 +45,10 @@ class BankDetailsBlockBuilderSpec extends VatRegSpec with VatRegistrationFixture
 
   val bankDetailsNotProvidedBlockJson: JsObject = Json.parse(
     """
-      |{ "UK": {
-      |     "reasonBankAccNotProvided": "BeingSetup"
-      |     }
+      |{ "UK":
+      |  {
+      |     "reasonBankAccNotProvided": "1"
+      |  }
       |}
       |""".stripMargin).as[JsObject]
 

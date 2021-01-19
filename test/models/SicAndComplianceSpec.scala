@@ -63,22 +63,4 @@ class SicAndComplianceSpec extends BaseSpec {
       )
     )
   )
-
-  "Submission writes" must {
-    "write successfully when there is more than 1 sic code and labour compliance" in {
-      val res = SicAndCompliance.submissionWrites.writes(sicAndCompliance)
-
-      res mustBe validFullSubmissionJson
-    }
-
-    "write successfully when there is just one sic code" in {
-      val res = SicAndCompliance.submissionWrites.writes(sicAndCompliance.copy(
-        labourCompliance = None,
-        businessActivities = List(sicAndCompliance.mainBusinessActivity)
-      ))
-
-      res mustBe validSubmissionJson
-    }
-  }
-
 }

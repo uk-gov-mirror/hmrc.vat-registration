@@ -50,7 +50,7 @@ class SubscriptionBlockBuilder @Inject()(registrationMongoRepository: Registrati
         "exemptionOrException" -> eligibilityData.exceptionOrExemption
       ),
       "corporateBodyRegistered" -> jsonObject(
-        optional("companyRegistrationNumber" -> applicantDetails.companyNumber),
+        "companyRegistrationNumber" -> applicantDetails.companyNumber,
         "dateOfIncorporation" -> applicantDetails.dateOfIncorporation,
         "countryOfIncorporation" -> applicantDetails.countryOfIncorporation
       ),

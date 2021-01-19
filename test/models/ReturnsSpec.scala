@@ -305,16 +305,4 @@ class ReturnsSpec extends BaseSpec with JsonFormatValidation {
       )
     }
   }
-
-  "submissionReads and submissionWrites" should {
-    "parse json" in {
-      val result = Json.fromJson[Returns](fullSubmissionJson)(Returns.submissionReads)
-      result mustBe JsSuccess(fullReturns)
-    }
-    "write to json" in {
-      val result = Json.toJson(fullReturns)(Returns.submissionWrites(true))
-      result mustBe fullSubmissionJson
-    }
-  }
-
 }

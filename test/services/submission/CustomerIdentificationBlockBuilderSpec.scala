@@ -71,7 +71,7 @@ class CustomerIdentificationBlockBuilderSpec extends VatRegSpec with VatRegistra
     "return Status Code 1" when {
       "the businessVerificationStatus is BvPass" in new Setup {
         when(mockRegistrationMongoRepository.getApplicantDetails(any()))
-          .thenReturn(Future.successful(Some(validApplicantDetails.copy(identifiersMatch = Some(true), businessVerification = Some(BvPass), registration = Some(FailedStatus)))))
+          .thenReturn(Future.successful(Some(validApplicantDetails.copy(identifiersMatch = true, businessVerification = BvPass, registration = FailedStatus))))
 
         when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
           .thenReturn(Future.successful(Some(validFullTradingDetails)))
@@ -81,7 +81,7 @@ class CustomerIdentificationBlockBuilderSpec extends VatRegSpec with VatRegistra
       }
       "the businessVerificationStatus is CtEnrolled" in new Setup {
         when(mockRegistrationMongoRepository.getApplicantDetails(any()))
-          .thenReturn(Future.successful(Some(validApplicantDetails.copy(identifiersMatch = Some(true), businessVerification = Some(BvCtEnrolled), registration = Some(FailedStatus)))))
+          .thenReturn(Future.successful(Some(validApplicantDetails.copy(identifiersMatch = true, businessVerification = BvCtEnrolled, registration = FailedStatus))))
 
         when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
           .thenReturn(Future.successful(Some(validFullTradingDetails)))
@@ -93,7 +93,7 @@ class CustomerIdentificationBlockBuilderSpec extends VatRegSpec with VatRegistra
     "return Status Code 2" when {
       "the identifiersMatch is false" in new Setup {
         when(mockRegistrationMongoRepository.getApplicantDetails(any()))
-          .thenReturn(Future.successful(Some(validApplicantDetails.copy(identifiersMatch = Some(false), businessVerification = Some(BvUnchallenged)))))
+          .thenReturn(Future.successful(Some(validApplicantDetails.copy(identifiersMatch = false, businessVerification = BvUnchallenged))))
 
         when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
           .thenReturn(Future.successful(Some(validFullTradingDetails)))
@@ -115,7 +115,7 @@ class CustomerIdentificationBlockBuilderSpec extends VatRegSpec with VatRegistra
       }
       "businessVerification is not called" in new Setup {
         when(mockRegistrationMongoRepository.getApplicantDetails(any()))
-          .thenReturn(Future.successful(Some(validApplicantDetails.copy(businessVerification = Some(BvUnchallenged)))))
+          .thenReturn(Future.successful(Some(validApplicantDetails.copy(businessVerification = BvUnchallenged))))
 
         when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
           .thenReturn(Future.successful(Some(validFullTradingDetails)))
@@ -127,7 +127,7 @@ class CustomerIdentificationBlockBuilderSpec extends VatRegSpec with VatRegistra
     "return the BP Safe ID" when {
       "businessVerificationStatus is Pass" in new Setup {
         when(mockRegistrationMongoRepository.getApplicantDetails(any()))
-          .thenReturn(Future.successful(Some(validApplicantDetails.copy(bpSafeId = Some(testBpSafeId), businessVerification = Some(BvPass)))))
+          .thenReturn(Future.successful(Some(validApplicantDetails.copy(bpSafeId = Some(testBpSafeId), businessVerification = BvPass))))
 
         when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
           .thenReturn(Future.successful(Some(validFullTradingDetails)))
@@ -137,7 +137,7 @@ class CustomerIdentificationBlockBuilderSpec extends VatRegSpec with VatRegistra
       }
       "businessVerification is CT-Enrolled" in new Setup {
         when(mockRegistrationMongoRepository.getApplicantDetails(any()))
-          .thenReturn(Future.successful(Some(validApplicantDetails.copy(bpSafeId = Some(testBpSafeId), businessVerification = Some(BvCtEnrolled)))))
+          .thenReturn(Future.successful(Some(validApplicantDetails.copy(bpSafeId = Some(testBpSafeId), businessVerification = BvCtEnrolled))))
 
         when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
           .thenReturn(Future.successful(Some(validFullTradingDetails)))
@@ -174,34 +174,6 @@ class CustomerIdentificationBlockBuilderSpec extends VatRegSpec with VatRegistra
 
         intercept[InternalServerException](await(service.buildCustomerIdentificationBlock(testRegId)))
       }
-      "the ctutr is missing" in new Setup {
-        when(mockRegistrationMongoRepository.getApplicantDetails(any()))
-          .thenReturn(Future.successful(Some(validApplicantDetails.copy(ctutr = None))))
-
-        when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
-          .thenReturn(Future.successful(Some(validFullTradingDetails)))
-
-        intercept[InternalServerException](await(service.buildCustomerIdentificationBlock(testRegId)))
-      }
-      "the company number is missing" in new Setup {
-        when(mockRegistrationMongoRepository.getApplicantDetails(any()))
-          .thenReturn(Future.successful(Some(validApplicantDetails.copy(companyNumber = None))))
-
-        when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
-          .thenReturn(Future.successful(Some(validFullTradingDetails)))
-
-        intercept[InternalServerException](await(service.buildCustomerIdentificationBlock(testRegId)))
-      }
-      "the ctutr and company number are missing" in new Setup {
-        when(mockRegistrationMongoRepository.getApplicantDetails(any()))
-          .thenReturn(Future.successful(Some(validApplicantDetails.copy(ctutr = None, companyNumber = None))))
-
-        when(mockRegistrationMongoRepository.retrieveTradingDetails(any()))
-          .thenReturn(Future.successful(Some(validFullTradingDetails)))
-
-        intercept[InternalServerException](await(service.buildCustomerIdentificationBlock(testRegId)))
-      }
     }
   }
-
 }

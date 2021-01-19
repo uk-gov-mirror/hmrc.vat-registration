@@ -16,7 +16,7 @@
 
 package models.api
 
-import play.api.libs.json.{Format, JsError, JsString, JsSuccess, Reads, Writes}
+import play.api.libs.json._
 
 sealed trait ContactPreference
 
@@ -43,18 +43,4 @@ object ContactPreference {
 
   val electronic = "ZEL"
   val paper = "P01"
-
-  val submissionReads: Reads[ContactPreference] = Reads[ContactPreference] {
-    case JsString(`electronic`) => JsSuccess(Email)
-    case JsString(`paper`) => JsSuccess(Letter)
-    case _ => JsError("Could not parse contact preference from submission")
-  }
-
-  val submissionWrites: Writes[ContactPreference] = Writes[ContactPreference] {
-    case Email => JsString(electronic)
-    case Letter => JsString(paper)
-  }
-
-  val submissionFormat: Format[ContactPreference] = Format(submissionReads, submissionWrites)
-
 }

@@ -43,6 +43,7 @@ class SubmissionPayloadBuilder @Inject()(adminBlockBuilder: AdminBlockBuilder,
     complianceBlock <- complianceBlockBuilder.buildComplianceBlock(regId)
     bankDetailsBlock <- bankDetailsBlockBuilder.buildBankDetailsBlock(regId)
   } yield jsonObject(
+    "messageType" -> "SubscriptionCreate",
     "admin" -> adminBlock,
     "declaration" -> declarationBlock,
     "customerIdentification" -> customerIdentificationBlock,
