@@ -36,7 +36,7 @@ class SubscriptionBlockBuilder @Inject()(registrationMongoRepository: Registrati
     optSicAndCompliance <- registrationMongoRepository.fetchSicAndCompliance(regId)
     optFlatRateScheme <- registrationMongoRepository.fetchFlatRateScheme(regId)
   } yield (optEligibilityData, optReturns, optApplicantDetails, optSicAndCompliance, optFlatRateScheme) match {
-    case (Some(eligibilityData), Some(returns), Some(applicantDetails), Some(sicAndCompliance), Some(flatRateScheme)) => jsonObject(
+    case (Some(eligibilityData), Some(returns), Some(applicantDetails), Some(sicAndCompliance), optFlatRateScheme) => jsonObject(
       "reasonForSubscription" -> jsonObject(
         "registrationReason" -> eligibilityData.reasonForRegistration,
         optional("relevantDate" -> {
@@ -68,7 +68,7 @@ class SubscriptionBlockBuilder @Inject()(registrationMongoRepository: Registrati
         "zeroRatedSupplies" -> returns.zeroRatedSupplies,
         "VATRepaymentExpected" -> returns.reclaimVatOnMostReturns
       ),
-      optional("schemes" -> {
+      optional("schemes" -> optFlatRateScheme.flatMap { flatRateScheme =>
         (flatRateScheme.joinFrs, flatRateScheme.frsDetails) match {
           case (true, Some(details)) =>
             Some(jsonObject(
@@ -87,7 +87,6 @@ class SubscriptionBlockBuilder @Inject()(registrationMongoRepository: Registrati
         "[SubscriptionBlockBuilder] Could not build subscription block for submission because some of the data is missing: " +
           s"ApplicantDetails found - ${optApplicantDetails.isDefined}, " +
           s"EligibilitySubmissionData found - ${optEligibilityData.isDefined}, " +
-          s"FlatRateScheme found - ${optFlatRateScheme.isDefined}, " +
           s"Returns found - ${optReturns.isDefined}, " +
           s"SicAndCompliance found - ${optSicAndCompliance.isDefined}."
       )

@@ -150,6 +150,26 @@ class SubscriptionBlockBuilderSpec extends VatRegSpec with VatRegistrationFixtur
       result mustBe minimalSubscriptionBlockJson
     }
 
+    "build a minimal subscription json when no Flat Rate Scheme is provided" in {
+      when(mockRegistrationMongoRepository.getApplicantDetails(any()))
+        .thenReturn(Future.successful(Some(validApplicantDetails)))
+      when(mockRegistrationMongoRepository.fetchReturns(any()))
+        .thenReturn(Future.successful(Some(testReturns)))
+      when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any()))
+        .thenReturn(Future.successful(Some(testEligibilitySubmissionData.copy(
+          threshold = Threshold(mandatoryRegistration = false, None, None, None),
+          exceptionOrExemption = "1"
+        ))))
+      when(mockRegistrationMongoRepository.fetchFlatRateScheme(any()))
+        .thenReturn(Future.successful(None))
+      when(mockRegistrationMongoRepository.fetchSicAndCompliance(any()))
+        .thenReturn(Future.successful(Some(testSicAndCompliance.copy(businessActivities = List.empty))))
+
+      val result = await(TestService.buildSubscriptionBlock(testRegId))
+
+      result mustBe minimalSubscriptionBlockJson
+    }
+
     "fail if the Flat Rate Scheme is invalid" in {
       when(mockRegistrationMongoRepository.getApplicantDetails(any()))
         .thenReturn(Future.successful(Some(validApplicantDetails)))
@@ -183,7 +203,7 @@ class SubscriptionBlockBuilderSpec extends VatRegSpec with VatRegistrationFixtur
 
       intercept[InternalServerException](await(result)).message mustBe "[SubscriptionBlockBuilder] Could not build subscription block " +
         "for submission because some of the data is missing: ApplicantDetails found - false, EligibilitySubmissionData found - false, " +
-        "FlatRateScheme found - false, Returns found - false, SicAndCompliance found - false."
+        "Returns found - false, SicAndCompliance found - false."
     }
 
     "fail if any of the repository requests return nothing" in {
@@ -202,7 +222,7 @@ class SubscriptionBlockBuilderSpec extends VatRegSpec with VatRegistrationFixtur
 
       intercept[InternalServerException](await(result)).message mustBe "[SubscriptionBlockBuilder] Could not build subscription block " +
         "for submission because some of the data is missing: ApplicantDetails found - true, EligibilitySubmissionData found - true, " +
-        "FlatRateScheme found - true, Returns found - false, SicAndCompliance found - false."
+        "Returns found - false, SicAndCompliance found - false."
     }
   }
 }
