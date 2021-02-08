@@ -38,7 +38,7 @@ class BankDetailsBlockBuilder @Inject()(registrationMongoRepository: Registratio
             jsonObject(
               "UK" -> jsonObject(
                 "accountName" -> bankAccountDetails.name,
-                "sortCode" -> bankAccountDetails.sortCode,
+                "sortCode" -> bankAccountDetails.sortCode.replaceAll("-", ""),
                 "accountNumber" -> bankAccountDetails.number
               )
             )

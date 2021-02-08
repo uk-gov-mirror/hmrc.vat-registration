@@ -61,6 +61,22 @@ class VatRegistrationControllerISpec extends IntegrationStubbing with FeatureSwi
       res.status mustBe OK
     }
 
+    "return OK if the submission is successful where the business partner is already registered when the frs data is completely missing" in new Setup {
+      enable(StubSubmission)
+
+      given
+        .user.isAuthorised
+        .regRepo.insertIntoDb(testMinimalVatSchemeWithRegisteredBusinessPartner.copy(flatRateScheme = None), repo.insert)
+
+      stubPost("/vatreg/test-only/vat/subscription", testRegisteredBusinessPartnerSubmissionJson, OK, "")
+
+      val res: WSResponse = await(client(controllers.routes.VatRegistrationController.submitVATRegistration(testRegId).url)
+        .put(Json.obj())
+      )
+
+      res.status mustBe OK
+    }
+
     "return INTERNAL_SERVER_ERROR if the VAT scheme is missing data" in new Setup {
       enable(StubSubmission)
 

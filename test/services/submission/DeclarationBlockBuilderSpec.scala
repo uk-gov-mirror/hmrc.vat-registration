@@ -169,7 +169,12 @@ class DeclarationBlockBuilderSpec extends VatRegSpec with VatRegistrationFixture
         )
       }
       "the user provides all contact details" in {
-        val contactDetails = DigitalContactOptional(email = Some("skylake@vilikariet.com"), tel = Some("1234"), mobile = Some("5678"))
+        val contactDetails = DigitalContactOptional(
+          email = Some("skylake@vilikariet.com"),
+          tel = Some("1234"),
+          mobile = Some("5678"),
+          emailVerified = Some(true)
+        )
         val applicantDetails = testApplicantDetails.copy(contact = contactDetails)
         mockGetVatScheme(testRegId)(Some(declarationVatScheme.copy(applicantDetails = Some(applicantDetails))))
 
