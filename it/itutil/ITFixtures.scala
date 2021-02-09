@@ -59,8 +59,9 @@ trait ITFixtures {
   val zeroRatedTurnoverEstimate: Long = 1000L
   val testCountry = Country(Some("GB"), None)
   val testAddress = Address("line1", "line2", None, None, Some("XX XX"), Some(testCountry), addressValidated = Some(true))
+  val testFullAddress = Address("line1", "line2", Some("line3"), Some("line4"), Some("XX XX"), Some(testCountry), addressValidated = Some(true))
   val testContactDetails = DigitalContact("test@test.com", Some("12345678910"), Some("12345678910"))
-  val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), None, None)
+  val testDigitalContactOptional = DigitalContactOptional(Some("skylake@vilikariet.com"), Some("1234567890"), Some("1234567890"), Some(true))
   val testNino = "NB686868C"
   val testRole: RoleInBusiness = Director
   val testName = Name(first = Some("Forename"), middle = None, last = "Surname")
@@ -80,10 +81,10 @@ trait ITFixtures {
     companyNumber = testCrn,
     dateOfIncorporation = testDateOfIncorp,
     ctutr = testCtUtr,
-    currentAddress = testAddress,
+    currentAddress = testFullAddress,
     contact = testDigitalContactOptional,
     changeOfName = Some(testFormerName),
-    previousAddress = None,
+    previousAddress = Some(testFullAddress),
     businessVerification = BvUnchallenged,
     registration = NotCalledStatus,
     identifiersMatch = true,
@@ -120,11 +121,13 @@ trait ITFixtures {
     mainBusinessActivity = SicCode("12345", "sicDesc", "sicDetail"),
     businessActivities = List(SicCode("12345", "sicDesc", "sicDetail")))
   val testTurnoverEstimates = TurnoverEstimates(12345678L)
+
   val testBankDetails = BankAccountDetails(
     name = "testBankName",
-    sortCode = "111111",
+    sortCode = "11-11-11",
     number = "01234567"
   )
+  val testSubmittedSortCode = "111111"
 
   val testThreshold = Threshold(mandatoryRegistration = true, Some(testDate), Some(testDate), Some(testDate))
 

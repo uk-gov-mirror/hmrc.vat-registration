@@ -22,7 +22,7 @@ class StubVatSubmissionControllerISpec extends IntegrationStubbing with ITVatSub
     "return OK if the json is a valid VatSubmission" in new Setup() {
       stubAudit(OK)
 
-      val response: WSResponse = await(client(routes.StubVatSubmissionController.processSubmission().url).post(vatSubmissionJson))
+      val response: WSResponse = await(client(routes.StubVatSubmissionController.processSubmission().url).post(testSubmissionJson))
 
       response.status mustBe OK
     }

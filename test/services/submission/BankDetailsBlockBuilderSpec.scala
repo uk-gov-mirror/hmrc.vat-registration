@@ -61,6 +61,15 @@ class BankDetailsBlockBuilderSpec extends VatRegSpec with VatRegistrationFixture
         val result: JsObject = await(service.buildBankDetailsBlock(testRegId))
         result mustBe bankDetailsBlockJson
       }
+
+      "the applicant has a bank account with a sortcode containing hyphens" in new Setup {
+        when(mockRegistrationMongoRepository.fetchBankAccount(testRegId))
+          .thenReturn(Future.successful(Some(testBankAccount.copy(details = Some(testBankDetails.copy(sortCode = "01-02-03"))))))
+
+        val result: JsObject = await(service.buildBankDetailsBlock(testRegId))
+        result mustBe bankDetailsBlockJson
+      }
+
       "the applicant does not have a bank account" in new Setup {
         when(mockRegistrationMongoRepository.fetchBankAccount(testRegId))
           .thenReturn(Future.successful(Some(testBankAccountNotProvided)))

@@ -51,8 +51,7 @@ class DeclarationBlockBuilder @Inject()(registrationMongoRepository: Registratio
                 "commDetails" -> jsonObject(
                   optional("email" -> applicantDetails.contact.email),
                   optional("telephone" -> applicantDetails.contact.tel),
-                  optional("mobileNumber" -> applicantDetails.contact.mobile),
-                  optional("emailVerified" -> applicantDetails.contact.emailVerified)
+                  optional("mobileNumber" -> applicantDetails.contact.mobile)
                 ),
                 "identifiers" -> applicantDetails.personalIdentifiers
               )
