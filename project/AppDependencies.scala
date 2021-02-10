@@ -34,7 +34,9 @@ object CompileDependencies {
     "uk.gov.hmrc" %% "domain" % domainVersion,
     "org.typelevel" %% "cats-core" % catsVersion,
     "uk.gov.hmrc" %% "auth-client" % authClientVersion,
-    "com.typesafe.play" %% "play-json-joda" % playJsonVersion
+    "com.typesafe.play" %% "play-json-joda" % playJsonVersion,
+    "org.openapi4j" % "openapi-operation-validator" % "1.0.5",
+    "org.openapi4j" % "openapi-parser" % "1.0.5"
   )
 
   def apply(): Seq[ModuleID] = compile

@@ -49,7 +49,7 @@ trait ITFixtures {
   val frsDetails = FRSDetails(
     businessGoods = Some(BusinessGoods(12345678L, true)),
     startDate = Some(testDate),
-    categoryOfBusiness = Some("testCategory"),
+    categoryOfBusiness = Some("123"),
     percent = 15,
     limitedCostTrader = Some(false)
   )

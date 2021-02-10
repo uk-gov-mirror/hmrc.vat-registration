@@ -32,7 +32,7 @@ class FlatRateSchemeControllerISpec extends IntegrationStubbing {
        |      "estimatedTotalSales": 12345678
        |    },
        |    "startDate": "$dateNow",
-       |    "categoryOfBusiness":"testCategory",
+       |    "categoryOfBusiness":"123",
        |    "percent":15.00,
        |    "limitedCostTrader": false
        |  }
