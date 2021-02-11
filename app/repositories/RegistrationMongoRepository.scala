@@ -21,7 +21,6 @@ import cats.data.OptionT
 import cats.instances.future._
 import common.exceptions._
 import enums.VatRegStatus
-import javax.inject.{Inject, Singleton}
 import models._
 import models.api._
 import play.api.libs.json._
@@ -36,6 +35,7 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import utils.JsonErrorUtil
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 // scalastyle:off
@@ -321,6 +321,12 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
         throw e
     }
   }
+
+  def fetchNrsSubmissionPayload(regId: String): Future[Option[String]] =
+    fetchBlock[String](regId, "nrsSubmissionPayload")
+
+  def updateNrsSubmissionPayload(regId: String, encodedHTML: String): Future[String] =
+    updateBlock[String](regId, encodedHTML, "nrsSubmissionPayload")
 
   def fetchSicAndCompliance(regId: String): Future[Option[SicAndCompliance]] =
     fetchBlock[SicAndCompliance](regId, "sicAndCompliance")(SicAndCompliance.apiFormat)

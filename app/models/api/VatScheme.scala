@@ -36,7 +36,8 @@ case class VatScheme(id: String,
                      eligibilityData: Option[JsObject] = None,
                      eligibilitySubmissionData: Option[EligibilitySubmissionData] = None,
                      applicantDetails: Option[ApplicantDetails] = None,
-                     confirmInformationDeclaration: Option[Boolean] = None)
+                     confirmInformationDeclaration: Option[Boolean] = None,
+                     nrsSubmissionPayload: Option[String] = None)
 
 object VatScheme {
 
@@ -55,7 +56,8 @@ object VatScheme {
       (__ \ "eligibilityData").writeNullable[JsObject] and
       (__ \ "eligibilitySubmissionData").writeNullable[EligibilitySubmissionData] and
       (__ \ "applicantDetails").writeNullable[ApplicantDetails] and
-      (__ \ "confirmInformationDeclaration").writeNullable[Boolean]
+      (__ \ "confirmInformationDeclaration").writeNullable[Boolean] and
+      (__ \ "nrsSubmissionPayload").writeNullable[String]
     ) (unlift(VatScheme.unapply))
 
   def mongoFormat(crypto: CryptoSCRS): OFormat[VatScheme] = (
@@ -73,7 +75,8 @@ object VatScheme {
       (__ \ "eligibilityData").formatNullable[JsObject] and
       (__ \ "eligibilitySubmissionData").formatNullable[EligibilitySubmissionData] and
       (__ \ "applicantDetails").formatNullable[ApplicantDetails] and
-      (__ \ "confirmInformationDeclaration").formatNullable[Boolean]
+      (__ \ "confirmInformationDeclaration").formatNullable[Boolean] and
+      (__ \ "nrsSubmissionPayload").formatNullable[String]
     ) (VatScheme.apply, unlift(VatScheme.unapply))
 
 }
