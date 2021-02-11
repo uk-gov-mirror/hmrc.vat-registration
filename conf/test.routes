@@ -4,3 +4,5 @@ POST        /api/feature-switches                                  featureswitch
 PUT         /api/daily-quota                                       controllers.test.UpdateTrafficManagementController.updateQuota
 
 POST        /vat/subscription                                      controllers.test.StubVatSubmissionController.processSubmission
+
+GET         /submissions/:regId/submission-payload                 controllers.test.RetrieveVatSubmissionController.retrieveSubmissionJson(regId)
