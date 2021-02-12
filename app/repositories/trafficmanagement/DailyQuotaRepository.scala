@@ -51,10 +51,14 @@ class DailyQuotaRepository @Inject()(mongo: ReactiveMongoComponent,
 
   private def today: LocalDate = timeMachine.today
 
+  private def currentHour: Int = timeMachine.timestamp.getHour
+
   def checkQuota: Future[Boolean] =
     find("date" -> JsString(today.toString))
       .map(_.headOption.getOrElse(DailyQuota(today)))
       .flatMap {
+        case _ if currentHour < config.allowUsersFrom || currentHour >= config.allowUsersUntil =>
+          Future.successful(true)
         case quota if quota.currentTotal >= config.dailyQuota =>
           Future.successful(true)
         case _ =>
