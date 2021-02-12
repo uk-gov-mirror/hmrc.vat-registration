@@ -16,10 +16,7 @@
 
 package controllers
 
-import java.time.LocalDate
-
 import auth.{Authorisation, AuthorisationResource}
-import javax.inject.{Inject, Singleton}
 import models.api.{RegistrationChannel, RegistrationStatus}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -27,6 +24,8 @@ import services.{Allocated, QuotaReached, TrafficManagementService}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import java.time.LocalDate
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton

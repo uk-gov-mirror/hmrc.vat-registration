@@ -45,7 +45,9 @@ class BackendConfig @Inject()(val servicesConfig: ServicesConfig,
 
   lazy val urlHeaderAuthorization: String = s"Bearer ${servicesConfig.getString("microservice.services.integration-framework.authorization-token")}"
 
-  lazy val dailyQuota: Int = servicesConfig.getInt("constants.daily-quota")
+  lazy val dailyQuota: Int = servicesConfig.getInt("traffic-management.daily-quota")
+  lazy val allowUsersFrom: Int = servicesConfig.getInt("traffic-management.hours.from")
+  lazy val allowUsersUntil: Int = servicesConfig.getInt("traffic-management.hours.until")
 
   lazy val nonRepudiationSubmissionUrl: String = servicesConfig.baseUrl("non-repudiation") + "/submission"
   lazy val nonRepudiationApiKey: String = servicesConfig.getString("microservice.services.non-repudiation.api-key")

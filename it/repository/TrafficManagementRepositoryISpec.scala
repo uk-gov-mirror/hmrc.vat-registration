@@ -1,18 +1,31 @@
 
 package repository
 
-import java.time.LocalDate
-
-import itutil.IntegrationSpecBase
+import java.time.{LocalDate, LocalDateTime, LocalTime}
+import itutil.{FakeTimeMachine, ITFixtures, IntegrationSpecBase}
 import models.api._
+import play.api.Application
+import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.TimeMachine
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TrafficManagementRepositoryISpec extends IntegrationSpecBase {
 
-  class Setup extends SetupHelper
+  class Setup(hour: Int = 9) extends SetupHelper with ITFixtures {
+    class TimestampMachine extends FakeTimeMachine {
+      override val timestamp = LocalDateTime.of(testDate, LocalTime.of(hour, 0))
+    }
+
+    implicit lazy val timeApp: Application = new GuiceApplicationBuilder()
+      .configure(config)
+      .configure("application.router" -> "testOnlyDoNotUseInAppConf.Routes")
+      .overrides(bind[TimeMachine].to[TimestampMachine])
+      .build()
+  }
 
   val internalId1 = "internalId1"
   val internalId2 = "internalId2"
