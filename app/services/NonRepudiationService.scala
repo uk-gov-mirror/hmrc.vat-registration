@@ -16,13 +16,7 @@
 
 package services
 
-import java.nio.charset.StandardCharsets
-import java.security.MessageDigest
-import java.time.LocalDateTime
-import java.util.Base64
-
 import connectors.NonRepudiationConnector
-import javax.inject.{Inject, Singleton}
 import models.nonrepudiation.NonRepudiationAuditing.{NonRepudiationSubmissionFailureAudit, NonRepudiationSubmissionSuccessAudit}
 import models.nonrepudiation.{IdentityData, NonRepudiationMetadata, NonRepudiationSubmissionAccepted}
 import org.joda.time.LocalDate
@@ -36,6 +30,11 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException, InternalServerException}
 
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.time.LocalDateTime
+import java.util.Base64
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -96,20 +95,20 @@ class NonRepudiationService @Inject()(nonRepudiationConnector: NonRepudiationCon
           internalId = internalId,
           externalId = externalId,
           agentCode = agentCode,
-          credentials = credentials,
+          optionalCredentials = credentials,
           confidenceLevel = confidenceLevel,
           nino = nino,
           saUtr = saUtr,
-          name = name,
+          optionalName = name,
           dateOfBirth = dateOfBirth,
           email = email,
           agentInformation = agentInfo,
           groupIdentifier = groupId,
           credentialRole = credentialRole,
           mdtpInformation = mdtpInfo,
-          itmpName = itmpName,
+          optionalItmpName = itmpName,
           itmpDateOfBirth = itmpDateOfBirth,
-          itmpAddress = itmpAddress,
+          optionalItmpAddress = itmpAddress,
           affinityGroup = affinityGroup,
           credentialStrength = credentialStrength,
           loginTimes = loginTimes

@@ -24,7 +24,9 @@ import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 
+import java.nio.charset.StandardCharsets
 import java.time.{LocalDate, LocalDateTime, LocalTime}
+import java.util.Base64
 
 trait VatRegistrationFixture {
   lazy val testNino = "AB123456A"
@@ -135,9 +137,12 @@ trait VatRegistrationFixture {
     ppob = Address(
       line1 = "line1",
       line2 = "line2",
-      postcode = Some("ZZ1 1ZZ"),
+      postcode = Some(testPostcode),
       country = Some(Country(code = Some("GB"), name = Some("UK")))),
     commsPreference = Email)
+
+  val testSubmissionPayload = "testSubmissionPayload"
+  val testEncodedPayload: String = Base64.getEncoder.encodeToString(testSubmissionPayload.getBytes(StandardCharsets.UTF_8))
 
   lazy val testFullVatScheme: VatScheme = testVatScheme.copy(
     tradingDetails = Some(validFullTradingDetails),
@@ -148,7 +153,8 @@ trait VatRegistrationFixture {
     applicantDetails = Some(validApplicantDetails),
     eligibilitySubmissionData = Some(testEligibilitySubmissionData),
     confirmInformationDeclaration = Some(true),
-    returns = Some(testReturns.copy(zeroRatedSupplies = Some(zeroRatedSupplies)))
+    returns = Some(testReturns.copy(zeroRatedSupplies = Some(zeroRatedSupplies))),
+    nrsSubmissionPayload = Some(testEncodedPayload)
   )
 
   lazy val testFullSubmission: VatSubmission = VatSubmission(

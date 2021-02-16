@@ -20,8 +20,8 @@ import cats.instances.FutureInstances
 import common.exceptions._
 import connectors.VatSubmissionConnector
 import enums.VatRegStatus
-import javax.inject.{Inject, Singleton}
-import models.api.Submitted
+import featureswitch.core.config.{CheckYourAnswersNrsSubmission, FeatureSwitching}
+import models.api.{Submitted, VatScheme}
 import models.monitoring.RegistrationSubmissionAuditing.RegistrationSubmissionAuditModel
 import models.submission.VatSubmission
 import play.api.Logging
@@ -33,9 +33,11 @@ import services.{NonRepudiationService, TrafficManagementService}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{credentials, _}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, InternalServerException}
 import utils.{IdGenerator, TimeMachine}
 
+import java.util.Base64
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -49,7 +51,7 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
                                   auditService: AuditService,
                                   idGenerator: IdGenerator,
                                   val authConnector: AuthConnector
-                                 )(implicit executionContext: ExecutionContext) extends FutureInstances with AuthorisedFunctions with Logging {
+                                 )(implicit executionContext: ExecutionContext) extends FutureInstances with AuthorisedFunctions with Logging with FeatureSwitching {
 
   def submitVatRegistration(regId: String, userHeaders: Map[String, String])
                            (implicit hc: HeaderCarrier,
@@ -58,8 +60,10 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
       status <- getValidDocumentStatus(regId)
       ackRefs <- ensureAcknowledgementReference(regId, status)
       oldSubmission <- buildOldSubmission(regId)
+      vatScheme <- registrationRepository.retrieveVatScheme(regId)
+        .map(_.getOrElse(throw new InternalServerException("[SubmissionService][submitVatRegistration] Missing VatScheme")))
       submission <- submissionPayloadBuilder.buildSubmissionPayload(regId)
-      _ <- submit(submission, oldSubmission, regId, userHeaders) // TODO refactor so this returns a value from the VatRegStatus enum or maybe an ADT
+      _ <- submit(submission, vatScheme, oldSubmission, regId, userHeaders) // TODO refactor so this returns a value from the VatRegStatus enum or maybe an ADT
       _ <- registrationRepository.finishRegistrationSubmission(regId, VatRegStatus.submitted)
       _ <- trafficManagementService.updateStatus(regId, Submitted)
     } yield {
@@ -68,6 +72,7 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
   }
 
   private[services] def submit(submission: JsObject,
+                               vatScheme: VatScheme,
                                oldSubmission: VatSubmission,
                                regId: String,
                                userHeaders: Map[String, String]
@@ -89,9 +94,24 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
               optAgentReferenceNumber = optAgentCode
             ))
 
-            //TODO - Confirm what to send when postcode is not available
-            val nonRepudiationPostcode = oldSubmission.businessContact.ppob.postcode.getOrElse("NoPostcodeSupplied")
-            nonRepudiationService.submitNonRepudiation(regId, Json.toJson(submission).toString, timeMachine.timestamp, nonRepudiationPostcode, userHeaders)
+            if (isEnabled(CheckYourAnswersNrsSubmission)) {
+              val encodedHtml = vatScheme.nrsSubmissionPayload
+                .getOrElse(throw new InternalServerException("[SubmissionService][submit] Missing NRS Submission payload"))
+              val payloadString = new String(Base64.getDecoder.decode(encodedHtml))
+              val postCode = vatScheme.businessContact
+                .getOrElse(throw new InternalServerException("[SubmissionService][submit] Missing business contact details"))
+                .ppob.postcode.getOrElse(throw new InternalServerException("[SubmissionService][submit] Missing postcode"))
+              //TODO - Confirm what to send when postcode is not available
+
+              nonRepudiationService.submitNonRepudiation(regId, payloadString, timeMachine.timestamp, postCode, userHeaders)
+            }
+            else {
+              val nonRepudiationPostcode = oldSubmission.businessContact.ppob.postcode.getOrElse("NoPostcodeSupplied")
+              //TODO - Confirm what to send when postcode is not available
+
+              nonRepudiationService.submitNonRepudiation(regId, Json.toJson(submission).toString, timeMachine.timestamp, nonRepudiationPostcode, userHeaders)
+            }
+
             response
         }
     }
