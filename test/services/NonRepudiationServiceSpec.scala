@@ -16,10 +16,6 @@
 
 package services
 
-import java.nio.charset.StandardCharsets
-import java.security.MessageDigest
-import java.util.Base64
-
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import mocks.monitoring.MockAuditService
@@ -32,9 +28,12 @@ import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.EmptyPredicate
-import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.http.logging.Authorization
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.util.Base64
 import scala.concurrent.Future
 
 class NonRepudiationServiceSpec extends VatRegSpec with MockAuditService with VatRegistrationFixture with Eventually {
@@ -127,8 +126,8 @@ class NonRepudiationServiceSpec extends VatRegSpec with MockAuditService with Va
       ).thenReturn(Future.successful(testAuthRetrievals))
 
       when(mockNonRepudiationConnector.submitNonRepudiation(
-          ArgumentMatchers.eq(testEncodedPayload),
-          ArgumentMatchers.eq(expectedMetadata)
+        ArgumentMatchers.eq(testEncodedPayload),
+        ArgumentMatchers.eq(expectedMetadata)
       )(ArgumentMatchers.eq(hc)))
         .thenReturn(Future.failed(new NotFoundException(testExceptionMessage)))
 
@@ -137,7 +136,7 @@ class NonRepudiationServiceSpec extends VatRegSpec with MockAuditService with Va
       intercept[NotFoundException](await(res))
 
       eventually {
-        verifyAudit(NonRepudiationSubmissionFailureAudit(testRegistrationId, NOT_FOUND , testExceptionMessage))
+        verifyAudit(NonRepudiationSubmissionFailureAudit(testRegistrationId, NOT_FOUND, testExceptionMessage))
       }
     }
   }

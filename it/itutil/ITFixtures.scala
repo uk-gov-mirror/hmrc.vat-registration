@@ -15,14 +15,17 @@
  */
 package itutil
 
-import java.time.{LocalDate, LocalDateTime, LocalTime}
-
 import common.TransactionId
 import enums.VatRegStatus
 import models.api._
 import models.submission.{DateOfBirth, Director, RoleInBusiness}
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.http.HeaderCarrier
+
+import java.nio.charset.StandardCharsets
+import java.time.{LocalDate, LocalDateTime, LocalTime}
+import java.util.Base64
 
 trait ITFixtures {
 
@@ -138,6 +141,9 @@ trait ITFixtures {
     customerStatus = MTDfB
   )
 
+  val testNrsSubmissionPayload = "testNrsSubmissionPayload"
+  val testEncodedPayload: String = Base64.getEncoder.encodeToString(testNrsSubmissionPayload.getBytes(StandardCharsets.UTF_8))
+
   lazy val testFullVatSchemeWithUnregisteredBusinessPartner: VatScheme =
     VatScheme(
       id = testRegId,
@@ -153,7 +159,8 @@ trait ITFixtures {
       status = VatRegStatus.draft,
       applicantDetails = Some(testUnregisteredApplicantDetails),
       eligibilitySubmissionData = Some(testEligibilitySubmissionData),
-      confirmInformationDeclaration = Some(true)
+      confirmInformationDeclaration = Some(true),
+      nrsSubmissionPayload = Some(testEncodedPayload)
     )
 
   lazy val testMinimalVatSchemeWithRegisteredBusinessPartner: VatScheme =
@@ -187,8 +194,6 @@ trait ITFixtures {
     import uk.gov.hmrc.auth.core.retrieve._
     import uk.gov.hmrc.auth.core.{ConfidenceLevel, CredentialStrength, User}
 
-
-    val testInternalId = "testInternalId"
     val testExternalId = "testExternalId"
     val testAgentCode = "testAgentCode"
     val testConfidenceLevel = ConfidenceLevel.L200
@@ -220,7 +225,7 @@ trait ITFixtures {
     lazy val testCredentials: Credentials = Credentials(testProviderId, testProviderType)
 
     val testNonRepudiationIdentityData: IdentityData = IdentityData(
-      Some(testInternalId),
+      Some(testInternalid),
       Some(testExternalId),
       Some(testAgentCode),
       Some(testCredentials),
@@ -242,13 +247,15 @@ trait ITFixtures {
       testLoginTimes
     )
 
+    val identityJson: JsValue = Json.toJson(testNonRepudiationIdentityData)
+
     implicit class RetrievalCombiner[A](a: A) {
       def ~[B](b: B): A ~ B = new ~(a, b)
     }
 
     val testAuthRetrievals: NonRepudiationIdentityRetrievals =
       Some(testAffinityGroup) ~
-        Some(testInternalId) ~
+        Some(testInternalid) ~
         Some(testExternalId) ~
         Some(testAgentCode) ~
         Some(testCredentials) ~
