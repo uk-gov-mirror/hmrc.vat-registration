@@ -51,3 +51,5 @@ GET         /:regId/applicant-details               controllers.ApplicantDetails
 PATCH       /:regId/applicant-details               controllers.ApplicantDetailsController.updateApplicantDetailsData(regId: String)
 
 PATCH       /:regId/honesty-declaration             controllers.VatRegistrationController.storeHonestyDeclaration(regId: String)
+
+PATCH       /:regId/nrs-payload                     controllers.NrsSubmissionPayloadController.storeNrsSubmissionPayload(regId: String)

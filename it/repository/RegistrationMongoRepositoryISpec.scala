@@ -16,8 +16,6 @@
 
 package repository
 
-import java.time.LocalDate
-
 import common.TransactionId
 import common.exceptions._
 import enums.VatRegStatus
@@ -29,6 +27,7 @@ import play.api.test.Helpers._
 import reactivemongo.api.commands.WriteResult
 import repositories.RegistrationMongoRepository
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -186,7 +185,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
         Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
       } yield (updatedScheme.status, updatedScheme.acknowledgementReference)
 
-      await(result) mustBe (VatRegStatus.locked, Some(testAckRef))
+      await(result) mustBe(VatRegStatus.locked, Some(testAckRef))
     }
 
     "update the vat scheme with the provided ackref on a topup" in new Setup {
@@ -196,7 +195,7 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
         Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
       } yield (updatedScheme.status, updatedScheme.acknowledgementReference)
 
-      await(result) mustBe (VatRegStatus.held, Some(testAckRef))
+      await(result) mustBe(VatRegStatus.held, Some(testAckRef))
     }
   }
 
@@ -789,6 +788,65 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
       res mustBe newJsonEligiblityData
 
       await(repository.fetchEligibilityData(vatScheme.id)) mustBe Some(newJsonEligiblityData)
+    }
+  }
+
+  "calling fetchNrsSubmissionPayload" should {
+    val testPayload = "testPayload"
+
+    "return an encoded payload string from existing data based on the reg Id" in new Setup {
+      val result: Future[Option[String]] = for {
+        _ <- repository.insert(vatScheme)
+        _ <- repository.updateNrsSubmissionPayload(vatScheme.id, testPayload)
+        _ = count mustBe 1
+        res <- repository.fetchNrsSubmissionPayload(vatScheme.id)
+      } yield res
+
+      await(result).get mustBe testPayload
+    }
+
+    "return None from an existing registration that exists but the payload does not exist" in new Setup {
+      val result: Future[Option[String]] = for {
+        _ <- repository.insert(vatScheme)
+        res <- repository.fetchNrsSubmissionPayload(vatScheme.id)
+      } yield res
+
+      await(result) mustBe None
+    }
+
+    "return a MissingRegDocument when nothing is returned from mongo for the reg id" in new Setup {
+      val result: Future[Option[SicAndCompliance]] = repository.fetchSicAndCompliance("madeUpRegId")
+
+      a[MissingRegDocument] mustBe thrownBy(await(result))
+    }
+  }
+
+  "calling updateNrsSubmissionPayload" should {
+    val testPayload = "testPayload"
+
+    "return an updated payload string when an entry already exists in the repo" in new Setup {
+      val testOldPayload = "testOldPayload"
+
+      val result: Future[String] = for {
+        _ <- repository.insert(vatScheme.copy(nrsSubmissionPayload = Some(testOldPayload)))
+        _ = count mustBe 1
+        res <- repository.updateNrsSubmissionPayload(vatScheme.id, testPayload)
+      } yield res
+
+      await(result) mustBe testPayload
+    }
+
+    "return the payload string after storing it" in new Setup {
+      val result: Future[String] = for {
+        _ <- repository.insert(vatScheme)
+        res <- repository.updateNrsSubmissionPayload(vatScheme.id, testPayload)
+      } yield res
+      await(result) mustBe testPayload
+    }
+
+    "return an MissingRegDocument if registration document does not exist for the registration id" in new Setup {
+      val result: Future[String] = repository.updateNrsSubmissionPayload("madeUpRegId", testPayload)
+      a[MissingRegDocument] mustBe thrownBy(await(result))
     }
   }
 }
