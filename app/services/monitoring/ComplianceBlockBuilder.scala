@@ -34,7 +34,7 @@ class ComplianceBlockBuilder {
           optional("intermediaryArrangement" -> labourCompliance.intermediaryArrangement),
           "supplyWorkers" -> labourCompliance.supplyWorkers
         ))
-      case None => throw new InternalServerException("Couldn't build audit compliance block due to missing sicAndCompliance data")
+      case None => throw new InternalServerException("[ComplianceBlockBuilder] Couldn't build audit compliance block due to missing sicAndCompliance data")
     }
   }
 
