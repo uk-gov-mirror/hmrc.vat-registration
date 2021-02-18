@@ -21,15 +21,13 @@ import play.api.libs.json.JsObject
 import uk.gov.hmrc.http.InternalServerException
 import utils.JsonUtils.jsonObject
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import javax.inject.Singleton
 
 @Singleton
-class BankAuditBlockBuilder @Inject()()(implicit ec: ExecutionContext) {
+class BankAuditBlockBuilder {
 
   def buildBankAuditBlock(vatScheme: VatScheme): JsObject = {
-    vatScheme.bankAccount
-    match {
+    vatScheme.bankAccount match {
       case Some(bankAccount) =>
         if (bankAccount.isProvided) {
           bankAccount.details match {
