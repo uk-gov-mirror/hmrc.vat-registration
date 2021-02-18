@@ -27,19 +27,20 @@ case class EligibilitySubmissionData(threshold: Threshold,
                                      exceptionOrExemption: String,
                                      estimates: TurnoverEstimates,
                                      customerStatus: CustomerStatus) {
+
   def earliestDate: LocalDate = Seq(
     threshold.thresholdPreviousThirtyDays,
     threshold.thresholdInTwelveMonths.map(_.withDayOfMonth(1).plusMonths(2)),
     threshold.thresholdNextThirtyDays
   ).flatten.min(Ordering.by((date: LocalDate) => date.toEpochDay))
 
-  def reasonForRegistration: String = threshold match {
+  def reasonForRegistration(humanReadable: Boolean = false): String = threshold match {
     case Threshold(false, _, _, _) =>
-      voluntaryKey
+      if (humanReadable) voluntaryHumanReadable else voluntaryKey
     case Threshold(true, forwardLook1, _, forwardLook2) if forwardLook1.contains(earliestDate) || forwardLook2.contains(earliestDate) =>
-      forwardLookKey
+      if (humanReadable) forwardLookHumanReadable else forwardLookKey
     case _ =>
-      backwardLookKey
+      if (humanReadable) backwardLookHumanReadable else backwardLookKey
   }
 }
 
@@ -47,6 +48,10 @@ object EligibilitySubmissionData {
   val voluntaryKey = "0018"
   val forwardLookKey = "0016"
   val backwardLookKey = "0015"
+
+  val voluntaryHumanReadable = "Voluntary"
+  val forwardLookHumanReadable = "Forward Look"
+  val backwardLookHumanReadable = "Backward Look"
 
   val exceptionKey = "2"
   val exemptionKey = "1"

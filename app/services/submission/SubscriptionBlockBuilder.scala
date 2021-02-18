@@ -38,9 +38,9 @@ class SubscriptionBlockBuilder @Inject()(registrationMongoRepository: Registrati
   } yield (optEligibilityData, optReturns, optApplicantDetails, optSicAndCompliance, optFlatRateScheme) match {
     case (Some(eligibilityData), Some(returns), Some(applicantDetails), Some(sicAndCompliance), optFlatRateScheme) => jsonObject(
       "reasonForSubscription" -> jsonObject(
-        "registrationReason" -> eligibilityData.reasonForRegistration,
+        "registrationReason" -> eligibilityData.reasonForRegistration(),
         optional("relevantDate" -> {
-          if (eligibilityData.reasonForRegistration == voluntaryKey) {
+          if (eligibilityData.reasonForRegistration() == voluntaryKey) {
             returns.start.date
           } else {
             Some(eligibilityData.earliestDate)
