@@ -24,8 +24,6 @@ import uk.gov.hmrc.http.InternalServerException
 
 class BankAuditBlockBuilderSpec extends VatRegSpec with VatRegistrationFixture {
 
-  val builder = app.injector.instanceOf[BankAuditBlockBuilder]
-
   val bankAuditBlockJson: JsObject = Json.parse(
     """
       |{

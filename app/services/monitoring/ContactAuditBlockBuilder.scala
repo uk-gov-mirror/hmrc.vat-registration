@@ -49,7 +49,7 @@ class ContactAuditBlockBuilder {
             })
           ))
       case _ =>
-        throw new InternalServerException("Could not build contact block for submission due to missing data")
+        throw new InternalServerException("[ContactAuditBlockBuilder]: Could not build contact block for submission due to missing data")
     }
 
 }

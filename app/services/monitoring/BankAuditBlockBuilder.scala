@@ -38,7 +38,7 @@ class BankAuditBlockBuilder {
                 "accountNumber" -> bankAccountDetails.number
               )
             case None =>
-              throw new InternalServerException("BankAuditBlockBuilder: Could not build bank details block for audit due to missing bank account details")
+              throw new InternalServerException("[BankAuditBlockBuilder]: Could not build bank details block for audit due to missing bank account details")
           }
         }
         else {
