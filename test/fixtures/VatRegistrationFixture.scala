@@ -70,6 +70,7 @@ trait VatRegistrationFixture {
   lazy val testAffinityGroup: AffinityGroup = AffinityGroup.Organisation
   lazy val testAuthToken = "testAuthToken"
 
+  val testTradingName = "trading-name"
   val testUserHeaders = Map("testKey" -> "testValue")
 
   lazy val testEligibilitySubmissionData: EligibilitySubmissionData = EligibilitySubmissionData(
@@ -218,7 +219,7 @@ trait VatRegistrationFixture {
        |}
     """.stripMargin).as[JsObject]
 
-  lazy val validFullTradingDetails: TradingDetails = TradingDetails(tradingName = Some("trading-name"), eoriRequested = true)
+  lazy val validFullTradingDetails: TradingDetails = TradingDetails(tradingName = Some(testTradingName), eoriRequested = true)
   lazy val validFullTradingDetailsJson: JsObject = Json.parse(
     s"""
        |{
