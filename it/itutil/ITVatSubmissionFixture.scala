@@ -39,10 +39,12 @@ trait ITVatSubmissionFixture extends ITFixtures {
     ),
     "contact" -> Json.obj(
       "address" -> Json.obj(
-        "line1" -> testAddress.line1,
-        "line2" -> testAddress.line2,
+        "line1" -> testFullAddress.line1,
+        "line2" -> testFullAddress.line2,
+        "line3" -> testFullAddress.line3,
+        "line4" -> testFullAddress.line4,
         //line5 not supplied by ALF
-        "postCode" -> testAddress.postcode,
+        "postCode" -> testFullAddress.postcode,
         "countryCode" -> "GB",
         "addressValidated" -> true //false if manually entered by user
       ),
@@ -172,10 +174,12 @@ trait ITVatSubmissionFixture extends ITFixtures {
     ),
     "contact" -> Json.obj(
       "address" -> Json.obj(
-        "line1" -> testAddress.line1,
-        "line2" -> testAddress.line2,
+        "line1" -> testFullAddress.line1,
+        "line2" -> testFullAddress.line2,
+        "line3" -> testFullAddress.line3,
+        "line4" -> testFullAddress.line4,
         //line5 not supplied by ALF
-        "postCode" -> testAddress.postcode,
+        "postCode" -> testFullAddress.postcode,
         "countryCode" -> "GB",
         "addressValidated" -> true //false if manually entered by user
       ),
@@ -234,9 +238,9 @@ trait ITVatSubmissionFixture extends ITFixtures {
           "lastName" -> testName.last
         ),
         "currAddress" -> Json.obj(
-          "line1" -> testAddress.line1,
-          "line2" -> testAddress.line2,
-          "postCode" -> testAddress.postcode,
+          "line1" -> testFullAddress.line1,
+          "line2" -> testFullAddress.line2,
+          "postCode" -> testFullAddress.postcode,
           "countryCode" -> "GB",
           "addressValidated" -> true
         ),

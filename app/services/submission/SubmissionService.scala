@@ -20,15 +20,16 @@ import cats.instances.FutureInstances
 import common.exceptions._
 import connectors.VatSubmissionConnector
 import enums.VatRegStatus
-import featureswitch.core.config.{CheckYourAnswersNrsSubmission, FeatureSwitching}
+import featureswitch.core.config.{CheckYourAnswersNrsSubmission, FeatureSwitching, UseSubmissionAuditBuilders}
 import models.api.{Submitted, VatScheme}
 import models.monitoring.RegistrationSubmissionAuditing.RegistrationSubmissionAuditModel
+import models.monitoring.SubmissionAuditModel
 import models.submission.VatSubmission
 import play.api.Logging
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Request
 import repositories._
-import services.monitoring.AuditService
+import services.monitoring.{AuditService, SubmissionAuditBlockBuilder}
 import services.{NonRepudiationService, TrafficManagementService}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{credentials, _}
 import uk.gov.hmrc.auth.core.retrieve.~
@@ -47,6 +48,7 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
                                   nonRepudiationService: NonRepudiationService,
                                   trafficManagementService: TrafficManagementService,
                                   submissionPayloadBuilder: SubmissionPayloadBuilder,
+                                  submissionAuditBlockBuilder: SubmissionAuditBlockBuilder,
                                   timeMachine: TimeMachine,
                                   auditService: AuditService,
                                   idGenerator: IdGenerator,
@@ -71,6 +73,7 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
     }
   }
 
+  // scalastyle:off
   private[services] def submit(submission: JsObject,
                                vatScheme: VatScheme,
                                oldSubmission: VatSubmission,
@@ -86,13 +89,25 @@ class SubmissionService @Inject()(sequenceMongoRepository: SequenceMongoReposito
       case Some(credentials) ~ Some(affinity) ~ optAgentCode =>
         vatSubmissionConnector.submit(submission, correlationId, credentials.providerId).map {
           response =>
-            auditService.audit(RegistrationSubmissionAuditModel(
-              vatSubmission = oldSubmission,
-              regId = regId,
-              authProviderId = credentials.providerId,
-              affinityGroup = affinity,
-              optAgentReferenceNumber = optAgentCode
-            ))
+            if (isEnabled(UseSubmissionAuditBuilders)) {
+              auditService.audit(
+                submissionAuditBlockBuilder.buildAuditJson(
+                  vatScheme = vatScheme,
+                  authProviderId = credentials.providerId,
+                  affinityGroup = affinity,
+                  optAgentReferenceNumber = optAgentCode
+                )
+              )
+            }
+            else {
+              auditService.audit(RegistrationSubmissionAuditModel(
+                vatSubmission = oldSubmission,
+                regId = regId,
+                authProviderId = credentials.providerId,
+                affinityGroup = affinity,
+                optAgentReferenceNumber = optAgentCode
+              ))
+            }
 
             if (isEnabled(CheckYourAnswersNrsSubmission)) {
               val encodedHtml = vatScheme.nrsSubmissionPayload

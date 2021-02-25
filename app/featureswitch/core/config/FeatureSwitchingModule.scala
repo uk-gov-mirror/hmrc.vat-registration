@@ -24,7 +24,11 @@ import featureswitch.core.models.FeatureSwitch
 @Singleton
 class FeatureSwitchingModule extends Module with FeatureSwitchRegistry {
 
-  val switches = Seq(StubSubmission, CheckYourAnswersNrsSubmission)
+  val switches = Seq(
+    StubSubmission,
+    CheckYourAnswersNrsSubmission,
+    UseSubmissionAuditBuilders
+  )
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     Seq(
@@ -41,4 +45,9 @@ case object StubSubmission extends FeatureSwitch {
 case object CheckYourAnswersNrsSubmission extends FeatureSwitch {
   override val configName: String = "feature-switch.check-your-answers-nrs-submission"
   override val displayName: String = "Use CYA HTML as payload for NRS"
+}
+
+case object UseSubmissionAuditBuilders extends FeatureSwitch {
+  override val configName: String = "feature-switch.use-submission-audit-builders"
+  override val displayName: String = "Use submission audit builders"
 }

@@ -39,7 +39,9 @@ trait ITFixtures {
   val testTransactionId = "transId"
   val vatScheme = VatScheme(testRegId, internalId = testInternalid, status = VatRegStatus.draft)
   val oldName = Name(first = Some("Bob"), middle = None, last = "Smith")
-  val testTradingDetails = TradingDetails(Some("test-name"), true)
+  val testTradingName = "trading-name"
+  val testTradingDetails = TradingDetails(Some(testTradingName), true)
+  val testAuthProviderId = "authProviderId"
 
   val testReturns = Returns(
     reclaimVatOnMostReturns = true,
@@ -70,10 +72,12 @@ trait ITFixtures {
   val testName = Name(first = Some("Forename"), middle = None, last = "Surname")
   val testFormerName = FormerName(name = Some(oldName), change = Some(testDate))
   val testCompanyName = "testCompanyName"
+  val testDateOfBirth = DateOfBirth(testDate)
   val testCrn = "testCrn"
   val testCtUtr = "testCtUtr"
   val testDateOfIncorp = LocalDate.of(2020, 1, 2)
   val testBpSafeId = "testBpSafeId"
+  val testWebsite = "www.foo.com"
 
   val testUnregisteredApplicantDetails: ApplicantDetails = ApplicantDetails(
     nino = testNino,
@@ -113,7 +117,9 @@ trait ITFixtures {
     bpSafeId = Some(testBpSafeId)
   )
 
-  val testBusinessContactDetails = BusinessContact(digitalContact = testContactDetails, website = None, ppob = testAddress, commsPreference = Email)
+  val testBusinessContactDetails = BusinessContact(digitalContact = testContactDetails, website = None, ppob = testFullAddress, commsPreference = Email)
+  val testFullBusinessContactDetails = BusinessContact(digitalContact = testContactDetails, website = Some(testWebsite), ppob = testFullAddress, commsPreference = Email)
+
   val testSicAndCompliance = SicAndCompliance(
     businessDescription = "businessDesc",
     labourCompliance = Some(ComplianceLabour(
@@ -123,6 +129,22 @@ trait ITFixtures {
     ),
     mainBusinessActivity = SicCode("12345", "sicDesc", "sicDetail"),
     businessActivities = List(SicCode("12345", "sicDesc", "sicDetail")))
+
+  val testFullSicAndCompliance = SicAndCompliance(
+    businessDescription = "businessDesc",
+    labourCompliance = Some(ComplianceLabour(
+      numOfWorkersSupplied = Some(1),
+      intermediaryArrangement = Some(true),
+      supplyWorkers = true)
+    ),
+    mainBusinessActivity = SicCode("12345", "sicDesc", "sicDetail"),
+    businessActivities = List(
+      SicCode("00002", "sicDesc", "sicDetail"),
+      SicCode("00003", "sicDesc", "sicDetail"),
+      SicCode("00004", "sicDesc", "sicDetail")
+    )
+  )
+
   val testTurnoverEstimates = TurnoverEstimates(12345678L)
 
   val testBankDetails = BankAccountDetails(
@@ -143,6 +165,21 @@ trait ITFixtures {
 
   val testNrsSubmissionPayload = "testNrsSubmissionPayload"
   val testEncodedPayload: String = Base64.getEncoder.encodeToString(testNrsSubmissionPayload.getBytes(StandardCharsets.UTF_8))
+
+  lazy val testVatScheme: VatScheme = VatScheme(testRegId, internalId = testInternalid, status = VatRegStatus.draft)
+
+  lazy val testFullVatScheme: VatScheme = testVatScheme.copy(
+    tradingDetails = Some(testTradingDetails),
+    sicAndCompliance = Some(testFullSicAndCompliance),
+    businessContact = Some(testFullBusinessContactDetails),
+    bankAccount = Some(BankAccount(isProvided = true, Some(testBankDetails), None)),
+    flatRateScheme = Some(testFlatRateScheme),
+    applicantDetails = Some(testUnregisteredApplicantDetails),
+    eligibilitySubmissionData = Some(testEligibilitySubmissionData),
+    confirmInformationDeclaration = Some(true),
+    returns = Some(testReturns),
+    nrsSubmissionPayload = Some(testEncodedPayload)
+  )
 
   lazy val testFullVatSchemeWithUnregisteredBusinessPartner: VatScheme =
     VatScheme(
