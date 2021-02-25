@@ -31,7 +31,7 @@ class AuditRootBlockBuilder {
   private val idVerificationStatus: String = "1"
   private val cidVerificationStatus: String = "1"
 
-  def buildRootBlock(vatScheme: VatScheme): JsValue = {
+  def buildRootBlock(vatScheme: VatScheme): JsObject = {
     (vatScheme.eligibilitySubmissionData, vatScheme.tradingDetails, vatScheme.applicantDetails, vatScheme.returns) match {
       case (None, _, _, _) =>
         throw new InternalServerException("[AdminBlockBuilder] Vat scheme missing Eligibility data")
