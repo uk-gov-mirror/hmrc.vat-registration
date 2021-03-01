@@ -136,24 +136,10 @@ trait SubmissionAuditFixture extends ITVatSubmissionFixture {
     ),
     "idsVerificationStatus" -> "1",
     "cidVerification" -> "1",
-    "detail" -> detailBlockRootJson
+    "userEnteredDetails" -> detailBlockAnswers
   )
 
-  val detailBlockRootJson = Json.obj(
-    "registrationReason" -> "Forward Look",
-    "registrationRelevantDate" -> "2017-01-01",
-    "messageType" -> "SubscriptionSubmitted",
-    "customerStatus" -> MTDfB.toString,
-    "eoriRequested" -> true,
-    "corporateBodyRegistered" -> Json.obj(
-      "dateOfIncorporation" -> testDateOfIncorp,
-      "countryOfIncorporation" -> "GB"
-    ),
-    "idVerificationStatus" -> "1",
-    "cidVerification" -> "1",
-  )
-
-  val detailBlockAnswers = detailBlockRootJson ++ Json.obj(
+  val detailBlockAnswers = Json.obj(
     "outsideEUSales" -> true,
     "subscription" -> fullSubscriptionBlockJson,
     "compliance" -> complianceAuditBlockJson,

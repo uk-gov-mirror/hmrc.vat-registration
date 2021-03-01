@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-package services.monitoring
-
+package models.monitoring
 
 import enums.VatRegStatus
-import fixtures.VatRegistrationFixture
-import java.time.LocalDate
+import fixtures.SubmissionAuditFixture
 import helpers.VatRegSpec
 import models.api.{MTDfB, VatScheme}
 import play.api.libs.json.Json
+import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
 import uk.gov.hmrc.http.InternalServerException
 
+import java.time.LocalDate
 
-
-class AuditRootBlockBuilderSpec extends VatRegSpec with VatRegistrationFixture {
-
-  val builder = app.injector.instanceOf[AuditRootBlockBuilder]
+class SubmissionAuditModelSpec extends VatRegSpec with SubmissionAuditFixture {
 
   val rootBlockTestVatScheme = VatScheme(
     id = testRegId,
@@ -41,43 +38,64 @@ class AuditRootBlockBuilderSpec extends VatRegSpec with VatRegistrationFixture {
     returns = Some(testReturns)
   )
 
+  def model(vatScheme: VatScheme): SubmissionAuditModel = SubmissionAuditModel(
+    userAnswers = Json.obj("user" -> "answers"),
+    vatScheme = vatScheme,
+    affinityGroup = Organisation,
+    authProviderId = testProviderId,
+    optAgentReferenceNumber = None
+  )
+
   "buildRootBlock" when {
     "All required blocks are present in the vat scheme" when {
       "forward look" should {
         "return the root JSON block when BP Safe ID is missing" in {
-          val res = builder.buildRootBlock(rootBlockTestVatScheme)
 
-          res mustBe Json.obj(
+          val res = model(rootBlockTestVatScheme)
+
+          res.detail mustBe Json.obj(
+            "authProviderId" -> "testProviderID",
+            "journeyId" -> "testRegId",
+            "userType" -> "Organisation",
             "registrationReason" -> "Forward Look",
             "registrationRelevantDate" -> "2020-10-07",
-            "messageType" -> "SubscriptionSubmitted",
+            "messageType" -> "SubscriptionCreate",
             "customerStatus" -> MTDfB.toString,
             "eoriRequested" -> true,
             "corporateBodyRegistered" -> Json.obj(
               "dateOfIncorporation" -> testDateOFIncorp,
               "countryOfIncorporation" -> "GB"
             ),
-            "idVerificationStatus" -> "1",
+            "idsVerificationStatus" -> "1",
             "cidVerification" -> "1",
+            "userEnteredDetails" -> Json.obj(
+              "user" -> "answers"
+            )
           )
         }
         "return the root JSON block when BP Safe ID is present" in {
           val applicantDetailsWithSafeId = validApplicantDetails.copy(bpSafeId = Some(testBpSafeId))
-          val res = builder.buildRootBlock(rootBlockTestVatScheme.copy(applicantDetails = Some(applicantDetailsWithSafeId)))
+          val res = model(rootBlockTestVatScheme.copy(applicantDetails = Some(applicantDetailsWithSafeId)))
 
-          res mustBe Json.obj(
+          res.detail mustBe Json.obj(
+            "authProviderId" -> "testProviderID",
+            "journeyId" -> "testRegId",
+            "userType" -> "Organisation",
             "registrationReason" -> "Forward Look",
             "registrationRelevantDate" -> "2020-10-07",
-            "messageType" -> "SubscriptionSubmitted",
+            "messageType" -> "SubscriptionCreate",
             "customerStatus" -> MTDfB.toString,
             "eoriRequested" -> true,
             "corporateBodyRegistered" -> Json.obj(
               "dateOfIncorporation" -> testDateOFIncorp,
               "countryOfIncorporation" -> "GB"
             ),
-            "idVerificationStatus" -> "1",
+            "idsVerificationStatus" -> "1",
             "cidVerification" -> "1",
-            "businessPartnerReference" -> testBpSafeId
+            "businessPartnerReference" -> testBpSafeId,
+            "userEnteredDetails" -> Json.obj(
+              "user" -> "answers"
+            )
           )
         }
       }
@@ -89,40 +107,54 @@ class AuditRootBlockBuilderSpec extends VatRegSpec with VatRegistrationFixture {
           )
 
           val eligibilityData = testEligibilitySubmissionData.copy(threshold = threshold)
-          val res = builder.buildRootBlock(rootBlockTestVatScheme.copy(eligibilitySubmissionData = Some(eligibilityData)))
+          val res = model(rootBlockTestVatScheme.copy(eligibilitySubmissionData = Some(eligibilityData)))
 
-          res mustBe Json.obj(
+          res.detail mustBe Json.obj(
+            "authProviderId" -> "testProviderID",
+            "journeyId" -> "testRegId",
+            "userType" -> "Organisation",
             "registrationReason" -> "Backward Look",
             "registrationRelevantDate" -> "2020-12-01",
-            "messageType" -> "SubscriptionSubmitted",
+            "userType" -> "Organisation",
+            "messageType" -> "SubscriptionCreate",
             "customerStatus" -> MTDfB.toString,
             "eoriRequested" -> true,
             "corporateBodyRegistered" -> Json.obj(
               "dateOfIncorporation" -> testDateOFIncorp,
               "countryOfIncorporation" -> "GB"
             ),
-            "idVerificationStatus" -> "1",
-            "cidVerification" -> "1"
+            "idsVerificationStatus" -> "1",
+            "cidVerification" -> "1",
+            "userEnteredDetails" -> Json.obj(
+              "user" -> "answers"
+            )
           )
         }
       }
       "registering voluntarily" should {
         "return the correct json" in {
           val eligibilityData = testEligibilitySubmissionData.copy(threshold = testVoluntaryThreshold)
-          val res = builder.buildRootBlock(rootBlockTestVatScheme.copy(eligibilitySubmissionData = Some(eligibilityData)))
+          val res = model(rootBlockTestVatScheme.copy(eligibilitySubmissionData = Some(eligibilityData)))
 
-          res mustBe Json.obj(
+          res.detail mustBe Json.obj(
+            "authProviderId" -> "testProviderID",
+            "journeyId" -> "testRegId",
+            "userType" -> "Organisation",
             "registrationReason" -> "Voluntary",
             "registrationRelevantDate" -> "2018-01-01",
-            "messageType" -> "SubscriptionSubmitted",
+            "messageType" -> "SubscriptionCreate",
+            "userType" -> "Organisation",
             "customerStatus" -> MTDfB.toString,
             "eoriRequested" -> true,
             "corporateBodyRegistered" -> Json.obj(
               "dateOfIncorporation" -> testDateOFIncorp,
               "countryOfIncorporation" -> "GB"
             ),
-            "idVerificationStatus" -> "1",
-            "cidVerification" -> "1"
+            "idsVerificationStatus" -> "1",
+            "cidVerification" -> "1",
+            "userEnteredDetails" -> Json.obj(
+              "user" -> "answers"
+            )
           )
         }
       }
@@ -130,28 +162,28 @@ class AuditRootBlockBuilderSpec extends VatRegSpec with VatRegistrationFixture {
     "the eligibility submission data block is missing in the vat scheme" should {
       "throw an exception" in {
         intercept[InternalServerException] {
-          builder.buildRootBlock(rootBlockTestVatScheme.copy(eligibilitySubmissionData = None))
+          model(rootBlockTestVatScheme.copy(eligibilitySubmissionData = None))
         }
       }
     }
     "the trading details block is missing in the vat scheme" should {
       "throw an exception" in {
         intercept[InternalServerException] {
-          builder.buildRootBlock(rootBlockTestVatScheme.copy(tradingDetails = None))
+          model(rootBlockTestVatScheme.copy(tradingDetails = None))
         }
       }
     }
     "the applicant details block is missing in the vat scheme" should {
       "throw an exception" in {
         intercept[InternalServerException] {
-          builder.buildRootBlock(rootBlockTestVatScheme.copy(applicantDetails = None))
+          model(rootBlockTestVatScheme.copy(applicantDetails = None))
         }
       }
     }
     "the returns block is missing in the vat scheme" should {
       "throw an exception" in {
         intercept[InternalServerException] {
-          builder.buildRootBlock(rootBlockTestVatScheme.copy(returns = None))
+          model(rootBlockTestVatScheme.copy(returns = None))
         }
       }
     }

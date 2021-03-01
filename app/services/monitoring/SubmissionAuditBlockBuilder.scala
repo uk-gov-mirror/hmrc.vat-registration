@@ -27,8 +27,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SubmissionAuditBlockBuilder @Inject()(auditRootBlockBuilder: AuditRootBlockBuilder,
-                                            subscriptionBlockBuilder: SubscriptionBlockBuilder,
+class SubmissionAuditBlockBuilder @Inject()(subscriptionBlockBuilder: SubscriptionBlockBuilder,
                                             declarationBlockBuilder: DeclarationBlockBuilder,
                                             complianceBlockBuilder: ComplianceBlockBuilder,
                                             customerIdentificationBlockBuilder: CustomerIdentificationBlockBuilder,
@@ -43,8 +42,7 @@ class SubmissionAuditBlockBuilder @Inject()(auditRootBlockBuilder: AuditRootBloc
                      affinityGroup: AffinityGroup,
                      optAgentReferenceNumber: Option[String]
                     )(implicit hc: HeaderCarrier): SubmissionAuditModel = {
-    val details = auditRootBlockBuilder.buildRootBlock(vatScheme) ++
-    Json.obj(
+    val details = Json.obj(
       "outsideEUSales" -> {
         vatScheme.tradingDetails.map(_.eoriRequested) match {
           case Some(euGoods) => euGoods
@@ -61,7 +59,7 @@ class SubmissionAuditBlockBuilder @Inject()(auditRootBlockBuilder: AuditRootBloc
     )
 
     SubmissionAuditModel(
-      detailBlock = details,
+      userAnswers = details,
       vatScheme = vatScheme,
       authProviderId = authProviderId,
       affinityGroup = affinityGroup,
