@@ -23,7 +23,7 @@ class SubmissionAuditBlockBuilderISpec extends IntegrationStubbing with Submissi
       )
 
       res mustBe SubmissionAuditModel(
-        detailBlock = detailBlockAnswers,
+        userAnswers = detailBlockAnswers,
         vatScheme = testFullVatScheme,
         authProviderId = testAuthProviderId,
         affinityGroup = Organisation,

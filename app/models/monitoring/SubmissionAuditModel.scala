@@ -16,48 +16,64 @@
 
 package models.monitoring
 
-import models.api.{ApplicantDetails, CustomerStatus, VatScheme}
+import models.api.{EligibilitySubmissionData, VatScheme}
 import play.api.libs.json.{JsValue, Json}
 import services.monitoring.AuditModel
 import uk.gov.hmrc.auth.core.AffinityGroup
 import uk.gov.hmrc.http.InternalServerException
 import utils.JsonUtils._
 
-case class SubmissionAuditModel(detailBlock: JsValue,
+case class SubmissionAuditModel(userAnswers: JsValue,
                                 vatScheme: VatScheme,
                                 authProviderId: String,
                                 affinityGroup: AffinityGroup,
                                 optAgentReferenceNumber: Option[String]) extends AuditModel {
 
-  private def customerStatus: CustomerStatus = vatScheme.eligibilitySubmissionData
-    .map(_.customerStatus)
-    .getOrElse(throw new InternalServerException("Customer status missing from Eligibility data"))
+  private val messageType = "SubscriptionCreate"
+  private val idsVerificationStatus: String = "1"
+  private val cidVerificationStatus: String = "1"
 
-  private def eoriRequested: Boolean = vatScheme.tradingDetails
-    .map(_.eoriRequested)
-    .getOrElse(throw new InternalServerException("EORI requested answer missing from Trading details"))
+  override val auditType: String = "SubscriptionSubmitted"
+  override val transactionName: String = "subscription-submitted"
 
-  private def applicantDetails: ApplicantDetails = vatScheme.applicantDetails
-    .getOrElse(throw new InternalServerException("Applicant details section missing"))
+  override val detail: JsValue =
+    (vatScheme.eligibilitySubmissionData, vatScheme.tradingDetails, vatScheme.applicantDetails, vatScheme.returns) match {
+      case (Some(eligibilityData), Some(tradingDetails), Some(applicantDetails), Some(returns)) =>
+        jsonObject(
+          "authProviderId" -> authProviderId,
+          "journeyId" -> vatScheme.id,
+          "userType" -> affinityGroup.toString,
+          optional("agentReferenceNumber" -> optAgentReferenceNumber.filterNot(_ == "")),
+          "messageType" -> messageType,
+          "customerStatus" -> eligibilityData.customerStatus.toString,
+          "eoriRequested" -> tradingDetails.eoriRequested,
+          "registrationReason" -> eligibilityData.reasonForRegistration(humanReadable = true),
+          optional("registrationRelevantDate" -> {
+            if (eligibilityData.reasonForRegistration() == EligibilitySubmissionData.voluntaryKey) {
+              returns.start.date
+            } else {
+              Some(eligibilityData.earliestDate)
+            }
+          }),
+          "corporateBodyRegistered" -> Json.obj(
+            "dateOfIncorporation" -> applicantDetails.dateOfIncorporation,
+            "countryOfIncorporation" -> applicantDetails.countryOfIncorporation
+          ),
+          "idsVerificationStatus" -> idsVerificationStatus,
+          "cidVerification" -> cidVerificationStatus,
+          optional("businessPartnerReference" -> applicantDetails.bpSafeId),
+          "userEnteredDetails" -> userAnswers
+        )
+      case _ =>
+        throw new InternalServerException(s"""
+          [SubmissionAuditModel] Could not construct Audit JSON as required blocks are missing.
 
-  override val auditType: String = "_"
-  override val transactionName: String = "_"
-  override val detail: JsValue = jsonObject(
-    "authProviderId" -> authProviderId,
-    "journeyId" -> vatScheme.id,
-    "userType" -> affinityGroup.toString,
-    optional("agentReferenceNumber" -> optAgentReferenceNumber.filterNot(_ == "")),
-    "messageType" -> "SubscriptionCreate",
-    "customerStatus" -> customerStatus,
-    "eoriRequested" -> eoriRequested,
-    "corporateBodyRegistered" -> Json.obj(
-      "dateOfIncorporation" -> applicantDetails.dateOfIncorporation,
-      "countryOfIncorporation" -> applicantDetails.countryOfIncorporation
-    ),
-    "idsVerificationStatus" -> "1",
-    "cidVerification" -> "1",
-    optional("businessPartnerReference" -> applicantDetails.bpSafeId),
-    "detail" -> detailBlock
-  )
+          eligibilitySubmissionData is present?   ${vatScheme.eligibilitySubmissionData.isDefined}
+          tradingDetails is present?              ${vatScheme.tradingDetails.isDefined}
+          applicantDetails is present?            ${vatScheme.applicantDetails.isDefined}
+          returns is present?                     ${vatScheme.returns.isDefined}
+        """)
+    }
+
 
 }
