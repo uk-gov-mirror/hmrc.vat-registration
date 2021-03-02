@@ -33,16 +33,14 @@ class CustomerIdentificationBlockBuilderSpec extends VatRegSpec with VatRegistra
           val res = buildCustomerIdentificationBlock(testFullVatScheme)
 
           res mustBe Json.obj(
-            "customerIdentification" -> Json.obj(
-              "tradersPartyType" -> UkCompany.toString, // TODO: refactor once we allow different entities
-              "identifiers" -> Json.obj(
-                "companyRegistrationNumber" -> testCrn,
-                "ctUTR" -> testCtUtr
-              ),
-              "shortOrgName" -> testCompanyName,
-              "dateOfBirth" -> testDateOfBirth,
-              "tradingName" -> testTradingName
-            )
+            "tradersPartyType" -> UkCompany.toString, // TODO: refactor once we allow different entities
+            "identifiers" -> Json.obj(
+              "companyRegistrationNumber" -> testCrn,
+              "ctUTR" -> testCtUtr
+            ),
+            "shortOrgName" -> testCompanyName,
+            "dateOfBirth" -> testDateOfBirth,
+            "tradingName" -> testTradingName
           )
         }
       }
@@ -52,15 +50,13 @@ class CustomerIdentificationBlockBuilderSpec extends VatRegSpec with VatRegistra
           val res = buildCustomerIdentificationBlock(testFullVatScheme.copy(tradingDetails = Some(tradingDetails)))
 
           res mustBe Json.obj(
-            "customerIdentification" -> Json.obj(
-              "tradersPartyType" -> UkCompany.toString, // TODO: refactor once we allow different entities
-              "identifiers" -> Json.obj(
-                "companyRegistrationNumber" -> testCrn,
-                "ctUTR" -> testCtUtr
-              ),
-              "shortOrgName" -> testCompanyName,
-              "dateOfBirth" -> testDateOfBirth
-            )
+            "tradersPartyType" -> UkCompany.toString, // TODO: refactor once we allow different entities
+            "identifiers" -> Json.obj(
+              "companyRegistrationNumber" -> testCrn,
+              "ctUTR" -> testCtUtr
+            ),
+            "shortOrgName" -> testCompanyName,
+            "dateOfBirth" -> testDateOfBirth
           )
         }
       }

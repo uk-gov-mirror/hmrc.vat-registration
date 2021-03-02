@@ -31,16 +31,14 @@ class CustomerIdentificationBlockBuilder extends {
     (vatScheme.applicantDetails, vatScheme.tradingDetails) match {
       case (Some(applicantDetails), Some(tradingDetails)) =>
         jsonObject(
-          "customerIdentification" -> jsonObject(
-            "tradersPartyType" -> UkCompany.toString, // TODO: refactor once we allow different entities
-            "identifiers" -> Json.obj(
-              "companyRegistrationNumber" -> applicantDetails.companyNumber,
-              "ctUTR" -> applicantDetails.ctutr
-            ),
-            "shortOrgName" -> applicantDetails.companyName,
-            "dateOfBirth" -> applicantDetails.dateOfBirth,
-            optional("tradingName" -> tradingDetails.tradingName)
-          )
+          "tradersPartyType" -> UkCompany.toString, // TODO: refactor once we allow different entities
+          "identifiers" -> Json.obj(
+            "companyRegistrationNumber" -> applicantDetails.companyNumber,
+            "ctUTR" -> applicantDetails.ctutr
+          ),
+          "shortOrgName" -> applicantDetails.companyName,
+          "dateOfBirth" -> applicantDetails.dateOfBirth,
+          optional("tradingName" -> tradingDetails.tradingName)
         )
       case (None, _) =>
         throw new InternalServerException("[CustomerIdentificationBlockBuilder][Audit] Could not build customerIdentification block due to missing Applicant details data")
