@@ -42,16 +42,14 @@ trait SubmissionAuditFixture extends ITVatSubmissionFixture {
     )
 
   val customerIdentificationAuditBlockJson = Json.obj(
-    "customerIdentification" -> Json.obj(
-      "tradersPartyType" -> UkCompany.toString,
-      "identifiers" -> Json.obj(
-        "companyRegistrationNumber" -> testCrn,
-        "ctUTR" -> testCtUtr
-      ),
-      "shortOrgName" -> testCompanyName,
-      "dateOfBirth" -> testDateOfBirth,
-      "tradingName" -> testTradingName
-    )
+    "tradersPartyType" -> UkCompany.toString,
+    "identifiers" -> Json.obj(
+      "companyRegistrationNumber" -> testCrn,
+      "ctUTR" -> testCtUtr
+    ),
+    "shortOrgName" -> testCompanyName,
+    "dateOfBirth" -> testDateOfBirth,
+    "tradingName" -> testTradingName
   )
 
   val declarationAuditBlockJson =
