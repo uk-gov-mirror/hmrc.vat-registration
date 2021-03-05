@@ -16,13 +16,14 @@
 
 package services.submission
 
-import javax.inject.{Inject, Singleton}
-import models.api.EligibilitySubmissionData.voluntaryKey
+import models.api.EligibilitySubmissionData._
 import play.api.libs.json.JsObject
 import repositories.RegistrationMongoRepository
 import uk.gov.hmrc.http.InternalServerException
 import utils.JsonUtils._
 
+import java.time.LocalDate
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 // scalastyle:off
@@ -39,13 +40,13 @@ class SubscriptionBlockBuilder @Inject()(registrationMongoRepository: Registrati
     case (Some(eligibilityData), Some(returns), Some(applicantDetails), Some(sicAndCompliance), optFlatRateScheme) => jsonObject(
       "reasonForSubscription" -> jsonObject(
         "registrationReason" -> eligibilityData.reasonForRegistration(),
-        optional("relevantDate" -> {
-          if (eligibilityData.reasonForRegistration() == voluntaryKey) {
-            returns.start.date
-          } else {
-            Some(eligibilityData.earliestDate)
+        "relevantDate" -> {
+          eligibilityData.reasonForRegistration() match {
+            case `voluntaryKey` => returns.start.date
+            case `backwardLookKey` => eligibilityData.threshold.thresholdInTwelveMonths
+            case `forwardLookKey` => Some(eligibilityData.earliestDate)
           }
-        }),
+        },
         optional("voluntaryOrEarlierDate" -> returns.start.date),
         "exemptionOrException" -> eligibilityData.exceptionOrExemption
       ),
