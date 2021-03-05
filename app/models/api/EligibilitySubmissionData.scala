@@ -32,7 +32,7 @@ case class EligibilitySubmissionData(threshold: Threshold,
     threshold.thresholdPreviousThirtyDays,
     threshold.thresholdInTwelveMonths.map(_.withDayOfMonth(1).plusMonths(2)),
     threshold.thresholdNextThirtyDays
-  ).flatten.min(Ordering.by((date: LocalDate) => date.toEpochDay))
+  ).flatten.minBy(date => date.toEpochDay)
 
   def reasonForRegistration(humanReadable: Boolean = false): String = threshold match {
     case Threshold(false, _, _, _) =>

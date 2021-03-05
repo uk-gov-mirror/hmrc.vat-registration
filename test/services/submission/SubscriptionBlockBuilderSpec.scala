@@ -16,8 +16,6 @@
 
 package services.submission
 
-import java.time.LocalDate
-
 import fixtures.VatRegistrationFixture
 import helpers.VatRegSpec
 import models.api._
@@ -27,14 +25,15 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.InternalServerException
 
+import java.time.LocalDate
 import scala.concurrent.Future
 
 class SubscriptionBlockBuilderSpec extends VatRegSpec with VatRegistrationFixture {
 
   object TestService extends SubscriptionBlockBuilder(mockRegistrationMongoRepository)
 
-  val fullSubscriptionBlockJson: JsValue = Json.parse(
-    """
+  def fullSubscriptionBlockJson(reason: String = "0016"): JsValue = Json.parse(
+    s"""
       |{
       | "corporateBodyRegistered": {
       |   "dateOfIncorporation": "2020-01-02",
@@ -43,8 +42,8 @@ class SubscriptionBlockBuilderSpec extends VatRegSpec with VatRegistrationFixtur
       | },
       | "reasonForSubscription": {
       |   "voluntaryOrEarlierDate": "2020-02-02",
-      |   "relevantDate": "2020-10-07",
-      |   "registrationReason": "0016",
+      |   "relevantDate": "2020-10-01",
+      |   "registrationReason": "$reason",
       |   "exemptionOrException": "0"
       | },
       | "yourTurnover": {
@@ -113,13 +112,15 @@ class SubscriptionBlockBuilderSpec extends VatRegSpec with VatRegistrationFixtur
       otherActivities
     )
 
-    "build a full subscription json when all data is provided and user is mandatory" in {
+    "build a full subscription json when all data is provided and user is mandatory on a forward look" in {
       when(mockRegistrationMongoRepository.getApplicantDetails(any()))
         .thenReturn(Future.successful(Some(validApplicantDetails)))
       when(mockRegistrationMongoRepository.fetchReturns(any()))
         .thenReturn(Future.successful(Some(testReturns)))
       when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any()))
-        .thenReturn(Future.successful(Some(testEligibilitySubmissionData)))
+        .thenReturn(Future.successful(Some(testEligibilitySubmissionData.copy(threshold = Threshold(
+          mandatoryRegistration = true, Some(LocalDate.of(2020, 10, 1)), None, None
+        )))))
       when(mockRegistrationMongoRepository.fetchFlatRateScheme(any()))
         .thenReturn(Future.successful(Some(validFullFlatRateScheme)))
       when(mockRegistrationMongoRepository.fetchSicAndCompliance(any()))
@@ -127,7 +128,26 @@ class SubscriptionBlockBuilderSpec extends VatRegSpec with VatRegistrationFixtur
 
       val result = await(TestService.buildSubscriptionBlock(testRegId))
 
-      result mustBe fullSubscriptionBlockJson
+      result mustBe fullSubscriptionBlockJson(reason = EligibilitySubmissionData.forwardLookKey)
+    }
+
+    "build a full subscription json when all data is provided and user is mandatory on a backward look" in {
+      when(mockRegistrationMongoRepository.getApplicantDetails(any()))
+        .thenReturn(Future.successful(Some(validApplicantDetails)))
+      when(mockRegistrationMongoRepository.fetchReturns(any()))
+        .thenReturn(Future.successful(Some(testReturns)))
+      when(mockRegistrationMongoRepository.fetchEligibilitySubmissionData(any()))
+        .thenReturn(Future.successful(Some(testEligibilitySubmissionData.copy(threshold = Threshold(
+          mandatoryRegistration = true, None, Some(LocalDate.of(2020, 10, 1)), None
+        )))))
+      when(mockRegistrationMongoRepository.fetchFlatRateScheme(any()))
+        .thenReturn(Future.successful(Some(validFullFlatRateScheme)))
+      when(mockRegistrationMongoRepository.fetchSicAndCompliance(any()))
+        .thenReturn(Future.successful(Some(testSicAndCompliance)))
+
+      val result = await(TestService.buildSubscriptionBlock(testRegId))
+
+      result mustBe fullSubscriptionBlockJson(reason = EligibilitySubmissionData.backwardLookKey)
     }
 
     "build a minimal subscription json when minimum data is provided and user is voluntary" in {
