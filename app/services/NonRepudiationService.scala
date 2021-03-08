@@ -27,8 +27,7 @@ import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.EmptyPredicate
 import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.http.{HeaderCarrier, HttpException, InternalServerException}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HttpException, InternalServerException}
 
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
