@@ -20,8 +20,7 @@ import config.BackendConfig
 import httpparsers.VatSubmissionHttpParser.VatSubmissionHttpReads
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsObject
-import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.http.{HttpClient, _}
+import uk.gov.hmrc.http._
 
 import scala.concurrent.{ExecutionContext, Future}
 
