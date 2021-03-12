@@ -16,13 +16,11 @@
 
 package api
 
-import connectors.stubs.BusinessRegConnectorStub._
 import connectors.stubs.VatSubmissionStub._
 import enums.VatRegStatus
 import featureswitch.core.config.{FeatureSwitching, StubSubmission}
 import itutil.IntegrationStubbing
 import models.api.VatScheme
-import models.external.CurrentProfile
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.test.Helpers._
@@ -32,12 +30,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureSwitching {
 
   class Setup extends SetupHelper
-
-  val validBusinessRegistrationResponse: CurrentProfile = CurrentProfile(
-    "12345",
-    Some("director"),
-    "ENG"
-  )
 
   "/vatreg/new (create registration)" when {
     "the user is authorised" should {
@@ -59,7 +51,6 @@ class VatRegistrationCreatedBasicISpec extends IntegrationStubbing with FeatureS
     "the user is not authorised" should {
       "Return FORBIDDEN" in new Setup {
         given.user.isNotAuthorised
-        stubBusinessReg(OK)(Some(validBusinessRegistrationResponse))
 
         val res: WSResponse = await(client(controllers.routes.VatRegistrationController.newVatRegistration().url).post("test"))
 

@@ -169,14 +169,6 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
       }
   }
 
-  def clearDownDocument(transId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      registrationService.clearDownDocument(transId).map {
-        case true => Ok
-        case _ => InternalServerError
-      }
-  }
-
   // TODO: this returns 404 when other methods return 204. Refactor to return 204 at some point
   def fetchBankAccountDetails(regId: String): Action[AnyContent] = Action.async {
     implicit request =>

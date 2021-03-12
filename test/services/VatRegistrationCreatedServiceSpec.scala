@@ -143,32 +143,6 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
     }
   }
 
-
-  "call to saveAcknowledgementReference" should {
-
-    val vatScheme = VatScheme(testRegId, testInternalid, None, None, None, status = VatRegStatus.draft)
-
-    "return Success response " in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(testRegId)).thenReturn(Future.successful(Some(vatScheme)))
-      when(mockRegistrationMongoRepository.updateByElement(testRegId, AcknowledgementReferencePath, testAckReference))
-        .thenReturn(Future.successful(testAckReference))
-      service.saveAcknowledgementReference(testRegId, testAckReference) returnsRight testAckReference
-    }
-
-    val vatSchemeWithAckRefNum = vatScheme.copy(acknowledgementReference = Some(testAckReference))
-    "return Error response " in new Setup {
-      when(mockRegistrationMongoRepository.retrieveVatScheme(testRegId)).thenReturn(Future.successful(Some(vatSchemeWithAckRefNum)))
-      service.saveAcknowledgementReference(testRegId, testAckReference) returnsLeft
-        AcknowledgementReferenceExists(s"""Registration ID $testRegId already has an acknowledgement reference of: $testAckReference""")
-    }
-
-    "return Error response for MissingVatSchemeDocument" in new Setup {
-      val fakeRegId = "fakeRegId"
-      when(mockRegistrationMongoRepository.retrieveVatScheme(fakeRegId)).thenReturn(Future.successful(None))
-      service.saveAcknowledgementReference(fakeRegId, testAckReference) returnsLeft ResourceNotFound(s"VatScheme ID: $fakeRegId missing")
-    }
-  }
-
   "call to retrieveAcknowledgementReference" should {
 
     "call to retrieveAcknowledgementReference return AcknowledgementReference from DB" in new Setup {
@@ -211,15 +185,6 @@ class VatRegistrationCreatedServiceSpec extends VatRegSpec with VatRegistrationF
 
       when(mockRegistrationMongoRepository.retrieveVatScheme(testRegId)).thenReturn(Future.successful(Some(vatSchemeWithAckRefNum)))
       await(service.getStatus(testRegId)) mustBe expectedJson
-    }
-  }
-
-  "call to clearDownDocument" should {
-    "pass" when {
-      "given a transactionid" in new Setup {
-        when(mockRegistrationMongoRepository.clearDownDocument(ArgumentMatchers.eq("testTransID"))).thenReturn(Future.successful(true))
-        await(service.clearDownDocument("testTransID")) mustBe true
-      }
     }
   }
 

@@ -23,7 +23,6 @@ PATCH        /:regId/returns                        controllers.VatRegistrationC
 GET          /:regId/acknowledgement-reference      controllers.VatRegistrationController.getAcknowledgementReference(regId: String)
 
 DELETE       /:regId/delete-scheme                  controllers.VatRegistrationController.deleteVatScheme(regId: String)
-PATCH        /:transId/clear-scheme                 controllers.VatRegistrationController.clearDownDocument(transId: String)
 
 PATCH        /:regId/transaction-id                 controllers.VatRegistrationController.saveTransId(regId: String)
 

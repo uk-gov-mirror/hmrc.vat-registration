@@ -17,14 +17,12 @@
 package models.api
 
 import auth.CryptoSCRS
-import common.TransactionId
 import enums.VatRegStatus
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 case class VatScheme(id: String,
                      internalId: String,
-                     transactionId: Option[TransactionId] = None,
                      tradingDetails: Option[TradingDetails] = None,
                      returns: Option[Returns] = None,
                      sicAndCompliance: Option[SicAndCompliance] = None,
@@ -44,7 +42,6 @@ object VatScheme {
   implicit val apiFormat: OFormat[VatScheme] = (
     (__ \ "registrationId").format[String] and
       (__ \ "internalId").format[String] and
-      (__ \ "transactionId").formatNullable[TransactionId] and
       (__ \ "tradingDetails").formatNullable[TradingDetails] and
       (__ \ "returns").formatNullable[Returns] and
       (__ \ "sicAndCompliance").formatNullable[SicAndCompliance] and
@@ -63,7 +60,6 @@ object VatScheme {
   def mongoFormat(crypto: CryptoSCRS): OFormat[VatScheme] = (
     (__ \ "registrationId").format[String] and
       (__ \ "internalId").format[String] and
-      (__ \ "transactionId").formatNullable[TransactionId] and
       (__ \ "tradingDetails").formatNullable[TradingDetails] and
       (__ \ "returns").formatNullable[Returns] and
       (__ \ "sicAndCompliance").formatNullable[SicAndCompliance] and

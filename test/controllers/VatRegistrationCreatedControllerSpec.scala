@@ -323,23 +323,6 @@ class VatRegistrationCreatedControllerSpec extends VatRegSpec with VatRegistrati
     }
   }
 
-  "call to clearDownDocument" should {
-    "pass" when {
-      "given a transactionid" in new Setup {
-        when(mockVatRegistrationService.clearDownDocument(any())).thenReturn(Future.successful(true))
-        val resp: Future[Result] = controller.clearDownDocument("TransID")(FakeRequest())
-        status(resp) mustBe Status.OK
-      }
-    }
-    "fail" when {
-      "given a transactionid that isn't found in mongo" in new Setup {
-        when(mockVatRegistrationService.clearDownDocument(any())).thenReturn(Future.successful(false))
-        val resp: Future[Result] = controller.clearDownDocument("TransID")(FakeRequest())
-        status(resp) mustBe Status.INTERNAL_SERVER_ERROR
-      }
-    }
-  }
-
   "call to saveTransId" should {
     "return Ok" when {
       "the transaction id was saved to the document" in new Setup {

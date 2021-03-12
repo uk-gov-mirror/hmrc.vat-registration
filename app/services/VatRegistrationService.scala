@@ -25,7 +25,6 @@ import common.exceptions._
 import config.BackendConfig
 import enums.VatRegStatus
 import javax.inject.{Inject, Singleton}
-import models.AcknowledgementReferencePath
 import models.api.{Threshold, TurnoverEstimates, VatScheme}
 import org.slf4j.LoggerFactory
 import play.api.libs.json._
@@ -58,17 +57,6 @@ class VatRegistrationService @Inject()(registrationRepository: RegistrationMongo
       case None => registrationRepository.createNewVatScheme(registrationId, internalId)
         .map(Right(_)).recover(repositoryErrorHandler)
     }
-
-  import cats.syntax.either._
-
-  def saveAcknowledgementReference(regID: String, ackRef: String): ServiceResult[String] =
-    OptionT(registrationRepository.retrieveVatScheme(regID)).toRight(ResourceNotFound(s"VatScheme ID: $regID missing"))
-      .flatMap(vs => vs.acknowledgementReference match {
-        case Some(ar) =>
-          Left[LeftState, String](AcknowledgementReferenceExists(s"""Registration ID $regID already has an acknowledgement reference of: $ar""")).toEitherT
-        case None =>
-          EitherT.liftF[Future, LeftState, String](registrationRepository.updateByElement(regID, AcknowledgementReferencePath, ackRef))
-      })
 
   def getStatus(regId: String): Future[JsValue] = {
     registrationRepository.retrieveVatScheme(regId) map {
@@ -109,10 +97,6 @@ class VatRegistrationService @Inject()(registrationRepository: RegistrationMongo
         throw new InvalidSubmissionStatus(s"[deleteVatScheme] - VAT reg doc for regId $regId was not deleted as the status was ${document.status}; not ${validStatuses.toString}")
       }
     } yield deleted
-  }
-
-  def clearDownDocument(transId: String): Future[Boolean] = {
-    registrationRepository.clearDownDocument(transId)
   }
 
   def retrieveAcknowledgementReference(regId: String): ServiceResult[String] = {

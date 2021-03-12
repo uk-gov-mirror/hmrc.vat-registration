@@ -23,7 +23,6 @@ import enums.VatRegStatus
 import featureswitch.core.config.{CheckYourAnswersNrsSubmission, FeatureSwitching, UseSubmissionAuditBuilders}
 import models.api.{Submitted, VatScheme}
 import models.monitoring.RegistrationSubmissionAuditing.RegistrationSubmissionAuditModel
-import models.monitoring.SubmissionAuditModel
 import models.submission.VatSubmission
 import play.api.Logging
 import play.api.libs.json.{JsObject, Json}

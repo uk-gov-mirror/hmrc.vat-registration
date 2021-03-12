@@ -16,11 +16,9 @@
 
 package repository
 
-import common.TransactionId
 import common.exceptions._
 import enums.VatRegStatus
 import itutil.{FutureAssertions, ITFixtures, MongoBaseSpec}
-import models.AcknowledgementReferencePath
 import models.api.{TurnoverEstimates, _}
 import play.api.libs.json._
 import play.api.test.Helpers._
@@ -159,38 +157,6 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
     }
   }
 
-
-  "Calling clearDownScheme" should {
-    "clear any optional data from the vat scheme object" in new Setup {
-      await(repository.insert(testFullVatSchemeWithUnregisteredBusinessPartner))
-      await(repository.clearDownDocument(testTransactionId)) mustBe true
-      await(repository.retrieveVatScheme(testRegId)) mustBe None
-    }
-    "fail when a already cleared document is cleared" in new Setup {
-      await(repository.insert(testFullVatSchemeWithUnregisteredBusinessPartner))
-      await(repository.clearDownDocument(testTransactionId)) mustBe true
-      await(repository.retrieveVatScheme(testRegId)) mustBe None
-      await(repository.clearDownDocument(testTransactionId)) mustBe true
-      await(repository.retrieveVatScheme(testRegId)) mustBe None
-    }
-  }
-
-
-  val ACK_REF_NUM = "REF0000001"
-  "Calling updateByElement" should {
-
-    "update Element object when one exists" in new Setup {
-      val schemeWithAckRefNumber: VatScheme = vatScheme.copy(acknowledgementReference = Some(ACK_REF_NUM))
-      repository.insert(schemeWithAckRefNumber).flatMap(_ => repository.updateByElement(vatScheme.id,
-        AcknowledgementReferencePath, ACK_REF_NUM)) returns ACK_REF_NUM
-    }
-
-    "return a None when there is no corresponding VatScheme object" in new Setup {
-      repository.insert(vatScheme).flatMap(_ => repository.updateByElement("fakeRegId",
-        AcknowledgementReferencePath, ACK_REF_NUM)) failedWith classOf[UpdateFailed]
-    }
-  }
-
   "Calling prepareRegistrationSubmission" should {
     val testAckRef = "testAckRef"
     "update the vat scheme with the provided ackref" in new Setup {
@@ -233,34 +199,6 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
       } yield updatedScheme.status
 
       await(result) mustBe VatRegStatus.held
-    }
-  }
-
-  "Calling saveTransId" should {
-    "store the transaction id provided into the specified vat scheme document" in new Setup {
-      val testTransId = "testTransId"
-
-      val result: Future[Option[TransactionId]] = for {
-        insert <- repository.insert(vatScheme)
-        update <- repository.saveTransId(testTransId, vatScheme.id)
-        Some(updatedScheme) <- repository.retrieveVatScheme(vatScheme.id)
-      } yield updatedScheme.transactionId
-
-      await(result).get mustBe TransactionId(testTransId)
-    }
-  }
-
-  "Calling fetchRegIdByTxId" should {
-    "retrieve the vat scheme by transactionid" in new Setup {
-      val testTransId = "testTransId"
-
-      val result: Future[VatScheme] = for {
-        insert <- repository.insert(vatScheme)
-        update <- repository.saveTransId(testTransId, vatScheme.id)
-        Some(updatedScheme) <- repository.fetchRegByTxId(testTransId)
-      } yield updatedScheme
-
-      await(result) mustBe vatScheme.copy(transactionId = Some(TransactionId(testTransId)))
     }
   }
 
