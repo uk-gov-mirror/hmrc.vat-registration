@@ -18,10 +18,10 @@ package connectors
 
 import config.BackendConfig
 import httpparsers.VatSubmissionHttpParser.VatSubmissionHttpReads
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.http._
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -31,21 +31,22 @@ class VatSubmissionConnector @Inject()(appConfig: BackendConfig,
 
   def submit(submissionData: JsObject, correlationId: String, credentialId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
 
-    val updatedHeaderCarrier: HeaderCarrier =
-      hc.copy(authorization = Some(Authorization(appConfig.urlHeaderAuthorization)))
-        .withExtraHeaders(
-          "Environment" -> appConfig.urlHeaderEnvironment,
-          "CorrelationId" -> correlationId,
-          "Credential-Id" -> credentialId
-        )
+    val submissionHeaders = Seq(
+      "Authorization" -> appConfig.urlHeaderAuthorization,
+      "Environment" -> appConfig.urlHeaderEnvironment,
+      "CorrelationId" -> correlationId,
+      "Credential-Id" -> credentialId,
+      "Content-Type" -> "application/json"
+    ) ++ hc.headers(Seq("X-Session-ID"))
 
     http.POST[JsObject, HttpResponse](
       url = appConfig.vatSubmissionUrl,
-      body = submissionData
+      body = submissionData,
+      headers = submissionHeaders
     )(
       wts = JsObject.writes,
       rds = VatSubmissionHttpReads,
-      hc = updatedHeaderCarrier,
+      hc = hc,
       ec = executionContext
     )
 
