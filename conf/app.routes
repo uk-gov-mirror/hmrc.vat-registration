@@ -53,3 +53,7 @@ PATCH       /:regId/applicant-details               controllers.ApplicantDetails
 PATCH       /:regId/honesty-declaration             controllers.VatRegistrationController.storeHonestyDeclaration(regId: String)
 
 PATCH       /:regId/nrs-payload                     controllers.NrsSubmissionPayloadController.storeNrsSubmissionPayload(regId: String)
+
+POST        /:regId/upscan-reference                controllers.UpscanController.createUpscanDetails(regId: String)
+GET         /:regId/upscan-file-details/:reference  controllers.UpscanController.getUpscanDetails(regId: String, reference: String)
+POST        /upscan-callback                        controllers.UpscanController.upscanDetailsCallback
