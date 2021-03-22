@@ -16,7 +16,7 @@
 package itutil
 
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor, urlMatching}
-import models.api.{DailyQuota, RegistrationInformation, VatScheme}
+import models.api.{DailyQuota, RegistrationInformation, UpscanDetails, VatScheme}
 import play.api.test.Helpers._
 import reactivemongo.api.commands.WriteResult
 import uk.gov.hmrc.auth.core.AuthenticateHeaderParser
@@ -33,6 +33,7 @@ trait IntegrationStubbing extends IntegrationSpecBase with ITFixtures {
     def dailyQuotaRepo: DailyQuotaRepo = DailyQuotaRepo()
     def regInfoRepo: RegInfoRepo = RegInfoRepo()
     def subscriptionApi: SubscriptionApi = SubscriptionApi()
+    def upscanDetailsRepo: UpscanDetailsRepo = UpscanDetailsRepo()
   }
 
   def given: PreconditionBuilder = new PreconditionBuilder
@@ -53,6 +54,13 @@ trait IntegrationStubbing extends IntegrationSpecBase with ITFixtures {
 
   case class RegInfoRepo()(implicit builder: PreconditionBuilder) {
     def insertIntoDb(v: RegistrationInformation, f: RegistrationInformation => Future[WriteResult]): PreconditionBuilder = {
+      await(f(v))
+      builder
+    }
+  }
+
+  case class UpscanDetailsRepo()(implicit builder: PreconditionBuilder) {
+    def insertIntoDb(v: UpscanDetails, f: UpscanDetails => Future[WriteResult]): PreconditionBuilder = {
       await(f(v))
       builder
     }
