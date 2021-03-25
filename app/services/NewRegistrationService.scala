@@ -34,6 +34,9 @@ class NewRegistrationService @Inject()(registrationRepository: RegistrationMongo
     registrationRepository.createNewVatScheme(regId, internalId)
   }
 
+  def insertVatScheme(vatScheme: VatScheme): Future[VatScheme] =
+    registrationRepository.insertVatScheme(vatScheme)
+
   private[services] def generateRegistrationId(): String = UUID.randomUUID().toString
 
 }

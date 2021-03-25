@@ -126,6 +126,21 @@ class RegistrationMongoRepositoryISpec extends MongoBaseSpec with FutureAssertio
     }
   }
 
+  "Calling insertVatScheme" should {
+    "insert the VatScheme object" in new Setup {
+      await(repository.insertVatScheme(testFullVatScheme)) mustBe testFullVatScheme
+      await(repository.retrieveVatScheme(testRegId)) mustBe Some(testFullVatScheme)
+    }
+
+    "override a VatScheme with the same regId" in new Setup {
+      await(repository.insertVatScheme(testVatScheme)) mustBe testVatScheme
+      await(repository.retrieveVatScheme(testRegId)) mustBe Some(testVatScheme)
+
+      await(repository.insertVatScheme(testFullVatScheme)) mustBe testFullVatScheme
+      await(repository.retrieveVatScheme(testRegId)) mustBe Some(testFullVatScheme)
+    }
+  }
+
   "Calling retrieveVatScheme" should {
 
     "retrieve a VatScheme object" in new Setup {

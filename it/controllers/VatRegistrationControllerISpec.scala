@@ -24,7 +24,7 @@ import itutil.{FakeTimeMachine, ITVatSubmissionFixture, IntegrationStubbing}
 import models.api.VatScheme
 import models.nonrepudiation.NonRepudiationMetadata
 import org.scalatest.concurrent.Eventually.eventually
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.libs.ws.WSResponse
 import play.api.test.Helpers._
 
@@ -74,7 +74,7 @@ class VatRegistrationControllerISpec extends IntegrationStubbing with FeatureSwi
     "metadata" -> testNonRepudiationMetadata
   )
 
-  "GET /new" should {
+  "POST /new" should {
     "return CREATED if the daily quota has not been met" in new Setup {
       given
         .user.isAuthorised
@@ -84,6 +84,21 @@ class VatRegistrationControllerISpec extends IntegrationStubbing with FeatureSwi
       )
 
       res.status mustBe CREATED
+    }
+  }
+
+  "POST /insert-s4l-scheme" should {
+    "return CREATED if the vatScheme is stored successfully" in new Setup {
+      given
+        .user.isAuthorised
+
+      val testVatSchemeJson: JsValue = Json.toJson(testFullVatScheme)
+      val res: WSResponse = await(client(controllers.routes.VatRegistrationController.insertVatScheme().url)
+        .post(testVatSchemeJson)
+      )
+
+      res.status mustBe CREATED
+      res.body mustBe testVatSchemeJson.toString
     }
   }
 

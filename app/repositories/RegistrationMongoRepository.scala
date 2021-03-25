@@ -92,6 +92,19 @@ class RegistrationMongoRepository @Inject()(mongo: ReactiveMongoComponent, crypt
     }
   }
 
+  def insertVatScheme(vatScheme: VatScheme): Future[VatScheme] = {
+    implicit val vatSchemeWrites: OWrites[VatScheme] = VatScheme.mongoFormat(crypto)
+
+    collection.update.one(regIdSelector(vatScheme.id), vatScheme, upsert = true).map { writeResult =>
+      logger.info(s"[RegistrationMongoRepository] [insertVatScheme] successfully stored a preexisting VatScheme")
+      vatScheme
+    }.recover {
+      case e: Exception =>
+        logger.error(s"[RegistrationMongoRepository] [insertVatScheme] failed to store a VatScheme with regId: ${vatScheme.id}")
+        throw e
+    }
+  }
+
   def retrieveVatScheme(regId: String): Future[Option[VatScheme]] = {
     collection.find[BSONDocument, VatScheme](regIdSelector(regId), None).one[VatScheme]
   }
