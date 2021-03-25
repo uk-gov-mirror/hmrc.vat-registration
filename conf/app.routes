@@ -1,6 +1,7 @@
 # microservice specific routes
 
 POST         /new                                   controllers.VatRegistrationController.newVatRegistration
+POST         /insert-s4l-scheme                         controllers.VatRegistrationController.insertVatScheme
 
 POST         /traffic-management/:regId/allocate    controllers.TrafficManagementController.allocate(regId)
 GET          /traffic-management/reg-info           controllers.TrafficManagementController.getRegistrationInformation

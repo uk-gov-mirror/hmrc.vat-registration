@@ -71,4 +71,14 @@ class NewRegistrationServiceSpec extends VatRegSpec
     }
   }
 
+  "insertVatScheme" should {
+    "return a vat scheme" in {
+      mockInsertVatScheme(testVatScheme)
+
+      val res = await(Service.insertVatScheme(testVatScheme))
+
+      res mustBe testVatScheme
+    }
+  }
+
 }

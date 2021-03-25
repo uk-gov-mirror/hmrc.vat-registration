@@ -20,7 +20,6 @@ import auth.{Authorisation, AuthorisationResource}
 import cats.instances.FutureInstances
 import common.exceptions.{InvalidSubmissionStatus, LeftState}
 import enums.VatRegStatus
-import javax.inject.{Inject, Singleton}
 import models.api._
 import play.api.libs.json._
 import play.api.mvc._
@@ -30,6 +29,7 @@ import services.submission.SubmissionService
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -46,26 +46,33 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
   override val resourceConn: AuthorisationResource = registrationRepository
   val errorHandler: LeftState => Result = err => err.toResult
 
-  def newVatRegistration: Action[AnyContent] = Action.async {
-    implicit request =>
-      isAuthenticated { internalId =>
-        implicit val writes: OWrites[VatScheme] = VatScheme.apiWrites
+  def newVatRegistration: Action[AnyContent] = Action.async { implicit request =>
+    isAuthenticated { internalId =>
+      implicit val writes: OWrites[VatScheme] = VatScheme.apiFormat
 
-        newRegistrationService.newRegistration(internalId) map { scheme =>
-          Created(Json.toJson(scheme))
-        } recover {
-          case _ => InternalServerError(
-            "[VatRegistrationController][newVatRegistration] Unexpected error when creating new registration"
-          )
-        }
+      newRegistrationService.newRegistration(internalId) map { scheme =>
+        Created(Json.toJson(scheme))
+      } recover {
+        case _ => InternalServerError(
+          "[VatRegistrationController][newVatRegistration] Unexpected error when creating new registration"
+        )
       }
+    }
+  }
+
+  def insertVatScheme: Action[VatScheme] = Action.async(parse.json[VatScheme]) { implicit request =>
+    isAuthenticated { _ =>
+      newRegistrationService.insertVatScheme(request.body).map { vatScheme =>
+        Created(Json.toJson(vatScheme))
+      }
+    }
   }
 
   def retrieveVatScheme(id: String): Action[AnyContent] = Action.async {
     implicit request =>
       isAuthorised(id) { authResult =>
         authResult.ifAuthorised(id, "VatRegistrationController", "retrieveVatScheme") {
-          implicit val writes: OWrites[VatScheme] = VatScheme.apiWrites
+          implicit val writes: OWrites[VatScheme] = VatScheme.apiFormat
 
           registrationService.retrieveVatScheme(id).fold(errorHandler, vatScheme => Ok(Json.toJson(vatScheme)))
         }
@@ -75,7 +82,7 @@ class VatRegistrationController @Inject()(val registrationService: VatRegistrati
   def retrieveVatSchemeByInternalId(): Action[AnyContent] = Action.async {
     implicit request =>
       isAuthenticated { internalId =>
-        implicit val writes: OWrites[VatScheme] = VatScheme.apiWrites
+        implicit val writes: OWrites[VatScheme] = VatScheme.apiFormat
 
         registrationService.retrieveVatSchemeByInternalId(internalId).fold(errorHandler, vatScheme => Ok(Json.toJson(vatScheme)))
       }
