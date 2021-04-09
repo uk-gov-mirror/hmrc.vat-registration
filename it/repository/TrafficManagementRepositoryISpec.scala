@@ -4,7 +4,7 @@ package repository
 import java.time.{LocalDate, LocalDateTime, LocalTime}
 import itutil.{FakeTimeMachine, ITFixtures, IntegrationSpecBase}
 import models.api._
-import play.api.Application
+import play.api.{Application, Configuration}
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
@@ -12,6 +12,11 @@ import uk.gov.hmrc.http.HeaderCarrier
 import utils.TimeMachine
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import org.scalatest.concurrent.Eventually._
+import reactivemongo.bson.BSONDocument.pretty
+import repositories.trafficmanagement.TrafficManagementRepository
+
+import scala.concurrent.duration._
 
 class TrafficManagementRepositoryISpec extends IntegrationSpecBase {
 
@@ -69,6 +74,21 @@ class TrafficManagementRepositoryISpec extends IntegrationSpecBase {
 
       res mustBe regInfo2
     }
+    "remove an expired document" in {
+      implicit lazy val tinkerApp: Application = new GuiceApplicationBuilder()
+        .configure("cache.expiryInSeconds" -> "1")
+        .build()
+
+      val testRepo = tinkerApp.injector.instanceOf[TrafficManagementRepository]
+      testRepo.ensureIndexes
+
+      await(testRepo.drop)
+      await(testRepo.insert(regInfo1))
+      testRepo.ensureIndexes
+
+      eventually(timeout(3 seconds), interval(500 millis)) {
+        await(testRepo.getRegistrationInformation(internalId1)) mustBe None
+      }
   }
 
 }
