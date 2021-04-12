@@ -85,8 +85,9 @@ class SubmissionServiceSpec extends VatRegSpec
     internalId = testInternalid,
     registrationId = testRegId,
     status = Submitted,
-    regStartDate = Some(testDate),
-    channel = VatReg
+    regStartDate = testDate,
+    channel = VatReg,
+    lastModified = testDate
   )
 
   implicit val hc: HeaderCarrier = HeaderCarrier()

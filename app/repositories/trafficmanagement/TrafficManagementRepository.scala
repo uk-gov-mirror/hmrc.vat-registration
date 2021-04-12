@@ -88,15 +88,17 @@ class TrafficManagementRepository @Inject()(mongo: ReactiveMongoComponent,
   def upsertRegistrationInformation(internalId: String,
                                     regId: String,
                                     status: RegistrationStatus,
-                                    regStartDate: Option[LocalDate],
-                                    channel: RegistrationChannel): Future[RegistrationInformation] = {
+                                    regStartDate: LocalDate,
+                                    channel: RegistrationChannel,
+                                    lastModified: LocalDate): Future[RegistrationInformation] = {
 
     val newRecord = RegistrationInformation(
       internalId = internalId,
       registrationId = regId,
       status = status,
       regStartDate = regStartDate,
-      channel = channel
+      channel = channel,
+      lastModified = lastModified
     )
 
     val selector = Json.obj("internalId" -> internalId)

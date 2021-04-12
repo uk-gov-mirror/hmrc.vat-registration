@@ -48,15 +48,16 @@ class TrafficManagementServiceSpec extends VatRegSpec
     internalId = testInternalId,
     registrationId = testRegId,
     status = Draft,
-    regStartDate = Some(timeMachine.today),
-    channel = VatReg
+    regStartDate = timeMachine.today,
+    channel = VatReg,
+    lastModified = timeMachine.today
   )
 
   "allocate" must {
     "return QuotaReached when the quota is exceeded" in {
       mockCheckQuota(response = true)
-      mockUpsertRegInfo(testInternalId, testRegId, Draft, Some(testDate), OTRS)(
-        Future.successful(RegistrationInformation(testInternalId, testRegId, Draft, Some(testDate), OTRS))
+      mockUpsertRegInfo(testInternalId, testRegId, Draft, testDate, OTRS, timeMachine.today)(
+        Future.successful(RegistrationInformation(testInternalId, testRegId, Draft, testDate, OTRS, timeMachine.today))
       )
 
       val res = await(Service.allocate(testInternalId, testRegId))
@@ -65,8 +66,8 @@ class TrafficManagementServiceSpec extends VatRegSpec
     }
     "return Allocated when the quota has not been exceeded" in {
       mockCheckQuota(response = false)
-      mockUpsertRegInfo(testInternalId, testRegId, Draft, Some(testDate), VatReg)(
-        Future.successful(RegistrationInformation(testInternalId, testRegId, Draft, Some(testDate), VatReg))
+      mockUpsertRegInfo(testInternalId, testRegId, Draft, testDate, VatReg, timeMachine.today)(
+        Future.successful(RegistrationInformation(testInternalId, testRegId, Draft, testDate, VatReg, timeMachine.today))
       )
 
       val res = await(Service.allocate(testInternalId, testRegId))
@@ -94,10 +95,10 @@ class TrafficManagementServiceSpec extends VatRegSpec
 
   "upsertRegistrationInformation" must {
     "return registration information" in {
-      val regInfo = RegistrationInformation(testInternalId, testRegId, Draft, Some(testDate), OTRS)
-      mockUpsertRegInfo(testInternalId, testRegId, Draft, Some(testDate), OTRS)(Future.successful(regInfo))
+      val regInfo = RegistrationInformation(testInternalId, testRegId, Draft, testDate, OTRS, timeMachine.today)
+      mockUpsertRegInfo(testInternalId, testRegId, Draft, testDate, OTRS, timeMachine.today)(Future.successful(regInfo))
 
-      val res = await(Service.upsertRegistrationInformation(testInternalId, testRegId, Draft, Some(testDate), OTRS))
+      val res = await(Service.upsertRegistrationInformation(testInternalId, testRegId, Draft, testDate, OTRS))
 
       res mustBe regInfo
     }

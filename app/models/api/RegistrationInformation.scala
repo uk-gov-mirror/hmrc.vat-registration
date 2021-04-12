@@ -17,15 +17,28 @@
 package models.api
 
 import java.time.LocalDate
-
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 case class RegistrationInformation(internalId: String,
                                    registrationId: String,
                                    status: RegistrationStatus,
-                                   regStartDate: Option[LocalDate] = None,
-                                   channel: RegistrationChannel)
+                                   regStartDate: LocalDate,
+                                   channel: RegistrationChannel,
+                                   lastModified: LocalDate)
 
 object RegistrationInformation {
-  implicit val format: Format[RegistrationInformation] = Json.format[RegistrationInformation]
+  val reads: Reads[RegistrationInformation] = (
+    (__ \ "internalId").read[String] and
+    (__ \ "registrationId").read[String] and
+    (__ \ "status").read[RegistrationStatus] and
+    (__ \ "regStartDate").read[LocalDate] and
+    (__ \ "channel").read[RegistrationChannel] and
+      // Default to regStartDate for records created before this field was added
+    (__ \ "lastModified").read[LocalDate].orElse((__ \ "regStartDate").read[LocalDate])
+  )(RegistrationInformation.apply _)
+
+  val writes: Writes[RegistrationInformation] = Json.writes[RegistrationInformation]
+
+  implicit val format: Format[RegistrationInformation] = Format(reads, writes)
 }

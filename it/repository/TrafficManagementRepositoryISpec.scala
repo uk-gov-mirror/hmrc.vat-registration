@@ -38,8 +38,8 @@ class TrafficManagementRepositoryISpec extends IntegrationSpecBase {
   val regId2 = "regId2"
   val testDate1 = LocalDate.parse("2020-01-01")
   val testDate2 = LocalDate.parse("2020-01-02")
-  val regInfo1 = RegistrationInformation(internalId1, regId1, Draft, Some(testDate1), VatReg)
-  val regInfo2 = RegistrationInformation(internalId2, regId2, Draft, Some(testDate2), VatReg)
+  val regInfo1 = RegistrationInformation(internalId1, regId1, Draft, testDate1, VatReg, testDate1)
+  val regInfo2 = RegistrationInformation(internalId2, regId2, Draft, testDate2, VatReg, testDate2)
   implicit val hc = HeaderCarrier()
 
   "getRegistrationInformation" must {
@@ -63,32 +63,17 @@ class TrafficManagementRepositoryISpec extends IntegrationSpecBase {
     "Update an existing record" in new Setup {
       await(trafficManagementRepo.bulkInsert(Seq(regInfo1, regInfo2)))
 
-      val res = await(trafficManagementRepo.upsertRegistrationInformation(internalId2, regId2, Submitted, Some(testDate2), OTRS))
+      val res = await(trafficManagementRepo.upsertRegistrationInformation(internalId2, regId2, Submitted, testDate2, OTRS, testDate2))
 
       res mustBe regInfo2.copy(status = Submitted, channel = OTRS)
     }
     "create a new record where one doesn't exist" in new Setup {
       await(trafficManagementRepo.insert(regInfo1))
 
-      val res = await(trafficManagementRepo.upsertRegistrationInformation(internalId2, regId2, Draft, Some(testDate2), VatReg))
+      val res = await(trafficManagementRepo.upsertRegistrationInformation(internalId2, regId2, Draft, testDate2, VatReg, testDate2))
 
       res mustBe regInfo2
     }
-    "remove an expired document" in {
-      implicit lazy val tinkerApp: Application = new GuiceApplicationBuilder()
-        .configure("cache.expiryInSeconds" -> "1")
-        .build()
-
-      val testRepo = tinkerApp.injector.instanceOf[TrafficManagementRepository]
-      testRepo.ensureIndexes
-
-      await(testRepo.drop)
-      await(testRepo.insert(regInfo1))
-      testRepo.ensureIndexes
-
-      eventually(timeout(3 seconds), interval(500 millis)) {
-        await(testRepo.getRegistrationInformation(internalId1)) mustBe None
-      }
   }
 
 }

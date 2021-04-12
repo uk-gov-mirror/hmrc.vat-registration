@@ -61,8 +61,9 @@ class TrafficManagementController @Inject()(controllerComponents: ControllerComp
     isAuthenticated { internalId =>
       val regId = (request.body \ "registrationId").as[String]
       val status = (request.body \ "status").as[RegistrationStatus]
-      val regStartDate = (request.body \ "regStartDate").asOpt[LocalDate]
+      val regStartDate = (request.body \ "regStartDate").as[LocalDate]
       val channel = (request.body \ "channel").as[RegistrationChannel]
+
       trafficManagementService.upsertRegistrationInformation(internalId, regId, status, regStartDate, channel) map {
         regInfo =>
           Ok(Json.toJson(regInfo))
