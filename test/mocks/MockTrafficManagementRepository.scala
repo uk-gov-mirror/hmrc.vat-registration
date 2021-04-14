@@ -40,15 +40,17 @@ trait MockTrafficManagementRepository extends MockitoSugar {
   def mockUpsertRegInfo(internalId: String,
                         regId: String,
                         status: RegistrationStatus,
-                        regStartDate: Option[LocalDate],
-                        channel: RegistrationChannel)
+                        regStartDate: LocalDate,
+                        channel: RegistrationChannel,
+                        lastModified: LocalDate)
                        (response: Future[RegistrationInformation]): OngoingStubbing[Future[RegistrationInformation]] =
     when(mockTrafficManagementRepository.upsertRegistrationInformation(
       ArgumentMatchers.eq(internalId),
       ArgumentMatchers.eq(regId),
       ArgumentMatchers.eq(status),
       ArgumentMatchers.eq(regStartDate),
-      ArgumentMatchers.eq(channel)
+      ArgumentMatchers.eq(channel),
+      ArgumentMatchers.eq(lastModified)
     )) thenReturn response
 
 }

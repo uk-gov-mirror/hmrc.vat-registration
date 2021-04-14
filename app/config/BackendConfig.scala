@@ -52,4 +52,6 @@ class BackendConfig @Inject()(val servicesConfig: ServicesConfig,
   lazy val nonRepudiationSubmissionUrl: String = servicesConfig.baseUrl("non-repudiation") + "/submission"
   lazy val nonRepudiationApiKey: String = servicesConfig.getString("microservice.services.non-repudiation.api-key")
 
+  lazy val expiryInSeconds: String = servicesConfig.getString("cache.expiryInSeconds")
+
 }

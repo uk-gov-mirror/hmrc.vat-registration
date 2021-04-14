@@ -17,38 +17,69 @@
 package repositories.trafficmanagement
 
 import java.time.LocalDate
-
 import auth.AuthorisationResource
+import config.BackendConfig
+
 import javax.inject.{Inject, Singleton}
 import models.api.{RegistrationChannel, RegistrationInformation, RegistrationStatus}
 import play.api.libs.json.{JsString, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
+import reactivemongo.bson.{BSONDocument, BSONInteger}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class TrafficManagementRepository @Inject()(mongo: ReactiveMongoComponent)(implicit ec: ExecutionContext)
+class TrafficManagementRepository @Inject()(mongo: ReactiveMongoComponent,
+                                            backendConfig: BackendConfig
+                                           )(implicit ec: ExecutionContext)
   extends ReactiveRepository(
     collectionName = "traffic-management",
     mongo = mongo.mongoConnector.db,
     domainFormat = RegistrationInformation.format
   ) with AuthorisationResource {
 
-  override def indexes: Seq[Index] = Seq(
-    Index(
-      name = Some("internalId"),
-      key = Seq("internalId" -> IndexType.Ascending),
-      unique = true
-    ),
-    Index(
-      name = Some("registrationId"),
-      key = Seq("registrationId" -> IndexType.Ascending),
-      unique = true
-    )
+  protected lazy val ttl = backendConfig.expiryInSeconds.toInt
+
+  val lastModifiedIndex = Index(
+    name = Some("lastModified"),
+    key = Seq("lastModified" -> IndexType.Ascending),
+    options = BSONDocument("expireAfterSeconds" -> BSONInteger(ttl))
   )
+
+  override def indexes: Seq[Index] = {
+    Seq(
+      Index(
+        name = Some("internalId"),
+        key = Seq("internalId" -> IndexType.Ascending),
+        unique = true
+      ),
+      Index(
+        name = Some("registrationId"),
+        key = Seq("registrationId" -> IndexType.Ascending),
+        unique = true
+      ),
+      lastModifiedIndex
+    )
+  }
+
+  override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] = {
+    for {
+      currentIndexes <- collection.indexesManager.list()
+      _<- deleteLastUpdatedIndex(currentIndexes)
+      indexes = currentIndexes :+ lastModifiedIndex
+      updated <- Future.sequence(indexes.map(collection.indexesManager.ensure))
+    } yield updated
+  }
+
+  def deleteLastUpdatedIndex(indexes: List[Index])(implicit ec: ExecutionContext): Future[Int] = {
+    indexes.find(index => index.eventualName == "lastModified") match {
+      case Some(index) => collection.indexesManager.drop(index.eventualName)
+      case None => Future.successful(0)
+    }
+  }
 
   def getRegistrationInformation(internalId: String): Future[Option[RegistrationInformation]] =
     find("internalId" -> JsString(internalId))
@@ -57,15 +88,17 @@ class TrafficManagementRepository @Inject()(mongo: ReactiveMongoComponent)(impli
   def upsertRegistrationInformation(internalId: String,
                                     regId: String,
                                     status: RegistrationStatus,
-                                    regStartDate: Option[LocalDate],
-                                    channel: RegistrationChannel): Future[RegistrationInformation] = {
+                                    regStartDate: LocalDate,
+                                    channel: RegistrationChannel,
+                                    lastModified: LocalDate): Future[RegistrationInformation] = {
 
     val newRecord = RegistrationInformation(
       internalId = internalId,
       registrationId = regId,
       status = status,
       regStartDate = regStartDate,
-      channel = channel
+      channel = channel,
+      lastModified = lastModified
     )
 
     val selector = Json.obj("internalId" -> internalId)

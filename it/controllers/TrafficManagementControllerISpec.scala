@@ -16,8 +16,9 @@ class TrafficManagementControllerISpec extends IntegrationStubbing {
     internalId = testInternalid,
     registrationId = testRegId,
     status = Draft,
-    regStartDate = Some(testDate),
-    channel = VatReg
+    regStartDate = testDate,
+    channel = VatReg,
+    lastModified = testDate
   )
 
   "POST /traffic-management/:regId/allocate" must {

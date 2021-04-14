@@ -36,7 +36,7 @@ class TrafficManagementService @Inject()(dailyQuotaRepository: DailyQuotaReposit
     for {
       quotaReached <- dailyQuotaRepository.checkQuota
       channel = if (quotaReached) OTRS else VatReg
-      _ <- trafficManagementRepository.upsertRegistrationInformation(internalId, regId, Draft, Some(timeMachine.today), channel)
+      _ <- trafficManagementRepository.upsertRegistrationInformation(internalId, regId, Draft, timeMachine.today, channel, timeMachine.today)
     } yield if (quotaReached) QuotaReached else Allocated
   }
 
@@ -46,14 +46,16 @@ class TrafficManagementService @Inject()(dailyQuotaRepository: DailyQuotaReposit
   def upsertRegistrationInformation(internalId: String,
                                     registrationId: String,
                                     status: RegistrationStatus,
-                                    regStartDate: Option[LocalDate],
+                                    regStartDate: LocalDate,
                                     channel: RegistrationChannel): Future[RegistrationInformation] =
     trafficManagementRepository.upsertRegistrationInformation(
       internalId = internalId,
       regId = registrationId,
       status = status,
       regStartDate = regStartDate,
-      channel = channel)
+      channel = channel,
+      lastModified = timeMachine.today
+    )
 
   def updateStatus(regId: String, status: RegistrationStatus): Future[Option[RegistrationInformation]] =
     trafficManagementRepository.findAndUpdate(

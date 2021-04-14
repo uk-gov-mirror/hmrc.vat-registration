@@ -51,8 +51,9 @@ class NewRegistrationServiceSpec extends VatRegSpec
     internalId = testInternalId,
     registrationId = testRegId,
     status = Draft,
-    regStartDate = Some(testDate),
-    channel = VatReg
+    regStartDate = testDate,
+    channel = VatReg,
+    lastModified = testDate
   )
 
   object Service extends NewRegistrationService(
